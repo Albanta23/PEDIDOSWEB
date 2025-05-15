@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pedidos-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+    rootDir: gestion-pedidos-carniceria
