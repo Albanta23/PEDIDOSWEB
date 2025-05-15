@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { jsPDF } from 'jspdf';
+import { jsPDF } from "jspdf";
 
 // Utilidad para cargar imagen como base64 y devolver una promesa
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.crossOrigin = 'Anonymous';
     img.onload = function () {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -14,64 +13,77 @@ function cargarLogoBase64(url) {
       ctx.drawImage(img, 0, 0);
       resolve(canvas.toDataURL('image/png'));
     };
-    img.onerror = reject;
+    img.onerror = (e) => {
+      let msg = 'No se pudo cargar el logo para el PDF.';
+      if (e && e.message) msg += ' ' + e.message;
+      reject(new Error(msg));
+    };
     img.src = url;
   });
 }
 
 async function generarPDFEnvio(pedido, tiendas) {
-  const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo.png');
-  const doc = new jsPDF();
-  doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Carnicería Central', 50, 20);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Albarán de Expedición', 50, 28);
-  doc.setLineWidth(0.5);
-  doc.line(15, 32, 195, 32);
-  doc.setFontSize(11);
-  let y = 40;
-  doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido), 45, y);
-  y += 7;
-  doc.text(`Tienda:`, 15, y); doc.text(tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId, 45, y);
-  y += 7;
-  doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-', 45, y);
-  y += 7;
-  doc.text(`Estado:`, 15, y); doc.text(
-    pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
-    pedido.estado === 'preparado' ? 'Preparado en fábrica' : pedido.estado, 45, y);
-  y += 10;
-  doc.setFont('helvetica', 'bold');
-  doc.setFillColor(230, 230, 230);
-  doc.rect(15, y, 180, 8, 'F');
-  doc.text('Nº', 18, y + 6);
-  doc.text('Producto', 28, y + 6);
-  doc.text('Pedida', 80, y + 6);
-  doc.text('Enviada', 100, y + 6);
-  doc.text('Formato', 120, y + 6);
-  doc.text('Lote', 150, y + 6);
-  doc.text('Comentario', 170, y + 6);
-  y += 14; // Dejar más espacio antes de la primera línea
-  doc.setFont('helvetica', 'normal');
-  pedido.lineas.forEach((l, i) => {
-    doc.text(String(i + 1), 18, y);
-    doc.text(l.producto || '-', 28, y);
-    doc.text(String(l.cantidad || '-'), 80, y, { align: 'right' });
-    doc.text(String(l.cantidadEnviada || '-'), 100, y, { align: 'right' });
-    doc.text(l.formato || '-', 120, y);
-    doc.text(l.lote || '-', 150, y);
-    doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
-    y += 8;
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-  });
-  doc.setFontSize(9);
-  doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 285);
-  doc.save(`albaran_envio_fabrica_${pedido.numeroPedido}_${Date.now()}.pdf`);
+  try {
+    const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
+    const doc = new jsPDF();
+    doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Carnicería Central', 50, 20);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Albarán de Expedición', 50, 28);
+    doc.setLineWidth(0.5);
+    doc.line(15, 32, 195, 32);
+    doc.setFontSize(11);
+    let y = 40;
+    doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido || '-'), 45, y);
+    y += 7;
+    doc.text(`Tienda:`, 15, y); doc.text(tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId || '-', 45, y);
+    y += 7;
+    doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-', 45, y);
+    y += 7;
+    doc.text(`Estado:`, 15, y); doc.text(
+      pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
+      pedido.estado === 'preparado' ? 'Preparado en fábrica' : (pedido.estado || '-'), 45, y);
+    y += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setFillColor(230, 230, 230);
+    doc.rect(15, y, 180, 8, 'F');
+    doc.text('Nº', 18, y + 6);
+    doc.text('Producto', 28, y + 6);
+    doc.text('Pedida', 80, y + 6);
+    doc.text('Enviada', 100, y + 6);
+    doc.text('Formato', 120, y + 6);
+    doc.text('Lote', 150, y + 6);
+    doc.text('Comentario', 170, y + 6);
+    y += 14;
+    doc.setFont('helvetica', 'normal');
+    (Array.isArray(pedido.lineas) ? pedido.lineas : []).forEach((l, i) => {
+      doc.text(String(i + 1), 18, y);
+      doc.text(l.producto || '-', 28, y);
+      doc.text(String(l.cantidad ?? '-') , 80, y, { align: 'right' });
+      doc.text(String(l.cantidadEnviada ?? '-') , 100, y, { align: 'right' });
+      doc.text(l.formato || '-', 120, y);
+      doc.text(l.lote || '-', 150, y);
+      doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
+      y += 8;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+    doc.setFontSize(9);
+    doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 285);
+    doc.save(`albaran_envio_fabrica_${pedido.numeroPedido || 'sin_numero'}_${Date.now()}.pdf`);
+  } catch (err) {
+    let msg = 'Error al generar el PDF: ';
+    if (err instanceof Error) msg += err.message;
+    else if (typeof err === 'string') msg += err;
+    else if (err && err.type === 'error' && err.target && err.target.src) msg += 'No se pudo cargar la imagen: ' + err.target.src;
+    else msg += JSON.stringify(err);
+    alert(msg);
+  }
 }
 
 const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {

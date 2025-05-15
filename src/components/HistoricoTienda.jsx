@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 function generarPDFAlbaran(pedido) {
   // Cargar logo como imagen base64
   const logoImg = new window.Image();
-  logoImg.src = window.location.origin + '/logo.png';
+  logoImg.src = window.location.origin + '/logo1.png';
   logoImg.onload = () => {
     const doc = new jsPDF();
     // Logo

@@ -8,6 +8,7 @@ import HistoricoTienda from './components/HistoricoTienda';
 import ErrorLogger from './components/ErrorLogger';
 import HistoricoFabrica from './components/HistoricoFabrica';
 import HistoricoTiendaPanel from './components/HistoricoTiendaPanel';
+import SeleccionModo from './components/SeleccionModo';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 
 const tiendas = [
@@ -52,6 +53,7 @@ function App() {
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
   const [mostrarHistoricoFabrica, setMostrarHistoricoFabrica] = useState(false);
   const [mostrarHistoricoTienda, setMostrarHistoricoTienda] = useState(false);
+  const [pedidoEditando, setPedidoEditando] = useState(null);
 
   // --- ESTADO PARA FEEDBACK UX ---
   const [mensaje, setMensaje] = useState(null);
@@ -190,15 +192,12 @@ function App() {
     });
   };
 
+  function handleEditarPedido(pedido) {
+    setPedidoEditando(pedido);
+  }
+
   if (!modo) {
-    return (
-      <div className="App">
-        <h2>Seleccionar Modo de Acceso</h2>
-        <button onClick={() => setModo('fabrica')}>Entrar como Fábrica</button>
-        <button onClick={() => setModo('tienda')}>Entrar como Tienda</button>
-        <ErrorLogger />
-      </div>
-    );
+    return <SeleccionModo onSeleccion={setModo} />;
   }
 
   if (!logueado) {
@@ -254,14 +253,23 @@ function App() {
             tiendaId={tiendaSeleccionada}
             tiendaNombre={tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
             onVolver={() => setMostrarHistoricoTienda(false)}
+            onModificarPedido={(pedidoEditado) => {
+              setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
+              guardarPedidos(pedidos.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
+              mostrarMensaje('Pedido actualizado', 'success');
+            }}
           />
         ) : (
           <div>
-            <PedidoForm onAdd={agregarPedido} />
+            <PedidoForm
+              pedido={pedidoEditando}
+              onAdd={agregarPedido}
+            />
             <PedidoList
               pedidos={pedidos.filter(p => p.tiendaId === tiendaSeleccionada)}
               onModificar={modificarPedido}
               onBorrar={borrarPedido}
+              onEditar={handleEditarPedido}
               modo={"tienda"}
             />
             <button onClick={enviarPedidosAFabrica}>Enviar pedidos a fábrica</button>

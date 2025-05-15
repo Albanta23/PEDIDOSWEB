@@ -19,7 +19,7 @@ function cargarLogoBase64(url) {
 }
 
 async function generarPDFTienda(pedido, tiendaNombre) {
-  const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo.png');
+  const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
   const doc = new jsPDF();
   doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
   doc.setFontSize(18);
@@ -75,8 +75,10 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   doc.save(`albaran_tienda_${pedido.numeroPedido || 'sin_numero'}_${Date.now()}.pdf`);
 }
 
-const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver }) => {
+const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido }) => {
   const [modalPedido, setModalPedido] = useState(null);
+  const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
+
   // Pedidos enviados a fábrica (solo enviados, NO borrador)
   const pedidosEnviados = pedidos.filter(p =>
     p.tiendaId === tiendaId &&
@@ -107,19 +109,6 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver }) => 
       zIndex:1,
       overflow:'hidden'
     }}>
-      {/* Imagen de fondo decorativa */}
-      <img src="/logo.png" alt="Fondo" style={{
-        position:'fixed',
-        top:0,
-        left:0,
-        width:'100vw',
-        height:'100vh',
-        objectFit:'cover',
-        opacity:0.07,
-        zIndex:0,
-        pointerEvents:'none',
-        filter:'blur(2px) grayscale(0.2)'
-      }} />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center', marginBottom:24}}>
         <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222'}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
         <button onClick={onVolver} style={{padding:'10px 24px',background:'linear-gradient(90deg,#007bff,#00c6ff)',color:'#fff',border:'none',borderRadius:8,cursor:'pointer',fontWeight:700, fontSize:16, boxShadow:'0 2px 8px #007bff22', transition:'0.2s', outline:'none'}}>
@@ -251,26 +240,75 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver }) => 
                     <th style={{padding:'8px 10px'}}>#</th>
                     <th style={{padding:'8px 10px'}}>Producto</th>
                     <th style={{padding:'8px 10px'}}>Pedida</th>
-                    <th style={{padding:'8px 10px'}}>Enviada</th>
                     <th style={{padding:'8px 10px'}}>Formato</th>
                     <th style={{padding:'8px 10px'}}>Comentario</th>
-                    <th style={{padding:'8px 10px'}}>Lote</th>
+                    <th style={{padding:'8px 10px'}}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {modalPedido.lineas.map((l, i) => (
+                  {(modalPedido.estado === 'borrador' ? (editandoLineas || modalPedido.lineas) : modalPedido.lineas).map((l, i) => (
                     <tr key={i} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
                       <td style={{padding:'8px 10px', textAlign:'center'}}>{i + 1}</td>
-                      <td style={{padding:'8px 10px'}}>{l.producto}</td>
-                      <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
-                      <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidadEnviada || '-'}</td>
-                      <td style={{padding:'8px 10px'}}>{l.formato}</td>
-                      <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
-                      <td style={{padding:'8px 10px'}}>{l.lote || '-'}</td>
+                      {modalPedido.estado === 'borrador' ? (
+                        editandoLineas ? (
+                          <>
+                            <td style={{padding:'8px 10px'}}>
+                              <input value={l.producto} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,producto:e.target.value}:li))} style={{width:100}} />
+                            </td>
+                            <td style={{padding:'8px 10px'}}>
+                              <input type="number" min="1" value={l.cantidad} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidad:Number(e.target.value)}:li))} style={{width:60}} />
+                            </td>
+                            <td style={{padding:'8px 10px'}}>
+                              <input value={l.formato} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,formato:e.target.value}:li))} style={{width:80}} />
+                            </td>
+                            <td style={{padding:'8px 10px'}}>
+                              <input value={l.comentario||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,comentario:e.target.value}:li))} style={{width:120}} />
+                            </td>
+                            <td style={{padding:'8px 10px'}}>
+                              <button onClick={() => setEditandoLineas(editandoLineas.filter((_,ix)=>ix!==i))} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer'}}>🗑</button>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td style={{padding:'8px 10px'}}>{l.producto}</td>
+                            <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
+                            <td style={{padding:'8px 10px'}}>{l.formato}</td>
+                            <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
+                            <td style={{padding:'8px 10px'}}></td>
+                          </>
+                        )
+                      ) : (
+                        <>
+                          <td style={{padding:'8px 10px'}}>{l.producto}</td>
+                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
+                          <td style={{padding:'8px 10px'}}>{l.formato}</td>
+                          <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
+                          <td style={{padding:'8px 10px'}}></td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {modalPedido.estado === 'borrador' && (
+                <div style={{display:'flex',gap:8,marginBottom:8}}>
+                  {editandoLineas ? (
+                    <>
+                      <button onClick={() => {
+                        onModificarPedido({ ...modalPedido, lineas: editandoLineas });
+                        setModalPedido({ ...modalPedido, lineas: editandoLineas });
+                        setEditandoLineas(null);
+                      }} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Guardar cambios</button>
+                      <button onClick={() => setEditandoLineas(null)} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => setEditandoLineas(modalPedido.lineas.map(l=>({...l})))} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Editar líneas</button>
+                      <button onClick={() => setEditandoLineas([...(modalPedido.lineas||[]),{producto:'',cantidad:1,formato:'',comentario:''}])} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Añadir línea</button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <div style={{display:'flex', gap:12, justifyContent:'center', marginTop:18}}>
               <button onClick={() => generarPDFTienda(modalPedido, tiendaNombre)} style={{
