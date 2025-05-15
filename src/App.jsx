@@ -12,7 +12,6 @@ import SeleccionModo from './components/SeleccionModo';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { io } from 'socket.io-client';
 
-// Conexión a socket.io en Render
 const socket = io('https://pedidos-backend-0e1s.onrender.com');
 
 const tiendas = [
@@ -71,28 +70,6 @@ function App() {
   useEffect(() => {
     guardarPedidos(pedidos);
   }, [pedidos]);
-
-  useEffect(() => {
-    // Escuchar eventos de pedidos en tiempo real
-    socket.on('pedido_nuevo', (pedido) => {
-      setPedidos(prev => [...prev, pedido]);
-    });
-    socket.on('pedido_actualizado', (pedidoActualizado) => {
-      setPedidos(prev => prev.map(p => p.id === pedidoActualizado.id ? pedidoActualizado : p));
-    });
-    socket.on('pedido_eliminado', (pedidoEliminado) => {
-      setPedidos(prev => prev.filter(p => p.id !== pedidoEliminado.id));
-    });
-    socket.on('pedidos_inicial', (pedidosIniciales) => {
-      setPedidos(pedidosIniciales);
-    });
-    return () => {
-      socket.off('pedido_nuevo');
-      socket.off('pedido_actualizado');
-      socket.off('pedido_eliminado');
-      socket.off('pedidos_inicial');
-    };
-  }, []);
 
   const cambiarEstadoPedido = (pedidoId, nuevoEstado) => {
     setPedidos(pedidosAnteriores => {
