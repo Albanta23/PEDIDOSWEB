@@ -11,7 +11,7 @@ function generarPDFAlbaran(pedido) {
     doc.addImage(logoImg, 'PNG', 15, 10, 30, 18);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Carnicería Central', 50, 20);
+    doc.text('EMBUTIDOS BALLESTEROS SL', 50, 20);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
     doc.text('Albarán de Expedición', 50, 28);
