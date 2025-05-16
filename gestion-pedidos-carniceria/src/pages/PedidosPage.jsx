@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PedidoForm from '../../../src/components/PedidoForm';
 import PedidoList from '../../../src/components/PedidoList';
-import { obtenerPedidos } from '../services/pedidosService';
+import { obtenerPedidos, crearPedido } from '../services/pedidosService';
 
 const PedidosPage = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -15,8 +15,13 @@ const PedidosPage = () => {
     fetchPedidos();
   }, []);
 
-  const agregarPedido = (nuevoPedido) => {
-    setPedidos([...pedidos, nuevoPedido]);
+  const agregarPedido = async (nuevoPedido) => {
+    try {
+      const pedidoGuardado = await crearPedido(nuevoPedido);
+      setPedidos([...pedidos, pedidoGuardado]);
+    } catch (error) {
+      alert('Error al guardar el pedido');
+    }
   };
 
   return (
