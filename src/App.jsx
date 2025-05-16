@@ -230,7 +230,6 @@ function App() {
               onEditar={handleEditarPedido}
               modo={"tienda"}
             />
-            <button onClick={enviarPedidosAFabrica}>Enviar pedidos a fábrica</button>
             <button onClick={() => setMostrarHistoricoTienda(true)} style={{marginLeft:12,background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>Ver histórico de pedidos</button>
           </div>
         )
