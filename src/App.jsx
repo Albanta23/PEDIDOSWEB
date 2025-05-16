@@ -10,7 +10,7 @@ import HistoricoFabrica from './components/HistoricoFabrica';
 import HistoricoTiendaPanel from './components/HistoricoTiendaPanel';
 import SeleccionModo from './components/SeleccionModo';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
-import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from '../gestion-pedidos-carniceria/src/services/pedidosService';
+import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -113,7 +113,7 @@ function App() {
 
   const handleLogin = (usuario, tiendaId) => {
     setLogueado(true);
-    if (modo === 'tienda') setTiendaSeleccionada(tiendaId);
+    if (modo === 'tienda' ) setTiendaSeleccionada(tiendaId);
   };
 
   const agregarPedido = async (pedido) => {
