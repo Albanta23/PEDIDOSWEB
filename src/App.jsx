@@ -10,9 +10,7 @@ import HistoricoFabrica from './components/HistoricoFabrica';
 import HistoricoTiendaPanel from './components/HistoricoTiendaPanel';
 import SeleccionModo from './components/SeleccionModo';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
-import { io } from 'socket.io-client';
-
-const socket = io('https://pedidos-backend-0e1s.onrender.com');
+import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from '../gestion-pedidos-carniceria/src/services/pedidosService';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -32,25 +30,8 @@ function generarIdUnico() {
   return 'pedido_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-function cargarPedidosPersistidos() {
-  try {
-    const pedidosGuardados = localStorage.getItem('pedidos');
-    if (!pedidosGuardados) return [];
-    const pedidos = JSON.parse(pedidosGuardados);
-    if (!Array.isArray(pedidos)) throw new Error('Formato inválido');
-    return pedidos;
-  } catch (e) {
-    localStorage.removeItem('pedidos');
-    return [];
-  }
-}
-
-function guardarPedidos(pedidos) {
-  localStorage.setItem('pedidos', JSON.stringify(pedidos));
-}
-
 function App() {
-  const [pedidos, setPedidos] = useState(() => cargarPedidosPersistidos());
+  const [pedidos, setPedidos] = useState([]);
   const [modo, setModo] = useState(null); // null, 'fabrica', 'tienda'
   const [logueado, setLogueado] = useState(false);
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
@@ -68,55 +49,66 @@ function App() {
   }
 
   useEffect(() => {
-    guardarPedidos(pedidos);
-  }, [pedidos]);
+    const fetchPedidos = async () => {
+      try {
+        const data = await obtenerPedidos();
+        setPedidos(data);
+      } catch (error) {
+        setMensaje({ texto: 'Error al cargar pedidos', tipo: 'warning' });
+      }
+    };
+    fetchPedidos();
+  }, []);
 
-  const cambiarEstadoPedido = (pedidoId, nuevoEstado) => {
-    setPedidos(pedidosAnteriores => {
-      const actualizados = pedidosAnteriores.map((p) =>
-        p.id === pedidoId
-          ? {
-              ...p,
-              estado: nuevoEstado,
-              ...(nuevoEstado === 'preparado' ? { fechaEnvio: new Date().toISOString() } : {}),
-              ...(nuevoEstado === 'enviadoTienda' ? { fechaRecepcion: new Date().toISOString() } : {})
-            }
-          : p
-      );
-      guardarPedidos(actualizados);
+  // Cambia el estado de un pedido y lo persiste en MongoDB
+  const cambiarEstadoPedido = async (pedidoId, nuevoEstado) => {
+    try {
+      const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
+      if (!pedido) return;
+      const actualizado = {
+        ...pedido,
+        estado: nuevoEstado,
+        ...(nuevoEstado === 'preparado' ? { fechaEnvio: new Date().toISOString() } : {}),
+        ...(nuevoEstado === 'enviadoTienda' ? { fechaRecepcion: new Date().toISOString() } : {})
+      };
+      await actualizarPedido(pedido._id || pedido.id, actualizado);
+      const data = await obtenerPedidos();
+      setPedidos(data);
       if (nuevoEstado === 'preparado') mostrarMensaje('Pedido preparado', 'success');
       if (nuevoEstado === 'enviadoTienda') mostrarMensaje('Pedido enviado a tienda', 'success');
-      return actualizados;
-    });
+    } catch (error) {
+      mostrarMensaje('Error al cambiar estado', 'warning');
+    }
   };
 
-  const cambiarEstadoLinea = (pedidoId, idxLinea, preparada) => {
-    setPedidos(pedidosAnteriores => {
-      const actualizados = pedidosAnteriores.map(p => {
-        if (p.id !== pedidoId) return p;
-        return {
-          ...p,
-          lineas: p.lineas.map((l, idx) => idx === idxLinea ? { ...l, preparada } : l)
-        };
-      });
-      guardarPedidos(actualizados);
-      return actualizados;
-    });
+  // Cambia el estado de una línea de pedido y lo persiste en MongoDB
+  const cambiarEstadoLinea = async (pedidoId, idxLinea, preparada) => {
+    try {
+      const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
+      if (!pedido) return;
+      const nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, preparada } : l);
+      const actualizado = { ...pedido, lineas: nuevasLineas };
+      await actualizarPedido(pedido._id || pedido.id, actualizado);
+      const data = await obtenerPedidos();
+      setPedidos(data);
+    } catch (error) {
+      mostrarMensaje('Error al cambiar estado de línea', 'warning');
+    }
   };
 
-  // Permite editar detalles de línea: cantidadEnviada y lote
-  const cambiarEstadoLineaDetalle = (pedidoId, idxLinea, cambios) => {
-    setPedidos(pedidosAnteriores => {
-      const actualizados = pedidosAnteriores.map(p => {
-        if (p.id !== pedidoId) return p;
-        return {
-          ...p,
-          lineas: p.lineas.map((l, idx) => idx === idxLinea ? { ...l, ...cambios } : l)
-        };
-      });
-      guardarPedidos(actualizados);
-      return actualizados;
-    });
+  // Cambia detalles de una línea de pedido y lo persiste en MongoDB
+  const cambiarEstadoLineaDetalle = async (pedidoId, idxLinea, cambios) => {
+    try {
+      const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
+      if (!pedido) return;
+      const nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, ...cambios } : l);
+      const actualizado = { ...pedido, lineas: nuevasLineas };
+      await actualizarPedido(pedido._id || pedido.id, actualizado);
+      const data = await obtenerPedidos();
+      setPedidos(data);
+    } catch (error) {
+      mostrarMensaje('Error al actualizar línea', 'warning');
+    }
   };
 
   const handleLogin = (usuario, tiendaId) => {
@@ -124,75 +116,39 @@ function App() {
     if (modo === 'tienda') setTiendaSeleccionada(tiendaId);
   };
 
-  const agregarPedido = (pedido) => {
-    setPedidos(prev => {
-      const nuevo = {
-        id: generarIdUnico(),
-        tiendaId: tiendaSeleccionada,
-        estado: 'borrador',
-        lineas: [
-          {
-            producto: pedido.producto,
-            cantidad: pedido.cantidad,
-            formato: pedido.formato,
-            comentario: pedido.comentario
-          }
-        ]
-      };
-      const actualizados = [...prev, nuevo];
-      guardarPedidos(actualizados);
-      mostrarMensaje('Pedido añadido al borrador', 'success');
-      return actualizados;
-    });
-  };
-
-  const modificarPedido = (idx, nuevoPedido) => {
-    setPedidos(pedidosAnteriores => {
-      const actualizados = pedidosAnteriores.map((p, i) =>
-        i === idx ? { ...p, ...nuevoPedido } : p
-      );
-      guardarPedidos(actualizados);
-      return actualizados;
-    });
-  };
-
-  const borrarPedido = (idx) => {
-    setPedidos(pedidosAnteriores => {
-      const actualizados = pedidosAnteriores.filter((_, i) => i !== idx);
-      guardarPedidos(actualizados);
-      mostrarMensaje('Pedido borrado', 'info');
-      return actualizados;
-    });
-  };
-
-  const enviarPedidosAFabrica = () => {
-    const fechaPedido = new Date().toISOString();
-    const pedidosBorrador = pedidos.filter(p => p.tiendaId === tiendaSeleccionada && p.estado === 'borrador');
-    if (pedidosBorrador.length === 0) {
-      mostrarMensaje('No hay pedidos en borrador para enviar', 'warning');
-      return;
+  const agregarPedido = async (pedido) => {
+    try {
+      await crearPedido({ ...pedido, tiendaId: tiendaSeleccionada });
+      const data = await obtenerPedidos();
+      setPedidos(data);
+      mostrarMensaje('Pedido añadido correctamente', 'success');
+    } catch (error) {
+      mostrarMensaje('Error al crear pedido', 'warning');
     }
-    const ultimoNumero = pedidos.reduce(
-      (max, p) => (p.numeroPedido && p.numeroPedido > max ? p.numeroPedido : max),
-      0
-    );
-    const nuevoNumero = ultimoNumero + 1;
-    const todasLasLineas = pedidosBorrador.flatMap(p => p.lineas).map(l => ({ ...l, preparada: false }));
-    const pedidoAgrupado = {
-      id: generarIdUnico(),
-      tiendaId: tiendaSeleccionada,
-      estado: 'enviado',
-      fechaPedido,
-      numeroPedido: nuevoNumero,
-      lineas: todasLasLineas
-    };
-    setPedidos(prevPedidos => {
-      const restantes = prevPedidos.filter(p => !(p.tiendaId === tiendaSeleccionada && p.estado === 'borrador'));
-      const actualizados = [...restantes, pedidoAgrupado];
-      guardarPedidos(actualizados);
-      mostrarMensaje('Pedidos enviados a fábrica', 'success');
-      return actualizados;
-    });
+  };
+
+  const modificarPedido = async (idx, nuevoPedido) => {
+    try {
+      const pedido = pedidos[idx];
+      await actualizarPedido(pedido._id, nuevoPedido);
+      const data = await obtenerPedidos();
+      setPedidos(data);
+      mostrarMensaje('Pedido actualizado', 'success');
+    } catch (error) {
+      mostrarMensaje('Error al actualizar pedido', 'warning');
+    }
+  };
+
+  const borrarPedido = async (idx) => {
+    try {
+      const pedido = pedidos[idx];
+      await eliminarPedido(pedido._id);
+      const data = await obtenerPedidos();
+      setPedidos(data);
+      mostrarMensaje('Pedido borrado', 'info');
+    } catch (error) {
+      mostrarMensaje('Error al borrar pedido', 'warning');
+    }
   };
 
   function handleEditarPedido(pedido) {
@@ -258,7 +214,6 @@ function App() {
             onVolver={() => setMostrarHistoricoTienda(false)}
             onModificarPedido={(pedidoEditado) => {
               setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
-              guardarPedidos(pedidos.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
               mostrarMensaje('Pedido actualizado', 'success');
             }}
           />
