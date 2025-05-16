@@ -17,8 +17,9 @@ const PedidosPage = () => {
 
   const agregarPedido = async (nuevoPedido) => {
     try {
-      const pedidoGuardado = await crearPedido(nuevoPedido);
-      setPedidos([...pedidos, pedidoGuardado]);
+      await crearPedido(nuevoPedido);
+      const data = await obtenerPedidos();
+      setPedidos(data);
     } catch (error) {
       alert('Error al guardar el pedido');
     }
