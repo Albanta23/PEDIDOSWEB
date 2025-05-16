@@ -3,8 +3,8 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
-const fs = require('fs');
-const path = require('path');
+const mongoose = require('mongoose');
+const Pedido = require('./models/Pedido');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,66 +23,71 @@ app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
-const PEDIDOS_FILE = path.join(__dirname, 'pedidos.json');
-
-// Función para leer pedidos desde el archivo
-function cargarPedidos() {
-  try {
-    const data = fs.readFileSync(PEDIDOS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    return [];
-  }
-}
-
-// Función para guardar pedidos en el archivo
-function guardarPedidos() {
-  fs.writeFileSync(PEDIDOS_FILE, JSON.stringify(pedidos, null, 2));
-}
-
-let pedidos = cargarPedidos();
-
 // Endpoints REST
-app.get('/api/pedidos', (req, res) => {
-  res.json(pedidos);
+app.get('/api/pedidos', async (req, res) => {
+  try {
+    const pedidos = await Pedido.find();
+    res.json(pedidos);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener pedidos' });
+  }
 });
 
-app.post('/api/pedidos', (req, res) => {
-  const pedido = req.body;
-  pedidos.push(pedido);
-  guardarPedidos();
-  io.emit('pedido_nuevo', pedido);
-  res.status(201).json(pedido);
+app.post('/api/pedidos', async (req, res) => {
+  try {
+    const pedido = new Pedido(req.body);
+    await pedido.save();
+    io.emit('pedido_nuevo', pedido);
+    res.status(201).json(pedido);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al crear pedido' });
+  }
 });
 
-app.put('/api/pedidos/:id', (req, res) => {
-  const { id } = req.params;
-  const idx = pedidos.findIndex(p => String(p.id) === String(id));
-  if (idx === -1) return res.status(404).json({ error: 'Pedido no encontrado' });
-  pedidos[idx] = { ...pedidos[idx], ...req.body };
-  guardarPedidos();
-  io.emit('pedido_actualizado', pedidos[idx]);
-  res.json(pedidos[idx]);
+app.put('/api/pedidos/:id', async (req, res) => {
+  try {
+    const pedido = await Pedido.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true });
+    if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
+    io.emit('pedido_actualizado', pedido);
+    res.json(pedido);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al actualizar pedido' });
+  }
 });
 
-app.delete('/api/pedidos/:id', (req, res) => {
-  const { id } = req.params;
-  const idx = pedidos.findIndex(p => String(p.id) === String(id));
-  if (idx === -1) return res.status(404).json({ error: 'Pedido no encontrado' });
-  const eliminado = pedidos.splice(idx, 1)[0];
-  guardarPedidos();
-  io.emit('pedido_eliminado', eliminado);
-  res.status(204).end();
+app.delete('/api/pedidos/:id', async (req, res) => {
+  try {
+    const pedido = await Pedido.findByIdAndDelete(req.params.id);
+    if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
+    io.emit('pedido_eliminado', pedido);
+    res.status(204).end();
+  } catch (err) {
+    res.status(400).json({ error: 'Error al eliminar pedido' });
+  }
 });
 
 // WebSocket para tiempo real
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('Cliente conectado:', socket.id);
+  const pedidos = await Pedido.find();
   socket.emit('pedidos_inicial', pedidos);
   socket.on('disconnect', () => {
     console.log('Cliente desconectado:', socket.id);
   });
 });
+
+// Conexión a MongoDB Atlas
+const MONGODB_URI = process.env.MONGODB_URI || '';
+if (!MONGODB_URI) {
+  console.error('Falta la variable de entorno MONGODB_URI');
+  process.exit(1);
+}
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Conectado a MongoDB'))
+  .catch(err => {
+    console.error('Error al conectar a MongoDB:', err.message);
+    process.exit(1);
+  });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
