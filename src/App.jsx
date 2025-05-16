@@ -155,6 +155,13 @@ function App() {
     setPedidoEditando(pedido);
   }
 
+  // --- DEBUG: Log de tiendaSeleccionada ---
+  useEffect(() => {
+    if (logueado && modo === 'tienda') {
+      console.log('[DEBUG] tiendaSeleccionada:', tiendaSeleccionada);
+    }
+  }, [tiendaSeleccionada, logueado, modo]);
+
   if (!modo) {
     return <SeleccionModo onSeleccion={setModo} />;
   }
@@ -235,6 +242,15 @@ function App() {
         )
       )}
       <ErrorLogger />
+      {/* DEBUG: Mensaje visual de tiendaSeleccionada */}
+      {modo === 'tienda' && (
+        <div style={{
+          position:'fixed',top:60,right:20,background:'#eee',padding:'8px 18px',
+          borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb'
+        }}>
+          <b>DEBUG tiendaSeleccionada:</b> {String(tiendaSeleccionada)}
+        </div>
+      )}
     </div>
   );
 }
