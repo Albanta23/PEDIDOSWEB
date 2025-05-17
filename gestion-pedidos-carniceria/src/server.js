@@ -54,7 +54,14 @@ app.get('/api/pedidos', async (req, res) => {
 
 app.post('/api/pedidos', async (req, res) => {
   try {
-    const nuevoPedido = new Pedido(req.body);
+    // Permitir todos los campos modernos
+    const nuevoPedido = new Pedido({
+      ...req.body,
+      fechaCreacion: req.body.fechaCreacion || new Date(),
+      fechaPedido: req.body.fechaPedido,
+      fechaEnvio: req.body.fechaEnvio,
+      fechaRecepcion: req.body.fechaRecepcion
+    });
     const pedidoGuardado = await nuevoPedido.save();
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
@@ -66,6 +73,7 @@ app.post('/api/pedidos', async (req, res) => {
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    // Permitir actualización de todos los campos
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
