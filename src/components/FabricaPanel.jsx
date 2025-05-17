@@ -11,6 +11,22 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   const [editandoPedidoId, setEditandoPedidoId] = useState(null);
   const [lineasEdit, setLineasEdit] = useState([]);
 
+  // Función para guardar cambios de líneas y limpiar pedidos vacíos
+  const guardarLineasEditadas = async (pedido) => {
+    // Filtra líneas vacías (por si el usuario borra todas)
+    const nuevasLineas = lineasEdit.filter(l => l.producto && l.cantidad);
+    if (nuevasLineas.length === 0) {
+      // Si no quedan líneas, borra el pedido completo
+      await onEstadoChange(pedido.id, 'eliminar');
+    } else {
+      // Si quedan líneas, guarda normalmente
+      const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
+      await onLineaDetalleChange(pedido.id, null, lineasNormalizadas);
+    }
+    setEditandoPedidoId(null);
+    setLineasEdit([]);
+  };
+
   // Pedidos pendientes: solo los que están en 'enviado' o 'preparado'
   const pedidosPendientes = pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado');
 
@@ -23,19 +39,52 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           Ver histórico de envíos
         </button>
       </div>
-      {/* Sección de pedidos pendientes */}
       <h3 style={{marginBottom:12,marginTop:24}}>Pedidos pendientes de preparar o enviar</h3>
       {pedidosPendientes.length === 0 ? (
         <p>No hay pedidos pendientes de tiendas.</p>
       ) : (
         pedidosPendientes.map((pedido) => {
-          const todasPreparadas = (editandoPedidoId === pedido.id ? lineasEdit : pedido.lineas).every(l => l.preparada);
+          const enEdicion = editandoPedidoId === pedido.id;
           return (
             <div key={pedido.id} style={{ marginBottom: 32, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
               <h3>
                 {tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId} - Nº Pedido: {pedido.numeroPedido}
               </h3>
               <div>Fecha: {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-'}</div>
+              <div style={{ marginTop: 12 }}>
+                Estado: <b>{estados[pedido.estado] || pedido.estado}</b>
+              </div>
+              <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
+                {pedido.estado === 'enviado' && !enEdicion && (
+                  <button
+                    onClick={() => { setEditandoPedidoId(pedido.id); setLineasEdit(pedido.lineas.map(l => ({ ...l })))} }
+                    style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}
+                  >
+                    Preparar pedido
+                  </button>
+                )}
+                {enEdicion && (
+                  <>
+                    <button onClick={() => guardarLineasEditadas(pedido)} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Guardar</button>
+                    <button onClick={() => { setEditandoPedidoId(null); setLineasEdit([]); }} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
+                  </>
+                )}
+                {pedido.estado === 'enviado' && !enEdicion && (
+                  <button
+                    onClick={() => onEstadoChange(pedido.id, 'preparado')}
+                    disabled={!pedido.lineas.every(l => l.preparada)}
+                    style={{background: pedido.lineas.every(l => l.preparada) ? '#ffc107' : '#ccc', color:'#222',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600, cursor: pedido.lineas.every(l => l.preparada) ? 'pointer' : 'not-allowed'}}
+                    title={!pedido.lineas.every(l => l.preparada) ? 'Debes preparar todas las líneas' : ''}
+                  >
+                    Marcar como preparado
+                  </button>
+                )}
+                {pedido.estado === 'preparado' && (
+                  <button onClick={() => onEstadoChange(pedido.id, 'enviadoTienda')} style={{background:'#17a2b8',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
+                    Enviar a tienda
+                  </button>
+                )}
+              </div>
               <table style={{ width: '100%', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #eee', marginTop: 12 }}>
                 <thead>
                   <tr>
@@ -46,16 +95,16 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <th>Comentario</th>
                     <th>Lote</th>
                     <th>Preparada</th>
-                    {editandoPedidoId === pedido.id && <th>Eliminar</th>}
+                    {enEdicion && <th>Eliminar</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {(editandoPedidoId === pedido.id ? lineasEdit : pedido.lineas).map((linea, idx) => (
+                  {(enEdicion ? lineasEdit : pedido.lineas).map((linea, idx) => (
                     <tr key={idx}>
                       <td>{linea.producto}</td>
                       <td>{linea.cantidad}</td>
                       <td>
-                        {editandoPedidoId === pedido.id ? (
+                        {enEdicion ? (
                           <input
                             type="number"
                             min="0"
@@ -71,7 +120,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       <td>{linea.formato}</td>
                       <td>{linea.comentario}</td>
                       <td>
-                        {editandoPedidoId === pedido.id ? (
+                        {enEdicion ? (
                           <input
                             type="text"
                             value={linea.lote ?? ''}
@@ -83,21 +132,17 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                         )}
                       </td>
                       <td>
-                        {pedido.estado === 'enviado' ? (
-                          editandoPedidoId === pedido.id ? (
-                            <input
-                              type="checkbox"
-                              checked={!!linea.preparada}
-                              onChange={e => setLineasEdit(lineasEdit.map((l, i) => i === idx ? { ...l, preparada: e.target.checked } : l))}
-                            />
-                          ) : (
-                            linea.preparada ? '✔' : ''
-                          )
+                        {enEdicion ? (
+                          <input
+                            type="checkbox"
+                            checked={!!linea.preparada}
+                            onChange={e => setLineasEdit(lineasEdit.map((l, i) => i === idx ? { ...l, preparada: e.target.checked } : l))}
+                          />
                         ) : (
                           linea.preparada ? '✔' : ''
                         )}
                       </td>
-                      {editandoPedidoId === pedido.id && (
+                      {enEdicion && (
                         <td>
                           <button
                             style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
@@ -112,45 +157,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   ))}
                 </tbody>
               </table>
-              <div style={{ marginTop: 12 }}>
-                Estado: <b>{estados[pedido.estado] || pedido.estado}</b>
-              </div>
-              <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
-                {pedido.estado === 'enviado' && (
-                  editandoPedidoId === pedido.id ? (
-                    <>
-                      <button onClick={async () => {
-                        // Guardar solo las líneas editadas, sin cambiar el estado del pedido
-                        const lineasNormalizadas = lineasEdit.map(l => ({
-                          ...l,
-                          preparada: !!l.preparada
-                        }));
-                        await onLineaDetalleChange(pedido.id, null, lineasNormalizadas);
-                        setEditandoPedidoId(null);
-                        setLineasEdit([]);
-                      }} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Guardar</button>
-                      <button onClick={() => { setEditandoPedidoId(null); setLineasEdit([]); }} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => { setEditandoPedidoId(pedido.id); setLineasEdit(pedido.lineas.map(l => ({ ...l })))} } style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Editar líneas</button>
-                      <button
-                        onClick={() => onEstadoChange(pedido.id, 'preparado')}
-                        disabled={!pedido.lineas.every(l => l.preparada)}
-                        style={{background: pedido.lineas.every(l => l.preparada) ? '#ffc107' : '#ccc', color:'#222',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600, cursor: pedido.lineas.every(l => l.preparada) ? 'pointer' : 'not-allowed'}}
-                        title={!pedido.lineas.every(l => l.preparada) ? 'Debes preparar todas las líneas' : ''}
-                      >
-                        Marcar como preparado
-                      </button>
-                    </>
-                  )
-                )}
-                {pedido.estado === 'preparado' && (
-                  <button onClick={() => onEstadoChange(pedido.id, 'enviadoTienda')} style={{background:'#17a2b8',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
-                    Enviar a tienda
-                  </button>
-                )}
-              </div>
             </div>
           );
         })
