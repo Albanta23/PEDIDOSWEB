@@ -1,0 +1,23 @@
+.watermark-jcf2025 {
+  position: fixed;
+  bottom: 16px;
+  right: 24px;
+  z-index: 9999;
+  opacity: 0.18;
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #1976d2;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 1px 1px 6px #fff, 0 0 2px #1976d2;
+  font-family: 'Roboto', Arial, sans-serif;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 600px) {
+  .watermark-jcf2025 {
+    font-size: 1.1rem;
+    bottom: 8px;
+    right: 8px;
+  }
+}

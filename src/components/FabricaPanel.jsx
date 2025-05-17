@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Watermark from './Watermark';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -15,6 +16,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   return (
     <div style={{ marginTop: 32 }}>
+      <Watermark />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <h2 style={{margin:0}}>Panel de Fábrica</h2>
         <button onClick={onVerHistorico} style={{padding:'8px 18px',background:'#007bff',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
@@ -44,6 +46,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <th>Comentario</th>
                     <th>Lote</th>
                     <th>Preparada</th>
+                    {editandoPedidoId === pedido.id && <th>Eliminar</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -94,6 +97,17 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           linea.preparada ? '✔' : ''
                         )}
                       </td>
+                      {editandoPedidoId === pedido.id && (
+                        <td>
+                          <button
+                            style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
+                            onClick={() => setLineasEdit(lineasEdit.filter((_, i) => i !== idx))}
+                            title="Eliminar línea"
+                          >
+                            🗑
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -101,7 +115,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <div style={{ marginTop: 12 }}>
                 Estado: <b>{estados[pedido.estado] || pedido.estado}</b>
               </div>
-              <div style={{ marginTop: 12, display:'flex', gap:12 }}>
+              <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
                 {pedido.estado === 'enviado' && (
                   editandoPedidoId === pedido.id ? (
                     <>
@@ -123,6 +137,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       <button
                         onClick={() => onEstadoChange(pedido.id, 'preparado')}
                         disabled={!pedido.lineas.every(l => l.preparada)}
+                        style={{background: pedido.lineas.every(l => l.preparada) ? '#ffc107' : '#ccc', color:'#222',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600, cursor: pedido.lineas.every(l => l.preparada) ? 'pointer' : 'not-allowed'}}
                         title={!pedido.lineas.every(l => l.preparada) ? 'Debes preparar todas las líneas' : ''}
                       >
                         Marcar como preparado
@@ -131,7 +146,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   )
                 )}
                 {pedido.estado === 'preparado' && (
-                  <button onClick={() => onEstadoChange(pedido.id, 'enviadoTienda')}>
+                  <button onClick={() => onEstadoChange(pedido.id, 'enviadoTienda')} style={{background:'#17a2b8',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
                     Enviar a tienda
                   </button>
                 )}
