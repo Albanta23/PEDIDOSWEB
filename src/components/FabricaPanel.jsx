@@ -106,7 +106,12 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   editandoPedidoId === pedido.id ? (
                     <>
                       <button onClick={async () => {
-                        await onLineaDetalleChange(pedido.id, null, lineasEdit); // null para indicar todas las líneas
+                        // Guardar solo las líneas editadas, sin cambiar el estado del pedido
+                        const lineasNormalizadas = lineasEdit.map(l => ({
+                          ...l,
+                          preparada: !!l.preparada
+                        }));
+                        await onLineaDetalleChange(pedido.id, null, lineasNormalizadas);
                         setEditandoPedidoId(null);
                         setLineasEdit([]);
                       }} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Guardar</button>
@@ -117,8 +122,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       <button onClick={() => { setEditandoPedidoId(pedido.id); setLineasEdit(pedido.lineas.map(l => ({ ...l })))} } style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Editar líneas</button>
                       <button
                         onClick={() => onEstadoChange(pedido.id, 'preparado')}
-                        disabled={!todasPreparadas}
-                        title={!todasPreparadas ? 'Debes preparar todas las líneas' : ''}
+                        disabled={!pedido.lineas.every(l => l.preparada)}
+                        title={!pedido.lineas.every(l => l.preparada) ? 'Debes preparar todas las líneas' : ''}
                       >
                         Marcar como preparado
                       </button>

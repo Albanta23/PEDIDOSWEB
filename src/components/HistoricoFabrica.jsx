@@ -124,8 +124,8 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
           {historico.length === 0 && (
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888'}}>No hay envíos preparados ni enviados desde fábrica</td></tr>
           )}
-          {historico.map((pedido) => (
-            <tr key={pedido.numeroPedido}>
+          {historico.map((pedido, idx) => (
+            <tr key={pedido.numeroPedido ? `${pedido.numeroPedido}-${pedido.tiendaId}` : `${pedido.id || idx}`}>
               <td>{pedido.numeroPedido}</td>
               <td>{tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId}</td>
               <td>{pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleString() : (pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-')}</td>
@@ -188,7 +188,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                 </thead>
                 <tbody>
                   {modalPedido.lineas.map((l, i) => (
-                    <tr key={l.lote ? `${l.lote}-${i}` : `${l.producto}-${i}`}>
+                    <tr key={l.lote ? `${modalPedido.numeroPedido}-${l.lote}-${i}` : `${modalPedido.numeroPedido}-${l.producto}-${i}`}>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{i + 1}</td>
                       <td style={{padding:'6px 8px'}}>{l.producto}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidad}</td>
