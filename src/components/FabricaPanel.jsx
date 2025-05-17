@@ -12,21 +12,18 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   // Función para iniciar edición de un pedido
   const iniciarEdicion = (pedido) => {
-    setEdicionPedidos(prev => ({
-      ...prev,
+    // Solo debe haber un pedido en edición a la vez
+    setEdicionPedidos({
       [pedido.id]: {
         lineas: pedido.lineas.map(l => ({ ...l })),
         editando: true
       }
-    }));
+    });
   };
 
   // Función para cancelar edición de un pedido
   const cancelarEdicion = (pedidoId) => {
-    setEdicionPedidos(prev => ({
-      ...prev,
-      [pedidoId]: undefined
-    }));
+    setEdicionPedidos({});
   };
 
   // Función para actualizar una línea editada
