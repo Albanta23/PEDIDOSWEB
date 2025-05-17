@@ -56,12 +56,12 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   const guardarEdicion = async () => {
     const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
     if (nuevasLineas.length === 0) {
-      await onEstadoChange(pedidoAbierto.id, 'eliminar');
+      await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
       setPedidoAbierto(null);
       return;
     }
     const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
-    await onLineaDetalleChange(pedidoAbierto.id, null, lineasNormalizadas);
+    await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
     setPedidoAbierto(null);
   };
 
@@ -79,36 +79,40 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       <div style={{display:'flex',flexWrap:'wrap',gap:18,marginBottom:32}}>
         {Object.entries(pedidosPorTienda).map(([tiendaId, pedidos], idx) => {
           const tienda = tiendas.find(t => t.id === tiendaId);
-          return pedidos.map((pedido, pidx) => (
-            <button
-              key={pedido.id}
-              onClick={() => abrirPedido(pedido)}
-              style={{
-                minWidth: 180,
-                minHeight: 90,
-                background: colores[(idx + pidx) % colores.length],
-                color: '#fff',
-                border: 'none',
-                borderRadius: 14,
-                fontWeight: 700,
-                fontSize: 18,
-                margin: 0,
-                boxShadow: '0 2px 8px #bbb',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'transform 0.1s',
-                outline: 'none',
-                padding: 12
-              }}
-            >
-              <span style={{fontSize:22}}>{tienda?.nombre || tiendaId}</span>
-              <span style={{fontSize:14,marginTop:6}}>Nº Pedido: <b>{pedido.numeroPedido}</b></span>
-              <span style={{fontSize:13,marginTop:2}}>Líneas: {pedido.lineas.length}</span>
-            </button>
-          ));
+          return pedidos.map((pedido, pidx) => {
+            // Clave única robusta: id/_id + número de pedido + índice
+            const key = `${pedido.id || pedido._id || 'sinid'}-${pedido.numeroPedido || 'nonum'}-${pidx}`;
+            return (
+              <button
+                key={key}
+                onClick={() => abrirPedido(pedido)}
+                style={{
+                  minWidth: 180,
+                  minHeight: 90,
+                  background: colores[(idx + pidx) % colores.length],
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 14,
+                  fontWeight: 700,
+                  fontSize: 18,
+                  margin: 0,
+                  boxShadow: '0 2px 8px #bbb',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'transform 0.1s',
+                  outline: 'none',
+                  padding: 12
+                }}
+              >
+                <span style={{fontSize:22}}>{tienda?.nombre || tiendaId}</span>
+                <span style={{fontSize:14,marginTop:6}}>Nº Pedido: <b>{pedido.numeroPedido}</b></span>
+                <span style={{fontSize:13,marginTop:2}}>Líneas: {pedido.lineas.length}</span>
+              </button>
+            );
+          });
         })}
       </div>
       {/* Edición del pedido abierto */}
@@ -186,16 +190,18 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   <button
                     style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
                     onClick={async () => {
-                      // Normalizar líneas válidas
                       const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
                       if (nuevasLineas.length === 0) {
-                        await onEstadoChange(pedidoAbierto.id, 'eliminar');
+                        console.log('[TEST] Eliminando pedido por no tener líneas válidas:', pedidoAbierto._id || pedidoAbierto.id);
+                        await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
                         setPedidoAbierto(null);
                         return;
                       }
                       const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
-                      await onLineaDetalleChange(pedidoAbierto.id, null, lineasNormalizadas);
-                      await onEstadoChange(pedidoAbierto.id, 'enviadoTienda');
+                      console.log('[TEST] Enviando pedido:', pedidoAbierto._id || pedidoAbierto.id, 'Estado actual:', pedidoAbierto.estado);
+                      await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                      await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
+                      console.log('[TEST] Pedido enviado, debería estar en históricos:', pedidoAbierto._id || pedidoAbierto.id);
                       setPedidoAbierto(null);
                     }}
                   >
