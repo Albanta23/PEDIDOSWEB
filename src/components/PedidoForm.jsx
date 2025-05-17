@@ -3,20 +3,29 @@ import React, { useState } from 'react';
 const formatos = ['Cajas', 'Bolsas', 'Kilos', 'Unidades'];
 
 const PedidoForm = ({ onAdd }) => {
-  const [producto, setProducto] = useState('');
-  const [cantidad, setCantidad] = useState(1);
-  const [formato, setFormato] = useState(formatos[0]);
-  const [comentario, setComentario] = useState('');
+  const [lineas, setLineas] = useState([
+    { producto: '', cantidad: 1, formato: formatos[0], comentario: '' }
+  ]);
   const [mensaje, setMensaje] = useState('');
+
+  const handleLineaChange = (idx, campo, valor) => {
+    setLineas(lineas.map((l, i) => i === idx ? { ...l, [campo]: valor } : l));
+  };
+
+  const handleAgregarLinea = () => {
+    setLineas([...lineas, { producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
+  };
+
+  const handleEliminarLinea = (idx) => {
+    setLineas(lineas.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!producto || cantidad < 1) return;
-    onAdd({ producto, cantidad, formato, comentario });
-    setProducto('');
-    setCantidad(1);
-    setFormato(formatos[0]);
-    setComentario('');
+    const lineasValidas = lineas.filter(l => l.producto && l.cantidad > 0);
+    if (lineasValidas.length === 0) return;
+    onAdd({ lineas: lineasValidas });
+    setLineas([{ producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
     setMensaje('¡Pedido enviado a fábrica!');
     setTimeout(() => setMensaje(''), 2000);
   };
@@ -24,39 +33,51 @@ const PedidoForm = ({ onAdd }) => {
   return (
     <form onSubmit={handleSubmit} style={{ margin: '20px 0', background: '#f8f8f8', padding: 16, borderRadius: 8 }}>
       <h3>Nuevo Pedido</h3>
-      <div style={{ marginBottom: 8 }}>
-        <input
-          type="text"
-          placeholder="Producto"
-          value={producto}
-          onChange={e => setProducto(e.target.value)}
-          style={{ padding: 8, width: 120, marginRight: 8 }}
-        />
-        <input
-          type="number"
-          min="1"
-          placeholder="Cantidad"
-          value={cantidad}
-          onChange={e => setCantidad(Number(e.target.value))}
-          style={{ padding: 8, width: 60, marginRight: 8 }}
-        />
-        <select
-          value={formato}
-          onChange={e => setFormato(e.target.value)}
-          style={{ padding: 8, marginRight: 8 }}
-        >
-          {formatos.map(f => (
-            <option key={f} value={f}>{f}</option>
-          ))}
-        </select>
-        <input
-          type="text"
-          placeholder="Comentario"
-          value={comentario}
-          onChange={e => setComentario(e.target.value)}
-          style={{ padding: 8, width: 120, marginRight: 8 }}
-        />
-        <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
+      {lineas.map((linea, idx) => (
+        <div key={idx} style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Producto"
+            value={linea.producto}
+            onChange={e => handleLineaChange(idx, 'producto', e.target.value)}
+            style={{ padding: 8, width: 120 }}
+          />
+          <input
+            type="number"
+            min="1"
+            placeholder="Cantidad"
+            value={linea.cantidad}
+            onChange={e => handleLineaChange(idx, 'cantidad', Number(e.target.value))}
+            style={{ padding: 8, width: 60 }}
+          />
+          <select
+            value={linea.formato}
+            onChange={e => handleLineaChange(idx, 'formato', e.target.value)}
+            style={{ padding: 8 }}
+          >
+            {formatos.map(f => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Comentario"
+            value={linea.comentario}
+            onChange={e => handleLineaChange(idx, 'comentario', e.target.value)}
+            style={{ padding: 8, width: 110 }}
+          />
+          {lineas.length > 1 && (
+            <button type="button" onClick={() => handleEliminarLinea(idx)} style={{ color: '#dc3545', background: 'none', border: 'none', fontWeight: 'bold', fontSize: 18, cursor: 'pointer' }}>×</button>
+          )}
+        </div>
+      ))}
+      <div style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
+        <button type="button" onClick={handleAgregarLinea} style={{ padding: '6px 14px', background: '#00c6ff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}>
+          Añadir línea
+        </button>
+        <button type="submit" style={{ padding: '8px 16px', background: '#28a745', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}>
+          Confirmar y enviar pedido
+        </button>
       </div>
       {mensaje && <div style={{ color: 'green', marginTop: 8 }}>{mensaje}</div>}
     </form>
