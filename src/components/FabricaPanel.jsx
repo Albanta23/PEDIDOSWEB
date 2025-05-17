@@ -8,23 +8,60 @@ const estados = {
 };
 
 const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLineaDetalleChange, onVerHistorico }) => {
-  const [editandoPedidoId, setEditandoPedidoId] = useState(null);
-  const [lineasEdit, setLineasEdit] = useState([]);
+  const [edicionPedidos, setEdicionPedidos] = useState({}); // { [pedidoId]: { lineas: [...], editando: bool } }
 
-  // Función para guardar cambios de líneas y limpiar pedidos vacíos
-  const guardarLineasEditadas = async (pedido) => {
-    // Filtra líneas vacías (por si el usuario borra todas)
-    const nuevasLineas = lineasEdit.filter(l => l.producto && l.cantidad);
+  // Función para iniciar edición de un pedido
+  const iniciarEdicion = (pedido) => {
+    setEdicionPedidos(prev => ({
+      ...prev,
+      [pedido.id]: {
+        lineas: pedido.lineas.map(l => ({ ...l })),
+        editando: true
+      }
+    }));
+  };
+
+  // Función para cancelar edición de un pedido
+  const cancelarEdicion = (pedidoId) => {
+    setEdicionPedidos(prev => ({
+      ...prev,
+      [pedidoId]: undefined
+    }));
+  };
+
+  // Función para actualizar una línea editada
+  const actualizarLinea = (pedidoId, idx, campo, valor) => {
+    setEdicionPedidos(prev => ({
+      ...prev,
+      [pedidoId]: {
+        ...prev[pedidoId],
+        lineas: prev[pedidoId].lineas.map((l, i) => i === idx ? { ...l, [campo]: valor } : l)
+      }
+    }));
+  };
+
+  // Función para borrar una línea
+  const borrarLinea = (pedidoId, idx) => {
+    setEdicionPedidos(prev => ({
+      ...prev,
+      [pedidoId]: {
+        ...prev[pedidoId],
+        lineas: prev[pedidoId].lineas.filter((_, i) => i !== idx)
+      }
+    }));
+  };
+
+  // Guardar edición de un pedido
+  const guardarEdicion = async (pedido) => {
+    const edicion = edicionPedidos[pedido.id];
+    const nuevasLineas = edicion.lineas.filter(l => l.producto && l.cantidad);
     if (nuevasLineas.length === 0) {
-      // Si no quedan líneas, borra el pedido completo
       await onEstadoChange(pedido.id, 'eliminar');
     } else {
-      // Si quedan líneas, guarda normalmente
       const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
       await onLineaDetalleChange(pedido.id, null, lineasNormalizadas);
     }
-    setEditandoPedidoId(null);
-    setLineasEdit([]);
+    setEdicionPedidos(prev => ({ ...prev, [pedido.id]: undefined }));
   };
 
   // Pedidos pendientes: solo los que están en 'enviado' o 'preparado'
@@ -44,7 +81,9 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
         <p>No hay pedidos pendientes de tiendas.</p>
       ) : (
         pedidosPendientes.map((pedido) => {
-          const enEdicion = editandoPedidoId === pedido.id;
+          const edicion = edicionPedidos[pedido.id];
+          const enEdicion = !!edicion && edicion.editando;
+          const lineasMostrar = enEdicion ? edicion.lineas : pedido.lineas;
           return (
             <div key={pedido.id} style={{ marginBottom: 32, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
               <h3>
@@ -57,7 +96,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
                 {pedido.estado === 'enviado' && !enEdicion && (
                   <button
-                    onClick={() => { setEditandoPedidoId(pedido.id); setLineasEdit(pedido.lineas.map(l => ({ ...l })))} }
+                    onClick={() => iniciarEdicion(pedido)}
                     style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}
                   >
                     Preparar pedido
@@ -65,8 +104,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 )}
                 {enEdicion && (
                   <>
-                    <button onClick={() => guardarLineasEditadas(pedido)} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Guardar</button>
-                    <button onClick={() => { setEditandoPedidoId(null); setLineasEdit([]); }} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
+                    <button onClick={() => guardarEdicion(pedido)} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Guardar</button>
+                    <button onClick={() => cancelarEdicion(pedido.id)} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
                   </>
                 )}
                 {pedido.estado === 'enviado' && !enEdicion && (
@@ -99,7 +138,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   </tr>
                 </thead>
                 <tbody>
-                  {(enEdicion ? lineasEdit : pedido.lineas).map((linea, idx) => (
+                  {lineasMostrar.map((linea, idx) => (
                     <tr key={idx}>
                       <td>{linea.producto}</td>
                       <td>{linea.cantidad}</td>
@@ -110,7 +149,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                             min="0"
                             step="any"
                             value={linea.cantidadEnviada ?? ''}
-                            onChange={e => setLineasEdit(lineasEdit.map((l, i) => i === idx ? { ...l, cantidadEnviada: e.target.value } : l))}
+                            onChange={e => actualizarLinea(pedido.id, idx, 'cantidadEnviada', e.target.value)}
                             style={{ width: 70 }}
                           />
                         ) : (
@@ -124,7 +163,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           <input
                             type="text"
                             value={linea.lote ?? ''}
-                            onChange={e => setLineasEdit(lineasEdit.map((l, i) => i === idx ? { ...l, lote: e.target.value } : l))}
+                            onChange={e => actualizarLinea(pedido.id, idx, 'lote', e.target.value)}
                             style={{ width: 90 }}
                           />
                         ) : (
@@ -136,7 +175,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           <input
                             type="checkbox"
                             checked={!!linea.preparada}
-                            onChange={e => setLineasEdit(lineasEdit.map((l, i) => i === idx ? { ...l, preparada: e.target.checked } : l))}
+                            onChange={e => actualizarLinea(pedido.id, idx, 'preparada', e.target.checked)}
                           />
                         ) : (
                           linea.preparada ? '✔' : ''
@@ -146,7 +185,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                         <td>
                           <button
                             style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
-                            onClick={() => setLineasEdit(lineasEdit.filter((_, i) => i !== idx))}
+                            onClick={() => borrarLinea(pedido.id, idx)}
                             title="Eliminar línea"
                           >
                             🗑
