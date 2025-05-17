@@ -188,7 +188,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                 </thead>
                 <tbody>
                   {modalPedido.lineas.map((l, i) => (
-                    <tr key={i}>
+                    <tr key={l.lote ? `${l.lote}-${i}` : `${l.producto}-${i}`}>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{i + 1}</td>
                       <td style={{padding:'6px 8px'}}>{l.producto}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidad}</td>
