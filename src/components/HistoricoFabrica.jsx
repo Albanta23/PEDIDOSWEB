@@ -75,7 +75,16 @@ async function generarPDFEnvio(pedido, tiendas) {
     });
     doc.setFontSize(9);
     doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 285);
-    doc.save(`albaran_envio_fabrica_${pedido.numeroPedido || 'sin_numero'}_${Date.now()}.pdf`);
+    // --- FIX COMPATIBILIDAD PDF ---
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } else {
+      doc.save(`albaran_envio_fabrica_${pedido.numeroPedido || 'sin_numero'}_${Date.now()}.pdf`);
+    }
   } catch (err) {
     let msg = 'Error al generar el PDF: ';
     if (err instanceof Error) msg += err.message;

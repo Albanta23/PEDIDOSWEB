@@ -105,12 +105,18 @@ function App() {
     try {
       const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
       if (!pedido) return;
-      const actualizado = {
-        ...pedido,
-        estado: nuevoEstado,
-        ...(nuevoEstado === 'preparado' ? { fechaEnvio: new Date().toISOString() } : {}),
-        ...(nuevoEstado === 'enviadoTienda' ? { fechaRecepcion: new Date().toISOString() } : {})
-      };
+      let actualizado = { ...pedido, estado: nuevoEstado };
+      if (nuevoEstado === 'preparado') {
+        actualizado = { ...actualizado, fechaEnvio: new Date().toISOString() };
+      }
+      if (nuevoEstado === 'enviadoTienda') {
+        // Si ya tiene fechaEnvio, la conservamos; si no, la ponemos ahora
+        actualizado = {
+          ...actualizado,
+          fechaEnvio: pedido.fechaEnvio || new Date().toISOString(),
+          fechaRecepcion: new Date().toISOString()
+        };
+      }
       await actualizarPedido(pedido._id || pedido.id, actualizado);
       const data = await obtenerPedidos();
       setPedidos(data);
@@ -158,7 +164,16 @@ function App() {
 
   const agregarPedido = async (pedido) => {
     try {
-      await crearPedido({ ...pedido, tiendaId: tiendaSeleccionada });
+      // Obtener el número de pedido más alto actual
+      const maxNumero = pedidos.reduce((max, p) => p.numeroPedido && p.numeroPedido > max ? p.numeroPedido : max, 0);
+      const nuevoNumero = maxNumero + 1;
+      await crearPedido({
+        ...pedido,
+        tiendaId: tiendaSeleccionada,
+        estado: 'enviado',
+        fechaCreacion: new Date().toISOString(),
+        numeroPedido: nuevoNumero
+      });
       const data = await obtenerPedidos();
       setPedidos(data);
       mostrarMensaje('Pedido añadido correctamente', 'success');
@@ -285,10 +300,11 @@ function App() {
       {/* DEBUG: Mensaje visual de tiendaSeleccionada */}
       {modo === 'tienda' && (
         <div style={{
-          position:'fixed',top:60,right:20,background:'#eee',padding:'8px 18px',
-          borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb'
+          position:'fixed',top:60,left:'50%',transform:'translateX(-50%)',background:'#eee',padding:'8px 18px',
+          borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb',
+          minWidth:180, textAlign:'center', fontWeight:600
         }}>
-          <b>DEBUG tiendaSeleccionada:</b> {String(tiendaSeleccionada)}
+          {tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
         </div>
       )}
     </div>
