@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { jsPDF } from "jspdf";
+import Watermark from './Watermark';
 
 // Utilidad para cargar imagen como base64 y devolver una promesa
 function cargarLogoBase64(url) {
@@ -103,6 +104,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
 
   return (
     <div style={{marginTop:32}}>
+      <Watermark />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <h2 style={{margin:0}}>Histórico de envíos desde fábrica</h2>
         <button onClick={onVolver} style={{padding:'8px 18px',background:'#888',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>

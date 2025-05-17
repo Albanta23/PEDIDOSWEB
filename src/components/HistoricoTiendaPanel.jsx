@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
+import Watermark from './Watermark';
 
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -118,6 +119,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       zIndex:1,
       overflow:'hidden'
     }}>
+      <Watermark />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center', marginBottom:24}}>
         <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222'}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
         <button onClick={onVolver} style={{padding:'10px 24px',background:'linear-gradient(90deg,#007bff,#00c6ff)',color:'#fff',border:'none',borderRadius:8,cursor:'pointer',fontWeight:700, fontSize:16, boxShadow:'0 2px 8px #007bff22', transition:'0.2s', outline:'none'}}>

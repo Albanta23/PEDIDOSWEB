@@ -1,6 +1,7 @@
 import React from "react";
 import { FaIndustry, FaCashRegister } from "react-icons/fa";
 import logo from "../assets/logo1.png";
+import Watermark from './Watermark';
 
 export default function SeleccionModo({ onSeleccion }) {
   return (
@@ -14,6 +15,7 @@ export default function SeleccionModo({ onSeleccion }) {
         background: "#f4f6f8",
       }}
     >
+      <Watermark />
       <img
         src={logo}
         alt="Logo"

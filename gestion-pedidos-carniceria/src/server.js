@@ -73,10 +73,13 @@ app.post('/api/pedidos', async (req, res) => {
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
     // Permitir actualización de todos los campos
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
+    console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
+    console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
     res.json(pedidoActualizado);
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -1,4 +1,5 @@
 import React from 'react';
+import Watermark from '../components/Watermark';
 
 const TiendasPage = () => {
   const tiendas = [
@@ -16,6 +17,7 @@ const TiendasPage = () => {
 
   return (
     <div>
+      <Watermark />
       <h1>Tiendas Disponibles</h1>
       <ul>
         {tiendas.map(tienda => (

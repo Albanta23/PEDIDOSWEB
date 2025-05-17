@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
+import Watermark from './Watermark';
 
 function generarPDFAlbaran(pedido) {
   // Cargar logo como imagen base64
@@ -78,6 +79,7 @@ const HistoricoTienda = ({ pedidos, tiendaId }) => {
 
   return (
     <div>
+      <Watermark />
       <h2>Histórico de Pedidos</h2>
       <h3 style={{marginTop:24, marginBottom:8}}>Pedidos enviados a fábrica</h3>
       <table>

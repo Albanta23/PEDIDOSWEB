@@ -10,6 +10,7 @@ import ErrorLogger from './components/ErrorLogger';
 import HistoricoFabrica from './components/HistoricoFabrica';
 import HistoricoTiendaPanel from './components/HistoricoTiendaPanel';
 import SeleccionModo from './components/SeleccionModo';
+import Watermark from './components/Watermark';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
 
@@ -73,6 +74,7 @@ function App() {
     });
 
     newSocket.on('pedido_actualizado', (pedidoActualizado) => {
+      console.log('[FRONTEND] Evento pedido_actualizado recibido:', pedidoActualizado);
       setPedidos(prevPedidos => 
         prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
       );
@@ -230,6 +232,8 @@ function App() {
   if (!logueado) {
     return (
       <div className="App">
+        {/* Marca de agua global */}
+        <Watermark />
         <Login
           tipo={modo}
           onLogin={handleLogin}
@@ -242,6 +246,8 @@ function App() {
 
   return (
     <div className="App">
+      {/* Marca de agua global */}
+      <Watermark />
       {mensaje && (
         <div style={{
           position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
@@ -256,6 +262,8 @@ function App() {
           {mensaje.texto}
         </div>
       )}
+      {/* DEBUG: Mostrar pedidos pendientes en consola */}
+      {(() => { try { console.log('[FRONTEND] Pedidos pendientes (FabricaPanel):', pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado')); } catch(e){} })()}
       {modo === 'fabrica' ? (
         mostrarHistoricoFabrica ? (
           <HistoricoFabrica

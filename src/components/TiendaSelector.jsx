@@ -1,4 +1,5 @@
 import React from 'react';
+import Watermark from './Watermark';
 
 const tiendas = [
   { id: 1, nombre: 'Carnicería La Tradición' },
@@ -16,6 +17,7 @@ const tiendas = [
 const TiendaSelector = ({ onSelect }) => {
   return (
     <div>
+      <Watermark />
       <h2>Selecciona una Tienda</h2>
       <select onChange={(e) => onSelect(e.target.value)}>
         <option value="">--Seleccione--</option>
