@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { io } from 'socket.io-client'; // <--- Añadido
 import './App.css';
 import FabricaPanel from './components/FabricaPanel';
 import Login from './components/Login';
@@ -32,6 +33,7 @@ function generarIdUnico() {
 
 function App() {
   const [pedidos, setPedidos] = useState([]);
+  const [socket, setSocket] = useState(null); // <--- Añadido para guardar la instancia del socket
   const [modo, setModo] = useState(null); // null, 'fabrica', 'tienda'
   const [logueado, setLogueado] = useState(false);
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
@@ -49,6 +51,11 @@ function App() {
   }
 
   useEffect(() => {
+    // Conexión de Socket.io
+    // La URL del backend debería venir de una variable de entorno para producción
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'https://pedidos-backend-0e1s.onrender.com'); 
+    setSocket(newSocket);
+
     const fetchPedidos = async () => {
       try {
         const data = await obtenerPedidos();
@@ -58,6 +65,39 @@ function App() {
       }
     };
     fetchPedidos();
+
+    // Listeners de Socket.io
+    newSocket.on('pedido_nuevo', (pedidoNuevo) => {
+      setPedidos(prevPedidos => [...prevPedidos, pedidoNuevo]);
+      mostrarMensaje('Nuevo pedido recibido', 'info');
+    });
+
+    newSocket.on('pedido_actualizado', (pedidoActualizado) => {
+      setPedidos(prevPedidos => 
+        prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
+      );
+      mostrarMensaje('Pedido actualizado en tiempo real', 'info');
+    });
+
+    newSocket.on('pedido_eliminado', (pedidoEliminado) => {
+      setPedidos(prevPedidos => 
+        prevPedidos.filter(p => (p._id !== pedidoEliminado._id && p.id !== pedidoEliminado.id))
+      );
+      mostrarMensaje('Pedido eliminado en tiempo real', 'info');
+    });
+    
+    newSocket.on('pedidos_inicial', (pedidosIniciales) => {
+      setPedidos(pedidosIniciales);
+    });
+
+    // Limpieza al desmontar el componente
+    return () => {
+      newSocket.off('pedido_nuevo');
+      newSocket.off('pedido_actualizado');
+      newSocket.off('pedido_eliminado');
+      newSocket.off('pedidos_inicial');
+      newSocket.disconnect();
+    };
   }, []);
 
   // Cambia el estado de un pedido y lo persiste en MongoDB
