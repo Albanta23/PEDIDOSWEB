@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL; // ej: https://pedidos-backend-0e1s.onrender.com
+const API_BASE_URL = import.meta.env.VITE_API_URL.replace(/\/$/, ''); // Elimina la barra final si existe
 const PEDIDOS_API_ENDPOINT = `${API_BASE_URL}/api/pedidos`; // ej: https://pedidos-backend-0e1s.onrender.com/api/pedidos
 
 export const obtenerPedidos = async () => {
