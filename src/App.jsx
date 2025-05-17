@@ -147,7 +147,13 @@ function App() {
     try {
       const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
       if (!pedido) return;
-      const nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, ...cambios } : l);
+      let nuevasLineas;
+      if (idxLinea === null && Array.isArray(cambios)) {
+        // Guardar todas las líneas editadas (modo edición por lote)
+        nuevasLineas = cambios;
+      } else {
+        nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, ...cambios } : l);
+      }
       const actualizado = { ...pedido, lineas: nuevasLineas };
       await actualizarPedido(pedido._id || pedido.id, actualizado);
       const data = await obtenerPedidos();

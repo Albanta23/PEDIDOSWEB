@@ -41,7 +41,7 @@ async function generarPDFEnvio(pedido, tiendas) {
     y += 7;
     doc.text(`Tienda:`, 15, y); doc.text(tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId || '-', 45, y);
     y += 7;
-    doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-', 45, y);
+    doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleString() : (pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-'), 45, y);
     y += 7;
     doc.text(`Estado:`, 15, y); doc.text(
       pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
@@ -128,7 +128,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
             <tr key={pedido.numeroPedido}>
               <td>{pedido.numeroPedido}</td>
               <td>{tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId}</td>
-              <td>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-'}</td>
+              <td>{pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleString() : (pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-')}</td>
               <td>{pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' : 'Preparado en fábrica'}</td>
               <td>{pedido.lineas.length}</td>
               <td style={{display:'flex',gap:8}}>
@@ -159,7 +159,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
             }} title="Cerrar">×</button>
             <h3 style={{marginTop:0, marginBottom: 8, textAlign:'center'}}>Pedido Nº {modalPedido.numeroPedido}</h3>
             <div style={{marginBottom:8, textAlign:'center'}}>Tienda: {tiendas.find(t => t.id === modalPedido.tiendaId)?.nombre || modalPedido.tiendaId}</div>
-            <div style={{marginBottom:8, textAlign:'center'}}>Fecha: {modalPedido.fechaPedido ? new Date(modalPedido.fechaPedido).toLocaleString() : '-'}</div>
+            <div style={{marginBottom:8, textAlign:'center'}}>Fecha: {modalPedido.fechaEnvio ? new Date(modalPedido.fechaEnvio).toLocaleString() : (modalPedido.fechaPedido ? new Date(modalPedido.fechaPedido).toLocaleString() : '-')}</div>
             <div style={{marginBottom:18, textAlign:'center'}}>
               Estado: <b style={{
                 color:
