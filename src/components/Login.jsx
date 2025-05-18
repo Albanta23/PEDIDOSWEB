@@ -17,7 +17,7 @@ const PINES_TIENDAS = {
   fabrica: 'fabrica' // Si quieres un pin para fábrica
 };
 
-const Login = ({ tipo, onLogin, tiendas }) => {
+const Login = ({ tipo, onLogin, tiendas, pinSupervisor }) => {
   const [usuario, setUsuario] = useState('');
   const [tiendaId, setTiendaId] = useState('');
   const [pin, setPin] = useState('');
@@ -25,6 +25,15 @@ const Login = ({ tipo, onLogin, tiendas }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (tipo === 'supervisor') {
+      if (pin !== (pinSupervisor || 'supervisor')) {
+        setError('PIN de supervisor incorrecto');
+        return;
+      }
+      setError('');
+      onLogin(usuario, null);
+      return;
+    }
     if (tipo === 'tienda') {
       if (!tiendaId) {
         setError('Selecciona una tienda');
@@ -50,7 +59,7 @@ const Login = ({ tipo, onLogin, tiendas }) => {
     <div>
       <Watermark />
       <form onSubmit={handleSubmit} style={{ maxWidth: 340, margin: '40px auto', background: '#fff', padding: 32, borderRadius: 12, boxShadow: '0 2px 16px #0001' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Acceso {tipo === 'fabrica' ? 'Fábrica' : 'Tienda'}</h2>
+        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Acceso {tipo === 'fabrica' ? 'Fábrica' : tipo === 'supervisor' ? 'Supervisor' : 'Tienda'}</h2>
         {tipo === 'tienda' && (
           <div style={{ marginBottom: 18 }}>
             <label>Selecciona tienda:</label>

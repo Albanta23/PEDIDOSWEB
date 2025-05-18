@@ -8,7 +8,7 @@ const estados = {
   cancelada: 'Cancelada'
 };
 
-export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica }) {
+export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica, filtroTienda, filtroFechaDesde, filtroFechaHasta, filtrarTransferencias }) {
   const [transferencias, setTransferencias] = useState([]);
   const [form, setForm] = useState({
     origen: '',
@@ -63,11 +63,16 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
   };
 
   // Filtrar transferencias según el contexto
-  const transferenciasFiltradas = transferencias.filter(t =>
+  let transferenciasFiltradas = transferencias.filter(t =>
     modoFabrica
       ? t.destino === 'TIENDA FABRICA' // Solo devoluciones de tiendas a fábrica
       : t.origen === tiendaActual?.nombre || t.destino === tiendaActual?.nombre
   );
+
+  // Si hay función de filtrado (desde supervisión), aplicar filtro extra
+  if (filtrarTransferencias && modoFabrica) {
+    transferenciasFiltradas = filtrarTransferencias(transferenciasFiltradas);
+  }
 
   // Tiendas para el selector (evitar que origen y destino sean iguales, y mostrar Fábrica solo si aplica)
   const opcionesTiendas = modoFabrica
