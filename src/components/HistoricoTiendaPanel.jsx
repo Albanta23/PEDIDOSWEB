@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
 import logo from '../assets/logo1.png';
+import { listarAvisos, marcarAvisoVisto } from '../services/avisosService';
 
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -106,6 +107,17 @@ async function generarPDFTienda(pedido, tiendaNombre) {
 const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido, onAvisoVisto }) => {
   const [modalPedido, setModalPedido] = useState(null);
   const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
+  const [avisos, setAvisos] = useState([]);
+  const [vistos, setVistos] = useState([]);
+
+  useEffect(() => {
+    async function fetchAvisos() {
+      const avisosBD = await listarAvisos(tiendaId);
+      setAvisos(avisosBD);
+      setVistos(avisosBD.filter(a => a.vistoPor.includes(tiendaId)).map(a => a.referenciaId));
+    }
+    if (tiendaId) fetchAvisos();
+  }, [tiendaId]);
 
   // Pedidos enviados a fábrica (solo enviados, NO borrador)
   const pedidosEnviados = pedidos.filter(p =>
@@ -116,12 +128,6 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
     )
   ).sort((a, b) => ((b.numeroPedido || 0) - (a.numeroPedido || 0)));
   // Pedidos preparados o recibidos de fábrica
-  const [vistos, setVistos] = useState(() => JSON.parse(localStorage.getItem('avisos_vistos_' + tiendaId) || '[]'));
-  useEffect(() => {
-    const handler = () => setVistos(JSON.parse(localStorage.getItem('avisos_vistos_' + tiendaId) || '[]'));
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, [tiendaId]);
   const pedidosRecibidos = pedidos.filter(p =>
     p.tiendaId === tiendaId &&
     p.numeroPedido &&
@@ -242,13 +248,13 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                   {pendienteAviso ? (
                     <button
                       style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
-                      onClick={() => {
-                        const key = 'avisos_vistos_' + tiendaId;
-                        const vistos = JSON.parse(localStorage.getItem(key) || '[]');
-                        const idPedido = pedido.id || pedido._id;
-                        localStorage.setItem(key, JSON.stringify([...vistos, idPedido]));
-                        setVistos([...vistos, idPedido]);
-                        if (onAvisoVisto) onAvisoVisto(idPedido);
+                      onClick={async () => {
+                        const aviso = avisos.find(a => a.referenciaId === (pedido.id || pedido._id));
+                        if (aviso) {
+                          await marcarAvisoVisto(aviso._id, tiendaId);
+                          setVistos(prev => [...prev, pedido.id || pedido._id]);
+                          if (onAvisoVisto) onAvisoVisto(pedido.id || pedido._id);
+                        }
                       }}
                     >
                       Visto

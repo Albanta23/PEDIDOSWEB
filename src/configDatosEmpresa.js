@@ -7,5 +7,5 @@ export const DATOS_EMPRESA = {
   telefono: '980690604',
   email: 'fabricaembutidosballesteros@gmail.com',
   web: 'www.embutidosballesteros.com',
-  cif: 'B459143456'
+  cif: 'B49143456'
 };
