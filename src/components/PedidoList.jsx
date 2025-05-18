@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import Watermark from './Watermark';
 import TransferenciasPanel from './TransferenciasPanel';
 
-export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual }) {
+export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onVerHistoricoPedidos }) {
   const [editandoIdx, setEditandoIdx] = useState(null);
   const [lineasEdit, setLineasEdit] = useState([]);
   const [mostrarTransferencias, setMostrarTransferencias] = useState(false);
@@ -37,7 +36,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
 
   return (
     <>
-      <Watermark />
       {modo === 'tienda' && (
         <div style={{marginBottom:16}}>
           <button onClick={()=>setMostrarTransferencias(true)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Traspasos y devoluciones</button>

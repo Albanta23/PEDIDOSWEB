@@ -138,28 +138,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       overflow:'hidden'
     }}>
       <Watermark />
-      <img
-        src={logo}
-        alt="Logo"
-        style={{
-          width: 75,
-          height: 75,
-          objectFit: 'contain',
-          marginBottom: 32,
-          marginTop: 10,
-          display: 'block',
-          boxShadow: '0 4px 24px #0002',
-          borderRadius: 18,
-          background: '#fff',
-          padding: 12,
-        }}
-      />
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center', marginBottom:24}}>
-        <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222'}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
-        <button onClick={onVolver} style={{padding:'10px 24px',background:'linear-gradient(90deg,#007bff,#00c6ff)',color:'#fff',border:'none',borderRadius:8,cursor:'pointer',fontWeight:700, fontSize:16, boxShadow:'0 2px 8px #007bff22', transition:'0.2s', outline:'none'}}>
-          ← Volver
-        </button>
-      </div>
+      <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
       <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos enviados a fábrica</h3>
       <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
       <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
