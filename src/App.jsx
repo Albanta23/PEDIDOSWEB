@@ -315,6 +315,7 @@ function App() {
               onBorrar={borrarPedido}
               onEditar={handleEditarPedido}
               modo={"tienda"}
+              tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
             />
             <button onClick={() => setMostrarHistoricoTienda(true)} style={{marginLeft:12,background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>Ver histórico de pedidos</button>
           </div>

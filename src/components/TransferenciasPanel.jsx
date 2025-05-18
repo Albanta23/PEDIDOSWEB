@@ -62,21 +62,28 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
       : t.origen === tiendaActual?.nombre || t.destino === tiendaActual?.nombre
   );
 
+  // Tiendas para el selector (evitar que origen y destino sean iguales, y mostrar Fábrica solo si aplica)
+  const opcionesTiendas = modoFabrica
+    ? [{ nombre: 'Fabrica' }, ...tiendas]
+    : tiendas;
+
   return (
     <div style={{marginTop:24}}>
       <h2>Transferencias {modoFabrica ? 'con Fábrica' : 'entre Tiendas'}</h2>
       <div style={{marginBottom:24,background:'#f9f9f9',padding:16,borderRadius:8}}>
         <h4>Crear nueva transferencia</h4>
         <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
-          <select value={form.origen} onChange={e => handleFormChange('origen', e.target.value)}>
+          <select value={form.origen} onChange={e => handleFormChange('origen', e.target.value)} disabled={!modoFabrica && !!tiendaActual?.nombre}>
             <option value=''>Origen</option>
             {modoFabrica && <option value='Fabrica'>Fábrica</option>}
-            {tiendas.map(t => <option key={t.id} value={t.nombre}>{t.nombre}</option>)}
+            {opcionesTiendas.map(t => <option key={t.nombre} value={t.nombre}>{t.nombre}</option>)}
           </select>
           <select value={form.destino} onChange={e => handleFormChange('destino', e.target.value)}>
             <option value=''>Destino</option>
             {modoFabrica && <option value='Fabrica'>Fábrica</option>}
-            {tiendas.map(t => <option key={t.id} value={t.nombre}>{t.nombre}</option>)}
+            {opcionesTiendas
+              .filter(t => t.nombre !== form.origen)
+              .map(t => <option key={t.nombre} value={t.nombre}>{t.nombre}</option>)}
           </select>
           <input type='text' placeholder='Observaciones' value={form.observaciones} onChange={e => handleFormChange('observaciones', e.target.value)} style={{width:180}} />
         </div>

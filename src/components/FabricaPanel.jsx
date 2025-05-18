@@ -11,6 +11,7 @@ const estados = {
 
 const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLineaDetalleChange, onVerHistorico }) => {
   const [pedidoAbierto, setPedidoAbierto] = useState(null);
+  const [mostrarHistoricoTransferencias, setMostrarHistoricoTransferencias] = useState(false);
 
   // Paleta de colores para los botones de tienda
   const colores = [
@@ -88,11 +89,24 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <h2 style={{margin:0}}>Panel de Fábrica</h2>
-        <button onClick={onVerHistorico} style={{padding:'8px 18px',background:'#007bff',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
-          Ver histórico de envíos
-        </button>
+        <div style={{display:'flex',gap:12}}>
+          <button onClick={onVerHistorico} style={{padding:'8px 18px',background:'#007bff',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
+            Ver histórico de envíos
+          </button>
+          <button onClick={()=>setMostrarHistoricoTransferencias(true)} style={{padding:'8px 18px',background:'#00b894',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
+            Ver histórico de transferencias
+          </button>
+        </div>
       </div>
-      <TransferenciasPanel tiendas={tiendas} modoFabrica={true} />
+      {mostrarHistoricoTransferencias && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:400,maxWidth:900,maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
+            <button onClick={()=>setMostrarHistoricoTransferencias(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
+            <h2 style={{marginTop:0}}>Histórico de transferencias</h2>
+            <TransferenciasPanel tiendas={tiendas} modoFabrica={true} />
+          </div>
+        </div>
+      )}
       <h3 style={{marginBottom:12,marginTop:24}}>Pedidos pendientes de preparar o enviar</h3>
       {/* Botones de tiendas con pedidos pendientes */}
       <div style={{display:'flex',flexWrap:'wrap',gap:18,marginBottom:32}}>

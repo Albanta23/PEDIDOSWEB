@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import Watermark from './Watermark';
+import TransferenciasPanel from './TransferenciasPanel';
 
-export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo }) {
+export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual }) {
   const [editandoIdx, setEditandoIdx] = useState(null);
   const [lineasEdit, setLineasEdit] = useState([]);
+  const [mostrarTransferencias, setMostrarTransferencias] = useState(false);
 
   const handleEditarLineas = (pedido, idx) => {
     setEditandoIdx(idx);
@@ -36,6 +38,20 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   return (
     <>
       <Watermark />
+      {modo === 'tienda' && (
+        <div style={{marginBottom:16}}>
+          <button onClick={()=>setMostrarTransferencias(true)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Transferencias y devoluciones</button>
+        </div>
+      )}
+      {mostrarTransferencias && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:400,maxWidth:900,maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
+            <button onClick={()=>setMostrarTransferencias(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
+            <h2 style={{marginTop:0}}>Transferencias y devoluciones</h2>
+            <TransferenciasPanel tiendas={[]} tiendaActual={tiendaActual} modoFabrica={false} />
+          </div>
+        </div>
+      )}
       <div>
         {pedidos.filter(p => p.estado === 'borrador').map((pedido, idx) => (
           <div key={pedido.id + '-' + idx} style={{ border: "1px solid #ccc", margin: 8, padding: 8 }}>
