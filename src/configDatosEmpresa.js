@@ -3,9 +3,9 @@
 
 export const DATOS_EMPRESA = {
   nombre: 'EMBUTIDOS BALLESTEROS SL',
-  direccion: 'C/ Ejemplo, 123, 28000 Madrid',
-  telefono: '91 123 45 67',
-  email: 'info@embutidosballesteros.com',
+  direccion: 'CARRETERA NACIONAL 122 KM 424',
+  telefono: '980690604',
+  email: 'fabricaembutidosballesteros@gmail.com',
   web: 'www.embutidosballesteros.com',
-  cif: 'B12345678'
+  cif: 'B459143456'
 };
