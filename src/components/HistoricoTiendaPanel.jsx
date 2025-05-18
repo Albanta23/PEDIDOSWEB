@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
@@ -103,7 +103,7 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   }
 }
 
-const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido }) => {
+const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido, onAvisoVisto }) => {
   const [modalPedido, setModalPedido] = useState(null);
   const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
 
@@ -116,6 +116,12 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
     )
   ).sort((a, b) => ((b.numeroPedido || 0) - (a.numeroPedido || 0)));
   // Pedidos preparados o recibidos de fábrica
+  const [vistos, setVistos] = useState(() => JSON.parse(localStorage.getItem('avisos_vistos_' + tiendaId) || '[]'));
+  useEffect(() => {
+    const handler = () => setVistos(JSON.parse(localStorage.getItem('avisos_vistos_' + tiendaId) || '[]'));
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [tiendaId]);
   const pedidosRecibidos = pedidos.filter(p =>
     p.tiendaId === tiendaId &&
     p.numeroPedido &&
@@ -137,6 +143,20 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       zIndex:1,
       overflow:'hidden'
     }}>
+      {/* Botón de volver solo si NO hay modal de pedido abierto (refuerzo: ocultar y deshabilitar si modalPedido) */}
+      <button
+        style={{
+          position:'fixed',top:24,left:24,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'10px 26px',fontWeight:700,fontSize:18,cursor:!modalPedido?'pointer':'not-allowed',zIndex:2100,boxShadow:'0 2px 8px #007bff33',
+          opacity:!modalPedido?1:0, pointerEvents:!modalPedido?'auto':'none', transition:'opacity 0.2s',
+          visibility:!modalPedido?'visible':'hidden'
+        }}
+        onClick={onVolver}
+        tabIndex={modalPedido ? -1 : 0}
+        aria-hidden={modalPedido ? 'true' : 'false'}
+        disabled={!!modalPedido}
+      >
+        ← Volver
+      </button>
       <Watermark />
       <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
       <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos enviados a fábrica</h3>
@@ -198,28 +218,50 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
           {pedidosRecibidos.length === 0 && (
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos preparados o recibidos de fábrica</td></tr>
           )}
-          {pedidosRecibidos.map((pedido, idx) => (
-            <tr key={pedido.numeroPedido} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
-              <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
-              <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
-              <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
-                <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
-                <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
-              </td>
-              <td style={{padding:'10px 8px'}}>
-                <span style={{display:'inline-block',padding:'4px 14px',borderRadius:16,background:pedido.estado==='preparado'?'#ffe066':pedido.estado==='enviadoTienda'?'#b2f2bb':'#e0e0e0',color:pedido.estado==='preparado'?'#b8860b':pedido.estado==='enviadoTienda'?'#228c22':'#555',fontWeight:700, fontSize:14, boxShadow:'0 1px 4px #007bff11'}}>{pedido.estado}</span>
-              </td>
-              <td style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
-              <td style={{display:'flex',gap:8, padding:'10px 8px'}}>
-                <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
-                  <span role="img" aria-label="ver">🔍</span> Ver
-                </button>
-                <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tiendaNombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
-                  <span role="img" aria-label="pdf">🗎</span> PDF
-                </button>
-              </td>
-            </tr>
-          ))}
+          {pedidosRecibidos.map((pedido, idx) => {
+            const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
+            return (
+              <tr key={pedido.numeroPedido} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
+                <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
+                <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
+                <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+                  <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
+                  <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
+                </td>
+                <td style={{padding:'10px 8px'}}>
+                  <span style={{display:'inline-block',padding:'4px 14px',borderRadius:16,background:pedido.estado==='preparado'?'#ffe066':pedido.estado==='enviadoTienda'?'#b2f2bb':'#e0e0e0',color:pedido.estado==='preparado'?'#b8860b':pedido.estado==='enviadoTienda'?'#228c22':'#555',fontWeight:700, fontSize:14, boxShadow:'0 1px 4px #007bff11'}}>{pedido.estado}</span>
+                </td>
+                <td style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
+                <td style={{display:'flex',gap:8, padding:'10px 8px'}}>
+                  <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
+                    <span role="img" aria-label="ver">🔍</span> Ver
+                  </button>
+                  <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tiendaNombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
+                    <span role="img" aria-label="pdf">🗎</span> PDF
+                  </button>
+                  {pendienteAviso ? (
+                    <button
+                      style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
+                      onClick={() => {
+                        const key = 'avisos_vistos_' + tiendaId;
+                        const vistos = JSON.parse(localStorage.getItem(key) || '[]');
+                        const idPedido = pedido.id || pedido._id;
+                        localStorage.setItem(key, JSON.stringify([...vistos, idPedido]));
+                        setVistos([...vistos, idPedido]);
+                        if (onAvisoVisto) onAvisoVisto(idPedido);
+                      }}
+                    >
+                      Visto
+                    </button>
+                  ) : (
+                    <span style={{background:'#28a745',color:'#fff',borderRadius:6,padding:'6px 16px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:6}}>
+                      <span role="img" aria-label="ok">✔️</span> OK
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       </div>
