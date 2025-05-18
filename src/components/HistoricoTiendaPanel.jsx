@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import Watermark from './Watermark';
+import { DATOS_EMPRESA } from '../configDatosEmpresa';
 
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -47,23 +48,33 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   y += 10;
   doc.setFont('helvetica', 'bold');
   doc.setFillColor(230, 230, 230);
-  doc.rect(15, y, 180, 8, 'F');
-  doc.text('Nº', 18, y + 6);
-  doc.text('Producto', 28, y + 6);
-  doc.text('Pedida', 80, y + 6);
-  doc.text('Enviada', 100, y + 6);
-  doc.text('Formato', 120, y + 6);
-  doc.text('Lote', 150, y + 6);
-  doc.text('Comentario', 170, y + 6);
-  y += 14;
+  doc.rect(15, y, 180, 12, 'F');
+  doc.text('Nº', 20, y + 6); // +2 para centrar mejor
+  // Ajustamos posiciones para dar más espacio a cantidades y lote
+  doc.text('Producto', 38, y + 8); // +6
+  // Formato más centrado
+  doc.text('Formato', 68, y + 8); // -2
+  // Doble fila para cantidades, más centrado y con más espacio
+  // Cantidad pedida
+  doc.text('Cantidad', 100, y + 5, { align: 'center' });
+  doc.text('pedida', 100, y + 11, { align: 'center' });
+  // Cantidad enviada desplazada 5mm a la derecha
+  doc.text('Cantidad', 130, y + 5, { align: 'center' });
+  doc.text('enviada', 130, y + 11, { align: 'center' });
+  // Lote desplazado 5mm a la derecha
+  doc.text('Lote', 150, y + 8, { align: 'center' });
+  doc.text('Comentario', 170, y + 8);
+  y += 16;
   doc.setFont('helvetica', 'normal');
   pedido.lineas.forEach((l, i) => {
     doc.text(String(i + 1), 18, y);
-    doc.text(l.producto || '-', 28, y);
-    doc.text(String(l.cantidad || '-'), 80, y, { align: 'right' });
-    doc.text(String(l.cantidadEnviada || '-'), 100, y, { align: 'right' });
-    doc.text(l.formato || '-', 120, y);
-    doc.text(l.lote || '-', 150, y);
+    doc.text(l.producto || '-', 32, y);
+    doc.text(l.formato || '-', 70, y);
+    doc.text(String(l.cantidad || '-'), 110, y, { align: 'right' });
+    // Cantidad enviada desplazada 5mm a la derecha
+    doc.text(String(l.cantidadEnviada || '-'), 145, y, { align: 'right' });
+    // Lote desplazado 5mm a la derecha
+    doc.text(l.lote || '-', 160, y);
     doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
     y += 8;
     if (y > 270) {
@@ -72,7 +83,13 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     }
   });
   doc.setFontSize(9);
-  doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 285);
+  // Datos corporativos en la parte inferior
+  let yFooter = 278;
+  doc.text(`${DATOS_EMPRESA.nombre} - CIF: ${DATOS_EMPRESA.cif}`, 15, yFooter);
+  yFooter += 4;
+  doc.text(`${DATOS_EMPRESA.direccion} | Tel: ${DATOS_EMPRESA.telefono} | ${DATOS_EMPRESA.email} | ${DATOS_EMPRESA.web}`, 15, yFooter);
+  yFooter += 4;
+  doc.text(`Generado: ${new Date().toLocaleString()}`, 15, yFooter);
   // --- FIX COMPATIBILIDAD PDF ---
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
@@ -250,10 +267,11 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                   <tr>
                     <th style={{padding:'8px 10px'}}>#</th>
                     <th style={{padding:'8px 10px'}}>Producto</th>
-                    <th style={{padding:'8px 10px'}}>Pedida</th>
                     <th style={{padding:'8px 10px'}}>Formato</th>
+                    <th style={{padding:'8px 10px'}}>Pedida</th>
+                    <th style={{padding:'8px 10px'}}>Enviada</th>
+                    <th style={{padding:'8px 10px'}}>Lote</th>
                     <th style={{padding:'8px 10px'}}>Comentario</th>
-                    <th style={{padding:'8px 10px'}}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -267,34 +285,37 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                               <input value={l.producto} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,producto:e.target.value}:li))} style={{width:100}} />
                             </td>
                             <td style={{padding:'8px 10px'}}>
-                              <input type="number" min="1" value={l.cantidad} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidad:Number(e.target.value)}:li))} style={{width:60}} />
-                            </td>
-                            <td style={{padding:'8px 10px'}}>
                               <input value={l.formato} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,formato:e.target.value}:li))} style={{width:80}} />
                             </td>
                             <td style={{padding:'8px 10px'}}>
-                              <input value={l.comentario||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,comentario:e.target.value}:li))} style={{width:120}} />
+                              <input type="number" min="1" value={l.cantidad} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidad:Number(e.target.value)}:li))} style={{width:60}} />
                             </td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
                             <td style={{padding:'8px 10px'}}>
-                              <button onClick={() => setEditandoLineas(editandoLineas.filter((_,ix)=>ix!==i))} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer'}}>🗑</button>
+                              <input value={l.comentario||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,comentario:e.target.value}:li))} style={{width:120}} />
                             </td>
                           </>
                         ) : (
                           <>
                             <td style={{padding:'8px 10px'}}>{l.producto}</td>
-                            <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
                             <td style={{padding:'8px 10px'}}>{l.formato}</td>
-                            <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
+                            <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
                             <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
                           </>
                         )
                       ) : (
                         <>
                           <td style={{padding:'8px 10px'}}>{l.producto}</td>
-                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
                           <td style={{padding:'8px 10px'}}>{l.formato}</td>
+                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
+                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidadEnviada ?? '-'}</td>
+                          <td style={{padding:'8px 10px'}}>{l.lote ?? '-'}</td>
                           <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
-                          <td style={{padding:'8px 10px'}}></td>
                         </>
                       )}
                     </tr>

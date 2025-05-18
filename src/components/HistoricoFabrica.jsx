@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { jsPDF } from "jspdf";
 import Watermark from './Watermark';
+import { DATOS_EMPRESA } from '../configDatosEmpresa';
 
 // Utilidad para cargar imagen como base64 y devolver una promesa
 function cargarLogoBase64(url) {
@@ -75,7 +76,12 @@ async function generarPDFEnvio(pedido, tiendas) {
       }
     });
     doc.setFontSize(9);
-    doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 285);
+    let yFooter = 278;
+    doc.text(`${DATOS_EMPRESA.nombre} - CIF: ${DATOS_EMPRESA.cif}`, 15, yFooter);
+    yFooter += 4;
+    doc.text(`${DATOS_EMPRESA.direccion} | Tel: ${DATOS_EMPRESA.telefono} | ${DATOS_EMPRESA.email} | ${DATOS_EMPRESA.web}`, 15, yFooter);
+    yFooter += 4;
+    doc.text(`Generado: ${new Date().toLocaleString()}`, 15, yFooter);
     // --- FIX COMPATIBILIDAD PDF ---
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {

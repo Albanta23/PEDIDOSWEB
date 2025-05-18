@@ -184,24 +184,32 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   </td>
                 </tr>
               ))}
-              {/* Botón Enviar pedido al final de la tabla */}
+              {/* Botones Guardar y Enviar pedido al final de la tabla */}
               <tr>
                 <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
+                  <button
+                    style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
+                    onClick={async () => {
+                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
+                      if (nuevasLineas.length === 0) return;
+                      const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
+                      await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                    }}
+                  >
+                    Guardar
+                  </button>
                   <button
                     style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
                     onClick={async () => {
                       const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
                       if (nuevasLineas.length === 0) {
-                        console.log('[TEST] Eliminando pedido por no tener líneas válidas:', pedidoAbierto._id || pedidoAbierto.id);
                         await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
                         setPedidoAbierto(null);
                         return;
                       }
                       const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
-                      console.log('[TEST] Enviando pedido:', pedidoAbierto._id || pedidoAbierto.id, 'Estado actual:', pedidoAbierto.estado);
                       await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
                       await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
-                      console.log('[TEST] Pedido enviado, debería estar en históricos:', pedidoAbierto._id || pedidoAbierto.id);
                       setPedidoAbierto(null);
                     }}
                   >

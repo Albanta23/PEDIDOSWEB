@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import Watermark from './Watermark';
+import { DATOS_EMPRESA } from '../configDatosEmpresa';
 
-function generarPDFAlbaran(pedido) {
+async function generarPDFAlbaran(pedido) {
   // Cargar logo como imagen base64
   const logoImg = new window.Image();
   logoImg.src = window.location.origin + '/logo1.png';
@@ -58,9 +59,14 @@ function generarPDFAlbaran(pedido) {
         y = 20;
       }
     });
-    // Pie de página
+    // Pie de página con datos corporativos
     doc.setFontSize(9);
-    doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 285);
+    let yFooter = 278;
+    doc.text(`${DATOS_EMPRESA.nombre} - CIF: ${DATOS_EMPRESA.cif}`, 15, yFooter);
+    yFooter += 4;
+    doc.text(`${DATOS_EMPRESA.direccion} | Tel: ${DATOS_EMPRESA.telefono} | ${DATOS_EMPRESA.email} | ${DATOS_EMPRESA.web}`, 15, yFooter);
+    yFooter += 4;
+    doc.text(`Generado: ${new Date().toLocaleString()}`, 15, yFooter);
     doc.save(`albaran_pedido_${pedido.numeroPedido}_${Date.now()}.pdf`);
   };
 }

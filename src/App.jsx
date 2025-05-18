@@ -108,14 +108,24 @@ function App() {
       const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
       if (!pedido) return;
       let actualizado = { ...pedido, estado: nuevoEstado };
-      if (nuevoEstado === 'preparado') {
-        actualizado = { ...actualizado, fechaEnvio: new Date().toISOString() };
-      }
-      if (nuevoEstado === 'enviadoTienda') {
-        // Si ya tiene fechaEnvio, la conservamos; si no, la ponemos ahora
+      // --- ACTUALIZAR DETALLES DE LÍNEA AL CAMBIAR DE ESTADO ---
+      if (nuevoEstado === 'preparado' || nuevoEstado === 'enviadoTienda') {
+        const fechaEnvio = pedido.fechaEnvio || new Date().toISOString();
         actualizado = {
           ...actualizado,
-          fechaEnvio: pedido.fechaEnvio || new Date().toISOString(),
+          fechaEnvio,
+          lineas: pedido.lineas.map(linea => ({
+            ...linea,
+            // Si no hay cantidadEnviada, se asume igual a la pedida
+            cantidadEnviada: linea.cantidadEnviada !== undefined ? Number(linea.cantidadEnviada) : Number(linea.cantidad),
+            lote: linea.lote || '',
+            fechaEnvioLinea: linea.fechaEnvioLinea || fechaEnvio
+          }))
+        };
+      }
+      if (nuevoEstado === 'enviadoTienda') {
+        actualizado = {
+          ...actualizado,
           fechaRecepcion: new Date().toISOString()
         };
       }
