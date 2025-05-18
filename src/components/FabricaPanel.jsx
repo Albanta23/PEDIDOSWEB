@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Watermark from './Watermark';
+import logo from '../assets/logo1.png';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -68,6 +69,22 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   return (
     <div style={{ marginTop: 32 }}>
       <Watermark />
+      <img
+        src={logo}
+        alt="Logo"
+        style={{
+          width: 75,
+          height: 75,
+          objectFit: 'contain',
+          marginBottom: 32,
+          marginTop: 10,
+          display: 'block',
+          boxShadow: '0 4px 24px #0002',
+          borderRadius: 18,
+          background: '#fff',
+          padding: 12,
+        }}
+      />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <h2 style={{margin:0}}>Panel de Fábrica</h2>
         <button onClick={onVerHistorico} style={{padding:'8px 18px',background:'#007bff',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
