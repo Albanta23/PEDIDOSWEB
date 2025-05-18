@@ -27,6 +27,7 @@ const tiendas = [
   { id: 'tienda10', nombre: 'TIENDA HAM&WINE' },
   { id: 'clientes', nombre: 'PEDIDOS CLIENTES' }
 ];
+window.tiendas = tiendas;
 
 function generarIdUnico() {
   return 'pedido_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);

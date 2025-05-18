@@ -71,38 +71,74 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   return (
     <div style={{ marginTop: 32 }}>
       <Watermark />
-      <img
-        src={logo}
-        alt="Logo"
-        style={{
-          width: 75,
-          height: 75,
-          objectFit: 'contain',
-          marginBottom: 32,
-          marginTop: 10,
-          display: 'block',
-          boxShadow: '0 4px 24px #0002',
-          borderRadius: 18,
-          background: '#fff',
-          padding: 12,
-        }}
-      />
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <h2 style={{margin:0}}>Panel de Fábrica</h2>
-        <div style={{display:'flex',gap:12}}>
-          <button onClick={onVerHistorico} style={{padding:'8px 18px',background:'#007bff',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
-            Ver histórico de envíos
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:32,marginTop:10}}>
+        <img
+          src={logo}
+          alt="Logo"
+          style={{
+            width: 75,
+            height: 75,
+            objectFit: 'contain',
+            boxShadow: '0 4px 24px #0002',
+            borderRadius: 18,
+            background: '#fff',
+            padding: 12,
+            margin: 0
+          }}
+        />
+        <div style={{display:'flex',gap:14,alignItems:'center'}}>
+          <button
+            onClick={onVerHistorico}
+            style={{
+              minWidth: 160,
+              height: 44,
+              background:'#007bff',
+              color:'#fff',
+              border:'none',
+              borderRadius:12,
+              cursor:'pointer',
+              fontWeight:700,
+              fontSize:17,
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'center',
+              boxShadow:'0 1px 4px #007bff22',
+              padding:'0 18px',
+              letterSpacing:0.2
+            }}
+          >
+            <span role="img" aria-label="histórico" style={{marginRight:8}}>📦</span>Historial de envíos
           </button>
-          <button onClick={()=>setMostrarHistoricoTransferencias(true)} style={{padding:'8px 18px',background:'#00b894',color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontWeight:500}}>
-            Ver histórico de transferencias
+          <button
+            onClick={()=>setMostrarHistoricoTransferencias(true)}
+            style={{
+              minWidth: 150,
+              height: 44,
+              background:'#00b894',
+              color:'#fff',
+              border:'none',
+              borderRadius:12,
+              cursor:'pointer',
+              fontWeight:700,
+              fontSize:17,
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'center',
+              boxShadow:'0 1px 4px #00b89422',
+              padding:'0 18px',
+              letterSpacing:0.2
+            }}
+          >
+            <span role="img" aria-label="devoluciones" style={{marginRight:8}}>↩️</span>Devoluciones
           </button>
         </div>
       </div>
+      <h2 style={{margin:0}}>Panel de Fábrica</h2>
       {mostrarHistoricoTransferencias && (
         <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:400,maxWidth:900,maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
             <button onClick={()=>setMostrarHistoricoTransferencias(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
-            <h2 style={{marginTop:0}}>Histórico de transferencias</h2>
+            <h2 style={{marginTop:0}}>Histórico de devoluciones de tiendas</h2>
             <TransferenciasPanel tiendas={tiendas} modoFabrica={true} />
           </div>
         </div>
