@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Transferencia = require('./models/Transferencia'); // Añadido
+const Aviso = require('./models/Aviso'); // <--- NUEVO
 
 const app = express();
 const server = http.createServer(app);
@@ -20,7 +21,7 @@ const io = new Server(server, {
 // Conexión a MongoDB
 // La variable de entorno MONGODB_URI se configura en el dashboard de Render.
 // Para desarrollo local, puedes definirla en un archivo .env o directamente aquí como fallback.
-const MONGODB_URI = process.env.mongodb; // Utiliza la variable de entorno 'mongodb' de Render
+const MONGODB_URI = process.env.MONGODB_URI || process.env.mongodb;
 
 if (!MONGODB_URI) {
   console.error('Error: La variable de entorno mongodb no está definida.');
@@ -43,6 +44,16 @@ app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
+// Función para crear avisos automáticos
+async function crearAvisoAutom({ tipo, referenciaId, tiendaId, texto }) {
+  try {
+    const existe = await Aviso.findOne({ tipo, referenciaId, tiendaId });
+    if (!existe) {
+      await Aviso.create({ tipo, referenciaId, tiendaId, texto });
+    }
+  } catch (e) { console.error('Error creando aviso automático:', e); }
+}
+
 // Endpoints REST
 app.get('/api/pedidos', async (req, res) => {
   try {
@@ -55,7 +66,6 @@ app.get('/api/pedidos', async (req, res) => {
 
 app.post('/api/pedidos', async (req, res) => {
   try {
-    // Permitir todos los campos modernos
     const nuevoPedido = new Pedido({
       ...req.body,
       fechaCreacion: req.body.fechaCreacion || new Date(),
@@ -64,6 +74,13 @@ app.post('/api/pedidos', async (req, res) => {
       fechaRecepcion: req.body.fechaRecepcion
     });
     const pedidoGuardado = await nuevoPedido.save();
+    // AVISO AUTOMÁTICO: nuevo pedido para la tienda
+    await crearAvisoAutom({
+      tipo: 'pedido',
+      referenciaId: pedidoGuardado._id.toString(),
+      tiendaId: pedidoGuardado.tiendaId,
+      texto: `¡Tienes un nuevo pedido recibido! Nº ${pedidoGuardado.numeroPedido || ''}`
+    });
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -75,9 +92,17 @@ app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
-    // Permitir actualización de todos los campos
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
+    // AVISO AUTOMÁTICO: si cambia a preparado o enviadoTienda
+    if (pedidoActualizado && ['preparado', 'enviadoTienda'].includes(pedidoActualizado.estado)) {
+      await crearAvisoAutom({
+        tipo: 'pedido',
+        referenciaId: pedidoActualizado._id.toString(),
+        tiendaId: pedidoActualizado.tiendaId,
+        texto: `¡Tienes un nuevo pedido recibido! Nº ${pedidoActualizado.numeroPedido || ''}`
+      });
+    }
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
     console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
@@ -113,6 +138,19 @@ app.post('/api/transferencias', async (req, res) => {
   try {
     const nueva = new Transferencia(req.body);
     const guardada = await nueva.save();
+    // AVISO AUTOMÁTICO: para destino y origen si aplica
+    if (guardada.origen && guardada.destino) {
+      await crearAvisoAutom({
+        tipo: 'traspaso',
+        referenciaId: guardada._id.toString(),
+        tiendaId: guardada.destino,
+        texto: `¡Tienes un nuevo traspaso/devolución recibido!` });
+      await crearAvisoAutom({
+        tipo: 'traspaso',
+        referenciaId: guardada._id.toString(),
+        tiendaId: guardada.origen,
+        texto: `¡Has realizado un traspaso/devolución!` });
+    }
     res.status(201).json(guardada);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -138,6 +176,44 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     );
     if (!confirmada) return res.status(404).json({ error: 'No encontrada' });
     res.json(confirmada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ENDPOINTS AVISOS (MENSAJES)
+app.get('/api/avisos', async (req, res) => {
+  try {
+    const { tiendaId } = req.query;
+    let query = {};
+    if (tiendaId) query.tiendaId = tiendaId;
+    const avisos = await Aviso.find(query).sort({ fecha: -1 });
+    res.json(avisos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/avisos', async (req, res) => {
+  try {
+    const aviso = new Aviso(req.body);
+    const guardado = await aviso.save();
+    res.status(201).json(guardado);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.patch('/api/avisos/:id/visto', async (req, res) => {
+  try {
+    const { usuario } = req.body;
+    const aviso = await Aviso.findByIdAndUpdate(
+      req.params.id,
+      { $addToSet: { vistoPor: usuario } },
+      { new: true }
+    );
+    if (!aviso) return res.status(404).json({ error: 'Aviso no encontrado' });
+    res.json(aviso);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client'; // <--- Añadido
+import { io } from 'socket.io-client';
 import './App.css';
 import FabricaPanel from './components/FabricaPanel';
 import Login from './components/Login';
@@ -13,6 +13,7 @@ import SeleccionModo from './components/SeleccionModo';
 import Watermark from './components/Watermark';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
+import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -35,7 +36,7 @@ function generarIdUnico() {
 
 function App() {
   const [pedidos, setPedidos] = useState([]);
-  const [socket, setSocket] = useState(null); // <--- Añadido para guardar la instancia del socket
+  const [socket, setSocket] = useState(null);
   const [modo, setModo] = useState(null); // null, 'fabrica', 'tienda'
   const [logueado, setLogueado] = useState(false);
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
@@ -49,23 +50,6 @@ function App() {
   // --- NUEVO: Estado para avisos de nuevos pedidos/traspasos recibidos ---
   const [avisos, setAvisos] = useState([]);
 
-  // --- Utilidad para persistir avisos vistos por tienda en localStorage ---
-  function getAvisosVistos(tiendaId) {
-    if (!tiendaId) return [];
-    try {
-      return JSON.parse(localStorage.getItem('avisos_vistos_' + tiendaId) || '[]');
-    } catch {
-      return [];
-    }
-  }
-  function marcarAvisoVisto(tiendaId, avisoId) {
-    if (!tiendaId || !avisoId) return;
-    const vistos = getAvisosVistos(tiendaId);
-    if (!vistos.includes(avisoId)) {
-      localStorage.setItem('avisos_vistos_' + tiendaId, JSON.stringify([...vistos, avisoId]));
-    }
-  }
-
   // --- FEEDBACK TEMPORAL ---
   function mostrarMensaje(texto, tipo = 'info', duracion = 2500) {
     setMensaje({ texto, tipo });
@@ -74,7 +58,6 @@ function App() {
 
   useEffect(() => {
     // Conexión de Socket.io
-    // La URL del backend debería venir de una variable de entorno para producción
     const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'https://pedidos-backend-0e1s.onrender.com'); 
     setSocket(newSocket);
 
@@ -126,22 +109,15 @@ function App() {
   // Detectar nuevos pedidos recibidos o traspasos para la tienda seleccionada
   useEffect(() => {
     if (modo !== 'tienda' || !logueado || !tiendaSeleccionada) return;
-    const avisosVistos = getAvisosVistos(tiendaSeleccionada);
-    const recibidos = pedidos.filter(p =>
-      p.tiendaId === tiendaSeleccionada &&
-      (p.estado === 'preparado' || p.estado === 'enviadoTienda') &&
-      !avisosVistos.includes(p.id || p._id)
-    );
-    const nuevosAvisos = recibidos.map(p => ({
-      id: p.id || p._id,
-      tipo: 'pedido',
-      texto: `¡Tienes un nuevo pedido recibido! Nº ${p.numeroPedido || ''}`
-    }));
-    setAvisos(prev => {
-      const idsPrev = prev.map(a => a.id);
-      const nuevos = nuevosAvisos.filter(a => !idsPrev.includes(a.id));
-      return [...prev, ...nuevos];
-    });
+    async function fetchAvisos() {
+      const avisosBD = await listarAvisos(tiendaSeleccionada);
+      setAvisos(avisosBD.filter(a => !a.vistoPor.includes(tiendaSeleccionada)).map(a => ({
+        id: a.referenciaId,
+        tipo: a.tipo,
+        texto: a.texto
+      })));
+    }
+    fetchAvisos();
   }, [pedidos, modo, logueado, tiendaSeleccionada]);
 
   // Función para gestionar click en un aviso (ahora solo lo navega, no lo marca como visto)
@@ -150,9 +126,13 @@ function App() {
   };
 
   // Función para marcar un aviso como visto y eliminarlo
-  const handleAvisoVisto = (aviso) => {
-    marcarAvisoVisto(tiendaSeleccionada, aviso.id);
-    setAvisos(prev => prev.filter(a => a.id !== aviso.id));
+  const handleAvisoVisto = async (aviso) => {
+    const avisosBD = await listarAvisos(tiendaSeleccionada);
+    const avisoBD = avisosBD.find(a => a.referenciaId === aviso.id);
+    if (avisoBD) {
+      await marcarAvisoVisto(avisoBD._id, tiendaSeleccionada);
+      setAvisos(prev => prev.filter(a => a.id !== aviso.id));
+    }
   };
 
   // Cambia el estado de un pedido y lo persiste en MongoDB
@@ -169,7 +149,6 @@ function App() {
           fechaEnvio,
           lineas: pedido.lineas.map(linea => ({
             ...linea,
-            // Si no hay cantidadEnviada, se asume igual a la pedida
             cantidadEnviada: linea.cantidadEnviada !== undefined ? Number(linea.cantidadEnviada) : Number(linea.cantidad),
             lote: linea.lote || '',
             fechaEnvioLinea: linea.fechaEnvioLinea || fechaEnvio
@@ -214,7 +193,6 @@ function App() {
       if (!pedido) return;
       let nuevasLineas;
       if (idxLinea === null && Array.isArray(cambios)) {
-        // Guardar todas las líneas editadas (modo edición por lote)
         nuevasLineas = cambios;
       } else {
         nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, ...cambios } : l);
@@ -235,7 +213,6 @@ function App() {
 
   const agregarPedido = async (pedido) => {
     try {
-      // Obtener el número de pedido más alto actual
       const maxNumero = pedidos.reduce((max, p) => p.numeroPedido && p.numeroPedido > max ? p.numeroPedido : max, 0);
       const nuevoNumero = maxNumero + 1;
       await crearPedido({
@@ -281,7 +258,6 @@ function App() {
     setPedidoEditando(pedido);
   }
 
-  // --- DEBUG: Log de tiendaSeleccionada ---
   useEffect(() => {
     if (logueado && modo === 'tienda') {
       console.log('[DEBUG] tiendaSeleccionada:', tiendaSeleccionada);
@@ -295,7 +271,6 @@ function App() {
   if (!logueado) {
     return (
       <div className="App">
-        {/* Marca de agua global */}
         <Watermark />
         <Login
           tipo={modo}
@@ -309,7 +284,6 @@ function App() {
 
   return (
     <div className="App">
-      {/* Marca de agua global */}
       <Watermark />
       {mensaje && (
         <div style={{
@@ -325,7 +299,6 @@ function App() {
           {mensaje.texto}
         </div>
       )}
-      {/* BANNERS DE AVISOS DE PEDIDOS/TRASPASOS RECIBIDOS */}
       {modo === 'tienda' && logueado && !mostrarHistoricoTienda && avisos.length > 0 && (
         <div style={{
           position: 'fixed', top: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 3000,
@@ -359,7 +332,6 @@ function App() {
           ))}
         </div>
       )}
-      {/* DEBUG: Mostrar pedidos pendientes en consola */}
       {(() => { try { console.log('[FRONTEND] Pedidos pendientes (FabricaPanel):', pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado')); } catch(e){} })()}
       {modo === 'fabrica' ? (
         mostrarHistoricoFabrica ? (
@@ -391,7 +363,6 @@ function App() {
             }}
             onAvisoVisto={avisoId => handleAvisoVisto({ id: avisoId })}
           >
-            {/* Botón de retroceso al panel principal */}
             <button
               style={{position:'absolute',top:18,left:18,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:700,fontSize:16,cursor:'pointer',zIndex:2100}}
               onClick={() => setMostrarHistoricoTienda(false)}
@@ -418,7 +389,6 @@ function App() {
         )
       )}
       <ErrorLogger />
-      {/* DEBUG: Mensaje visual de tiendaSeleccionada */}
       {modo === 'tienda' && (
         <>
           <div style={{
