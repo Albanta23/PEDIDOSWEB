@@ -237,7 +237,7 @@ function App() {
   }, [tiendaSeleccionada, logueado, modo]);
 
   if (!modo) {
-    return <SeleccionModo onSeleccion={setModo} />;
+    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} />;
   }
 
   if (!logueado) {

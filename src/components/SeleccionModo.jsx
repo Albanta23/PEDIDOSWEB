@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaIndustry, FaCashRegister } from "react-icons/fa";
 import logo from "../assets/logo1.png";
 import Watermark from './Watermark';
+import SupervisionPanel from './SupervisionPanel';
 
-export default function SeleccionModo({ onSeleccion }) {
+export default function SeleccionModo({ onSeleccion, pedidos, tiendas }) {
+  const [showSupervision, setShowSupervision] = useState(false);
   return (
     <div
       style={{
@@ -30,7 +32,12 @@ export default function SeleccionModo({ onSeleccion }) {
           borderRadius: 18,
           background: "#fff",
           padding: 12,
+          cursor: 'pointer',
+          border: showSupervision ? '3px solid #007bff' : 'none',
+          transition: 'border 0.2s'
         }}
+        title="Panel de supervisión"
+        onClick={() => setShowSupervision(true)}
       />
       <div style={{ display: "flex", gap: 40 }}>
         <button
@@ -76,6 +83,9 @@ export default function SeleccionModo({ onSeleccion }) {
           Tienda
         </button>
       </div>
+      {showSupervision && (
+        <SupervisionPanel pedidos={pedidos} tiendas={tiendas} onClose={()=>setShowSupervision(false)} />
+      )}
     </div>
   );
 }
