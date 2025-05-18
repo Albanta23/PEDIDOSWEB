@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Watermark from './Watermark';
+import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
 
 const estados = {
@@ -91,6 +92,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           Ver histórico de envíos
         </button>
       </div>
+      <TransferenciasPanel tiendas={tiendas} modoFabrica={true} />
       <h3 style={{marginBottom:12,marginTop:24}}>Pedidos pendientes de preparar o enviar</h3>
       {/* Botones de tiendas con pedidos pendientes */}
       <div style={{display:'flex',flexWrap:'wrap',gap:18,marginBottom:32}}>

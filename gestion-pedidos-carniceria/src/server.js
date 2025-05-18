@@ -6,6 +6,7 @@ const cors = require('cors');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
+const Transferencia = require('./models/Transferencia'); // Añadido
 
 const app = express();
 const server = http.createServer(app);
@@ -95,6 +96,50 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ENDPOINTS TRANSFERENCIAS
+app.get('/api/transferencias', async (req, res) => {
+  try {
+    const transferencias = await Transferencia.find();
+    res.json(transferencias);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/transferencias', async (req, res) => {
+  try {
+    const nueva = new Transferencia(req.body);
+    const guardada = await nueva.save();
+    res.status(201).json(guardada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/transferencias/:id', async (req, res) => {
+  try {
+    const actualizada = await Transferencia.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!actualizada) return res.status(404).json({ error: 'No encontrada' });
+    res.json(actualizada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
+  try {
+    const confirmada = await Transferencia.findByIdAndUpdate(
+      req.params.id,
+      { estado: 'recibida', ...req.body },
+      { new: true }
+    );
+    if (!confirmada) return res.status(404).json({ error: 'No encontrada' });
+    res.json(confirmada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

@@ -1,0 +1,13 @@
+[33mcommit 7fa78f9d9e3fb0bf3a3389aac184170d0a9d2930[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mPEDIDOSTIENDAS150525[m[33m, [m[1;31morigin/PEDIDOSTIENDAS150525[m[33m)[m
+Author: Albanta23 <132266850+Albanta23@users.noreply.github.com>
+Date:   Sun May 18 08:04:55 2025 +0000
+
+    Mejoras visuales y funcionales en PDFs: datos corporativos configurables, alineación de columnas, y ajustes de presentación en HistoricoTiendaPanel, HistoricoTienda y HistoricoFabrica
+
+ src/App.jsx                             | 18 [32m++++++++[m[31m---[m
+ src/components/FabricaPanel.jsx         | 16 [32m+++++++[m[31m---[m
+ src/components/HistoricoFabrica.jsx     |  8 [32m++++[m[31m-[m
+ src/components/HistoricoTienda.jsx      | 12 [32m+++++[m[31m--[m
+ src/components/HistoricoTiendaPanel.jsx | 73 [32m++++++++++++++++++++++++++++[m[31m---------------[m
+ src/configDatosEmpresa.js               | 11 [32m+++++++[m
+ 6 files changed, 100 insertions(+), 38 deletions(-)
