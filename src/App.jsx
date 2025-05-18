@@ -46,6 +46,26 @@ function App() {
   // --- ESTADO PARA FEEDBACK UX ---
   const [mensaje, setMensaje] = useState(null);
 
+  // --- NUEVO: Estado para avisos de nuevos pedidos/traspasos recibidos ---
+  const [avisos, setAvisos] = useState([]);
+
+  // --- Utilidad para persistir avisos vistos por tienda en localStorage ---
+  function getAvisosVistos(tiendaId) {
+    if (!tiendaId) return [];
+    try {
+      return JSON.parse(localStorage.getItem('avisos_vistos_' + tiendaId) || '[]');
+    } catch {
+      return [];
+    }
+  }
+  function marcarAvisoVisto(tiendaId, avisoId) {
+    if (!tiendaId || !avisoId) return;
+    const vistos = getAvisosVistos(tiendaId);
+    if (!vistos.includes(avisoId)) {
+      localStorage.setItem('avisos_vistos_' + tiendaId, JSON.stringify([...vistos, avisoId]));
+    }
+  }
+
   // --- FEEDBACK TEMPORAL ---
   function mostrarMensaje(texto, tipo = 'info', duracion = 2500) {
     setMensaje({ texto, tipo });
@@ -102,6 +122,38 @@ function App() {
       newSocket.disconnect();
     };
   }, []);
+
+  // Detectar nuevos pedidos recibidos o traspasos para la tienda seleccionada
+  useEffect(() => {
+    if (modo !== 'tienda' || !logueado || !tiendaSeleccionada) return;
+    const avisosVistos = getAvisosVistos(tiendaSeleccionada);
+    const recibidos = pedidos.filter(p =>
+      p.tiendaId === tiendaSeleccionada &&
+      (p.estado === 'preparado' || p.estado === 'enviadoTienda') &&
+      !avisosVistos.includes(p.id || p._id)
+    );
+    const nuevosAvisos = recibidos.map(p => ({
+      id: p.id || p._id,
+      tipo: 'pedido',
+      texto: `¡Tienes un nuevo pedido recibido! Nº ${p.numeroPedido || ''}`
+    }));
+    setAvisos(prev => {
+      const idsPrev = prev.map(a => a.id);
+      const nuevos = nuevosAvisos.filter(a => !idsPrev.includes(a.id));
+      return [...prev, ...nuevos];
+    });
+  }, [pedidos, modo, logueado, tiendaSeleccionada]);
+
+  // Función para gestionar click en un aviso (ahora solo lo navega, no lo marca como visto)
+  const handleAvisoClick = (aviso) => {
+    setMostrarHistoricoTienda(true);
+  };
+
+  // Función para marcar un aviso como visto y eliminarlo
+  const handleAvisoVisto = (aviso) => {
+    marcarAvisoVisto(tiendaSeleccionada, aviso.id);
+    setAvisos(prev => prev.filter(a => a.id !== aviso.id));
+  };
 
   // Cambia el estado de un pedido y lo persiste en MongoDB
   const cambiarEstadoPedido = async (pedidoId, nuevoEstado) => {
@@ -273,6 +325,40 @@ function App() {
           {mensaje.texto}
         </div>
       )}
+      {/* BANNERS DE AVISOS DE PEDIDOS/TRASPASOS RECIBIDOS */}
+      {modo === 'tienda' && logueado && !mostrarHistoricoTienda && avisos.length > 0 && (
+        <div style={{
+          position: 'fixed', top: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 3000,
+          display: 'flex', flexDirection: 'column', gap: 10, minWidth: 320, maxWidth: 600, width: '90vw',
+        }}>
+          {avisos.map(aviso => (
+            <div key={aviso.id} style={{
+              background: aviso.tipo === 'pedido' ? '#28a745' : '#007bff',
+              color: '#fff',
+              borderRadius: 10,
+              boxShadow: '0 2px 12px #aaa',
+              padding: '14px 24px',
+              fontWeight: 600,
+              fontSize: 17,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              border: '2px solid #218838',
+              cursor: 'pointer',
+            }}
+            >
+              <span>{aviso.texto}</span>
+              <button
+                style={{marginLeft:18,background:'#fff',color:aviso.tipo==='pedido'?'#28a745':'#007bff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
+                onClick={e => {
+                  e.stopPropagation();
+                  setMostrarHistoricoTienda(true);
+                }}
+              >
+                Ver
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       {/* DEBUG: Mostrar pedidos pendientes en consola */}
       {(() => { try { console.log('[FRONTEND] Pedidos pendientes (FabricaPanel):', pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado')); } catch(e){} })()}
       {modo === 'fabrica' ? (
@@ -303,7 +389,16 @@ function App() {
               setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
               mostrarMensaje('Pedido actualizado', 'success');
             }}
-          />
+            onAvisoVisto={avisoId => handleAvisoVisto({ id: avisoId })}
+          >
+            {/* Botón de retroceso al panel principal */}
+            <button
+              style={{position:'absolute',top:18,left:18,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:700,fontSize:16,cursor:'pointer',zIndex:2100}}
+              onClick={() => setMostrarHistoricoTienda(false)}
+            >
+              ← Volver
+            </button>
+          </HistoricoTiendaPanel>
         ) : (
           <div>
             <PedidoForm
@@ -325,13 +420,32 @@ function App() {
       <ErrorLogger />
       {/* DEBUG: Mensaje visual de tiendaSeleccionada */}
       {modo === 'tienda' && (
-        <div style={{
-          position:'fixed',top:60,left:'50%',transform:'translateX(-50%)',background:'#eee',padding:'8px 18px',
-          borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb',
-          minWidth:180, textAlign:'center', fontWeight:600
-        }}>
-          {tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
-        </div>
+        <>
+          <div style={{
+            position:'fixed',top:60,left:'50%',transform:'translateX(-50%)',background:'#eee',padding:'8px 18px',
+            borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb',
+            minWidth:180, textAlign:'center', fontWeight:600,
+            display:'flex', alignItems:'center', justifyContent:'center', gap:16
+          }}>
+            <span>{tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}</span>
+            <button
+              onClick={() => {
+                setLogueado(false);
+                setTiendaSeleccionada(null);
+                setMostrarHistoricoTienda(false);
+                setPedidoEditando(null);
+                setMensaje(null);
+              }}
+              style={{
+                background:'#dc3545', color:'#fff', border:'none', borderRadius:8, padding:'6px 18px', fontWeight:700, fontSize:16, cursor:'pointer', boxShadow:'0 1px 6px #dc354522',
+                marginLeft:'auto'
+              }}
+              title="Cerrar sesión"
+            >
+              Cerrar
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
