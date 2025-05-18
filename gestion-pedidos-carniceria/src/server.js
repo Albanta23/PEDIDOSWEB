@@ -94,8 +94,8 @@ app.put('/api/pedidos/:id', async (req, res) => {
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
-    // AVISO AUTOMÁTICO: si cambia a preparado o enviadoTienda
-    if (pedidoActualizado && ['preparado', 'enviadoTienda'].includes(pedidoActualizado.estado)) {
+    // AVISO AUTOMÁTICO: solo si cambia a 'enviadoTienda'
+    if (pedidoActualizado && pedidoActualizado.estado === 'enviadoTienda') {
       await crearAvisoAutom({
         tipo: 'pedido',
         referenciaId: pedidoActualizado._id.toString(),
