@@ -48,7 +48,9 @@ async function generarPDFEnvio(pedido, tiendas) {
     doc.text(`Estado:`, 15, y); doc.text(
       pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
       pedido.estado === 'preparado' ? 'Preparado en fábrica' : (pedido.estado || '-'), 45, y);
-    y += 10;
+    y += 7;
+    doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined ? String(pedido.peso) + ' kg' : '-', 45, y);
+    y += 7;
     doc.setFont('helvetica', 'bold');
     doc.setFillColor(230, 230, 230);
     doc.rect(15, y, 180, 8, 'F');
