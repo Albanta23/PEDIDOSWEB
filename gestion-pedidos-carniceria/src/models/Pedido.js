@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const LineaSchema = new mongoose.Schema({
   producto: String,
   cantidad: Number,
+  peso: Number, // <--- NUEVO: peso por línea
   formato: String,
   comentario: String,
   cantidadEnviada: Number,
