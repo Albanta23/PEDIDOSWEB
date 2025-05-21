@@ -194,6 +194,17 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           <div style={{ marginTop: 12 }}>
             Estado: <b>{estados[pedidoAbierto.estado] || pedidoAbierto.estado}</b>
           </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={{fontWeight:600,marginRight:8}}>Peso total (kg):</label>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={pedidoAbierto.peso ?? ''}
+              onChange={e => setPedidoAbierto(prev => ({ ...prev, peso: e.target.value }))}
+              style={{ width: 100, fontSize:16, padding:4, borderRadius:6, border:'1px solid #ccc' }}
+            />
+          </div>
           <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
             <button onClick={cerrarPedido} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
           </div>

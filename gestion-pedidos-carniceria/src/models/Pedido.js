@@ -18,7 +18,8 @@ const PedidoSchema = new mongoose.Schema({
   fechaCreacion: { type: Date, default: Date.now },
   fechaPedido: Date,
   fechaEnvio: Date,
-  fechaRecepcion: Date
+  fechaRecepcion: Date,
+  peso: { type: Number, min: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Pedido', PedidoSchema);
