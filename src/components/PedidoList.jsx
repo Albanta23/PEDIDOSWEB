@@ -2,6 +2,25 @@ import React, { useState, useEffect } from "react";
 import TransferenciasPanel from './TransferenciasPanel';
 import { crearPedido, actualizarPedido, obtenerPedidos } from '../services/pedidosService';
 import { FORMATOS_PEDIDO } from '../configFormatos';
+import { jsPDF } from 'jspdf';
+
+// Utilidad para cargar imagen como base64
+async function cargarLogoBase64(url) {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
 export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onVerHistoricoPedidos }) {
   const [mostrarTransferencias, setMostrarTransferencias] = useState(false);
@@ -9,6 +28,9 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const [lineasEdit, setLineasEdit] = useState([]);
   const [logGuardado, setLogGuardado] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [mostrarModalProveedor, setMostrarModalProveedor] = useState(false);
+  const [enviandoProveedor, setEnviandoProveedor] = useState(false);
+  const [mensajeProveedor, setMensajeProveedor] = useState("");
 
   // Clave para localStorage específica de la tienda
   const getStorageKey = () => `pedido_borrador_${tiendaActual?.id || 'default'}`;
@@ -172,6 +194,164 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setCreandoNuevo(false);
     // Mantener las líneas en memoria pero ocultar el editor
   };
+
+  // --- Estado y persistencia para la lista de proveedor (despiece cerdo) ---
+  const REFERENCIAS_CERDO = [
+    "lomo", "panceta", "solomillos", "costilla", "chuletero", "carrilleras", "pies", "manteca", "secreto", "papada", "jamon", "paleta", "paleta tipo york", "maza de jamon"
+  ];
+  const getProveedorKey = () => `proveedor_despiece_${tiendaActual?.id || 'default'}`;
+  const [lineasProveedor, setLineasProveedor] = useState([]);
+
+  // Inicializar con las referencias del cerdo si está vacío y se abre el modal
+  useEffect(() => {
+    if (!tiendaActual?.id) return;
+    const key = getProveedorKey();
+    const guardadas = localStorage.getItem(key);
+    if (guardadas) {
+      try {
+        const arr = JSON.parse(guardadas);
+        if (Array.isArray(arr) && arr.length > 0) {
+          setLineasProveedor(arr);
+        } else {
+          setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
+        }
+      } catch (e) {
+        setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
+      }
+    } else {
+      setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
+    }
+  }, [tiendaActual?.id, mostrarModalProveedor]);
+
+  // Guardar líneas proveedor en localStorage
+  useEffect(() => {
+    if (tiendaActual?.id) {
+      const key = getProveedorKey();
+      localStorage.setItem(key, JSON.stringify(lineasProveedor));
+    }
+  }, [lineasProveedor, tiendaActual?.id]);
+
+  const handleProveedorLineaChange = (idx, campo, valor) => {
+    setLineasProveedor(lineasProveedor.map((l, i) => i === idx ? { ...l, [campo]: valor } : l));
+  };
+  const handleProveedorAgregarLinea = () => {
+    setLineasProveedor([...lineasProveedor, { referencia: '', cantidad: 1 }]);
+  };
+  const handleProveedorEliminarLinea = (idx) => {
+    setLineasProveedor(lineasProveedor.filter((_, i) => i !== idx));
+  };
+  const handleProveedorLimpiar = () => {
+    setLineasProveedor([]);
+    localStorage.removeItem(getProveedorKey());
+  };
+
+  // --- Generar PDF de la lista de proveedor ---
+  async function exportarProveedorPDF(lineasProveedor, tiendaActual) {
+    const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
+    const doc = new jsPDF();
+    // Logo en la cabecera
+    doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
+    let y = 18 + 10; // Bajar todo el texto 1 cm (10 mm)
+    doc.setFontSize(18);
+    doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
+    y += 10;
+    doc.setFontSize(12);
+    if (tiendaActual?.nombre) {
+      doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
+      y += 8;
+    }
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+    y += 10;
+    // Cabecera tabla
+    doc.setFontSize(13);
+    doc.text('Referencia', 14, y);
+    doc.text('Cantidad', 100, y);
+    y += 7;
+    doc.setLineWidth(0.3);
+    doc.line(14, y, 196, y);
+    y += 4;
+    doc.setFontSize(12);
+    lineasProveedor.forEach(l => {
+      if (l.referencia && l.cantidad) {
+        doc.text(String(l.referencia), 14, y);
+        doc.text(String(l.cantidad), 100, y);
+        y += 7;
+        if (y > 280) {
+          doc.addPage();
+          y = 18 + 10;
+        }
+      }
+    });
+    doc.save(`pedidos_proveedor_${tiendaActual?.nombre || ''}_${Date.now()}.pdf`);
+  }
+
+  // --- Enviar lista de proveedor por email (profesional) ---
+  async function enviarProveedorPorEmail(lineasProveedor, tiendaActual) {
+    setEnviandoProveedor(true);
+    setMensajeProveedor("");
+    try {
+      // 1. Generar PDF como base64
+      const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
+      const doc = new jsPDF();
+      doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
+      let y = 28; // texto 1cm más abajo
+      doc.setFontSize(18);
+      doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
+      y += 10;
+      doc.setFontSize(12);
+      if (tiendaActual?.nombre) {
+        doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
+        y += 8;
+      }
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+      y += 10;
+      doc.setFontSize(13);
+      doc.text('Referencia', 14, y);
+      doc.text('Cantidad', 100, y);
+      y += 7;
+      doc.setLineWidth(0.3);
+      doc.line(14, y, 196, y);
+      y += 4;
+      doc.setFontSize(12);
+      lineasProveedor.forEach(l => {
+        if (l.referencia && l.cantidad) {
+          doc.text(String(l.referencia), 14, y);
+          doc.text(String(l.cantidad), 100, y);
+          y += 7;
+          if (y > 280) {
+            doc.addPage();
+            y = 28;
+          }
+        }
+      });
+      // Obtener PDF como base64
+      const pdfBase64 = doc.output('datauristring');
+      // 2. Enviar al backend
+      const res = await fetch('/api/enviar-proveedor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tienda: tiendaActual?.nombre || '',
+          fecha: new Date().toLocaleDateString(),
+          lineas: lineasProveedor,
+          pdfBase64
+        })
+      });
+      if (res.ok) {
+        setMensajeProveedor("¡Lista enviada al proveedor!");
+        handleProveedorLimpiar();
+        setTimeout(()=>{
+          setMensajeProveedor("");
+          setMostrarModalProveedor(false);
+        }, 1500);
+      } else {
+        setMensajeProveedor("Error al enviar el email al proveedor.");
+      }
+    } catch (e) {
+      setMensajeProveedor("Error al generar o enviar el PDF.");
+    }
+    setEnviandoProveedor(false);
+  }
 
   return (
     <>
@@ -367,7 +547,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         >
           <span>+ Crear<br/>pedido</span>
         </button>
-        
+        {/* Botón cerdo para proveedor */}
+        <button onClick={() => setMostrarModalProveedor(true)} style={{background:'#ffb6b6',color:'#b71c1c',border:'none',borderRadius:8,padding:'7px 18px',fontWeight:700,fontSize:18,display:'flex',alignItems:'center',flexDirection:'column',boxShadow:'0 2px 8px #ffb6b644'}} title="Enviar lista a proveedor">
+          <span role="img" aria-label="cerdo" style={{fontSize:28,marginBottom:2}}>🐷</span>
+          <span style={{lineHeight:'1.1',textAlign:'center'}}>Pedidos<br/>de fresco</span>
+        </button>
         {/* Mostrar el botón de confirmar solo si se está creando un pedido */}
         {creandoNuevo && (
           <button 
@@ -394,7 +578,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <span>Confirmar y<br/>enviar pedido</span>
           </button>
         )}
-        
         <button 
           onClick={() => setMostrarTransferencias(true)} 
           style={{
@@ -418,7 +601,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         >
           <span>Traspasos y<br/>devoluciones</span>
         </button>
-        
         {onVerHistoricoPedidos && (
           <button 
             onClick={onVerHistoricoPedidos} 
@@ -445,6 +627,74 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           </button>
         )}
       </div>
+      {/* Modal para crear y enviar lista al proveedor */}
+      {mostrarModalProveedor && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0007',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:320,maxWidth:540,minHeight:420,maxHeight:'90vh',position:'relative',overflow:'auto'}}>
+            <button onClick={()=>setMostrarModalProveedor(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
+            <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#b71c1c',display:'flex',alignItems:'center'}}>
+              <span role="img" aria-label="cerdo" style={{fontSize:32,marginRight:10}}>🐷</span>Lista para proveedor
+            </h2>
+            <div style={{overflowX:'auto'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16,minWidth:400}}>
+                <thead>
+                  <tr style={{background:'#f8f9fa'}}>
+                    <th style={{padding:'8px 6px',borderBottom:'1px solid #ddd',textAlign:'left'}}>Referencia</th>
+                    <th style={{padding:'8px 6px',borderBottom:'1px solid #ddd',textAlign:'left'}}>Cantidad</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lineasProveedor.length === 0 && (
+                    <tr><td colSpan={3} style={{color:'#888',fontStyle:'italic',padding:10}}>No hay líneas. Añade una para comenzar.</td></tr>
+                  )}
+                  {lineasProveedor.map((linea, i) => (
+                    <tr key={i}>
+                      <td style={{padding:'6px'}}>
+                        <input
+                          value={linea.referencia}
+                          onChange={e => handleProveedorLineaChange(i, 'referencia', e.target.value)}
+                          placeholder="Referencia"
+                          list={`referencias-cerdo-lista-${i}`}
+                          style={{width:'100%',border:'1px solid #bbb',borderRadius:6,padding:'6px 8px'}}
+                        />
+                        <datalist id={`referencias-cerdo-lista-${i}`}>
+                          {REFERENCIAS_CERDO.map(ref => <option key={ref} value={ref} />)}
+                        </datalist>
+                      </td>
+                      <td style={{padding:'6px'}}>
+                        <input type="number" min="1" value={linea.cantidad} onChange={e => handleProveedorLineaChange(i, 'cantidad', Number(e.target.value))} style={{width:'100%',border:'1px solid #bbb',borderRadius:6,padding:'6px 8px'}} />
+                      </td>
+                      <td style={{padding:'6px'}}>
+                        <button onClick={() => handleProveedorEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:20}} title="Eliminar línea">🗑</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',alignItems:'center',marginBottom:8}}>
+              <button onClick={handleProveedorAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>Añadir línea</button>
+              <button onClick={handleProveedorLimpiar} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700}}>Limpiar</button>
+              <button onClick={()=>exportarProveedorPDF(lineasProveedor, tiendaActual)} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
+                <span role="img" aria-label="pdf">🗎</span> Exportar PDF
+              </button>
+            </div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',alignItems:'center'}}>
+              <button
+                onClick={async ()=>{
+                  await enviarProveedorPorEmail(lineasProveedor, tiendaActual);
+                }}
+                disabled={enviandoProveedor || lineasProveedor.length === 0 || lineasProveedor.some(l => !l.referencia || !l.cantidad)}
+                style={{background:'#b71c1c',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:17,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1}}
+              >
+                {enviandoProveedor ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
+            {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
+          </div>
+        </div>
+      )}
 
       {/* Lista de pedidos en borrador (para referencia) */}
       <div style={{marginTop: 20}}>

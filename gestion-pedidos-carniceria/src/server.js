@@ -44,6 +44,9 @@ app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
+// --- Endpoint para enviar lista de proveedor por email ---
+require('./enviarProveedorEmail')(app);
+
 // Función para crear avisos automáticos
 // IMPORTANTE: Los avisos de pedidos SOLO deben crearse cuando fábrica envía a tienda (estado 'enviadoTienda')
 // NO se deben crear avisos cuando la tienda envía a fábrica (estado 'enviado')
