@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import Watermark from './Watermark';
-
-const formatos = ['Cajas', 'Bolsas', 'Kilos', 'Unidades'];
+import { FORMATOS_PEDIDO } from '../configFormatos';
 
 const PedidoForm = ({ onAdd }) => {
   const [lineas, setLineas] = useState([
-    { producto: '', cantidad: 1, peso: 0, formato: formatos[0], comentario: '' }
+    { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }
   ]);
   const [mensaje, setMensaje] = useState('');
 
@@ -14,7 +13,7 @@ const PedidoForm = ({ onAdd }) => {
   };
 
   const handleAgregarLinea = () => {
-    setLineas([...lineas, { producto: '', cantidad: 1, peso: 0, formato: formatos[0], comentario: '' }]);
+    setLineas([...lineas, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
   };
 
   const handleEliminarLinea = (idx) => {
@@ -26,7 +25,7 @@ const PedidoForm = ({ onAdd }) => {
     const lineasValidas = lineas.filter(l => l.producto && l.cantidad > 0);
     if (lineasValidas.length === 0) return;
     onAdd({ lineas: lineasValidas });
-    setLineas([{ producto: '', cantidad: 1, peso: 0, formato: formatos[0], comentario: '' }]);
+    setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
     setMensaje('¡Pedido enviado a fábrica!');
     setTimeout(() => setMensaje(''), 2000);
   };
@@ -53,21 +52,12 @@ const PedidoForm = ({ onAdd }) => {
               onChange={e => handleLineaChange(idx, 'cantidad', Number(e.target.value))}
               style={{ padding: 8, width: 60 }}
             />
-            <input
-              type="number"
-              min="0"
-              step="any"
-              placeholder="Peso (kg)"
-              value={linea.peso ?? ''}
-              onChange={e => handleLineaChange(idx, 'peso', Number(e.target.value))}
-              style={{ padding: 8, width: 80 }}
-            />
             <select
               value={linea.formato}
               onChange={e => handleLineaChange(idx, 'formato', e.target.value)}
               style={{ padding: 8 }}
             >
-              {formatos.map(f => (
+              {FORMATOS_PEDIDO.map(f => (
                 <option key={f} value={f}>{f}</option>
               ))}
             </select>

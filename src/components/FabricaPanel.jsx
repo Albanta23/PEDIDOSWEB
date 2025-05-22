@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Watermark from './Watermark';
 import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
+import { FORMATOS_PEDIDO } from '../configFormatos';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -264,7 +265,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       style={{ width: 90 }}
                     />
                   </td>
-                  <td>{linea.formato}</td>
+                  <td>{FORMATOS_PEDIDO.includes(linea.formato) ? linea.formato : '-'}</td>
                   <td>{linea.comentario}</td>
                   <td>
                     <button
