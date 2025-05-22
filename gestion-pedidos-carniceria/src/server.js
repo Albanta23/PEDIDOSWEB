@@ -45,6 +45,8 @@ app.get('/', (req, res) => {
 });
 
 // Función para crear avisos automáticos
+// IMPORTANTE: Los avisos de pedidos SOLO deben crearse cuando fábrica envía a tienda (estado 'enviadoTienda')
+// NO se deben crear avisos cuando la tienda envía a fábrica (estado 'enviado')
 async function crearAvisoAutom({ tipo, referenciaId, tiendaId, texto }) {
   try {
     const existe = await Aviso.findOne({ tipo, referenciaId, tiendaId });
@@ -74,13 +76,8 @@ app.post('/api/pedidos', async (req, res) => {
       fechaRecepcion: req.body.fechaRecepcion
     });
     const pedidoGuardado = await nuevoPedido.save();
-    // AVISO AUTOMÁTICO: nuevo pedido para la tienda
-    await crearAvisoAutom({
-      tipo: 'pedido',
-      referenciaId: pedidoGuardado._id.toString(),
-      tiendaId: pedidoGuardado.tiendaId,
-      texto: `¡Tienes un nuevo pedido recibido! Nº ${pedidoGuardado.numeroPedido || ''}`
-    });
+    // No crear aviso para pedidos enviados de tienda a fábrica (estado = 'enviado')
+    // Solo se crean cuando fábrica los envía a tienda (estado = 'enviadoTienda')
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -94,7 +91,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
-    // AVISO AUTOMÁTICO: solo si cambia a 'enviadoTienda'
+    // AVISO AUTOMÁTICO: solo si fábrica cambia estado a 'enviadoTienda' (envío a tienda)
     if (pedidoActualizado && pedidoActualizado.estado === 'enviadoTienda') {
       await crearAvisoAutom({
         tipo: 'pedido',

@@ -5,12 +5,53 @@
  * Abre una ventana nueva con el histórico de pedidos de la tienda.
  * @param {Array} pedidos - Lista de pedidos.
  * @param {string} tiendaId - ID de la tienda.
+ * @param {Window} win - Referencia a la ventana abierta.
  */
-export function abrirHistoricoEnVentana(pedidos, tiendaId) {
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`
+export function abrirHistoricoEnVentana(pedidos, tiendaId, win) {
+  const html = generarHtmlHistorico(pedidos, tiendaId);
+  // Estrategia robusta multiplataforma para poblar la ventana
+  try {
+    win.document.open && win.document.open();
+    win.document.write(html);
+    win.document.close && win.document.close();
+    // Verifica si el contenido se cargó correctamente
+    if (!win.document.body || win.document.body.innerHTML.trim() === '') {
+      throw new Error('document.write falló');
+    }
+  } catch (e) {
+    try {
+      win.location.replace('about:blank');
+      setTimeout(() => {
+        try {
+          if (win.document.documentElement) {
+            win.document.documentElement.innerHTML = html;
+          } else {
+            win.document.write(html);
+          }
+        } catch (e2) {
+          try {
+            win.document.body.innerHTML = '<pre style="color:red">No se pudo mostrar el historial.\n' + (e2.message || e2) + '</pre>';
+          } catch {}
+        }
+      }, 100);
+    } catch (e3) {
+      try {
+        win.document.body.innerHTML = '<pre style="color:red">No se pudo mostrar el historial.\n' + (e3.message || e3) + '</pre>';
+      } catch {}
+    }
+  }
+}
+
+/**
+ * Genera el HTML completo para el histórico de pedidos.
+ * Devuelve un string con la página HTML.
+ */
+export function generarHtmlHistorico(pedidos, tiendaId) {
+  return `
+    <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="utf-8" />
         <title>Histórico de Pedidos</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
         <style>
@@ -178,15 +219,7 @@ export function abrirHistoricoEnVentana(pedidos, tiendaId) {
               doc.setFontSize(9);
               doc.setTextColor(120);
               doc.text('Generado el: ' + new Date().toLocaleString(), 10, y);
-              var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-              if (isMobile) {
-                var blob = doc.output('blob');
-                var url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-                setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-              } else {
-                doc.save('pedido_' + numeroPedido + '.pdf');
-              }
+              doc.save('pedido_' + numeroPedido + '.pdf');
             }
           }
           function filtrarPorFecha() {
@@ -202,9 +235,8 @@ export function abrirHistoricoEnVentana(pedidos, tiendaId) {
             renderTablas();
           }
           renderTablas();
-        <\/script>
+        </script>
       </body>
     </html>
-  `);
-  win.document.close();
+  `;
 }
