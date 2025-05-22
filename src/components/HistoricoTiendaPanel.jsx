@@ -34,58 +34,105 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   doc.text('Albarán de Expedición', 50, 28);
   doc.setLineWidth(0.5);
   doc.line(15, 32, 195, 32);
-  doc.setFontSize(11);
+
+  doc.setFontSize(10);
   let y = 40;
   doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido || '-'), 45, y);
-  y += 7;
+  y += 6;
   doc.text(`Tienda:`, 15, y); doc.text(tiendaNombre, 45, y);
-  y += 7;
-  doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-'), 45, y);
-  y += 7;
+  y += 6;
+  doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleDateString() : '-'), 45, y);
+  y += 6;
   doc.text(`Estado:`, 15, y); doc.text(
     pedido.estado === 'enviadoTienda' ? 'Recibido de fábrica' :
     pedido.estado === 'preparado' ? 'Preparado en fábrica' :
     pedido.estado === 'enviado' ? 'Enviado a fábrica' :
     pedido.estado === 'borrador' ? 'Borrador (no enviado)' : pedido.estado, 45, y);
-  y += 7;
-  doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined ? String(pedido.peso) + ' kg' : '-', 45, y);
-  y += 7;
+
+  y += 10; // Increased space before the table
+
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
   doc.setFillColor(230, 230, 230);
-  doc.rect(15, y, 180, 12, 'F');
-  doc.text('Nº', 20, y + 6); // +2 para centrar mejor
-  // Ajustamos posiciones para dar más espacio a cantidades y lote
-  doc.text('Producto', 38, y + 8); // +6
-  // Formato más centrado
-  doc.text('Formato', 68, y + 8); // -2
-  // Doble fila para cantidades, más centrado y con más espacio
-  // Cantidad pedida
-  doc.text('Cantidad', 100, y + 5, { align: 'center' });
-  doc.text('pedida', 100, y + 11, { align: 'center' });
-  // Cantidad enviada desplazada 5mm a la derecha
-  doc.text('Cantidad', 130, y + 5, { align: 'center' });
-  doc.text('enviada', 130, y + 11, { align: 'center' });
-  // Lote desplazado 5mm a la derecha
-  doc.text('Lote', 150, y + 8, { align: 'center' });
-  doc.text('Comentario', 170, y + 8);
-  y += 16;
+  doc.rect(15, y, 180, 12, 'F'); // Aumentar altura de cabecera
+  const headerY = y + 6;
+  let currentX = 16;
+
+  // Define column widths (sin peso, con unidadesEnviadas)
+  const colWidths = {
+    num: 8,
+    producto: 45,
+    formato: 25,
+    pedida: 22,
+    enviada: 22,
+    unidades: 22,
+    lote: 22,
+    comentario: 35
+  };
+
+  doc.text('Nº', currentX, headerY); currentX += colWidths.num;
+  doc.text('Producto', currentX, headerY); currentX += colWidths.producto;
+  doc.text('Formato', currentX, headerY); currentX += colWidths.formato;
+  doc.text(['Cantidad', 'pedida'], currentX + colWidths.pedida / 2, headerY - 2, { align: 'center' }); currentX += colWidths.pedida;
+  doc.text(['Kilos', 'enviados'], currentX + colWidths.enviada / 2, headerY - 2, { align: 'center' }); currentX += colWidths.enviada;
+  doc.text(['Unidades', 'enviadas'], currentX + colWidths.unidades / 2, headerY - 2, { align: 'center' }); currentX += colWidths.unidades;
+  doc.text('Lote', currentX + colWidths.lote / 2, headerY, { align: 'center' }); currentX += colWidths.lote;
+  doc.text('Comentario', currentX, headerY);
+
+  y += 16; // Más espacio tras la cabecera
+
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8); // Slightly smaller font for table data
+
   pedido.lineas.forEach((l, i) => {
-    doc.text(String(i + 1), 18, y);
-    doc.text(l.producto || '-', 32, y);
-    doc.text(l.formato || '-', 70, y);
-    doc.text(String(l.cantidad || '-'), 110, y, { align: 'right' });
-    // Cantidad enviada desplazada 5mm a la derecha
-    doc.text(String(l.cantidadEnviada || '-'), 145, y, { align: 'right' });
-    // Lote desplazado 5mm a la derecha
-    doc.text(l.lote || '-', 160, y);
-    doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
-    y += 8;
     if (y > 270) {
       doc.addPage();
       y = 20;
+      // Optionally re-draw header on new page
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setFillColor(230, 230, 230);
+      doc.rect(15, y, 180, 12, 'F');
+      const newPageHeaderY = y + 6;
+      let newPageCurrentX = 16;
+      doc.text('Nº', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.num;
+      doc.text('Producto', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.producto;
+      doc.text('Formato', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.formato;
+      doc.text(['Cantidad', 'pedida'], newPageCurrentX + colWidths.pedida / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.pedida;
+      doc.text(['Kilos', 'enviados'], newPageCurrentX + colWidths.enviada / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.enviada;
+      doc.text(['Unidades', 'enviadas'], newPageCurrentX + colWidths.unidades / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.unidades;
+      doc.text('Lote', newPageCurrentX + colWidths.lote / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.lote;
+      doc.text('Comentario', newPageCurrentX, newPageHeaderY);
+      y += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
     }
+    currentX = 16;
+    doc.text(String(i + 1), currentX + colWidths.num / 2, y, {align: 'center'}); currentX += colWidths.num;
+    
+    // Handle potential multi-line for producto
+    const productoLines = doc.splitTextToSize(l.producto || '-', colWidths.producto - 2); // -2 for padding
+    doc.text(productoLines, currentX, y);
+    let productoLineHeight = productoLines.length * 4; // Approximate height based on font size 8
+
+    currentX += colWidths.producto;
+    doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
+    doc.text(String(l.cantidad || '-'), currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
+    doc.text(String(l.cantidadEnviada ?? '-') , currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
+    doc.text(l.unidadesEnviadas !== undefined && l.unidadesEnviadas !== null ? String(l.unidadesEnviadas) : '-', currentX + colWidths.unidades / 2, y, { align: 'center' }); currentX += colWidths.unidades;
+    doc.text(l.lote || '-', currentX + colWidths.lote / 2, y, { align: 'center' }); currentX += colWidths.lote;
+    
+    // Handle potential multi-line for comentario
+    const comentarioLines = doc.splitTextToSize(l.comentario || '-', colWidths.comentario -2);
+    // Comentario en rojo
+    doc.setTextColor(220, 38, 38); // Rojo
+    doc.text(comentarioLines, currentX, y);
+    doc.setTextColor(0, 0, 0); // Restaurar a negro
+    let comentarioLineHeight = comentarioLines.length * 4;
+
+    y += Math.max(productoLineHeight, comentarioLineHeight, 6); // Adjust y based on max line height or default
   });
+
   doc.setFontSize(9);
   // Datos corporativos en la parte inferior
   let yFooter = 278;
@@ -228,6 +275,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
           )}
           {pedidosRecibidos.map((pedido, idx) => {
             const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
+            const mostrarAviso = pedido.estado === 'enviadoTienda' && pendienteAviso;
             return (
               <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
                 <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
@@ -247,7 +295,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                   <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tiendaNombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
                     <span role="img" aria-label="pdf">🗎</span> PDF
                   </button>
-                  {pendienteAviso ? (
+                  {mostrarAviso ? (
                     <button
                       style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
                       onClick={async () => {
@@ -262,9 +310,11 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                       Visto
                     </button>
                   ) : (
-                    <span style={{background:'#28a745',color:'#fff',borderRadius:6,padding:'6px 16px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:6}}>
-                      <span role="img" aria-label="ok">✔️</span> OK
-                    </span>
+                    pedido.estado === 'enviadoTienda' ? (
+                      <span style={{background:'#28a745',color:'#fff',borderRadius:6,padding:'6px 16px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:6}}>
+                        <span role="img" aria-label="ok">✔️</span> OK
+                      </span>
+                    ) : null
                   )}
                 </td>
               </tr>
@@ -309,13 +359,14 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             </div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%', background:'#f8f9fa', borderRadius:10, marginBottom:8, borderCollapse:'collapse', boxShadow:'0 1px 8px #007bff11'}}>
-                <thead style={{background:'#f1f8ff'}}>
+                <thead>
                   <tr>
                     <th style={{padding:'8px 10px'}}>#</th>
                     <th style={{padding:'8px 10px'}}>Producto</th>
                     <th style={{padding:'8px 10px'}}>Formato</th>
                     <th style={{padding:'8px 10px'}}>Pedida</th>
-                    <th style={{padding:'8px 10px'}}>Enviada</th>
+                    <th style={{padding:'8px 10px'}}>Kilos enviados</th>
+                    <th style={{padding:'8px 10px'}}>Unidades enviadas</th>
                     <th style={{padding:'8px 10px'}}>Lote</th>
                     <th style={{padding:'8px 10px'}}>Comentario</th>
                   </tr>
@@ -336,9 +387,15 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                             <td style={{padding:'8px 10px'}}>
                               <input type="number" min="1" value={l.cantidad} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidad:Number(e.target.value)}:li))} style={{width:60}} />
                             </td>
-                            <td style={{padding:'8px 10px'}}></td>
-                            <td style={{padding:'8px 10px'}}></td>
-                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}>
+                              <input type="number" min="0" step="any" value={l.cantidadEnviada ?? ''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidadEnviada:e.target.value===''?null:Number(e.target.value)}:li))} style={{width:60}} />
+                            </td>
+                            <td style={{padding:'8px 10px'}}>
+                              <input type="number" min="0" step="1" value={l.unidadesEnviadas ?? ''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,unidadesEnviadas:e.target.value===''?null:Number(e.target.value)}:li))} style={{width:60}} />
+                            </td>
+                            <td style={{padding:'8px 10px'}}>
+                              <input value={l.lote||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,lote:e.target.value}:li))} style={{width:80}} />
+                            </td>
                             <td style={{padding:'8px 10px'}}>
                               <input value={l.comentario||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,comentario:e.target.value}:li))} style={{width:120}} />
                             </td>
@@ -347,10 +404,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                           <>
                             <td style={{padding:'8px 10px'}}>{l.producto}</td>
                             <td style={{padding:'8px 10px'}}>{l.formato}</td>
-                            <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
-                            <td style={{padding:'8px 10px'}}></td>
-                            <td style={{padding:'8px 10px'}}></td>
-                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}>{l.lote ?? '-'}</td>
                             <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
                           </>
                         )
@@ -360,6 +414,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                           <td style={{padding:'8px 10px'}}>{l.formato}</td>
                           <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
                           <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidadEnviada ?? '-'}</td>
+                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.unidadesEnviadas ?? '-'}</td>
                           <td style={{padding:'8px 10px'}}>{l.lote ?? '-'}</td>
                           <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
                         </>
