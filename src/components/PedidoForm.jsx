@@ -25,10 +25,11 @@ const PedidoForm = ({ onAdd }) => {
     e.preventDefault();
     const lineasValidas = lineas.filter(l => l.producto && l.cantidad > 0);
     if (lineasValidas.length === 0) return;
-    onAdd({ lineas: lineasValidas });
+    const normalizadas = lineasValidas.map(l => ({
+      ...l
+    }));
+    onAdd({ lineas: normalizadas });
     setLineas([{ producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
-    setMensaje('¡Pedido enviado a fábrica!');
-    setTimeout(() => setMensaje(''), 2000);
   };
 
   return (
@@ -82,7 +83,6 @@ const PedidoForm = ({ onAdd }) => {
             Confirmar y enviar pedido
           </button>
         </div>
-        {mensaje && <div style={{ color: 'green', marginTop: 8 }}>{mensaje}</div>}
       </form>
     </div>
   );

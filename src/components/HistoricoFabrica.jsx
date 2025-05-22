@@ -37,45 +37,99 @@ async function generarPDFEnvio(pedido, tiendas) {
     doc.text('Albarán de Expedición', 50, 28);
     doc.setLineWidth(0.5);
     doc.line(15, 32, 195, 32);
-    doc.setFontSize(11);
+    doc.setFontSize(10); // Reducido para datos generales
     let y = 40;
     doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido || '-'), 45, y);
-    y += 7;
+    y += 6;
     doc.text(`Tienda:`, 15, y); doc.text(tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId || '-', 45, y);
-    y += 7;
-    doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleString() : (pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-'), 45, y);
-    y += 7;
+    y += 6;
+    doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleDateString() : (pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : '-'), 45, y);
+    y += 6;
     doc.text(`Estado:`, 15, y); doc.text(
       pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
       pedido.estado === 'preparado' ? 'Preparado en fábrica' : (pedido.estado || '-'), 45, y);
-    y += 7;
-    doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined ? String(pedido.peso) + ' kg' : '-', 45, y);
-    y += 7;
+    
+    y += 10; // Increased space before table
+
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
     doc.setFillColor(230, 230, 230);
-    doc.rect(15, y, 180, 8, 'F');
-    doc.text('Nº', 18, y + 6);
-    doc.text('Producto', 28, y + 6);
-    doc.text('Pedida', 80, y + 6);
-    doc.text('Enviada', 100, y + 6);
-    doc.text('Formato', 120, y + 6);
-    doc.text('Lote', 150, y + 6);
-    doc.text('Comentario', 170, y + 6);
-    y += 14;
+    doc.rect(15, y, 180, 12, 'F'); // Aumentar altura de cabecera
+    const headerY = y + 6;
+    let currentX = 16;
+
+    // Define column widths (sin peso, con unidadesEnviadas)
+    const colWidths = {
+      num: 8,
+      producto: 45,
+      formato: 25,
+      pedida: 22,
+      enviada: 22,
+      unidades: 22,
+      lote: 22,
+      comentario: 35
+    };
+
+    doc.text('Nº', currentX, headerY); currentX += colWidths.num;
+    doc.text('Producto', currentX, headerY); currentX += colWidths.producto;
+    doc.text('Formato', currentX, headerY); currentX += colWidths.formato;
+    doc.text(['Cantidad', 'pedida'], currentX + colWidths.pedida / 2, headerY - 2, { align: 'center' }); currentX += colWidths.pedida;
+    doc.text(['Kilos', 'enviados'], currentX + colWidths.enviada / 2, headerY - 2, { align: 'center' }); currentX += colWidths.enviada;
+    doc.text(['Unidades', 'enviadas'], currentX + colWidths.unidades / 2, headerY - 2, { align: 'center' }); currentX += colWidths.unidades;
+    doc.text('Lote', currentX + colWidths.lote / 2, headerY, { align: 'center' }); currentX += colWidths.lote;
+    doc.text('Comentario', currentX, headerY);
+
+    y += 16; // Más espacio tras la cabecera
+
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8); // Slightly smaller font for table data
+
     (Array.isArray(pedido.lineas) ? pedido.lineas : []).forEach((l, i) => {
-      doc.text(String(i + 1), 18, y);
-      doc.text(l.producto || '-', 28, y);
-      doc.text(String(l.cantidad ?? '-') , 80, y, { align: 'right' });
-      doc.text(String(l.cantidadEnviada ?? '-') , 100, y, { align: 'right' });
-      doc.text(l.formato || '-', 120, y);
-      doc.text(l.lote || '-', 150, y);
-      doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
-      y += 8;
-      if (y > 270) {
+      if (y > 270) { // Page break
         doc.addPage();
         y = 20;
+        // Optionally re-draw header on new page
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setFillColor(230, 230, 230);
+        doc.rect(15, y, 180, 12, 'F');
+        const newPageHeaderY = y + 6;
+        let newPageCurrentX = 16;
+        doc.text('Nº', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.num;
+        doc.text('Producto', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.producto;
+        doc.text('Formato', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.formato;
+        doc.text(['Cantidad', 'pedida'], newPageCurrentX + colWidths.pedida / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.pedida;
+        doc.text(['Kilos', 'enviados'], newPageCurrentX + colWidths.enviada / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.enviada;
+        doc.text(['Unidades', 'enviadas'], newPageCurrentX + colWidths.unidades / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.unidades;
+        doc.text('Lote', newPageCurrentX + colWidths.lote / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.lote;
+        doc.text('Comentario', newPageCurrentX, newPageHeaderY);
+        y += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
       }
+      currentX = 16;
+      doc.text(String(i + 1), currentX + colWidths.num / 2, y, {align: 'center'}); currentX += colWidths.num;
+      
+      const productoLines = doc.splitTextToSize(l.producto || '-', colWidths.producto - 2);
+      doc.text(productoLines, currentX, y);
+      let productoLineHeight = productoLines.length * 4;
+      currentX += colWidths.producto;
+
+      doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
+
+      doc.text(String(l.cantidad ?? '-') , currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
+      doc.text(String(l.cantidadEnviada ?? '-') , currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
+      doc.text(l.unidadesEnviadas !== undefined && l.unidadesEnviadas !== null ? String(l.unidadesEnviadas) : '-', currentX + colWidths.unidades / 2, y, { align: 'center' }); currentX += colWidths.unidades;
+      doc.text(l.lote || '-', currentX + colWidths.lote / 2, y, { align: 'center' }); currentX += colWidths.lote;
+      
+      const comentarioLines = doc.splitTextToSize(l.comentario || '-', colWidths.comentario - 2);
+      // Comentario en rojo
+      doc.setTextColor(220, 38, 38); // Rojo
+      doc.text(comentarioLines, currentX, y);
+      doc.setTextColor(0, 0, 0); // Restaurar a negro
+      let comentarioLineHeight = comentarioLines.length * 4;
+
+      y += Math.max(productoLineHeight, comentarioLineHeight, 6); // Adjust y based on max line height or default
     });
     doc.setFontSize(9);
     let yFooter = 278;
@@ -190,7 +244,8 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                     <th style={{padding:'6px 8px'}}>#</th>
                     <th style={{padding:'6px 8px'}}>Producto</th>
                     <th style={{padding:'6px 8px'}}>Pedida</th>
-                    <th style={{padding:'6px 8px'}}>Enviada</th>
+                    <th style={{padding:'6px 8px'}}>Kilos enviados</th>
+                    <th style={{padding:'6px 8px'}}>Unidades enviadas</th>
                     <th style={{padding:'6px 8px'}}>Formato</th>
                     <th style={{padding:'6px 8px'}}>Comentario</th>
                     <th style={{padding:'6px 8px'}}>Lote</th>
@@ -202,7 +257,8 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{i + 1}</td>
                       <td style={{padding:'6px 8px'}}>{l.producto}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidad}</td>
-                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidadEnviada || '-'}</td>
+                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidadEnviada ?? '-'}</td>
+                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.unidadesEnviadas ?? '-'}</td>
                       <td style={{padding:'6px 8px'}}>{l.formato}</td>
                       <td style={{padding:'6px 8px'}}>{l.comentario || '-'}</td>
                       <td style={{padding:'6px 8px'}}>{l.lote || '-'}</td>

@@ -74,13 +74,6 @@ app.post('/api/pedidos', async (req, res) => {
       fechaRecepcion: req.body.fechaRecepcion
     });
     const pedidoGuardado = await nuevoPedido.save();
-    // AVISO AUTOMÁTICO: nuevo pedido para la tienda
-    await crearAvisoAutom({
-      tipo: 'pedido',
-      referenciaId: pedidoGuardado._id.toString(),
-      tiendaId: pedidoGuardado.tiendaId,
-      texto: `¡Tienes un nuevo pedido recibido! Nº ${pedidoGuardado.numeroPedido || ''}`
-    });
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -92,7 +85,22 @@ app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
-    const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
+    // LOG extra para ver las líneas y el campo peso
+    if (Array.isArray(req.body.lineas)) {
+      req.body.lineas.forEach((l, i) => {
+        console.log(`[BACKEND] Línea ${i}:`, l);
+      });
+    }
+    // Solo actualizar campos permitidos y el array de líneas
+    const updateFields = {};
+    if (req.body.lineas) updateFields.lineas = req.body.lineas;
+    if (req.body.estado) updateFields.estado = req.body.estado;
+    if (req.body.fechaEnvio) updateFields.fechaEnvio = req.body.fechaEnvio;
+    if (req.body.fechaRecepcion) updateFields.fechaRecepcion = req.body.fechaRecepcion;
+    if (req.body.numeroPedido) updateFields.numeroPedido = req.body.numeroPedido;
+    if (req.body.tiendaId) updateFields.tiendaId = req.body.tiendaId;
+    // Puedes añadir más campos si es necesario
+    const pedidoActualizado = await Pedido.findByIdAndUpdate(id, updateFields, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
     // AVISO AUTOMÁTICO: solo si cambia a 'enviadoTienda'
     if (pedidoActualizado && pedidoActualizado.estado === 'enviadoTienda') {
@@ -235,7 +243,7 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log('Servidor backend escuchando en puerto', PORT);
 });

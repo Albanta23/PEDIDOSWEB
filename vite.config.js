@@ -15,4 +15,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:4000'
+    }
+  },
 });
