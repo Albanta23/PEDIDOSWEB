@@ -256,6 +256,15 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                     placeholder="Cantidad" 
                     style={{width:60, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
                   />
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={linea.peso ?? ''}
+                    onChange={e => handleLineaChange(i, 'peso', e.target.value === '' ? null : parseFloat(e.target.value))}
+                    placeholder="Peso (kg)"
+                    style={{width:70, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
+                  />
                   <select 
                     value={linea.formato || ''} 
                     onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
@@ -421,6 +430,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 {pedido.lineas?.map((linea, i) => (
                   <li key={i}>
                     {linea.producto} - {linea.cantidad} {linea.formato}
+                    {linea.peso && <> - {linea.peso} kg</>}
                     {linea.comentario && <> ({linea.comentario})</>}
                   </li>
                 ))}
