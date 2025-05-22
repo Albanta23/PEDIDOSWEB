@@ -232,7 +232,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos enviados a fábrica ni creados</td></tr>
           )}
           {pedidosEnviados.map((pedido, idx) => (
-            <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
+            <tr key={`enviado-${pedido.id || pedido._id || pedido.numeroPedido || idx}-${pedido.fechaCreacion || ''}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
               <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
               <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
               <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
@@ -277,7 +277,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
             const mostrarAviso = pedido.estado === 'enviadoTienda' && pendienteAviso;
             return (
-              <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
+              <tr key={`recibido-${pedido.id || pedido._id || pedido.numeroPedido || idx}-${pedido.fechaCreacion || ''}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
                 <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
                 <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
                 <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
@@ -373,7 +373,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                 </thead>
                 <tbody>
                   {(modalPedido.estado === 'borrador' ? (editandoLineas || modalPedido.lineas) : modalPedido.lineas).map((l, i) => (
-                    <tr key={i} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
+                    <tr key={`linea-${l.producto || ''}-${l.formato || ''}-${l.lote || ''}-${i}`} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
                       <td style={{padding:'8px 10px', textAlign:'center'}}>{i + 1}</td>
                       {modalPedido.estado === 'borrador' ? (
                         editandoLineas ? (

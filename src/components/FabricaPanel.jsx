@@ -43,7 +43,12 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   const actualizarLinea = (idx, campo, valor) => {
     setPedidoAbierto(prev => ({
       ...prev,
-      lineas: prev.lineas.map((l, i) => i === idx ? { ...l, [campo]: valor } : l)
+      lineas: prev.lineas.map((l, i) => {
+        if (i === idx) {
+          return { ...l, [campo]: valor === '' ? null : valor };
+        }
+        return l;
+      })
     }));
   };
 
@@ -57,13 +62,17 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   // Guardar edición de un pedido
   const guardarEdicion = async () => {
-    const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
-    if (nuevasLineas.length === 0) {
-      await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
-      setPedidoAbierto(null);
+    const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
+    if (nuevasLineas.length === 0 && pedidoAbierto.lineas.length > 0) {
       return;
     }
-    const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
+    const lineasNormalizadas = nuevasLineas.map(l => ({
+      ...l,
+      preparada: !!l.preparada,
+      cantidadEnviada: l.cantidadEnviada ?? null,
+      unidadesEnviadas: l.unidadesEnviadas === '' || l.unidadesEnviadas === undefined ? null : l.unidadesEnviadas,
+      cantidad: Number(l.cantidad)
+    }));
     await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
     setPedidoAbierto(null);
   };
@@ -149,7 +158,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
         {Object.entries(pedidosPorTienda).map(([tiendaId, pedidos], idx) => {
           const tienda = tiendas.find(t => t.id === tiendaId);
           return pedidos.map((pedido, pidx) => {
-            // Clave única robusta: id/_id + número de pedido + índice
             const key = `${pedido.id || pedido._id || 'sinid'}-${pedido.numeroPedido || 'nonum'}-${pidx}`;
             return (
               <button
@@ -194,17 +202,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           <div style={{ marginTop: 12 }}>
             Estado: <b>{estados[pedidoAbierto.estado] || pedidoAbierto.estado}</b>
           </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={{fontWeight:600,marginRight:8}}>Peso total (kg):</label>
-            <input
-              type="number"
-              min="0"
-              step="any"
-              value={pedidoAbierto.peso ?? ''}
-              onChange={e => setPedidoAbierto(prev => ({ ...prev, peso: e.target.value }))}
-              style={{ width: 100, fontSize:16, padding:4, borderRadius:6, border:'1px solid #ccc' }}
-            />
-          </div>
           <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
             <button onClick={cerrarPedido} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
           </div>
@@ -213,11 +210,11 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <tr>
                 <th>Producto</th>
                 <th>Cant. pedida</th>
-                <th>Cant. enviada</th>
+                <th>Kilos enviados</th>
+                <th>Unidades enviadas</th>
+                <th>Lote</th>
                 <th>Formato pedido</th>
                 <th>Comentario</th>
-                <th>Lote</th>
-                <th>Preparada</th>
                 <th>Eliminar</th>
               </tr>
             </thead>
@@ -232,12 +229,20 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       min="0"
                       step="any"
                       value={linea.cantidadEnviada ?? ''}
-                      onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
+                      onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: 70 }}
                     />
                   </td>
-                  <td>{linea.formato}</td>
-                  <td>{linea.comentario}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={linea.unidadesEnviadas ?? ''}
+                      onChange={e => actualizarLinea(idx, 'unidadesEnviadas', e.target.value === '' ? null : Number(e.target.value))}
+                      style={{ width: 70 }}
+                    />
+                  </td>
                   <td>
                     <input
                       type="text"
@@ -246,13 +251,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       style={{ width: 90 }}
                     />
                   </td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={!!linea.preparada}
-                      onChange={e => actualizarLinea(idx, 'preparada', e.target.checked)}
-                    />
-                  </td>
+                  <td>{linea.formato}</td>
+                  <td>{linea.comentario}</td>
                   <td>
                     <button
                       style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
@@ -264,15 +264,19 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   </td>
                 </tr>
               ))}
-              {/* Botones Guardar y Enviar pedido al final de la tabla */}
               <tr>
                 <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
                   <button
                     style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
                     onClick={async () => {
-                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
-                      if (nuevasLineas.length === 0) return;
-                      const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
+                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
+                      const lineasNormalizadas = nuevasLineas.map(l => ({
+                        ...l,
+                        preparada: !!l.preparada,
+                        cantidadEnviada: l.cantidadEnviada ?? null,
+                        unidadesEnviadas: l.unidadesEnviadas === '' || l.unidadesEnviadas === undefined ? null : l.unidadesEnviadas,
+                        cantidad: Number(l.cantidad)
+                      }));
                       await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
                     }}
                   >
@@ -281,13 +285,19 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   <button
                     style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
                     onClick={async () => {
-                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && l.cantidad);
+                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
                       if (nuevasLineas.length === 0) {
                         await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
                         setPedidoAbierto(null);
                         return;
                       }
-                      const lineasNormalizadas = nuevasLineas.map(l => ({ ...l, preparada: !!l.preparada }));
+                      const lineasNormalizadas = nuevasLineas.map(l => ({
+                        ...l,
+                        preparada: !!l.preparada,
+                        cantidadEnviada: l.cantidadEnviada ?? null,
+                        unidadesEnviadas: l.unidadesEnviadas === '' || l.unidadesEnviadas === undefined ? null : l.unidadesEnviadas,
+                        cantidad: Number(l.cantidad)
+                      }));
                       await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
                       await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
                       setPedidoAbierto(null);
