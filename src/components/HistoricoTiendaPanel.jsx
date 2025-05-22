@@ -4,6 +4,7 @@ import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
 import logo from '../assets/logo1.png';
 import { listarAvisos, marcarAvisoVisto } from '../services/avisosService';
+import { FORMATOS_PEDIDO } from '../configFormatos';
 
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -119,7 +120,7 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     let productoLineHeight = productoLines.length * 4; // Approximate height based on font size 8
 
     currentX += colWidths.producto;
-    doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
+    doc.text(FORMATOS_PEDIDO.includes(l.formato) ? l.formato : '-', currentX, y); currentX += colWidths.formato;
     doc.text(String(l.cantidad || '-'), currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
     doc.text(l.peso !== undefined && l.peso !== null ? String(l.peso) : '-', currentX + colWidths.peso / 2, y, { align: 'center' }); currentX += colWidths.peso;
     doc.text(String(l.cantidadEnviada || '-'), currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
