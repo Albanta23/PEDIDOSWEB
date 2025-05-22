@@ -193,7 +193,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
 
       {/* Editor visual unificado para crear pedido */}
       {creandoNuevo && (
-        <div style={{ border: "2px solid #007bff", margin: 12, padding: 20, background: '#fafdff', borderRadius: 14, boxShadow:'0 2px 12px #007bff11', maxWidth: 600, marginLeft: 'auto', marginRight: 'auto', position:'relative' }}>
+        <div style={{ border: "2px solid #007bff", margin: 12, padding: 20, background: '#fafdff', borderRadius: 14, boxShadow:'0 2px 12px #007bff11', maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', position:'relative' }}>
           {/* Nombre de la tienda */}
           {tiendaActual?.nombre && (
             <div style={{
@@ -241,52 +241,78 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 <li style={{color:'#888',fontStyle:'italic',marginBottom:8}}>No hay líneas. Añade una para comenzar.</li>
               )}
               {lineasEdit.map((linea, i) => (
-                <li key={i} style={{marginBottom:6, display:'flex', gap:10, alignItems:'center'}}>
-                  <input 
-                    value={linea.producto} 
-                    onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
-                    placeholder="Producto" 
-                    style={{width:110, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                  />
-                  <input 
-                    type="number" 
-                    min="1" 
-                    value={linea.cantidad} 
-                    onChange={e => handleLineaChange(i, 'cantidad', Number(e.target.value))} 
-                    placeholder="Cantidad" 
-                    style={{width:60, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={linea.peso ?? ''}
-                    onChange={e => handleLineaChange(i, 'peso', e.target.value === '' ? null : parseFloat(e.target.value))}
-                    placeholder="Peso (kg)"
-                    style={{width:70, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
-                  />
-                  <select 
-                    value={linea.formato || ''} 
-                    onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
-                    style={{width:110, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
-                  >
-                    <option value="">Formato</option>
-                    {FORMATOS_PEDIDO.map(f => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                  <input 
-                    value={linea.comentario||''} 
-                    onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
-                    placeholder="Comentario" 
-                    style={{width:130, border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                  />
-                  <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:20}}>🗑</button>
+                <li key={i} style={{
+                  marginBottom:12,
+                  display:'flex',
+                  gap:18,
+                  alignItems:'flex-end',
+                  background:'#fff',
+                  borderRadius:10,
+                  boxShadow:'0 1px 6px #007bff11',
+                  padding:'12px 28px 12px 18px', // padding-right aumentado
+                  border:'1px solid #e0e6ef',
+                  position:'relative'
+                }}>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Producto</label>
+                    <input 
+                      value={linea.producto} 
+                      onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
+                      placeholder="Producto" 
+                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                    />
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:70}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Cantidad</label>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={linea.cantidad} 
+                      onChange={e => handleLineaChange(i, 'cantidad', Number(e.target.value))} 
+                      placeholder="Cantidad" 
+                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                    />
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:80}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Peso (kg)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={linea.peso ?? ''}
+                      onChange={e => handleLineaChange(i, 'peso', e.target.value === '' ? null : parseFloat(e.target.value))}
+                      placeholder="Peso (kg)"
+                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
+                    />
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Formato</label>
+                    <select 
+                      value={linea.formato || ''} 
+                      onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
+                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
+                    >
+                      <option value="">Formato</option>
+                      {FORMATOS_PEDIDO.map(f => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Comentario</label>
+                    <input 
+                      value={linea.comentario||''} 
+                      onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
+                      placeholder="Comentario" 
+                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                    />
+                  </div>
+                  <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
                 </li>
               ))}
             </ul>
             
-            <div style={{display:'flex', gap:10, marginTop:12, alignItems:'center'}}>
+            <div style={{display:'flex', gap:10, marginTop:12, alignItems:'center', justifyContent:'flex-end'}}>
               <button onClick={handleAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>
                 Añadir línea
               </button>
