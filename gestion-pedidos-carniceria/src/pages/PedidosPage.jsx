@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PedidoForm from '../../../src/components/PedidoForm';
 import PedidoList from '../../../src/components/PedidoList';
 import { obtenerPedidos, crearPedido } from '../services/pedidosService';
 import Watermark from '../components/Watermark';
@@ -29,6 +30,7 @@ const PedidosPage = () => {
     <div>
       <Watermark />
       <h1>Gestión de Pedidos</h1>
+      <PedidoForm agregarPedido={agregarPedido} />
       <PedidoList pedidos={pedidos} />
     </div>
   );
