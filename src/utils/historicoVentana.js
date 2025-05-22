@@ -178,7 +178,15 @@ export function abrirHistoricoEnVentana(pedidos, tiendaId) {
               doc.setFontSize(9);
               doc.setTextColor(120);
               doc.text('Generado el: ' + new Date().toLocaleString(), 10, y);
-              doc.save('pedido_' + numeroPedido + '.pdf');
+              var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+              if (isMobile) {
+                var blob = doc.output('blob');
+                var url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+              } else {
+                doc.save('pedido_' + numeroPedido + '.pdf');
+              }
             }
           }
           function filtrarPorFecha() {

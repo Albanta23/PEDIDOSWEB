@@ -48,38 +48,41 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     pedido.estado === 'preparado' ? 'Preparado en fábrica' :
     pedido.estado === 'enviado' ? 'Enviado a fábrica' :
     pedido.estado === 'borrador' ? 'Borrador (no enviado)' : pedido.estado, 45, y);
+  y += 6;
+  doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined && pedido.peso !== null ? String(pedido.peso) + ' kg' : '-', 45, y);
 
   y += 10; // Increased space before the table
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setFillColor(230, 230, 230);
-  doc.rect(15, y, 180, 12, 'F'); // Aumentar altura de cabecera
-  const headerY = y + 6;
-  let currentX = 16;
+  doc.rect(15, y, 180, 8, 'F'); // Header background
 
-  // Define column widths (sin peso, con unidadesEnviadas)
+  const headerY = y + 6; // Adjusted Y for header text
+  let currentX = 16; // Start a bit to the right for padding
+
+  // Define column widths
   const colWidths = {
     num: 8,
-    producto: 45,
+    producto: 45, // Increased width for producto
     formato: 25,
-    pedida: 22,
-    enviada: 22,
-    unidades: 22,
+    pedida: 15,
+    peso: 15,
+    enviada: 15,
     lote: 22,
-    comentario: 35
+    comentario: 35 // Adjusted for remaining space
   };
 
   doc.text('Nº', currentX, headerY); currentX += colWidths.num;
   doc.text('Producto', currentX, headerY); currentX += colWidths.producto;
   doc.text('Formato', currentX, headerY); currentX += colWidths.formato;
-  doc.text(['Cantidad', 'pedida'], currentX + colWidths.pedida / 2, headerY - 2, { align: 'center' }); currentX += colWidths.pedida;
-  doc.text(['Kilos', 'enviados'], currentX + colWidths.enviada / 2, headerY - 2, { align: 'center' }); currentX += colWidths.enviada;
-  doc.text(['Unidades', 'enviadas'], currentX + colWidths.unidades / 2, headerY - 2, { align: 'center' }); currentX += colWidths.unidades;
+  doc.text('Pedida', currentX + colWidths.pedida / 2, headerY, { align: 'center' }); currentX += colWidths.pedida;
+  doc.text('Peso(kg)', currentX + colWidths.peso / 2, headerY, { align: 'center' }); currentX += colWidths.peso;
+  doc.text('Enviada', currentX + colWidths.enviada / 2, headerY, { align: 'center' }); currentX += colWidths.enviada;
   doc.text('Lote', currentX + colWidths.lote / 2, headerY, { align: 'center' }); currentX += colWidths.lote;
   doc.text('Comentario', currentX, headerY);
 
-  y += 16; // Más espacio tras la cabecera
+  y += 10; // New Y after header (increased space)
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8); // Slightly smaller font for table data
@@ -92,15 +95,15 @@ async function generarPDFTienda(pedido, tiendaNombre) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setFillColor(230, 230, 230);
-      doc.rect(15, y, 180, 12, 'F');
+      doc.rect(15, y, 180, 8, 'F');
       const newPageHeaderY = y + 6;
       let newPageCurrentX = 16;
       doc.text('Nº', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.num;
       doc.text('Producto', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.producto;
       doc.text('Formato', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.formato;
-      doc.text(['Cantidad', 'pedida'], newPageCurrentX + colWidths.pedida / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.pedida;
-      doc.text(['Kilos', 'enviados'], newPageCurrentX + colWidths.enviada / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.enviada;
-      doc.text(['Unidades', 'enviadas'], newPageCurrentX + colWidths.unidades / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.unidades;
+      doc.text('Pedida', newPageCurrentX + colWidths.pedida / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.pedida;
+      doc.text('Peso(kg)', newPageCurrentX + colWidths.peso / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.peso;
+      doc.text('Enviada', newPageCurrentX + colWidths.enviada / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.enviada;
       doc.text('Lote', newPageCurrentX + colWidths.lote / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.lote;
       doc.text('Comentario', newPageCurrentX, newPageHeaderY);
       y += 10;
@@ -118,16 +121,13 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     currentX += colWidths.producto;
     doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
     doc.text(String(l.cantidad || '-'), currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
-    doc.text(String(l.cantidadEnviada ?? '-') , currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
-    doc.text(l.unidadesEnviadas !== undefined && l.unidadesEnviadas !== null ? String(l.unidadesEnviadas) : '-', currentX + colWidths.unidades / 2, y, { align: 'center' }); currentX += colWidths.unidades;
+    doc.text(l.peso !== undefined && l.peso !== null ? String(l.peso) : '-', currentX + colWidths.peso / 2, y, { align: 'center' }); currentX += colWidths.peso;
+    doc.text(String(l.cantidadEnviada || '-'), currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
     doc.text(l.lote || '-', currentX + colWidths.lote / 2, y, { align: 'center' }); currentX += colWidths.lote;
     
     // Handle potential multi-line for comentario
     const comentarioLines = doc.splitTextToSize(l.comentario || '-', colWidths.comentario -2);
-    // Comentario en rojo
-    doc.setTextColor(220, 38, 38); // Rojo
     doc.text(comentarioLines, currentX, y);
-    doc.setTextColor(0, 0, 0); // Restaurar a negro
     let comentarioLineHeight = comentarioLines.length * 4;
 
     y += Math.max(productoLineHeight, comentarioLineHeight, 6); // Adjust y based on max line height or default
@@ -232,7 +232,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos enviados a fábrica ni creados</td></tr>
           )}
           {pedidosEnviados.map((pedido, idx) => (
-            <tr key={`enviado-${pedido.id || pedido._id || pedido.numeroPedido || idx}-${pedido.fechaCreacion || ''}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
+            <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
               <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
               <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
               <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
@@ -275,9 +275,8 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
           )}
           {pedidosRecibidos.map((pedido, idx) => {
             const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
-            const mostrarAviso = pedido.estado === 'enviadoTienda' && pendienteAviso;
             return (
-              <tr key={`recibido-${pedido.id || pedido._id || pedido.numeroPedido || idx}-${pedido.fechaCreacion || ''}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
+              <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
                 <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
                 <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
                 <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
@@ -295,7 +294,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                   <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tiendaNombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
                     <span role="img" aria-label="pdf">🗎</span> PDF
                   </button>
-                  {mostrarAviso ? (
+                  {pendienteAviso ? (
                     <button
                       style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
                       onClick={async () => {
@@ -310,11 +309,9 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                       Visto
                     </button>
                   ) : (
-                    pedido.estado === 'enviadoTienda' ? (
-                      <span style={{background:'#28a745',color:'#fff',borderRadius:6,padding:'6px 16px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:6}}>
-                        <span role="img" aria-label="ok">✔️</span> OK
-                      </span>
-                    ) : null
+                    <span style={{background:'#28a745',color:'#fff',borderRadius:6,padding:'6px 16px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:6}}>
+                      <span role="img" aria-label="ok">✔️</span> OK
+                    </span>
                   )}
                 </td>
               </tr>
@@ -359,21 +356,21 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             </div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%', background:'#f8f9fa', borderRadius:10, marginBottom:8, borderCollapse:'collapse', boxShadow:'0 1px 8px #007bff11'}}>
-                <thead>
+                <thead style={{background:'#f1f8ff'}}>
                   <tr>
                     <th style={{padding:'8px 10px'}}>#</th>
                     <th style={{padding:'8px 10px'}}>Producto</th>
                     <th style={{padding:'8px 10px'}}>Formato</th>
                     <th style={{padding:'8px 10px'}}>Pedida</th>
-                    <th style={{padding:'8px 10px'}}>Kilos enviados</th>
-                    <th style={{padding:'8px 10px'}}>Unidades enviadas</th>
+                    <th style={{padding:'8px 10px'}}>Peso (kg)</th>
+                    <th style={{padding:'8px 10px'}}>Enviada</th>
                     <th style={{padding:'8px 10px'}}>Lote</th>
                     <th style={{padding:'8px 10px'}}>Comentario</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(modalPedido.estado === 'borrador' ? (editandoLineas || modalPedido.lineas) : modalPedido.lineas).map((l, i) => (
-                    <tr key={`linea-${l.producto || ''}-${l.formato || ''}-${l.lote || ''}-${i}`} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
+                    <tr key={i} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
                       <td style={{padding:'8px 10px', textAlign:'center'}}>{i + 1}</td>
                       {modalPedido.estado === 'borrador' ? (
                         editandoLineas ? (
@@ -387,15 +384,9 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                             <td style={{padding:'8px 10px'}}>
                               <input type="number" min="1" value={l.cantidad} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidad:Number(e.target.value)}:li))} style={{width:60}} />
                             </td>
-                            <td style={{padding:'8px 10px'}}>
-                              <input type="number" min="0" step="any" value={l.cantidadEnviada ?? ''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,cantidadEnviada:e.target.value===''?null:Number(e.target.value)}:li))} style={{width:60}} />
-                            </td>
-                            <td style={{padding:'8px 10px'}}>
-                              <input type="number" min="0" step="1" value={l.unidadesEnviadas ?? ''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,unidadesEnviadas:e.target.value===''?null:Number(e.target.value)}:li))} style={{width:60}} />
-                            </td>
-                            <td style={{padding:'8px 10px'}}>
-                              <input value={l.lote||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,lote:e.target.value}:li))} style={{width:80}} />
-                            </td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
                             <td style={{padding:'8px 10px'}}>
                               <input value={l.comentario||''} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,comentario:e.target.value}:li))} style={{width:120}} />
                             </td>
@@ -404,7 +395,10 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                           <>
                             <td style={{padding:'8px 10px'}}>{l.producto}</td>
                             <td style={{padding:'8px 10px'}}>{l.formato}</td>
-                            <td style={{padding:'8px 10px'}}>{l.lote ?? '-'}</td>
+                            <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
+                            <td style={{padding:'8px 10px'}}></td>
                             <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
                           </>
                         )
@@ -413,8 +407,8 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                           <td style={{padding:'8px 10px'}}>{l.producto}</td>
                           <td style={{padding:'8px 10px'}}>{l.formato}</td>
                           <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidad}</td>
+                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.peso ?? '-'}</td>
                           <td style={{padding:'8px 10px', textAlign:'center'}}>{l.cantidadEnviada ?? '-'}</td>
-                          <td style={{padding:'8px 10px', textAlign:'center'}}>{l.unidadesEnviadas ?? '-'}</td>
                           <td style={{padding:'8px 10px'}}>{l.lote ?? '-'}</td>
                           <td style={{padding:'8px 10px'}}>{l.comentario || '-'}</td>
                         </>
