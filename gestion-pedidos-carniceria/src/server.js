@@ -44,7 +44,13 @@ app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
+// --- Endpoint para enviar lista de proveedor por email ---
+// require('./enviarProveedorEmail')(app); // Comentado o eliminado
+require('./sendgridProveedorEmail')(app); // Nueva línea para SendGrid
+
 // Función para crear avisos automáticos
+// IMPORTANTE: Los avisos de pedidos SOLO deben crearse cuando fábrica envía a tienda (estado 'enviadoTienda')
+// NO se deben crear avisos cuando la tienda envía a fábrica (estado 'enviado')
 async function crearAvisoAutom({ tipo, referenciaId, tiendaId, texto }) {
   try {
     const existe = await Aviso.findOne({ tipo, referenciaId, tiendaId });
@@ -74,6 +80,8 @@ app.post('/api/pedidos', async (req, res) => {
       fechaRecepcion: req.body.fechaRecepcion
     });
     const pedidoGuardado = await nuevoPedido.save();
+    // No crear aviso para pedidos enviados de tienda a fábrica (estado = 'enviado')
+    // Solo se crean cuando fábrica los envía a tienda (estado = 'enviadoTienda')
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -85,24 +93,9 @@ app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
-    // LOG extra para ver las líneas y el campo peso
-    if (Array.isArray(req.body.lineas)) {
-      req.body.lineas.forEach((l, i) => {
-        console.log(`[BACKEND] Línea ${i}:`, l);
-      });
-    }
-    // Solo actualizar campos permitidos y el array de líneas
-    const updateFields = {};
-    if (req.body.lineas) updateFields.lineas = req.body.lineas;
-    if (req.body.estado) updateFields.estado = req.body.estado;
-    if (req.body.fechaEnvio) updateFields.fechaEnvio = req.body.fechaEnvio;
-    if (req.body.fechaRecepcion) updateFields.fechaRecepcion = req.body.fechaRecepcion;
-    if (req.body.numeroPedido) updateFields.numeroPedido = req.body.numeroPedido;
-    if (req.body.tiendaId) updateFields.tiendaId = req.body.tiendaId;
-    // Puedes añadir más campos si es necesario
-    const pedidoActualizado = await Pedido.findByIdAndUpdate(id, updateFields, { new: true });
+    const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
-    // AVISO AUTOMÁTICO: solo si cambia a 'enviadoTienda'
+    // AVISO AUTOMÁTICO: solo si fábrica cambia estado a 'enviadoTienda' (envío a tienda)
     if (pedidoActualizado && pedidoActualizado.estado === 'enviadoTienda') {
       await crearAvisoAutom({
         tipo: 'pedido',
@@ -227,9 +220,6 @@ app.patch('/api/avisos/:id/visto', async (req, res) => {
   }
 });
 
-// Cambiar a SendGrid para envío de correo a proveedor
-require('./sendgridProveedorEmail')(app);
-
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
   console.log('Cliente conectado:', socket.id);
@@ -246,7 +236,7 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
   });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log('Servidor backend escuchando en puerto', PORT);
 });
