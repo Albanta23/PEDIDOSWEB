@@ -22,6 +22,51 @@ async function cargarLogoBase64(url) {
   });
 }
 
+// Utilidad para cargar imagen como base64 y comprimirla (opcional calidad)
+async function cargarLogoBase64Optimizado(url, maxWidth = 120, maxHeight = 60, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function () {
+      // Redimensionar el logo para reducir el peso
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = h * (maxWidth / w); w = maxWidth; }
+      if (h > maxHeight) { w = w * (maxHeight / h); h = maxHeight; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      // Comprimir a calidad media
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(null); // Si falla, no bloquea
+    img.src = url;
+  });
+}
+
+// Utilidad robusta para convertir ArrayBuffer a base64
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  try {
+    const base64 = window.btoa(binary);
+    // Validar que el base64 no esté vacío y tenga una longitud razonable
+    if (!base64 || base64.length < 20) {
+      console.error('[Base64] Conversión fallida o resultado muy corto:', base64 ? base64.substring(0,50) : 'null');
+      return null; // Devolver null si la conversión falla o es muy corta
+    }
+    return base64;
+  } catch (e) {
+    console.error('[Base64] Error en window.btoa:', e);
+    return null; // Devolver null en caso de error
+  }
+}
+
 export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onVerHistoricoPedidos }) {
   const [mostrarTransferencias, setMostrarTransferencias] = useState(false);
   const [creandoNuevo, setCreandoNuevo] = useState(false);
@@ -247,41 +292,46 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
 
   // --- Generar PDF de la lista de proveedor ---
   async function exportarProveedorPDF(lineasProveedor, tiendaActual) {
-    const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
-    const doc = new jsPDF();
-    // Logo en la cabecera
-    doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-    let y = 18 + 10; // Bajar todo el texto 1 cm (10 mm)
-    doc.setFontSize(18);
+    // Usar logo optimizado y comprimido
+    const logoBase64 = await cargarLogoBase64Optimizado(window.location.origin + '/logo1.png', 100, 40, 0.6);
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    let y = 18;
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'JPEG', 15, 10, 24, 12); // Logo más pequeño
+    }
+    doc.setFontSize(15);
     doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
-    y += 10;
-    doc.setFontSize(12);
+    y += 8;
+    doc.setFontSize(10);
     if (tiendaActual?.nombre) {
       doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
-      y += 8;
+      y += 6;
     }
     doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
-    y += 10;
+    y += 8;
     // Cabecera tabla
-    doc.setFontSize(13);
+    doc.setFontSize(11);
     doc.text('Referencia', 14, y);
-    doc.text('Cantidad', 100, y);
-    y += 7;
-    doc.setLineWidth(0.3);
-    doc.line(14, y, 196, y);
-    y += 4;
-    doc.setFontSize(12);
+    doc.text('Cantidad', 80, y);
+    y += 6;
+    doc.setLineWidth(0.2);
+    doc.line(14, y, 120, y);
+    y += 3;
+    doc.setFontSize(10);
     lineasProveedor.forEach(l => {
       if (l.referencia && l.cantidad) {
         doc.text(String(l.referencia), 14, y);
-        doc.text(String(l.cantidad), 100, y);
-        y += 7;
-        if (y > 280) {
+        doc.text(String(l.cantidad), 80, y);
+        y += 5;
+        if (y > 270) {
           doc.addPage();
-          y = 18 + 10;
+          y = 18;
         }
       }
     });
+    // Pie de página simple
+    doc.setFontSize(8);
+    doc.text('Generado por gestión de pedidos', 14, 287);
     doc.save(`pedidos_proveedor_${tiendaActual?.nombre || ''}_${Date.now()}.pdf`);
   }
 
@@ -290,54 +340,81 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
-      // 1. Generar PDF como base64
-      const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
-      const doc = new jsPDF();
-      doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-      let y = 28; // texto 1cm más abajo
-      doc.setFontSize(18);
+      // 1. Generar PDF como base64 puro y robusto (usando logo optimizado)
+      const logoBase64 = await cargarLogoBase64Optimizado(window.location.origin + '/logo1.png', 100, 40, 0.6);
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      let y = 18;
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'JPEG', 15, 10, 24, 12);
+      }
+      doc.setFontSize(15);
       doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
-      y += 10;
-      doc.setFontSize(12);
+      y += 8;
+      doc.setFontSize(10);
       if (tiendaActual?.nombre) {
         doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
-        y += 8;
+        y += 6;
       }
       doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
-      y += 10;
-      doc.setFontSize(13);
+      y += 8;
+      doc.setFontSize(11);
       doc.text('Referencia', 14, y);
-      doc.text('Cantidad', 100, y);
-      y += 7;
-      doc.setLineWidth(0.3);
-      doc.line(14, y, 196, y);
-      y += 4;
-      doc.setFontSize(12);
+      doc.text('Cantidad', 80, y);
+      y += 6;
+      doc.setLineWidth(0.2);
+      doc.line(14, y, 120, y);
+      y += 3;
+      doc.setFontSize(10);
       lineasProveedor.forEach(l => {
         if (l.referencia && l.cantidad) {
           doc.text(String(l.referencia), 14, y);
-          doc.text(String(l.cantidad), 100, y);
-          y += 7;
-          if (y > 280) {
+          doc.text(String(l.cantidad), 80, y);
+          y += 5;
+          if (y > 270) {
             doc.addPage();
-            y = 28;
+            y = 18;
           }
         }
       });
-      // Obtener PDF como base64
-      const pdfBase64 = doc.output('datauristring');
+      doc.setFontSize(8);
+      doc.text('Generado por gestión de pedidos', 14, 287);
+      // Obtener PDF como arraybuffer y convertir a base64 robusto
+      const pdfArrayBuffer = doc.output('arraybuffer');
+      const pdfBase64String = arrayBufferToBase64(pdfArrayBuffer);
+
+      // Validar que el base64 se generó correctamente
+      if (!pdfBase64String) {
+        setMensajeProveedor("Error: No se pudo generar el PDF (base64 vacío).");
+        setEnviandoProveedor(false);
+        return;
+      }
+
       // 2. Enviar al backend
-      const res = await fetch('/api/enviar-proveedor', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+      console.log('[FRONTEND] Enviando a:', `${apiUrl}/api/enviar-proveedor`);
+      console.log('[FRONTEND] Datos a enviar:', {
+        tienda: tiendaActual?.nombre || '',
+        fecha: new Date().toLocaleDateString(),
+        lineasCount: lineasProveedor.length,
+        pdfBase64Length: pdfBase64String.length
+      });
+      
+      const res = await fetch(`${apiUrl}/api/enviar-proveedor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tienda: tiendaActual?.nombre || '',
           fecha: new Date().toLocaleDateString(),
           lineas: lineasProveedor,
-          pdfBase64
+          pdfBase64: pdfBase64String // solo base64 puro
         })
       });
+      
+      console.log('[FRONTEND] Respuesta status:', res.status);
+      
       if (res.ok) {
+        const responseData = await res.json();
+        console.log('[FRONTEND] Respuesta exitosa:', responseData);
         setMensajeProveedor("¡Lista enviada al proveedor!");
         handleProveedorLimpiar();
         setTimeout(()=>{
@@ -345,10 +422,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           setMostrarModalProveedor(false);
         }, 1500);
       } else {
-        setMensajeProveedor("Error al enviar el email al proveedor.");
+        const errorData = await res.text();
+        console.error('[FRONTEND] Error del servidor:', {
+          status: res.status,
+          statusText: res.statusText,
+          body: errorData
+        });
+        setMensajeProveedor(`Error al enviar email: ${res.status} ${res.statusText}`);
       }
     } catch (e) {
-      setMensajeProveedor("Error al generar o enviar el PDF.");
+      console.error('[FRONTEND] Excepción capturada:', e);
+      setMensajeProveedor(`Error: ${e.message || 'Error al generar o enviar el PDF'}`);
     }
     setEnviandoProveedor(false);
   }

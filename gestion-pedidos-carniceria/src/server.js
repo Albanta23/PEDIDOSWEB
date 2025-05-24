@@ -1,15 +1,17 @@
 // Servidor Express con Socket.io para pedidos en tiempo real
-require('dotenv').config();
+require('dotenv').config(); // Carga temprana de variables de entorno
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
-const mongoose = require('mongoose'); // Añadido
-const Pedido = require('./models/Pedido'); // Añadido
-const Transferencia = require('./models/Transferencia'); // Añadido
-const Aviso = require('./models/Aviso'); // <--- NUEVO
+const mongoose = require('mongoose');
+const Pedido = require('./models/Pedido');
+const Transferencia = require('./models/Transferencia');
+const Aviso = require('./models/Aviso');
 
 const app = express();
+app.use(cors()); // CORS antes de cualquier endpoint
+app.use(express.json({ limit: process.env.BODY_LIMIT || '20mb' })); // Límite configurable
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -19,38 +21,43 @@ const io = new Server(server, {
 });
 
 // Conexión a MongoDB
-// La variable de entorno MONGODB_URI se configura en el dashboard de Render.
-// Para desarrollo local, puedes definirla en un archivo .env o directamente aquí como fallback.
 const MONGODB_URI = process.env.MONGODB_URI || process.env.mongodb;
-
 if (!MONGODB_URI) {
-  console.error('Error: La variable de entorno mongodb no está definida.');
-  // Considera salir del proceso si la conexión a la BD es crítica para el inicio
-  // process.exit(1);
-  // O usa una URI local por defecto para desarrollo si lo prefieres, pero asegúrate de que no se use en producción sin querer.
-  // MONGODB_URI = 'mongodb://localhost:27017/pedidos_db_local'; 
-  // console.warn('Usando URI de MongoDB local por defecto.');
+  console.error('Error: La variable de entorno MONGODB_URI no está definida.');
+  process.exit(1);
 }
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB conectado exitosamente.'))
-  .catch(err => console.error('Error de conexión a MongoDB:', err));
+  .catch(err => {
+    console.error('Error de conexión a MongoDB:', err);
+    process.exit(1);
+  });
 
-app.use(cors());
-app.use(express.json());
-
-// Nueva ruta para health check
+// Health check
 app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
-// --- Endpoint para enviar lista de proveedor por email ---
-// require('./enviarProveedorEmail')(app); // Comentado o eliminado
-require('./sendgridProveedorEmail')(app); // Nueva línea para SendGrid
+// Test endpoint para validación
+app.get('/api/test', (req, res) => {
+  res.status(200).json({ 
+    message: 'Backend funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    mailgun: process.env.MAILGUN_API_KEY ? 'configurado' : 'no configurado'
+  });
+});
+
+// Endpoint para enviar lista de proveedor por email (Mailgun Sandbox)
+require('./mailgunProveedorEmail')(app);
+
+// Endpoint de prueba para enviar emails sin PDF adjunto
+require('./mailgunTestEmail')(app);
+
+// Endpoint de producción con mejores prácticas anti-spam
+require('./mailgunProductionEmail')(app);
 
 // Función para crear avisos automáticos
-// IMPORTANTE: Los avisos de pedidos SOLO deben crearse cuando fábrica envía a tienda (estado 'enviadoTienda')
-// NO se deben crear avisos cuando la tienda envía a fábrica (estado 'enviado')
 async function crearAvisoAutom({ tipo, referenciaId, tiendaId, texto }) {
   try {
     const existe = await Aviso.findOne({ tipo, referenciaId, tiendaId });
@@ -80,8 +87,6 @@ app.post('/api/pedidos', async (req, res) => {
       fechaRecepcion: req.body.fechaRecepcion
     });
     const pedidoGuardado = await nuevoPedido.save();
-    // No crear aviso para pedidos enviados de tienda a fábrica (estado = 'enviado')
-    // Solo se crean cuando fábrica los envía a tienda (estado = 'enviadoTienda')
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -95,7 +100,6 @@ app.put('/api/pedidos/:id', async (req, res) => {
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
-    // AVISO AUTOMÁTICO: solo si fábrica cambia estado a 'enviadoTienda' (envío a tienda)
     if (pedidoActualizado && pedidoActualizado.estado === 'enviadoTienda') {
       await crearAvisoAutom({
         tipo: 'pedido',
@@ -118,7 +122,7 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     const { id } = req.params;
     const pedidoEliminado = await Pedido.findByIdAndDelete(id);
     if (!pedidoEliminado) return res.status(404).json({ error: 'Pedido no encontrado' });
-    io.emit('pedido_eliminado', pedidoEliminado); // Emitir el pedido completo o solo su ID
+    io.emit('pedido_eliminado', pedidoEliminado);
     res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -139,7 +143,6 @@ app.post('/api/transferencias', async (req, res) => {
   try {
     const nueva = new Transferencia(req.body);
     const guardada = await nueva.save();
-    // AVISO AUTOMÁTICO: para destino y origen si aplica
     if (guardada.origen && guardada.destino) {
       await crearAvisoAutom({
         tipo: 'traspaso',
@@ -221,14 +224,13 @@ app.patch('/api/avisos/:id/visto', async (req, res) => {
 });
 
 // WebSocket para tiempo real
-io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
+io.on('connection', async (socket) => {
   console.log('Cliente conectado:', socket.id);
   try {
     const pedidosActuales = await Pedido.find();
     socket.emit('pedidos_inicial', pedidosActuales);
   } catch (err) {
     console.error('Error al enviar pedidos iniciales:', err);
-    // Opcionalmente emitir un error al cliente
     socket.emit('error_pedidos_inicial', { message: 'No se pudieron cargar los pedidos.' });
   }
   socket.on('disconnect', () => {

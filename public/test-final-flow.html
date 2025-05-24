@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Final - Envío de Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .loading {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .pedido-form {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        input, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba Final del Flujo de Envío de Pedidos</h1>
+        
+        <div class="test-section">
+            <h3>1. Verificación de Conectividad Backend</h3>
+            <button onclick="testBackendConnection()">Probar Conexión Backend</button>
+            <div id="backend-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Envío de Email de Prueba (Mailgun)</h3>
+            <div class="pedido-form">
+                <input type="text" id="tiendaInput" placeholder="Nombre de la tienda" value="Tienda de Prueba">
+                <input type="email" id="emailInput" placeholder="Email del proveedor" value="javier.cantoral.fernandez@gmail.com">
+                <textarea id="productosInput" placeholder="Lista de productos (JSON)">
+[
+  {"nombre": "Lomo", "cantidad": 5, "peso": "2.5kg", "precio": 15.50},
+  {"nombre": "Chorizo", "cantidad": 10, "peso": "1.2kg", "precio": 8.75},
+  {"nombre": "Jamón", "cantidad": 3, "peso": "1.8kg", "precio": 22.00}
+]</textarea>
+            </div>
+            <button onclick="sendTestEmail()">Enviar Email de Prueba</button>
+            <div id="email-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Resultados de las Pruebas</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:10001';
+        
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = type;
+        }
+
+        function addResult(message) {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleString();
+            results.textContent += `[${timestamp}] ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testBackendConnection() {
+            updateStatus('backend-status', '🔄 Probando conexión...', 'loading');
+            addResult('Iniciando prueba de conectividad backend...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/test`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('backend-status', `✅ Backend conectado: ${data.message}`, 'success');
+                    addResult('✅ Backend conectado correctamente');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('backend-status', `❌ Error de conexión: ${error.message}`, 'error');
+                addResult(`❌ Error de conexión backend: ${error.message}`);
+            }
+        }
+
+        async function sendTestEmail() {
+            updateStatus('email-status', '📧 Enviando email...', 'loading');
+            addResult('Iniciando envío de email de prueba...');
+            
+            const tienda = document.getElementById('tiendaInput').value;
+            const email = document.getElementById('emailInput').value;
+            const productosText = document.getElementById('productosInput').value;
+            
+            try {
+                const productos = JSON.parse(productosText);
+                
+                const pedidoData = {
+                    tienda: tienda,
+                    proveedor: {
+                        email: email,
+                        nombre: "Proveedor de Prueba"
+                    },
+                    productos: productos,
+                    fechaPedido: new Date().toISOString(),
+                    observaciones: "Este es un pedido de prueba para validar el flujo de envío por email."
+                };
+
+                addResult(`Enviando pedido con ${productos.length} productos...`);
+                
+                const response = await fetch(`${API_BASE_URL}/api/enviar-proveedor`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(pedidoData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    updateStatus('email-status', '✅ Email enviado correctamente', 'success');
+                    addResult('✅ Email enviado correctamente via Mailgun');
+                    addResult(`Detalles: ${JSON.stringify(result, null, 2)}`);
+                } else {
+                    throw new Error(result.error || 'Error desconocido');
+                }
+            } catch (error) {
+                updateStatus('email-status', `❌ Error: ${error.message}`, 'error');
+                addResult(`❌ Error en envío de email: ${error.message}`);
+                
+                if (error.message.includes('JSON')) {
+                    addResult('💡 Verifica que el JSON de productos esté bien formateado');
+                }
+            }
+        }
+
+        // Ejecutar prueba de conectividad al cargar la página
+        window.onload = function() {
+            addResult('=== INICIANDO PRUEBAS DEL SISTEMA ===');
+            setTimeout(testBackendConnection, 1000);
+        };
+    </script>
+</body>
+</html>
