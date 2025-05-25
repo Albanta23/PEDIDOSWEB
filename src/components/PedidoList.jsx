@@ -398,8 +398,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           {logGuardado && (
             <div style={{
               position: 'absolute',
-              top: 12,
-              right: 20,
+              top:12,
+              right:20,
               background: '#28a745',
               color: '#fff',
               padding: '8px 18px',
@@ -641,6 +641,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                   <tr style={{background:'#f8f9fa'}}>
                     <th style={{padding:'8px 6px',borderBottom:'1px solid #ddd',textAlign:'left'}}>Referencia</th>
                     <th style={{padding:'8px 6px',borderBottom:'1px solid #ddd',textAlign:'left'}}>Cantidad</th>
+                    <th style={{padding:'8px 6px',borderBottom:'1px solid #ddd',textAlign:'left'}}>Unidad</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -664,6 +665,12 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       </td>
                       <td style={{padding:'6px'}}>
                         <input type="number" min="1" value={linea.cantidad} onChange={e => handleProveedorLineaChange(i, 'cantidad', Number(e.target.value))} style={{width:'100%',border:'1px solid #bbb',borderRadius:6,padding:'6px 8px'}} />
+                      </td>
+                      <td style={{padding:'6px'}}>
+                        <select value={linea.unidad || 'kg'} onChange={e => handleProveedorLineaChange(i, 'unidad', e.target.value)} style={{width:'100%',border:'1px solid #bbb',borderRadius:6,padding:'6px 8px'}}>
+                          <option value="kg">kg</option>
+                          <option value="uds">uds</option>
+                        </select>
                       </td>
                       <td style={{padding:'6px'}}>
                         <button onClick={() => handleProveedorEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:20}} title="Eliminar línea">🗑</button>
