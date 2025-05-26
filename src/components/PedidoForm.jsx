@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import Watermark from './Watermark';
-import { FORMATOS_PEDIDO } from '../configFormatos';
+
+const formatos = ['Cajas', 'Bolsas', 'Kilos', 'Unidades'];
 
 const PedidoForm = ({ onAdd }) => {
   const [lineas, setLineas] = useState([
-    { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }
+    { producto: '', cantidad: 1, formato: formatos[0], comentario: '' }
   ]);
   const [mensaje, setMensaje] = useState('');
 
@@ -13,7 +14,7 @@ const PedidoForm = ({ onAdd }) => {
   };
 
   const handleAgregarLinea = () => {
-    setLineas([...lineas, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
+    setLineas([...lineas, { producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
   };
 
   const handleEliminarLinea = (idx) => {
@@ -24,10 +25,11 @@ const PedidoForm = ({ onAdd }) => {
     e.preventDefault();
     const lineasValidas = lineas.filter(l => l.producto && l.cantidad > 0);
     if (lineasValidas.length === 0) return;
-    onAdd({ lineas: lineasValidas });
-    setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
-    setMensaje('¡Pedido enviado a fábrica!');
-    setTimeout(() => setMensaje(''), 2000);
+    const normalizadas = lineasValidas.map(l => ({
+      ...l
+    }));
+    onAdd({ lineas: normalizadas });
+    setLineas([{ producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
   };
 
   return (
@@ -57,7 +59,7 @@ const PedidoForm = ({ onAdd }) => {
               onChange={e => handleLineaChange(idx, 'formato', e.target.value)}
               style={{ padding: 8 }}
             >
-              {FORMATOS_PEDIDO.map(f => (
+              {formatos.map(f => (
                 <option key={f} value={f}>{f}</option>
               ))}
             </select>
@@ -81,7 +83,6 @@ const PedidoForm = ({ onAdd }) => {
             Confirmar y enviar pedido
           </button>
         </div>
-        {mensaje && <div style={{ color: 'green', marginTop: 8 }}>{mensaje}</div>}
       </form>
     </div>
   );

@@ -34,7 +34,7 @@ module.exports = function(app) {
 
       // Preparar el email
       const emailData = {
-        from: process.env.MAILGUN_FROM || 'Pedidos Carnicería <mailgun@' + process.env.MAILGUN_SANDBOX_DOMAIN + '>',
+        from: 'fabricaembutidosballesteros@gmail.com',
         to: proveedorEmail,
         subject: `🥩 Pedido de Carnicería - ${tienda} (${new Date(fechaPedido).toLocaleDateString()})`,
         text: `

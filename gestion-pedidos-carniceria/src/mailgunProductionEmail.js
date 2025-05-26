@@ -30,7 +30,7 @@ module.exports = function(app) {
 
       // Email con mejores prácticas anti-spam
       const emailData = {
-        from: `Carniceria Ballesteros <${process.env.MAILGUN_FROM}>`,
+        from: 'fabricaembutidosballesteros@gmail.com',
         to: proveedorEmail,
         subject: `Pedido ${fechaFormateada} - ${tienda}`, // Asunto más profesional
         text: `
