@@ -17,7 +17,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'https://pedidos-backend-0e1s.onrender.com'
+      '/api': 'http://localhost:4000'
     }
   },
 });

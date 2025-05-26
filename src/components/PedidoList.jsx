@@ -326,14 +326,20 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       });
       // Obtener PDF como base64
       const pdfBase64 = doc.output('datauristring');
-      // 2. Enviar al backend
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor`, {
+      // 2. Enviar al endpoint profesional de Mailgun
+      const productos = lineasProveedor.map(l => ({
+        nombre: l.referencia,
+        cantidad: l.cantidad,
+        unidad: l.unidad || 'kg'
+      }));
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor-production`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tienda: tiendaActual?.nombre || '',
-          fecha: new Date().toLocaleDateString(),
-          lineas: lineasProveedor,
+          productos,
+          fechaPedido: new Date().toISOString(),
+          observaciones: '',
           pdfBase64
         })
       });
@@ -349,6 +355,42 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       }
     } catch (e) {
       setMensajeProveedor("Error al generar o enviar el PDF.");
+    }
+    setEnviandoProveedor(false);
+  }
+
+  // --- Enviar lista de proveedor SOLO HTML por email (sin PDF, modo test Mailgun) ---
+  async function enviarProveedorSoloHtmlPorEmail(lineasProveedor, tiendaActual) {
+    setEnviandoProveedor(true);
+    setMensajeProveedor("");
+    try {
+      // Construir datos mínimos para el endpoint de test
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+      const tienda = tiendaActual?.nombre || '';
+      const fecha = new Date().toLocaleDateString();
+      // Adaptar estructura a la esperada por el backend
+      const lineas = lineasProveedor.map(l => ({
+        referencia: l.referencia,
+        cantidad: l.cantidad,
+        unidad: l.unidad || 'kg'
+      }));
+      const res = await fetch(`${apiUrl}/api/enviar-proveedor-html-test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tienda, fecha, lineas })
+      });
+      if (res.ok) {
+        setMensajeProveedor("¡Lista enviada al proveedor (solo HTML, sin PDF)!");
+        handleProveedorLimpiar();
+        setTimeout(()=>{
+          setMensajeProveedor("");
+          setMostrarModalProveedor(false);
+        }, 1500);
+      } else {
+        setMensajeProveedor("Error al enviar el email de prueba (solo HTML).");
+      }
+    } catch (e) {
+      setMensajeProveedor("Error de red al enviar email de prueba.");
     }
     setEnviandoProveedor(false);
   }
@@ -696,6 +738,16 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 style={{background:'#b71c1c',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:17,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1}}
               >
                 {enviandoProveedor ? 'Enviando...' : 'Enviar'}
+              </button>
+              <button
+                onClick={async ()=>{
+                  await enviarProveedorSoloHtmlPorEmail(lineasProveedor, tiendaActual);
+                }}
+                style={{background:'#ff9800',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,marginLeft:10}}
+                disabled={enviandoProveedor}
+                title="Enviar solo HTML de prueba (sin PDF)"
+              >
+                Enviar solo HTML (test)
               </button>
             </div>
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
