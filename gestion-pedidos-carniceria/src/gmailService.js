@@ -1,50 +1,32 @@
-const fs = require('fs');
-const path = require('path');
 const { google } = require('googleapis');
 
-// Cargar credenciales desde el archivo credentials.json
-const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
-const TOKEN_PATH = path.join(__dirname, 'token.json');
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const REFRESH_TOKEN = process.env.GMAIL_REFRESH_TOKEN; // Debes obtenerlo solo una vez con el flujo OAuth
 
-const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
+const oAuth2Client = new google.auth.OAuth2(
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI
+);
 
-async function authorize() {
-  const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
-  const { client_secret, client_id, redirect_uris } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-  // Cargar token desde token.json
-  if (fs.existsSync(TOKEN_PATH)) {
-    const token = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
-    oAuth2Client.setCredentials(token);
-    return oAuth2Client;
-  } else {
-    throw new Error('Token no encontrado. Genera un token usando el script de autorización.');
-  }
-}
+async function sendMail({ to, subject, html }) {
+  const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+  const raw = Buffer.from(
+    `To: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${html}`
+  )
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 
-async function sendEmail(auth, to, subject, body) {
-  const gmail = google.gmail({ version: 'v1', auth });
-
-  const email = [
-    `To: ${to}`,
-    'Content-Type: text/html; charset=utf-8',
-    'MIME-Version: 1.0',
-    `Subject: ${subject}`,
-    '',
-    body,
-  ].join('\n');
-
-  const encodedMessage = Buffer.from(email).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-  const res = await gmail.users.messages.send({
+  await gmail.users.messages.send({
     userId: 'me',
-    requestBody: {
-      raw: encodedMessage,
-    },
+    requestBody: { raw },
   });
-
-  return res.data;
 }
 
-module.exports = { authorize, sendEmail };
+module.exports = { sendMail };

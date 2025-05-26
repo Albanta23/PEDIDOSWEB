@@ -12,14 +12,6 @@ services:
         fromDatabase:
           name: mongodb_connection
           property: connectionString
-      - key: MAILGUN_API_KEY
-        sync: false
-      - key: MAILGUN_SANDBOX_DOMAIN  
-        sync: false
-      - key: MAILGUN_FROM
-        sync: false
-      - key: PROVEEDOR_EMAIL
-        sync: false
       - key: PORT
         value: 10000
       - key: BODY_LIMIT

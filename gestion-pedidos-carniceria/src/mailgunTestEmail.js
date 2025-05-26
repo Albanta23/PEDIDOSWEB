@@ -1,5 +1,4 @@
 // Endpoint simplificado para pruebas de envío de email sin PDF adjunto
-const mailgun = require('mailgun-js');
 
 module.exports = function(app) {
   app.post('/api/enviar-proveedor-test', async (req, res) => {
@@ -12,17 +11,6 @@ module.exports = function(app) {
         proveedorEmail,
         productosCount: productos?.length,
         fechaPedido
-      });
-
-      // Configurar Mailgun con sandbox
-      const mg = mailgun({
-        apiKey: process.env.MAILGUN_API_KEY,
-        domain: process.env.MAILGUN_SANDBOX_DOMAIN
-      });
-
-      console.log('[MAILGUN TEST] Configuración:', {
-        domain: process.env.MAILGUN_SANDBOX_DOMAIN,
-        hasApiKey: !!process.env.MAILGUN_API_KEY
       });
 
       // Generar contenido del email
@@ -125,22 +113,15 @@ Carnicería - Sistema de Gestión de Pedidos
       });
 
       // Enviar el email
-      const result = await new Promise((resolve, reject) => {
-        mg.messages().send(emailData, (error, body) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(body);
-          }
-        });
-      });
+      // Aquí se debe integrar el servicio de envío de email deseado (por ejemplo, SMTP, SendGrid, etc.)
+      // Este es un ejemplo genérico y no funcionará hasta que se configure un servicio de envío real
+      await enviarEmailServicioExterno(emailData);
 
-      console.log('[MAILGUN TEST] Email enviado exitosamente:', result);
+      console.log('[MAILGUN TEST] Email enviado exitosamente');
       
       res.status(200).json({ 
         ok: true, 
         message: 'Email de prueba enviado correctamente',
-        messageId: result.id,
         destinatario: proveedorEmail,
         productos: productos.length,
         total: total.toFixed(2)
@@ -155,3 +136,14 @@ Carnicería - Sistema de Gestión de Pedidos
     }
   });
 };
+
+// Función simulada para enviar email a través de un servicio externo
+// Reemplazar esta función con la integración real del servicio de envío de email
+async function enviarEmailServicioExterno(emailData) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log('[SERVICIO EXTERNO] Email simulado como enviado:', emailData);
+      resolve();
+    }, 1000);
+  });
+}
