@@ -1,0 +1,30 @@
+services:
+  # Backend API
+  - type: web
+    name: pedidos-backend
+    env: node
+    buildCommand: cd gestion-pedidos-carniceria && npm install
+    startCommand: cd gestion-pedidos-carniceria && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: mongodb_connection
+          property: connectionString
+      - key: PORT
+        value: 10000
+      - key: BODY_LIMIT
+        value: 20mb
+
+  # Frontend
+  - type: web
+    name: pedidos-frontend
+    env: node  
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: VITE_API_URL
+        value: https://pedidos-backend.onrender.com
+      - key: VITE_SOCKET_URL  
+        value: https://pedidos-backend.onrender.com

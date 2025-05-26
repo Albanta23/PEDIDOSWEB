@@ -3,13 +3,13 @@ const mongoose = require('mongoose');
 const LineaSchema = new mongoose.Schema({
   producto: String,
   cantidad: Number,
-  peso: Number, // <--- NUEVO: peso por línea
   formato: String,
   comentario: String,
-  cantidadEnviada: Number,
+  cantidadEnviada: Number, // ahora representa los kilos enviados
+  unidadesEnviadas: { type: Number, default: null }, // nuevo campo para unidades/piezas enviadas
   lote: String,
   preparada: Boolean
-});
+}, { minimize: false }); // <--- No omitir campos null
 
 const PedidoSchema = new mongoose.Schema({
   tiendaId: String,

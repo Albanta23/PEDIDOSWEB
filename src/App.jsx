@@ -3,7 +3,6 @@ import { io } from 'socket.io-client';
 import './App.css';
 import FabricaPanel from './components/FabricaPanel';
 import Login from './components/Login';
-import PedidoForm from './components/PedidoForm';
 import PedidoList from './components/PedidoList';
 import HistoricoTienda from './components/HistoricoTienda';
 import ErrorLogger from './components/ErrorLogger';
@@ -379,10 +378,6 @@ function App() {
           </HistoricoTiendaPanel>
         ) : (
           <div>
-            <PedidoForm
-              pedido={pedidoEditando}
-              onAdd={agregarPedido}
-            />
             <PedidoList
               pedidos={pedidos.filter(p => p.tiendaId === tiendaSeleccionada)}
               onModificar={modificarPedido}
