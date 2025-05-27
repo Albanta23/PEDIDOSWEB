@@ -96,6 +96,38 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     setPedidoAbierto(null); // Cerrar el modal de edición después de guardar
   };
 
+  // Estado para el modal sumatorio de peso
+  const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
+
+  // Handler para abrir el modal sumatorio
+  const abrirModalPeso = (lineaIdx, pesoActual, cantidad) => {
+    setModalPeso({
+      visible: true,
+      lineaIdx,
+      valores: Array.from({length: cantidad}, (_, i) => (pesoActual && !isNaN(pesoActual) && cantidad === 1) ? pesoActual : '')
+    });
+  };
+
+  // Handler para cambiar un valor de peso
+  const cambiarValorPeso = (idx, valor) => {
+    setModalPeso(prev => {
+      const nuevos = [...prev.valores];
+      nuevos[idx] = valor;
+      return {...prev, valores: nuevos};
+    });
+  };
+
+  // Handler para aplicar la suma de pesos
+  const aplicarPesos = () => {
+    if (modalPeso.lineaIdx == null) return;
+    const suma = modalPeso.valores.reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
+    setPedidoAbierto(prev => ({
+      ...prev,
+      lineas: prev.lineas.map((l, i) => i === modalPeso.lineaIdx ? {...l, peso: suma} : l)
+    }));
+    setModalPeso({visible: false, lineaIdx: null, valores: []});
+  };
+
   return (
     <div style={{
       fontFamily:'Inter, Segoe UI, Arial, sans-serif',
@@ -265,14 +297,20 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <td>{linea.producto}</td>
                     <td>{linea.cantidad}</td>
                     <td>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={linea.peso ?? ''} // Muestra string vacío si es null/undefined
-                        onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                        style={{ width: 70 }}
-                      />
+                      {linea.cantidad > 1 ? (
+                        <button style={{background:'#eafaf1',border:'1px solid #28a745',borderRadius:4,padding:'2px 8px',cursor:'pointer'}} onClick={() => abrirModalPeso(idx, linea.peso, linea.cantidad)}>
+                          {linea.peso ?? '-'} <span style={{fontSize:13, color:'#28a745'}}>✚</span>
+                        </button>
+                      ) : (
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={linea.peso ?? ''}
+                          onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+                          style={{ width: 70 }}
+                        />
+                      )}
                     </td>
                     <td>
                       <input
@@ -357,6 +395,23 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           </div>
         </div>
       )}
+      {modalPeso.visible && (
+  <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.35)',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})}>
+    <div style={{background:'#fff',borderRadius:12,padding:32,minWidth:320,maxWidth:400,boxShadow:'0 4px 32px #0002'}} onClick={e=>e.stopPropagation()}>
+      <h3 style={{marginTop:0}}>Sumar pesos para la línea</h3>
+      {modalPeso.valores.map((v, idx) => (
+        <div key={idx} style={{marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
+          <span style={{width:24,display:'inline-block',textAlign:'right'}}>{idx+1}:</span>
+          <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(idx, e.target.value)} style={{width:80,padding:'4px 8px',borderRadius:4,border:'1px solid #ccc'}} />
+          <span>kg</span>
+        </div>
+      ))}
+      <div style={{margin:'12px 0',fontWeight:600}}>Suma total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
+      <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6,fontWeight:600,marginRight:8}}>Aplicar</button>
+      <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6}}>Cancelar</button>
+    </div>
+  </div>
+)}
     </div>
   );
 };
