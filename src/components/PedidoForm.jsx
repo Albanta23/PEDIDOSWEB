@@ -5,7 +5,7 @@ const formatos = ['Cajas', 'Bolsas', 'Kilos', 'Unidades'];
 
 const PedidoForm = ({ onAdd }) => {
   const [lineas, setLineas] = useState([
-    { producto: '', cantidad: 1, formato: formatos[0], comentario: '' }
+    { producto: '', cantidad: 1, peso: 0, formato: formatos[0], comentario: '' }
   ]);
   const [mensaje, setMensaje] = useState('');
 
@@ -14,7 +14,7 @@ const PedidoForm = ({ onAdd }) => {
   };
 
   const handleAgregarLinea = () => {
-    setLineas([...lineas, { producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
+    setLineas([...lineas, { producto: '', cantidad: 1, peso: 0, formato: formatos[0], comentario: '' }]);
   };
 
   const handleEliminarLinea = (idx) => {
@@ -25,11 +25,10 @@ const PedidoForm = ({ onAdd }) => {
     e.preventDefault();
     const lineasValidas = lineas.filter(l => l.producto && l.cantidad > 0);
     if (lineasValidas.length === 0) return;
-    const normalizadas = lineasValidas.map(l => ({
-      ...l
-    }));
-    onAdd({ lineas: normalizadas });
-    setLineas([{ producto: '', cantidad: 1, formato: formatos[0], comentario: '' }]);
+    onAdd({ lineas: lineasValidas });
+    setLineas([{ producto: '', cantidad: 1, peso: 0, formato: formatos[0], comentario: '' }]);
+    setMensaje('¡Pedido enviado a fábrica!');
+    setTimeout(() => setMensaje(''), 2000);
   };
 
   return (
@@ -53,6 +52,15 @@ const PedidoForm = ({ onAdd }) => {
               value={linea.cantidad}
               onChange={e => handleLineaChange(idx, 'cantidad', Number(e.target.value))}
               style={{ padding: 8, width: 60 }}
+            />
+            <input
+              type="number"
+              min="0"
+              step="any"
+              placeholder="Peso (kg)"
+              value={linea.peso ?? ''}
+              onChange={e => handleLineaChange(idx, 'peso', Number(e.target.value))}
+              style={{ padding: 8, width: 80 }}
             />
             <select
               value={linea.formato}
@@ -83,6 +91,7 @@ const PedidoForm = ({ onAdd }) => {
             Confirmar y enviar pedido
           </button>
         </div>
+        {mensaje && <div style={{ color: 'green', marginTop: 8 }}>{mensaje}</div>}
       </form>
     </div>
   );

@@ -3,19 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@sendgrid/mail": "^8.1.5",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
-    "axios": "^1.9.0",
-    "googleapis": "^149.0.0",
     "jspdf": "^3.0.1",
-    "node-fetch": "^3.3.2",
-    "nodemailer": "^7.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
-    "socket.io-client": "^4.8.1",
     "web-vitals": "^3.1.0"
   },
   "overrides": {
@@ -51,7 +45,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.1",
     "jsdom": "^22.1.0",
-    "vite": "^6.3.5",
-    "vitest": "^3.1.4"
+    "vite": "^4.5.9",
+    "vitest": "^0.34.6"
   }
 }
