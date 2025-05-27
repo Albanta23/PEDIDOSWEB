@@ -54,9 +54,15 @@ app.get('/api/pedidos', async (req, res) => {
 
 app.post('/api/pedidos', async (req, res) => {
   try {
-    // Permitir todos los campos modernos
+    // Obtener el último numeroPedido actual de forma atómica
+    // Usar sort y limit para encontrar el mayor actual
+    const ultimoPedido = await Pedido.findOne({}, {}, { sort: { numeroPedido: -1 } });
+    const siguienteNumero = (ultimoPedido?.numeroPedido || 0) + 1;
+
+    // Crear el nuevo pedido con el siguiente numeroPedido
     const nuevoPedido = new Pedido({
       ...req.body,
+      numeroPedido: siguienteNumero,
       fechaCreacion: req.body.fechaCreacion || new Date(),
       fechaPedido: req.body.fechaPedido,
       fechaEnvio: req.body.fechaEnvio,
@@ -66,6 +72,27 @@ app.post('/api/pedidos', async (req, res) => {
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
+    // Si hay error de duplicado, intentar de nuevo (muy raro, pero posible en concurrencia)
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.numeroPedido) {
+      // Reintentar una vez más
+      try {
+        const ultimoPedido = await Pedido.findOne({}, {}, { sort: { numeroPedido: -1 } });
+        const siguienteNumero = (ultimoPedido?.numeroPedido || 0) + 1;
+        const nuevoPedido = new Pedido({
+          ...req.body,
+          numeroPedido: siguienteNumero,
+          fechaCreacion: req.body.fechaCreacion || new Date(),
+          fechaPedido: req.body.fechaPedido,
+          fechaEnvio: req.body.fechaEnvio,
+          fechaRecepcion: req.body.fechaRecepcion
+        });
+        const pedidoGuardado = await nuevoPedido.save();
+        io.emit('pedido_nuevo', pedidoGuardado);
+        return res.status(201).json(pedidoGuardado);
+      } catch (err2) {
+        return res.status(400).json({ error: err2.message });
+      }
+    }
     res.status(400).json({ error: err.message });
   }
 });

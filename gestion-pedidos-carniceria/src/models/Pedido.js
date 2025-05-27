@@ -23,4 +23,6 @@ const PedidoSchema = new mongoose.Schema({
   peso: { type: Number, min: 0 }
 }, { timestamps: true });
 
+PedidoSchema.index({ numeroPedido: 1 }, { unique: true });
+
 module.exports = mongoose.model('Pedido', PedidoSchema);
