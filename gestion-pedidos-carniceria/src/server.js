@@ -19,10 +19,15 @@ const io = new Server(server, {
 // Conexión a MongoDB
 // La variable de entorno MONGODB_URI se configura en el dashboard de Render.
 // Para desarrollo local, puedes definirla en un archivo .env o directamente aquí como fallback.
-const MONGODB_URI = process.env.MONGODB_URI; // Usar solo la variable estándar MONGODB_URI
+const MONGODB_URI = process.env.mongodb; // Utiliza la variable de entorno 'mongodb' de Render
+
 if (!MONGODB_URI) {
-  console.error('Error: La variable de entorno MONGODB_URI no está definida.');
-  process.exit(1);
+  console.error('Error: La variable de entorno mongodb no está definida.');
+  // Considera salir del proceso si la conexión a la BD es crítica para el inicio
+  // process.exit(1);
+  // O usa una URI local por defecto para desarrollo si lo prefieres, pero asegúrate de que no se use en producción sin querer.
+  // MONGODB_URI = 'mongodb://localhost:27017/pedidos_db_local'; 
+  // console.warn('Usando URI de MongoDB local por defecto.');
 }
 
 mongoose.connect(MONGODB_URI)
@@ -95,44 +100,6 @@ app.delete('/api/pedidos/:id', async (req, res) => {
 
 // Importar y montar el endpoint de Mailgun para enviar proveedor
 require('./enviarProveedorEmail')(app);
-
-// Endpoint de prueba para enviar solo la plantilla HTML al proveedor (sin PDF)
-app.post('/api/enviar-proveedor-html-test', async (req, res) => {
-  try {
-    // Usa la misma lógica de plantilla que en enviarProveedorEmail.js
-    const mailgun = require('mailgun-js');
-    const DOMAIN = process.env.MAILGUN_DOMAIN || process.env.MAILGUN_SANDBOX_DOMAIN;
-    const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: DOMAIN });
-    const proveedorEmail = process.env.PROVEEDOR_EMAIL || 'proveedor@ejemplo.com';
-    const fromEmail = 'fabricaembutidosballesteros@gmail.com';
-    const { tienda, fecha, lineas } = req.body;
-
-    // Construcción simple de la plantilla HTML (ajusta según tu plantilla real)
-    let html = `<h2>Pedido de ${tienda}</h2><p>Fecha: ${fecha}</p><table border="1" cellpadding="5"><tr><th>Referencia</th><th>Cantidad</th><th>Unidad</th></tr>`;
-    for (const l of lineas) {
-      html += `<tr><td>${l.referencia}</td><td>${l.cantidad}</td><td>${l.unidad}</td></tr>`;
-    }
-    html += '</table>';
-
-    const data = {
-      from: fromEmail,
-      to: proveedorEmail,
-      subject: `Pedido TEST solo HTML - ${tienda} (${fecha})`,
-      html
-    };
-
-    mg.messages().send(data, function (error, body) {
-      if (error) {
-        console.error('Error enviando email:', error);
-        return res.status(500).json({ error: 'Error enviando email', details: error });
-      }
-      res.json({ ok: true, enviado: true, body });
-    });
-  } catch (err) {
-    console.error('Error en endpoint /api/enviar-proveedor-html-test:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB

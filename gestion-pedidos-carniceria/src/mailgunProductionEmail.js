@@ -1,18 +1,26 @@
-// Endpoint para envío de emails a proveedores
+// Endpoint mejorado para envío de emails con mejores prácticas anti-spam
+const mailgun = require('mailgun-js');
+
 module.exports = function(app) {
   app.post('/api/enviar-proveedor-production', async (req, res) => {
     try {
       const { tienda, proveedor, productos, fechaPedido, observaciones } = req.body;
       const proveedorEmail = proveedor?.email || process.env.PROVEEDOR_EMAIL || 'javier.cantoral.fernandez@gmail.com';
       
-      console.log('[ENVIO EMAIL] Datos recibidos:', {
+      console.log('[MAILGUN PROD] Datos recibidos:', {
         tienda,
         proveedorEmail,
         productosCount: productos?.length,
         fechaPedido
       });
 
-      // Generar contenido del email
+      // Configurar Mailgun con sandbox
+      const mg = mailgun({
+        apiKey: process.env.MAILGUN_API_KEY,
+        domain: process.env.MAILGUN_SANDBOX_DOMAIN
+      });
+
+      // Generar contenido del email con mejores prácticas anti-spam
       const productosTexto = productos.map(p => 
         `${p.nombre}: ${p.cantidad} unidades (${p.peso || 'N/A'}) - €${p.precio || 'N/A'}`
       ).join('\n');
@@ -20,11 +28,11 @@ module.exports = function(app) {
       const total = productos.reduce((sum, p) => sum + (p.precio * p.cantidad || 0), 0);
       const fechaFormateada = new Date(fechaPedido).toLocaleDateString('es-ES');
 
-      // Email
+      // Email con mejores prácticas anti-spam
       const emailData = {
-        from: 'fabricaembutidosballesteros@gmail.com',
+        from: `Carniceria Ballesteros <${process.env.MAILGUN_FROM}>`,
         to: proveedorEmail,
-        subject: `Pedido ${fechaFormateada} - ${tienda}`, // Asunto
+        subject: `Pedido ${fechaFormateada} - ${tienda}`, // Asunto más profesional
         text: `
 PEDIDO DE PRODUCTOS CARNICOS
 
@@ -145,26 +153,35 @@ Carniceria Ballesteros
 </body>
 </html>
         `,
+        // Headers anti-spam
+        'h:List-Unsubscribe': '<mailto:no-reply@carniceriaballesteros.com>',
+        'h:X-Campaign-Id': 'pedidos-proveedor',
+        'h:Reply-To': proveedorEmail
       };
 
-      console.log('[ENVIO EMAIL] Enviando email:', {
+      console.log('[MAILGUN PROD] Enviando email profesional:', {
         from: emailData.from,
         to: emailData.to,
         subject: emailData.subject,
         productosCount: productos.length
       });
 
-      // Aquí se debería integrar el servicio de envío de email (por ejemplo, SMTP, SendGrid, etc.)
-      // const result = await enviarEmailServicio(emailData);
+      // Enviar el email
+      const result = await new Promise((resolve, reject) => {
+        mg.messages().send(emailData, (error, body) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(body);
+          }
+        });
+      });
 
-      // Simulación de envío exitoso
-      const result = { id: '12345', message: 'Email enviado exitosamente' };
-
-      console.log('[ENVIO EMAIL] Email enviado exitosamente:', result);
+      console.log('[MAILGUN PROD] Email enviado exitosamente:', result);
       
       res.status(200).json({ 
         ok: true, 
-        message: 'Email enviado correctamente',
+        message: 'Email profesional enviado correctamente',
         messageId: result.id,
         destinatario: proveedorEmail,
         productos: productos.length,
@@ -173,9 +190,9 @@ Carniceria Ballesteros
       });
       
     } catch (err) {
-      console.error('[ENVIO EMAIL] Error enviando email:', err);
+      console.error('[MAILGUN PROD] Error enviando email profesional:', err);
       res.status(500).json({ 
-        error: 'Error enviando email: ' + err.message,
+        error: 'Error enviando email profesional: ' + err.message,
         detalles: err.toString()
       });
     }
