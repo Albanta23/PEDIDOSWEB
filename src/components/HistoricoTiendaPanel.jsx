@@ -4,7 +4,6 @@ import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
 import logo from '../assets/logo1.png';
 import { listarAvisos, marcarAvisoVisto } from '../services/avisosService';
-import { FORMATOS_PEDIDO } from '../configFormatos';
 
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -120,7 +119,7 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     let productoLineHeight = productoLines.length * 4; // Approximate height based on font size 8
 
     currentX += colWidths.producto;
-    doc.text(FORMATOS_PEDIDO.includes(l.formato) ? l.formato : '-', currentX, y); currentX += colWidths.formato;
+    doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
     doc.text(String(l.cantidad || '-'), currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
     doc.text(l.peso !== undefined && l.peso !== null ? String(l.peso) : '-', currentX + colWidths.peso / 2, y, { align: 'center' }); currentX += colWidths.peso;
     doc.text(String(l.cantidadEnviada || '-'), currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
@@ -233,7 +232,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos enviados a fábrica ni creados</td></tr>
           )}
           {pedidosEnviados.map((pedido, idx) => (
-            <tr key={`enviado-${pedido.id || pedido._id || `${pedido.numeroPedido}-${pedido.tiendaId}-${idx}`}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
+            <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
               <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
               <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
               <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
@@ -371,7 +370,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                 </thead>
                 <tbody>
                   {(modalPedido.estado === 'borrador' ? (editandoLineas || modalPedido.lineas) : modalPedido.lineas).map((l, i) => (
-                    <tr key={`linea-${l.id || l._id || `${l.producto}-${l.formato}-${i}`}`} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
+                    <tr key={i} style={{background:i%2===0?'#fff':'#f1f8ff'}}>
                       <td style={{padding:'8px 10px', textAlign:'center'}}>{i + 1}</td>
                       {modalPedido.estado === 'borrador' ? (
                         editandoLineas ? (

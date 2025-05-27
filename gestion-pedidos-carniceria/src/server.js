@@ -6,6 +6,8 @@ const cors = require('cors');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
+const Transferencia = require('./models/Transferencia'); // Añadido
+const Aviso = require('./models/Aviso'); // <--- NUEVO
 
 const app = express();
 const server = http.createServer(app);
@@ -19,10 +21,15 @@ const io = new Server(server, {
 // Conexión a MongoDB
 // La variable de entorno MONGODB_URI se configura en el dashboard de Render.
 // Para desarrollo local, puedes definirla en un archivo .env o directamente aquí como fallback.
-const MONGODB_URI = process.env.MONGODB_URI; // Usar solo la variable estándar MONGODB_URI
+const MONGODB_URI = process.env.MONGODB_URI || process.env.mongodb;
+
 if (!MONGODB_URI) {
-  console.error('Error: La variable de entorno MONGODB_URI no está definida.');
-  process.exit(1);
+  console.error('Error: La variable de entorno mongodb no está definida.');
+  // Considera salir del proceso si la conexión a la BD es crítica para el inicio
+  // process.exit(1);
+  // O usa una URI local por defecto para desarrollo si lo prefieres, pero asegúrate de que no se use en producción sin querer.
+  // MONGODB_URI = 'mongodb://localhost:27017/pedidos_db_local'; 
+  // console.warn('Usando URI de MongoDB local por defecto.');
 }
 
 mongoose.connect(MONGODB_URI)
@@ -37,6 +44,16 @@ app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
+// Función para crear avisos automáticos
+async function crearAvisoAutom({ tipo, referenciaId, tiendaId, texto }) {
+  try {
+    const existe = await Aviso.findOne({ tipo, referenciaId, tiendaId });
+    if (!existe) {
+      await Aviso.create({ tipo, referenciaId, tiendaId, texto });
+    }
+  } catch (e) { console.error('Error creando aviso automático:', e); }
+}
+
 // Endpoints REST
 app.get('/api/pedidos', async (req, res) => {
   try {
@@ -49,7 +66,6 @@ app.get('/api/pedidos', async (req, res) => {
 
 app.post('/api/pedidos', async (req, res) => {
   try {
-    // Permitir todos los campos modernos
     const nuevoPedido = new Pedido({
       ...req.body,
       fechaCreacion: req.body.fechaCreacion || new Date(),
@@ -58,6 +74,13 @@ app.post('/api/pedidos', async (req, res) => {
       fechaRecepcion: req.body.fechaRecepcion
     });
     const pedidoGuardado = await nuevoPedido.save();
+    // AVISO AUTOMÁTICO: nuevo pedido para la tienda
+    await crearAvisoAutom({
+      tipo: 'pedido',
+      referenciaId: pedidoGuardado._id.toString(),
+      tiendaId: pedidoGuardado.tiendaId,
+      texto: `¡Tienes un nuevo pedido recibido! Nº ${pedidoGuardado.numeroPedido || ''}`
+    });
     io.emit('pedido_nuevo', pedidoGuardado);
     res.status(201).json(pedidoGuardado);
   } catch (err) {
@@ -69,9 +92,17 @@ app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
-    // Permitir actualización de todos los campos
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
+    // AVISO AUTOMÁTICO: solo si cambia a 'enviadoTienda'
+    if (pedidoActualizado && pedidoActualizado.estado === 'enviadoTienda') {
+      await crearAvisoAutom({
+        tipo: 'pedido',
+        referenciaId: pedidoActualizado._id.toString(),
+        tiendaId: pedidoActualizado.tiendaId,
+        texto: `¡Tienes un nuevo pedido recibido! Nº ${pedidoActualizado.numeroPedido || ''}`
+      });
+    }
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
     console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
@@ -93,44 +124,98 @@ app.delete('/api/pedidos/:id', async (req, res) => {
   }
 });
 
-// Importar y montar el endpoint de Mailgun para enviar proveedor
-require('./enviarProveedorEmail')(app);
-
-// Endpoint de prueba para enviar solo la plantilla HTML al proveedor (sin PDF)
-app.post('/api/enviar-proveedor-html-test', async (req, res) => {
+// ENDPOINTS TRANSFERENCIAS
+app.get('/api/transferencias', async (req, res) => {
   try {
-    // Usa la misma lógica de plantilla que en enviarProveedorEmail.js
-    const mailgun = require('mailgun-js');
-    const DOMAIN = process.env.MAILGUN_DOMAIN || process.env.MAILGUN_SANDBOX_DOMAIN;
-    const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: DOMAIN });
-    const proveedorEmail = process.env.PROVEEDOR_EMAIL || 'proveedor@ejemplo.com';
-    const fromEmail = 'fabricaembutidosballesteros@gmail.com';
-    const { tienda, fecha, lineas } = req.body;
-
-    // Construcción simple de la plantilla HTML (ajusta según tu plantilla real)
-    let html = `<h2>Pedido de ${tienda}</h2><p>Fecha: ${fecha}</p><table border="1" cellpadding="5"><tr><th>Referencia</th><th>Cantidad</th><th>Unidad</th></tr>`;
-    for (const l of lineas) {
-      html += `<tr><td>${l.referencia}</td><td>${l.cantidad}</td><td>${l.unidad}</td></tr>`;
-    }
-    html += '</table>';
-
-    const data = {
-      from: fromEmail,
-      to: proveedorEmail,
-      subject: `Pedido TEST solo HTML - ${tienda} (${fecha})`,
-      html
-    };
-
-    mg.messages().send(data, function (error, body) {
-      if (error) {
-        console.error('Error enviando email:', error);
-        return res.status(500).json({ error: 'Error enviando email', details: error });
-      }
-      res.json({ ok: true, enviado: true, body });
-    });
+    const transferencias = await Transferencia.find();
+    res.json(transferencias);
   } catch (err) {
-    console.error('Error en endpoint /api/enviar-proveedor-html-test:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/transferencias', async (req, res) => {
+  try {
+    const nueva = new Transferencia(req.body);
+    const guardada = await nueva.save();
+    // AVISO AUTOMÁTICO: para destino y origen si aplica
+    if (guardada.origen && guardada.destino) {
+      await crearAvisoAutom({
+        tipo: 'traspaso',
+        referenciaId: guardada._id.toString(),
+        tiendaId: guardada.destino,
+        texto: `¡Tienes un nuevo traspaso/devolución recibido!` });
+      await crearAvisoAutom({
+        tipo: 'traspaso',
+        referenciaId: guardada._id.toString(),
+        tiendaId: guardada.origen,
+        texto: `¡Has realizado un traspaso/devolución!` });
+    }
+    res.status(201).json(guardada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/transferencias/:id', async (req, res) => {
+  try {
+    const actualizada = await Transferencia.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!actualizada) return res.status(404).json({ error: 'No encontrada' });
+    res.json(actualizada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
+  try {
+    const confirmada = await Transferencia.findByIdAndUpdate(
+      req.params.id,
+      { estado: 'recibida', ...req.body },
+      { new: true }
+    );
+    if (!confirmada) return res.status(404).json({ error: 'No encontrada' });
+    res.json(confirmada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ENDPOINTS AVISOS (MENSAJES)
+app.get('/api/avisos', async (req, res) => {
+  try {
+    const { tiendaId } = req.query;
+    let query = {};
+    if (tiendaId) query.tiendaId = tiendaId;
+    const avisos = await Aviso.find(query).sort({ fecha: -1 });
+    res.json(avisos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/avisos', async (req, res) => {
+  try {
+    const aviso = new Aviso(req.body);
+    const guardado = await aviso.save();
+    res.status(201).json(guardado);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.patch('/api/avisos/:id/visto', async (req, res) => {
+  try {
+    const { usuario } = req.body;
+    const aviso = await Aviso.findByIdAndUpdate(
+      req.params.id,
+      { $addToSet: { vistoPor: usuario } },
+      { new: true }
+    );
+    if (!aviso) return res.status(404).json({ error: 'Aviso no encontrado' });
+    res.json(aviso);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

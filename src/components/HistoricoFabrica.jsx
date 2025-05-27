@@ -48,38 +48,41 @@ async function generarPDFEnvio(pedido, tiendas) {
     doc.text(`Estado:`, 15, y); doc.text(
       pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
       pedido.estado === 'preparado' ? 'Preparado en fábrica' : (pedido.estado || '-'), 45, y);
+    y += 6;
+    doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined && pedido.peso !== null ? String(pedido.peso) + ' kg' : '-', 45, y);
     
     y += 10; // Increased space before table
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
     doc.setFillColor(230, 230, 230);
-    doc.rect(15, y, 180, 12, 'F'); // Aumentar altura de cabecera
-    const headerY = y + 6;
-    let currentX = 16;
+    doc.rect(15, y, 180, 8, 'F'); // Header background
 
-    // Define column widths (sin peso, con unidadesEnviadas)
+    const headerY = y + 6; // Adjusted Y for header text
+    let currentX = 16; // Start a bit to the right for padding
+
+    // Define column widths
     const colWidths = {
       num: 8,
-      producto: 45,
-      formato: 25,
-      pedida: 22,
-      enviada: 22,
-      unidades: 22,
+      producto: 45, // Increased width
+      pedida: 15,
+      peso: 15,
+      enviada: 15,
+      formato: 25, // Adjusted width
       lote: 22,
-      comentario: 35
+      comentario: 35 // Adjusted width
     };
 
     doc.text('Nº', currentX, headerY); currentX += colWidths.num;
     doc.text('Producto', currentX, headerY); currentX += colWidths.producto;
+    doc.text('Pedida', currentX + colWidths.pedida / 2, headerY, { align: 'center' }); currentX += colWidths.pedida;
+    doc.text('Peso(kg)', currentX + colWidths.peso / 2, headerY, { align: 'center' }); currentX += colWidths.peso;
+    doc.text('Enviada', currentX + colWidths.enviada / 2, headerY, { align: 'center' }); currentX += colWidths.enviada;
     doc.text('Formato', currentX, headerY); currentX += colWidths.formato;
-    doc.text(['Cantidad', 'pedida'], currentX + colWidths.pedida / 2, headerY - 2, { align: 'center' }); currentX += colWidths.pedida;
-    doc.text(['Kilos', 'enviados'], currentX + colWidths.enviada / 2, headerY - 2, { align: 'center' }); currentX += colWidths.enviada;
-    doc.text(['Unidades', 'enviadas'], currentX + colWidths.unidades / 2, headerY - 2, { align: 'center' }); currentX += colWidths.unidades;
     doc.text('Lote', currentX + colWidths.lote / 2, headerY, { align: 'center' }); currentX += colWidths.lote;
     doc.text('Comentario', currentX, headerY);
 
-    y += 16; // Más espacio tras la cabecera
+    y += 10; // New Y after header (increased space)
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8); // Slightly smaller font for table data
@@ -92,15 +95,15 @@ async function generarPDFEnvio(pedido, tiendas) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         doc.setFillColor(230, 230, 230);
-        doc.rect(15, y, 180, 12, 'F');
+        doc.rect(15, y, 180, 8, 'F');
         const newPageHeaderY = y + 6;
         let newPageCurrentX = 16;
         doc.text('Nº', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.num;
         doc.text('Producto', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.producto;
+        doc.text('Pedida', newPageCurrentX + colWidths.pedida / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.pedida;
+        doc.text('Peso(kg)', newPageCurrentX + colWidths.peso / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.peso;
+        doc.text('Enviada', newPageCurrentX + colWidths.enviada / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.enviada;
         doc.text('Formato', newPageCurrentX, newPageHeaderY); newPageCurrentX += colWidths.formato;
-        doc.text(['Cantidad', 'pedida'], newPageCurrentX + colWidths.pedida / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.pedida;
-        doc.text(['Kilos', 'enviados'], newPageCurrentX + colWidths.enviada / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.enviada;
-        doc.text(['Unidades', 'enviadas'], newPageCurrentX + colWidths.unidades / 2, newPageHeaderY - 2, { align: 'center' }); newPageCurrentX += colWidths.unidades;
         doc.text('Lote', newPageCurrentX + colWidths.lote / 2, newPageHeaderY, { align: 'center' }); newPageCurrentX += colWidths.lote;
         doc.text('Comentario', newPageCurrentX, newPageHeaderY);
         y += 10;
@@ -115,18 +118,14 @@ async function generarPDFEnvio(pedido, tiendas) {
       let productoLineHeight = productoLines.length * 4;
       currentX += colWidths.producto;
 
-      doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
-
       doc.text(String(l.cantidad ?? '-') , currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
+      doc.text(l.peso !== undefined && l.peso !== null ? String(l.peso) : '-', currentX + colWidths.peso / 2, y, { align: 'center' }); currentX += colWidths.peso;
       doc.text(String(l.cantidadEnviada ?? '-') , currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
-      doc.text(l.unidadesEnviadas !== undefined && l.unidadesEnviadas !== null ? String(l.unidadesEnviadas) : '-', currentX + colWidths.unidades / 2, y, { align: 'center' }); currentX += colWidths.unidades;
+      doc.text(l.formato || '-', currentX, y); currentX += colWidths.formato;
       doc.text(l.lote || '-', currentX + colWidths.lote / 2, y, { align: 'center' }); currentX += colWidths.lote;
       
       const comentarioLines = doc.splitTextToSize(l.comentario || '-', colWidths.comentario - 2);
-      // Comentario en rojo
-      doc.setTextColor(220, 38, 38); // Rojo
       doc.text(comentarioLines, currentX, y);
-      doc.setTextColor(0, 0, 0); // Restaurar a negro
       let comentarioLineHeight = comentarioLines.length * 4;
 
       y += Math.max(productoLineHeight, comentarioLineHeight, 6); // Adjust y based on max line height or default
@@ -244,8 +243,8 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                     <th style={{padding:'6px 8px'}}>#</th>
                     <th style={{padding:'6px 8px'}}>Producto</th>
                     <th style={{padding:'6px 8px'}}>Pedida</th>
-                    <th style={{padding:'6px 8px'}}>Kilos enviados</th>
-                    <th style={{padding:'6px 8px'}}>Unidades enviadas</th>
+                    <th style={{padding:'6px 8px'}}>Peso (kg)</th> 
+                    <th style={{padding:'6px 8px'}}>Enviada</th>
                     <th style={{padding:'6px 8px'}}>Formato</th>
                     <th style={{padding:'6px 8px'}}>Comentario</th>
                     <th style={{padding:'6px 8px'}}>Lote</th>
@@ -257,8 +256,8 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{i + 1}</td>
                       <td style={{padding:'6px 8px'}}>{l.producto}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidad}</td>
-                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidadEnviada ?? '-'}</td>
-                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.unidadesEnviadas ?? '-'}</td>
+                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.peso ?? '-'}</td>
+                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidadEnviada || '-'}</td>
                       <td style={{padding:'6px 8px'}}>{l.formato}</td>
                       <td style={{padding:'6px 8px'}}>{l.comentario || '-'}</td>
                       <td style={{padding:'6px 8px'}}>{l.lote || '-'}</td>
