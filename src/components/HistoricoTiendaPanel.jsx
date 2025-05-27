@@ -182,30 +182,46 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
     return true; // 'todo'
   };
 
-  // Mostrar pedidos enviados a fábrica (no recibidos ni preparados)
-  const historico = pedidos.filter(p => p.estado === 'enviado' && filtrarPorFecha(p) && p.tiendaId === tienda.id)
-    .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
-
-  // Mostrar pedidos preparados o recibidos de fábrica para la tienda
-  const historicoRecibidos = pedidos.filter(p => (p.estado === 'enviadoTienda' || p.estado === 'preparado') && filtrarPorFecha(p) && p.tiendaId === tienda.id)
+  // Mostrar pedidos recibidos en tienda filtrados solo por fecha y por la tienda actual
+  const historico = pedidos.filter(p => (p.estado === 'recibidoTienda' || p.estado === 'entregadoCliente') && filtrarPorFecha(p) && p.tiendaId === tienda.id)
     .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
 
   // Handler para abrir el modal sumatorio
   const abrirModalPeso = (lineaIdx, pesoActual, cantidad) => {
-    // Solo permitir sumar pesos en el panel de fábrica
-    return; // Deshabilitado en historiales
+    setModalPeso({
+      visible: true,
+      lineaIdx,
+      valores: Array.from({length: cantidad}, (_, i) => (pesoActual && !isNaN(pesoActual) && cantidad === 1) ? pesoActual : '')
+    });
   };
 
   // Handler para cambiar un valor de peso
   const cambiarValorPeso = (idx, valor) => {
-    // Solo permitir sumar pesos en el panel de fábrica
-    return; // Deshabilitado en historiales
+    setModalPeso(prev => {
+      const nuevos = [...prev.valores];
+      nuevos[idx] = valor;
+      return {...prev, valores: nuevos};
+    });
   };
 
   // Handler para aplicar la suma de pesos y guardar en backend
   const aplicarPesos = async () => {
-    // Solo permitir sumar pesos en el panel de fábrica
-    return; // Deshabilitado en historiales
+    if (!modalPedido || modalPeso.lineaIdx == null) return;
+    const suma = modalPeso.valores.reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
+    const nuevasLineas = modalPedido.lineas.map((l, i) => i === modalPeso.lineaIdx ? {...l, peso: suma} : l);
+    const pedidoActualizado = {...modalPedido, lineas: nuevasLineas};
+    setModalPedido(pedidoActualizado);
+    setModalPeso({visible: false, lineaIdx: null, valores: []});
+    // Guardar en backend
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/${modalPedido._id || modalPedido.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pedidoActualizado)
+      });
+    } catch (e) {
+      alert('Error al guardar el peso en el servidor');
+    }
   };
 
   return (
@@ -218,29 +234,8 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
       paddingBottom:40,
       position:'relative',
       zIndex:1,
-      overflow:'hidden',
-      boxSizing:'border-box',
-      width:'100vw',
-      maxWidth:'100vw'
+      overflow:'hidden'
     }}>
-      <style>{`
-        @media (max-width: 700px) {
-          .htp-table {
-            font-size: 13px !important;
-          }
-          .htp-table th, .htp-table td {
-            padding: 8px 4px !important;
-          }
-          .htp-modal {
-            min-width: 0 !important;
-            max-width: 98vw !important;
-            padding: 18px 4vw 24px 4vw !important;
-          }
-          .htp-modal h3 {
-            font-size: 18px !important;
-          }
-        }
-      `}</style>
       <div style={{margin:'0 0 18px 0',display:'flex',alignItems:'center',gap:12}}>
         <label style={{fontWeight:600}}>Filtrar por:</label>
         <select value={filtro} onChange={e=>setFiltro(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
@@ -268,8 +263,8 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
       <Watermark />
       <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tienda.nombre}</span></h2>
       <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos enviados a fábrica</h3>
-      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', marginBottom: 16}}>
-      <table className="htp-table" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden', minWidth: 600}}>
+      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
+      <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
           <tr>
             <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>ID</th>
@@ -286,17 +281,17 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
           )}
           {historico.map((pedido, idx) => (
             <tr key={`enviado-${pedido.id || pedido._id || `${pedido.numeroPedido}-${pedido.tiendaId}-${idx}`}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
-              <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
-              <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
-              <td style={{padding:'10px 8px', fontWeight:600}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+              <td data-label="ID" title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
+              <td data-label="Nº Pedido" style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
+              <td data-label="Fecha" style={{padding:'10px 8px', fontWeight:600}} title={pedido.fechaPedido || pedido.fechaCreacion}>
                 <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
                 <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
               </td>
-              <td style={{padding:'10px 8px'}}>
+              <td data-label="Estado" style={{padding:'10px 8px'}}>
                 <span style={{display:'inline-block',padding:'4px 14px',borderRadius:16,background:pedido.estado==='borrador'?'#e0e0e0':pedido.estado==='enviado'?'#007bff22':'#00c6ff22',color:pedido.estado==='borrador'?'#555':pedido.estado==='enviado'?'#007bff':'#00c6ff',fontWeight:700, fontSize:14, boxShadow:'0 1px 4px #007bff11'}}>{pedido.estado}</span>
               </td>
-              <td style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
-              <td style={{display:'flex',gap:8, padding:'10px 8px'}}>
+              <td data-label="Líneas" style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
+              <td data-label="Acciones" style={{display:'flex',gap:8, padding:'10px 8px'}}>
                 <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
                   <span role="img" aria-label="ver">🔍</span> Ver
                 </button>
@@ -310,8 +305,8 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
       </table>
       </div>
       <h3 style={{marginTop:32,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos preparados o recibidos de fábrica</h3>
-      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', marginBottom: 16}}>
-      <table className="htp-table" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden', minWidth: 600}}>
+      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
+      <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
           <tr>
             <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>ID</th>
@@ -323,24 +318,24 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
           </tr>
         </thead>
         <tbody>
-          {historicoRecibidos.length === 0 && (
+          {pedidos.length === 0 && (
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos preparados o recibidos de fábrica</td></tr>
           )}
-          {historicoRecibidos.map((pedido, idx) => {
-            const pendienteAviso = !vistos?.includes(pedido.id || pedido._id);
+          {pedidos.map((pedido, idx) => {
+            const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
             return (
               <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
-                <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
-                <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
-                <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+                <td data-label="ID" title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
+                <td data-label="Nº Pedido" style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
+                <td data-label="Fecha" style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
                   <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
                   <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
                 </td>
-                <td style={{padding:'10px 8px'}}>
+                <td data-label="Estado" style={{padding:'10px 8px'}}>
                   <span style={{display:'inline-block',padding:'4px 14px',borderRadius:16,background:pedido.estado==='preparado'?'#ffe066':pedido.estado==='enviadoTienda'?'#b2f2bb':'#e0e0e0',color:pedido.estado==='preparado'?'#b8860b':pedido.estado==='enviadoTienda'?'#228c22':'#555',fontWeight:700, fontSize:14, boxShadow:'0 1px 4px #007bff11'}}>{pedido.estado}</span>
                 </td>
-                <td style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
-                <td style={{display:'flex',gap:8, padding:'10px 8px'}}>
+                <td data-label="Líneas" style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
+                <td data-label="Acciones" style={{display:'flex',gap:8, padding:'10px 8px'}}>
                   <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
                     <span role="img" aria-label="ver">🔍</span> Ver
                   </button>
@@ -351,10 +346,10 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
                     <button
                       style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
                       onClick={async () => {
-                        const aviso = avisos?.find(a => a.referenciaId === (pedido.id || pedido._id));
+                        const aviso = avisos.find(a => a.referenciaId === (pedido.id || pedido._id));
                         if (aviso) {
                           await marcarAvisoVisto(aviso._id, tienda.id);
-                          setVistos?.(prev => [...prev, pedido.id || pedido._id]);
+                          setVistos(prev => [...prev, pedido.id || pedido._id]);
                           if (onAvisoVisto) onAvisoVisto(pedido.id || pedido._id);
                         }
                       }}
@@ -378,15 +373,12 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter:'blur(2px)'
         }} onClick={() => setModalPedido(null)}>
-          <div className="htp-modal" style={{
-            background: '#fff', borderRadius: 18, minWidth: 320, maxWidth: 600, width: '95vw',
-            padding: '24px 24px 32px 24px', boxShadow: '0 8px 40px #007bff33',
+          <div style={{
+            background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 600, width: '90vw',
+            padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
             position: 'relative',
             display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-            border: '1.5px solid #e3eaff',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxSizing: 'border-box'
+            border: '1.5px solid #e3eaff'
           }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setModalPedido(null)} style={{
               position: 'absolute', top: 18, right: 22, background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#007bff', lineHeight: 1, fontWeight:700

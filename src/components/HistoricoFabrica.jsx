@@ -192,27 +192,45 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
   };
 
   // Mostrar pedidos preparados o enviados desde fábrica filtrados
-  const historico = pedidos.filter(p => p.estado === 'enviadoTienda')
-    .filter(filtrarPorFecha)
-    .filter(filtrarPorTienda)
+  const historico = pedidos.filter(p => (p.estado === 'preparado' || p.estado === 'enviadoTienda') && filtrarPorFecha(p) && filtrarPorTienda(p))
     .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
 
   // Handler para abrir el modal sumatorio
   const abrirModalPeso = (lineaIdx, pesoActual, cantidad) => {
-    // Solo permitir sumar pesos en el panel de fábrica
-    return; // Deshabilitado en historiales
+    setModalPeso({
+      visible: true,
+      lineaIdx,
+      valores: Array.from({length: cantidad}, (_, i) => (pesoActual && !isNaN(pesoActual) && cantidad === 1) ? pesoActual : '')
+    });
   };
 
   // Handler para cambiar un valor de peso
   const cambiarValorPeso = (idx, valor) => {
-    // Solo permitir sumar pesos en el panel de fábrica
-    return; // Deshabilitado en historiales
+    setModalPeso(prev => {
+      const nuevos = [...prev.valores];
+      nuevos[idx] = valor;
+      return {...prev, valores: nuevos};
+    });
   };
 
   // Handler para aplicar la suma de pesos y guardar en backend
   const aplicarPesos = async () => {
-    // Solo permitir sumar pesos en el panel de fábrica
-    return; // Deshabilitado en historiales
+    if (!modalPedido || modalPeso.lineaIdx == null) return;
+    const suma = modalPeso.valores.reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
+    const nuevasLineas = modalPedido.lineas.map((l, i) => i === modalPeso.lineaIdx ? {...l, peso: suma} : l);
+    const pedidoActualizado = {...modalPedido, lineas: nuevasLineas};
+    setModalPedido(pedidoActualizado);
+    setModalPeso({visible: false, lineaIdx: null, valores: []});
+    // Guardar en backend
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/${modalPedido._id || modalPedido.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pedidoActualizado)
+      });
+    } catch (e) {
+      alert('Error al guardar el peso en el servidor');
+    }
   };
 
   return (
@@ -284,9 +302,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
             background: '#fff', borderRadius: 14, minWidth: 380, maxWidth: 600, width: '90vw',
             padding: '28px 28px 32px 28px', boxShadow: '0 4px 32px #0002',
             position: 'relative',
-            display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-            maxHeight: '90vh',
-            overflowY: 'auto'
+            display: 'flex', flexDirection: 'column', alignItems: 'stretch'
           }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setModalPedido(null)} style={{
               position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#888', lineHeight: 1
