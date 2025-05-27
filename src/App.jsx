@@ -360,8 +360,8 @@ function App() {
         mostrarHistoricoTienda ? (
           <HistoricoTiendaPanel
             pedidos={pedidos}
-            tiendaId={tiendaSeleccionada}
-            tiendaNombre={tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
+            tienda={tiendas.find(t => t.id === tiendaSeleccionada)}
+            tiendas={tiendas}
             onVolver={() => setMostrarHistoricoTienda(false)}
             onModificarPedido={(pedidoEditado) => {
               setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));

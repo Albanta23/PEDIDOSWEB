@@ -22,6 +22,9 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   // Pedidos pendientes: solo los que están en 'enviado' o 'preparado'
   const pedidosPendientes = pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado');
 
+  // Estado para forzar refresco visual tras guardar/enviar
+  const [refresco, setRefresco] = useState(0);
+
   // Agrupar pedidos por tienda
   const pedidosPorTienda = {};
   pedidosPendientes.forEach(p => {
@@ -38,7 +41,10 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   };
 
   // Función para cerrar el pedido abierto
-  const cerrarPedido = () => setPedidoAbierto(null);
+  const cerrarPedido = () => {
+    setPedidoAbierto(null);
+    setTimeout(() => setRefresco(r => r + 1), 50); // Fuerza refresco tras cerrar
+  };
 
   // Función para actualizar una línea editada
   const actualizarLinea = (idx, campo, valor) => {
@@ -91,7 +97,16 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   };
 
   return (
-    <div style={{ marginTop: 32 }}>
+    <div style={{
+      fontFamily:'Inter, Segoe UI, Arial, sans-serif',
+      fontSize:16,
+      background:'#f6f8fa',
+      minHeight:'100vh',
+      paddingBottom:40,
+      position:'relative',
+      zIndex:1,
+      overflow:'hidden'
+    }}>
       <Watermark />
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:32,marginTop:10}}>
         <img
@@ -167,7 +182,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       )}
       <h3 style={{marginBottom:12,marginTop:24}}>Pedidos pendientes de preparar o enviar</h3>
       {/* Botones de tiendas con pedidos pendientes */}
-      <div style={{display:'flex',flexWrap:'wrap',gap:18,marginBottom:32}}>
+      <div style={{display:'flex',flexWrap:'wrap',gap:18,marginBottom:32}} key={refresco}>
         {Object.entries(pedidosPorTienda).map(([tiendaId, pedidos], idx) => {
           const tienda = tiendas.find(t => t.id === tiendaId);
           return pedidos.map((pedido, pidx) => {
@@ -208,124 +223,138 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       </div>
       {/* Edición del pedido abierto */}
       {pedidoAbierto && (
-        <div style={{ marginBottom: 32, border: '1px solid #eee', borderRadius: 8, padding: 16 }}>
-          <h3>
-            {tiendas.find(t => t.id === pedidoAbierto.tiendaId)?.nombre || pedidoAbierto.tiendaId} - Nº Pedido: {pedidoAbierto.numeroPedido}
-          </h3>
-          <div>Fecha: {pedidoAbierto.fechaPedido ? new Date(pedidoAbierto.fechaPedido).toLocaleString() : '-'}</div>
-          <div style={{ marginTop: 12 }}>
-            Estado: <b>{estados[pedidoAbierto.estado] || pedidoAbierto.estado}</b>
-          </div>
-          <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
-            <button onClick={cerrarPedido} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
-          </div>
-          <table style={{ width: '100%', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #eee', marginTop: 12 }}>
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Cant. pedida</th>
-                <th>Peso (kg)</th>
-                <th>Cant. enviada</th>
-                <th>Lote</th>
-                <th>Formato pedido</th>
-                <th>Comentario</th>
-                <th>Eliminar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pedidoAbierto.lineas.map((linea, idx) => (
-                <tr key={idx}>
-                  <td>{linea.producto}</td>
-                  <td>{linea.cantidad}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={linea.peso ?? ''} // Muestra string vacío si es null/undefined
-                      onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                      style={{ width: 70 }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any" // Permitir decimales si es necesario para cantidadEnviada
-                      value={linea.cantidadEnviada ?? ''} // Muestra string vacío si es null/undefined
-                      onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
-                      style={{ width: 70 }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={linea.lote ?? ''}
-                      onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                      style={{ width: 90 }}
-                    />
-                  </td>
-                  <td>{FORMATOS_PEDIDO.includes(linea.formato) ? linea.formato : '-'}</td>
-                  <td>{linea.comentario}</td>
-                  <td>
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.35)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }} onClick={() => setPedidoAbierto(null)}>
+          <div style={{
+            background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 700, width: '95vw',
+            padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
+            position: 'relative',
+            display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }} onClick={e => e.stopPropagation()}>
+            <h3>
+              {tiendas.find(t => t.id === pedidoAbierto.tiendaId)?.nombre || pedidoAbierto.tiendaId} - Nº Pedido: {pedidoAbierto.numeroPedido}
+            </h3>
+            <div>Fecha: {pedidoAbierto.fechaPedido ? new Date(pedidoAbierto.fechaPedido).toLocaleString() : '-'}</div>
+            <div style={{ marginTop: 12 }}>
+              Estado: <b>{estados[pedidoAbierto.estado] || pedidoAbierto.estado}</b>
+            </div>
+            <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
+              <button onClick={cerrarPedido} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
+            </div>
+            <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
+            <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cant. pedida</th>
+                  <th>Peso (kg)</th>
+                  <th>Cant. enviada</th>
+                  <th>Lote</th>
+                  <th>Formato pedido</th>
+                  <th>Comentario</th>
+                  <th>Eliminar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pedidoAbierto.lineas.map((linea, idx) => (
+                  <tr key={idx}>
+                    <td>{linea.producto}</td>
+                    <td>{linea.cantidad}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={linea.peso ?? ''} // Muestra string vacío si es null/undefined
+                        onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+                        style={{ width: 70 }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any" // Permitir decimales si es necesario para cantidadEnviada
+                        value={linea.cantidadEnviada ?? ''} // Muestra string vacío si es null/undefined
+                        onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
+                        style={{ width: 70 }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={linea.lote ?? ''}
+                        onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
+                        style={{ width: 90 }}
+                      />
+                    </td>
+                    <td>{FORMATOS_PEDIDO.includes(linea.formato) ? linea.formato : '-'}</td>
+                    <td>{linea.comentario}</td>
+                    <td>
+                      <button
+                        style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
+                        onClick={() => borrarLinea(idx)}
+                        title="Eliminar línea"
+                      >
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
                     <button
-                      style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
-                      onClick={() => borrarLinea(idx)}
-                      title="Eliminar línea"
+                      style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
+                      onClick={async () => {
+                        const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
+                        const lineasNormalizadas = nuevasLineas.map(l => ({
+                          ...l,
+                          preparada: !!l.preparada,
+                          peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+                          cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+                          cantidad: Number(l.cantidad) // Asegurar que cantidad sea número
+                        }));
+                        await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                        // No cerramos el pedido aquí para permitir más ediciones o el envío posterior.
+                      }}
                     >
-                      🗑
+                      Guardar
+                    </button>
+                    <button
+                      style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
+                      onClick={async () => {
+                        const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
+                        if (nuevasLineas.length === 0) {
+                          // Si no hay líneas válidas pero el pedido original sí tenía, se considera eliminar el pedido.
+                          // Esto es consistente con la lógica previa de eliminar si no hay líneas.
+                          await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
+                          setPedidoAbierto(null);
+                          return;
+                        }
+                        const lineasNormalizadas = nuevasLineas.map(l => ({
+                          ...l,
+                          preparada: !!l.preparada,
+                          peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+                          cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+                          cantidad: Number(l.cantidad)
+                        }));
+                        await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                        await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
+                        setPedidoAbierto(null);
+                      }}
+                    >
+                      Enviar pedido
                     </button>
                   </td>
                 </tr>
-              ))}
-              <tr>
-                <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
-                  <button
-                    style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
-                    onClick={async () => {
-                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
-                      const lineasNormalizadas = nuevasLineas.map(l => ({
-                        ...l,
-                        preparada: !!l.preparada,
-                        peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                        cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                        cantidad: Number(l.cantidad) // Asegurar que cantidad sea número
-                      }));
-                      await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-                      // No cerramos el pedido aquí para permitir más ediciones o el envío posterior.
-                    }}
-                  >
-                    Guardar
-                  </button>
-                  <button
-                    style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
-                    onClick={async () => {
-                      const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
-                      if (nuevasLineas.length === 0) {
-                        // Si no hay líneas válidas pero el pedido original sí tenía, se considera eliminar el pedido.
-                        // Esto es consistente con la lógica previa de eliminar si no hay líneas.
-                        await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
-                        setPedidoAbierto(null);
-                        return;
-                      }
-                      const lineasNormalizadas = nuevasLineas.map(l => ({
-                        ...l,
-                        preparada: !!l.preparada,
-                        peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                        cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                        cantidad: Number(l.cantidad)
-                      }));
-                      await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-                      await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
-                      setPedidoAbierto(null);
-                    }}
-                  >
-                    Enviar pedido
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

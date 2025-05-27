@@ -154,38 +154,59 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   }
 }
 
-const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido, onAvisoVisto }) => {
+const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
   const [modalPedido, setModalPedido] = useState(null);
-  const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
-  const [avisos, setAvisos] = useState([]);
-  const [vistos, setVistos] = useState([]);
+  const [filtro, setFiltro] = useState('dia');
+  // Modal sumatorio de peso
+  const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
+  // Eliminamos el filtro de tienda, ya que solo debe ver su tienda
 
-  useEffect(() => {
-    async function fetchAvisos() {
-      const avisosBD = await listarAvisos(tiendaId);
-      setAvisos(avisosBD);
-      setVistos(avisosBD.filter(a => a.vistoPor.includes(tiendaId)).map(a => a.referenciaId));
+  // Función para filtrar por fecha
+  const ahora = new Date();
+  const filtrarPorFecha = (pedido) => {
+    const fecha = new Date(pedido.fechaEnvio || pedido.fechaPedido);
+    if (isNaN(fecha)) return false;
+    if (filtro === 'dia') {
+      return fecha.toDateString() === ahora.toDateString();
+    } else if (filtro === 'semana') {
+      const inicioSemana = new Date(ahora);
+      inicioSemana.setDate(ahora.getDate() - ahora.getDay());
+      const finSemana = new Date(inicioSemana);
+      finSemana.setDate(inicioSemana.getDate() + 6);
+      return fecha >= inicioSemana && fecha <= finSemana;
+    } else if (filtro === 'mes') {
+      return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+    } else if (filtro === 'año') {
+      return fecha.getFullYear() === ahora.getFullYear();
     }
-    if (tiendaId) fetchAvisos();
-  }, [tiendaId]);
+    return true; // 'todo'
+  };
 
-  // Pedidos enviados a fábrica (solo enviados, NO borrador)
-  const pedidosEnviados = pedidos.filter(p =>
-    p.tiendaId === tiendaId &&
-    (
-      (p.lineas && p.lineas.length > 0 && p.estado === 'enviado') ||
-      (p.estado === 'borrador' && p.fechaCreacion && p.numeroPedido)
-    )
-  ).sort((a, b) => ((b.numeroPedido || 0) - (a.numeroPedido || 0)));
-  // Pedidos preparados o recibidos de fábrica
-  const pedidosRecibidos = pedidos.filter(p =>
-    p.tiendaId === tiendaId &&
-    p.numeroPedido &&
-    (
-      (p.lineas && p.lineas.length > 0 && (p.estado === 'preparado' || p.estado === 'enviadoTienda')) ||
-      (p.estado === 'borrador' && p.fechaCreacion && p.numeroPedido)
-    )
-  ).sort((a, b) => (b.numeroPedido - a.numeroPedido));
+  // Mostrar pedidos enviados a fábrica (no recibidos ni preparados)
+  const historico = pedidos.filter(p => p.estado === 'enviado' && filtrarPorFecha(p) && p.tiendaId === tienda.id)
+    .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
+
+  // Mostrar pedidos preparados o recibidos de fábrica para la tienda
+  const historicoRecibidos = pedidos.filter(p => (p.estado === 'enviadoTienda' || p.estado === 'preparado') && filtrarPorFecha(p) && p.tiendaId === tienda.id)
+    .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
+
+  // Handler para abrir el modal sumatorio
+  const abrirModalPeso = (lineaIdx, pesoActual, cantidad) => {
+    // Solo permitir sumar pesos en el panel de fábrica
+    return; // Deshabilitado en historiales
+  };
+
+  // Handler para cambiar un valor de peso
+  const cambiarValorPeso = (idx, valor) => {
+    // Solo permitir sumar pesos en el panel de fábrica
+    return; // Deshabilitado en historiales
+  };
+
+  // Handler para aplicar la suma de pesos y guardar en backend
+  const aplicarPesos = async () => {
+    // Solo permitir sumar pesos en el panel de fábrica
+    return; // Deshabilitado en historiales
+  };
 
   return (
     <div style={{
@@ -197,8 +218,39 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       paddingBottom:40,
       position:'relative',
       zIndex:1,
-      overflow:'hidden'
+      overflow:'hidden',
+      boxSizing:'border-box',
+      width:'100vw',
+      maxWidth:'100vw'
     }}>
+      <style>{`
+        @media (max-width: 700px) {
+          .htp-table {
+            font-size: 13px !important;
+          }
+          .htp-table th, .htp-table td {
+            padding: 8px 4px !important;
+          }
+          .htp-modal {
+            min-width: 0 !important;
+            max-width: 98vw !important;
+            padding: 18px 4vw 24px 4vw !important;
+          }
+          .htp-modal h3 {
+            font-size: 18px !important;
+          }
+        }
+      `}</style>
+      <div style={{margin:'0 0 18px 0',display:'flex',alignItems:'center',gap:12}}>
+        <label style={{fontWeight:600}}>Filtrar por:</label>
+        <select value={filtro} onChange={e=>setFiltro(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
+          <option value="dia">Día</option>
+          <option value="semana">Semana</option>
+          <option value="mes">Mes</option>
+          <option value="año">Año</option>
+          <option value="todo">Todo</option>
+        </select>
+      </div>
       {/* Botón de volver solo si NO hay modal de pedido abierto (refuerzo: ocultar y deshabilitar si modalPedido) */}
       <button
         style={{
@@ -214,10 +266,10 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
         ← Volver
       </button>
       <Watermark />
-      <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
+      <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tienda.nombre}</span></h2>
       <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos enviados a fábrica</h3>
-      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-      <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', marginBottom: 16}}>
+      <table className="htp-table" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden', minWidth: 600}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
           <tr>
             <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>ID</th>
@@ -229,14 +281,14 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
           </tr>
         </thead>
         <tbody>
-          {pedidosEnviados.length === 0 && (
+          {historico.length === 0 && (
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos enviados a fábrica ni creados</td></tr>
           )}
-          {pedidosEnviados.map((pedido, idx) => (
+          {historico.map((pedido, idx) => (
             <tr key={`enviado-${pedido.id || pedido._id || `${pedido.numeroPedido}-${pedido.tiendaId}-${idx}`}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
               <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
               <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
-              <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+              <td style={{padding:'10px 8px', fontWeight:600}} title={pedido.fechaPedido || pedido.fechaCreacion}>
                 <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
                 <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
               </td>
@@ -248,7 +300,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                 <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
                   <span role="img" aria-label="ver">🔍</span> Ver
                 </button>
-                <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tiendaNombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
+                <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tienda.nombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
                   <span role="img" aria-label="pdf">🗎</span> PDF
                 </button>
               </td>
@@ -258,8 +310,8 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       </table>
       </div>
       <h3 style={{marginTop:32,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos preparados o recibidos de fábrica</h3>
-      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-      <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', marginBottom: 16}}>
+      <table className="htp-table" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden', minWidth: 600}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
           <tr>
             <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>ID</th>
@@ -271,11 +323,11 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
           </tr>
         </thead>
         <tbody>
-          {pedidosRecibidos.length === 0 && (
+          {historicoRecibidos.length === 0 && (
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos preparados o recibidos de fábrica</td></tr>
           )}
-          {pedidosRecibidos.map((pedido, idx) => {
-            const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
+          {historicoRecibidos.map((pedido, idx) => {
+            const pendienteAviso = !vistos?.includes(pedido.id || pedido._id);
             return (
               <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
                 <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
@@ -292,17 +344,17 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                   <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
                     <span role="img" aria-label="ver">🔍</span> Ver
                   </button>
-                  <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tiendaNombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
+                  <button title="Descargar PDF" onClick={() => generarPDFTienda(pedido, tienda.nombre)} style={{background:'linear-gradient(90deg,#007bff,#00c6ff)',border:'none',color:'#fff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff22'}}>
                     <span role="img" aria-label="pdf">🗎</span> PDF
                   </button>
                   {pendienteAviso ? (
                     <button
                       style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
                       onClick={async () => {
-                        const aviso = avisos.find(a => a.referenciaId === (pedido.id || pedido._id));
+                        const aviso = avisos?.find(a => a.referenciaId === (pedido.id || pedido._id));
                         if (aviso) {
-                          await marcarAvisoVisto(aviso._id, tiendaId);
-                          setVistos(prev => [...prev, pedido.id || pedido._id]);
+                          await marcarAvisoVisto(aviso._id, tienda.id);
+                          setVistos?.(prev => [...prev, pedido.id || pedido._id]);
                           if (onAvisoVisto) onAvisoVisto(pedido.id || pedido._id);
                         }
                       }}
@@ -326,12 +378,15 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter:'blur(2px)'
         }} onClick={() => setModalPedido(null)}>
-          <div style={{
-            background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 600, width: '90vw',
-            padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
+          <div className="htp-modal" style={{
+            background: '#fff', borderRadius: 18, minWidth: 320, maxWidth: 600, width: '95vw',
+            padding: '24px 24px 32px 24px', boxShadow: '0 8px 40px #007bff33',
             position: 'relative',
             display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-            border: '1.5px solid #e3eaff'
+            border: '1.5px solid #e3eaff',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxSizing: 'border-box'
           }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setModalPedido(null)} style={{
               position: 'absolute', top: 18, right: 22, background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#007bff', lineHeight: 1, fontWeight:700
@@ -439,7 +494,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
               )}
             </div>
             <div style={{display:'flex', gap:12, justifyContent:'center', marginTop:18}}>
-              <button onClick={() => generarPDFTienda(modalPedido, tiendaNombre)} style={{
+              <button onClick={() => generarPDFTienda(modalPedido, tienda.nombre)} style={{
                 padding: '10px 22px', background: 'linear-gradient(90deg,#007bff,#00c6ff)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight:700, fontSize:16, boxShadow:'0 2px 8px #007bff22', transition:'0.2s', outline:'none'
               }}>
                 🗎 Descargar PDF
@@ -501,6 +556,24 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                 🔄 Reutilizar pedido
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal sumatorio de pesos */}
+      {modalPeso.visible && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.35)',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})}>
+          <div style={{background:'#fff',borderRadius:12,padding:32,minWidth:320,maxWidth:400,boxShadow:'0 4px 32px #0002'}} onClick={e=>e.stopPropagation()}>
+            <h3 style={{marginTop:0}}>Sumar pesos para la línea</h3>
+            {modalPeso.valores.map((v, idx) => (
+              <div key={idx} style={{marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
+                <span style={{width:24,display:'inline-block',textAlign:'right'}}>{idx+1}:</span>
+                <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(idx, e.target.value)} style={{width:80,padding:'4px 8px',borderRadius:4,border:'1px solid #ccc'}} />
+                <span>kg</span>
+              </div>
+            ))}
+            <div style={{margin:'12px 0',fontWeight:600}}>Suma total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
+            <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6,fontWeight:600,marginRight:8}}>Aplicar</button>
+            <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6}}>Cancelar</button>
           </div>
         </div>
       )}

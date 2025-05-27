@@ -161,7 +161,9 @@ const HistoricoTienda = ({ pedidos, tiendaId }) => {
             background: '#fff', borderRadius: 14, minWidth: 380, maxWidth: 600, width: '90vw',
             padding: '28px 28px 32px 28px', boxShadow: '0 4px 32px #0002',
             position: 'relative',
-            display: 'flex', flexDirection: 'column', alignItems: 'stretch'
+            display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setModalPedido(null)} style={{
               position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#888', lineHeight: 1

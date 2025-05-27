@@ -64,12 +64,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
   }, [lineasEdit, tiendaActual?.id]);
 
-  // Función para obtener el siguiente número de pedido disponible
-  const getNextNumeroPedido = () => {
-    const maxNumero = pedidos.reduce((max, p) => p.numeroPedido && p.numeroPedido > max ? p.numeroPedido : max, 0);
-    return maxNumero + 1;
-  };
-
   // Función para limpiar localStorage cuando se envía el pedido
   const limpiarStorage = () => {
     if (tiendaActual?.id) {
@@ -111,7 +105,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         tienda: tiendaActual,
         tiendaId: tiendaActual?.id,
         fechaPedido: new Date().toISOString(),
-        numeroPedido: getNextNumeroPedido()
       };
       if (typeof onModificar === 'function') {
         onModificar(pedidoBorrador.id, pedidoBorrador);
@@ -139,13 +132,10 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
 
     try {
-      const numeroPedido = getNextNumeroPedido();
-      
       // Crear el pedido con estado 'enviado'
       const nuevoPedido = {
         estado: 'enviado',
         fechaPedido: new Date().toISOString(),
-        numeroPedido,
         tiendaId: tiendaActual?.id,
         tienda: tiendaActual,
         lineas: lineasValidas.map(l => ({
