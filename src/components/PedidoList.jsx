@@ -657,8 +657,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       body: JSON.stringify({
                         tienda: tiendaActual?.nombre || '',
                         fecha: new Date().toLocaleDateString(),
-                        lineas: lineasProveedor,
-                        pdfBase64
+                        lineas: lineasProveedor
+                        // pdfBase64 eliminado
                       })
                     });
                     if (res.ok) {
@@ -669,10 +669,19 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                         setMostrarModalProveedor(false);
                       }, 1500);
                     } else {
-                      setMensajeProveedor("Error al enviar el email al proveedor.");
+                      let errorMsg = "Error al enviar el email al proveedor.";
+                      try {
+                        const errorData = await res.json();
+                        if (errorData && errorData.error) errorMsg += ` (${errorData.error})`;
+                      } catch (err) {
+                        // Si la respuesta no es JSON, ignorar
+                      }
+                      setMensajeProveedor(errorMsg);
+                      console.error('Error al enviar email proveedor:', res.status, res.statusText);
                     }
                   } catch (e) {
                     setMensajeProveedor("Error al generar o enviar el PDF.");
+                    console.error('Error JS al enviar email proveedor:', e);
                   }
                   setEnviandoProveedor(false);
                 }}

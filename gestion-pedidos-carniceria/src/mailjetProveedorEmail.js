@@ -9,11 +9,10 @@ const mailjetClient = mailjet.apiConnect(
 module.exports = function(app) {
   app.post('/api/enviar-proveedor', async (req, res) => {
     try {
-      const { tienda, fecha, lineas, pdfBase64 } = req.body;
+      const { tienda, fecha, lineas } = req.body;
       const proveedorEmail = process.env.PROVEEDOR_EMAIL || 'proveedor@ejemplo.com';
       const fromEmail = process.env.MAILJET_FROM_EMAIL || 'notificaciones@tudominio.com';
       const fromName = process.env.MAILJET_FROM_NAME || 'Pedidos Carnicería';
-      const pdfData = pdfBase64.split(',')[1];
       const htmlTableRows = lineas.map(l => `
         <tr>
           <td>${l.referencia || ''}</td>
@@ -66,14 +65,7 @@ module.exports = function(app) {
               }
             ],
             Subject: `Pedido de frescos - ${tienda || ''}`,
-            HTMLPart: html,
-            Attachments: [
-              {
-                ContentType: 'application/pdf',
-                Filename: `pedido_frescos_${tienda || 'tienda'}.pdf`,
-                Base64Content: pdfData
-              }
-            ]
+            HTMLPart: html
           }
         ]
       });
@@ -81,8 +73,11 @@ module.exports = function(app) {
       await request;
       res.json({ ok: true, message: 'Email enviado correctamente al proveedor.' });
     } catch (err) {
-      console.error('Error al enviar email con Mailjet:', err);
-      res.status(500).json({ ok: false, error: err.message || err.toString() });
+      let errorMsg = 'Error desconocido';
+      if (err && err.message) errorMsg = err.message;
+      if (err && err.response && err.response.body) errorMsg += ' | ' + JSON.stringify(err.response.body);
+      console.error('Error al enviar email con Mailjet:', errorMsg);
+      res.status(500).json({ ok: false, error: errorMsg });
     }
   });
 };
