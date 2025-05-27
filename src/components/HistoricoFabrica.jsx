@@ -161,8 +161,6 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
   const [modalPedido, setModalPedido] = useState(null);
   const [filtro, setFiltro] = useState('dia');
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState('todas');
-  // Nuevo: estado para el modal sumatorio de peso
-  const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
 
   // Función para filtrar por fecha
   const ahora = new Date();
@@ -194,44 +192,6 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
   // Mostrar pedidos preparados o enviados desde fábrica filtrados
   const historico = pedidos.filter(p => (p.estado === 'preparado' || p.estado === 'enviadoTienda') && filtrarPorFecha(p) && filtrarPorTienda(p))
     .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
-
-  // Handler para abrir el modal sumatorio
-  const abrirModalPeso = (lineaIdx, pesoActual, cantidad) => {
-    setModalPeso({
-      visible: true,
-      lineaIdx,
-      valores: Array.from({length: cantidad}, (_, i) => (pesoActual && !isNaN(pesoActual) && cantidad === 1) ? pesoActual : '')
-    });
-  };
-
-  // Handler para cambiar un valor de peso
-  const cambiarValorPeso = (idx, valor) => {
-    setModalPeso(prev => {
-      const nuevos = [...prev.valores];
-      nuevos[idx] = valor;
-      return {...prev, valores: nuevos};
-    });
-  };
-
-  // Handler para aplicar la suma de pesos y guardar en backend
-  const aplicarPesos = async () => {
-    if (!modalPedido || modalPeso.lineaIdx == null) return;
-    const suma = modalPeso.valores.reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
-    const nuevasLineas = modalPedido.lineas.map((l, i) => i === modalPeso.lineaIdx ? {...l, peso: suma} : l);
-    const pedidoActualizado = {...modalPedido, lineas: nuevasLineas};
-    setModalPedido(pedidoActualizado);
-    setModalPeso({visible: false, lineaIdx: null, valores: []});
-    // Guardar en backend
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/${modalPedido._id || modalPedido.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pedidoActualizado)
-      });
-    } catch (e) {
-      alert('Error al guardar el peso en el servidor');
-    }
-  };
 
   return (
     <div style={{marginTop:32}}>
@@ -343,15 +303,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{i + 1}</td>
                       <td style={{padding:'6px 8px'}}>{l.producto}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidad}</td>
-                      <td style={{padding:'6px 8px', textAlign:'center'}}>
-                        {l.cantidad > 1 ? (
-                          <button style={{background:'#eafaf1',border:'1px solid #28a745',borderRadius:4,padding:'2px 8px',cursor:'pointer'}} onClick={() => abrirModalPeso(i, l.peso, l.cantidad)}>
-                            {l.peso ?? '-'} <span style={{fontSize:13, color:'#28a745'}}>✚</span>
-                          </button>
-                        ) : (
-                          l.peso ?? '-'
-                        )}
-                      </td>
+                      <td style={{padding:'6px 8px', textAlign:'center'}}>{l.peso ?? '-'}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidadEnviada || '-'}</td>
                       <td style={{padding:'6px 8px'}}>{l.formato}</td>
                       <td style={{padding:'6px 8px'}}>{l.comentario || '-'}</td>
@@ -366,24 +318,6 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
             }}>
               Descargar PDF
             </button>
-          </div>
-        </div>
-      )}
-      {/* Modal sumatorio de pesos */}
-      {modalPeso.visible && (
-        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.35)',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})}>
-          <div style={{background:'#fff',borderRadius:12,padding:32,minWidth:320,maxWidth:400,boxShadow:'0 4px 32px #0002'}} onClick={e=>e.stopPropagation()}>
-            <h3 style={{marginTop:0}}>Sumar pesos para la línea</h3>
-            {modalPeso.valores.map((v, idx) => (
-              <div key={idx} style={{marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
-                <span style={{width:24,display:'inline-block',textAlign:'right'}}>{idx+1}:</span>
-                <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(idx, e.target.value)} style={{width:80,padding:'4px 8px',borderRadius:4,border:'1px solid #ccc'}} />
-                <span>kg</span>
-              </div>
-            ))}
-            <div style={{margin:'12px 0',fontWeight:600}}>Suma total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
-            <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6,fontWeight:600,marginRight:8}}>Aplicar</button>
-            <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6}}>Cancelar</button>
           </div>
         </div>
       )}
