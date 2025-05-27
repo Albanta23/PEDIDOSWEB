@@ -98,8 +98,8 @@ app.delete('/api/pedidos/:id', async (req, res) => {
   }
 });
 
-// Importar y montar el endpoint de Mailgun para enviar proveedor
-// require('./enviarProveedorEmail')(app);
+// Montar el endpoint de Mailjet para enviar proveedor
+require('./mailjetProveedorEmail')(app);
 
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
