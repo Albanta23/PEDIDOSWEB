@@ -1,5 +1,5 @@
 // Endpoint para enviar la lista de proveedor por email con PDF adjunto usando Mailgun Sandbox
-// const mailgun = require('mailgun-js');
+const mailgun = require('mailgun-js');
 
 module.exports = function(app) {
   app.post('/api/enviar-proveedor', async (req, res) => {
@@ -74,10 +74,10 @@ module.exports = function(app) {
       });
 
       // Configurar Mailgun con sandbox
-      // const mg = mailgun({
-      //   apiKey: process.env.MAILGUN_API_KEY,
-      //   domain: process.env.MAILGUN_SANDBOX_DOMAIN // Usar dominio sandbox
-      // });
+      const mg = mailgun({
+        apiKey: process.env.MAILGUN_API_KEY,
+        domain: process.env.MAILGUN_SANDBOX_DOMAIN // Usar dominio sandbox
+      });
 
       console.log('[MAILGUN] Configuración:', {
         domain: process.env.MAILGUN_SANDBOX_DOMAIN,
@@ -94,7 +94,7 @@ module.exports = function(app) {
 
       // Preparar el email
       const emailData = {
-        from: 'fabricaembutidosballesteros@gmail.com',
+        from: process.env.MAILGUN_FROM || 'Pedidos Carnicería <mailgun@' + process.env.MAILGUN_SANDBOX_DOMAIN + '>',
         to: proveedorEmail,
         subject: `Pedido de fresco - ${tienda || ''} (${fecha})`,
         text: `Adjunto pedido de fresco para proveedor.\n\nTienda: ${tienda}\nFecha: ${fecha}\n\nResumen:\n${lineas.map(l => `${l.referencia}: ${l.cantidad}`).join('\n')}`,
@@ -117,23 +117,23 @@ module.exports = function(app) {
       });
 
       // Enviar el email
-      // const result = await new Promise((resolve, reject) => {
-      //   mg.messages().send(emailData, (error, body) => {
-      //     if (error) {
-      //       reject(error);
-      //     } else {
-      //       resolve(body);
-      //     }
-      //   });
-      // });
+      const result = await new Promise((resolve, reject) => {
+        mg.messages().send(emailData, (error, body) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(body);
+          }
+        });
+      });
 
-      // console.log('[MAILGUN] Email enviado exitosamente:', result);
-      console.log('[MAILGUN] Email simulado exitosamente a:', proveedorEmail);
+      console.log('[MAILGUN] Email enviado exitosamente:', result);
+      console.log('[MAILGUN] Email enviado a:', proveedorEmail);
       
       res.status(200).json({ 
         ok: true, 
-        message: 'Email simulado correctamente',
-        // messageId: result.id 
+        message: 'Email enviado correctamente',
+        messageId: result.id 
       });
       
     } catch (err) {

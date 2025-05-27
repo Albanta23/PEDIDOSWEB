@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Watermark from './Watermark';
 import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
+import { FORMATOS_PEDIDO } from '../configFormatos';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -45,7 +46,14 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       ...prev,
       lineas: prev.lineas.map((l, i) => {
         if (i === idx) {
-          return { ...l, [campo]: valor === '' ? null : valor };
+          let nuevoValor = valor;
+          if (campo === 'peso' || campo === 'cantidadEnviada') {
+            nuevoValor = valor === '' ? null : parseFloat(valor);
+            if (isNaN(nuevoValor)) {
+              nuevoValor = null; // Si no es un número válido, establece null
+            }
+          }
+          return { ...l, [campo]: nuevoValor };
         }
         return l;
       })
@@ -62,19 +70,24 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   // Guardar edición de un pedido
   const guardarEdicion = async () => {
-    const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
-    if (nuevasLineas.length === 0 && pedidoAbierto.lineas.length > 0) {
-      return;
+    const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null)); // Asegurar que cantidad exista
+    if (nuevasLineas.length === 0 && pedidoAbierto.lineas.length > 0) { // Si todas las líneas se borraron o invalidaron
+      // Opcional: decidir si eliminar el pedido o simplemente no guardar líneas vacías
+      // Por ahora, si había líneas y ahora no hay válidas, no hacemos nada o podríamos eliminar el pedido.
+      // await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
+      // setPedidoAbierto(null);
+      // return;
     }
+    // Asegurarse de que el peso se incluye y es un número
     const lineasNormalizadas = nuevasLineas.map(l => ({
       ...l,
-      preparada: !!l.preparada,
-      cantidadEnviada: l.cantidadEnviada ?? null,
-      unidadesEnviadas: l.unidadesEnviadas === '' || l.unidadesEnviadas === undefined ? null : l.unidadesEnviadas,
-      cantidad: Number(l.cantidad)
+      preparada: !!l.preparada, // Mantener la lógica de preparada
+      peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+      cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+      cantidad: Number(l.cantidad) // Asegurar que cantidad también sea número
     }));
     await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-    setPedidoAbierto(null);
+    setPedidoAbierto(null); // Cerrar el modal de edición después de guardar
   };
 
   return (
@@ -158,6 +171,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
         {Object.entries(pedidosPorTienda).map(([tiendaId, pedidos], idx) => {
           const tienda = tiendas.find(t => t.id === tiendaId);
           return pedidos.map((pedido, pidx) => {
+            // Clave única robusta: id/_id + número de pedido + índice
             const key = `${pedido.id || pedido._id || 'sinid'}-${pedido.numeroPedido || 'nonum'}-${pidx}`;
             return (
               <button
@@ -210,8 +224,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <tr>
                 <th>Producto</th>
                 <th>Cant. pedida</th>
-                <th>Kilos enviados</th>
-                <th>Unidades enviadas</th>
+                <th>Peso (kg)</th>
+                <th>Cant. enviada</th>
                 <th>Lote</th>
                 <th>Formato pedido</th>
                 <th>Comentario</th>
@@ -228,8 +242,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       type="number"
                       min="0"
                       step="any"
-                      value={linea.cantidadEnviada ?? ''}
-                      onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value === '' ? '' : Number(e.target.value))}
+                      value={linea.peso ?? ''} // Muestra string vacío si es null/undefined
+                      onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
                       style={{ width: 70 }}
                     />
                   </td>
@@ -237,9 +251,9 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <input
                       type="number"
                       min="0"
-                      step="1"
-                      value={linea.unidadesEnviadas ?? ''}
-                      onChange={e => actualizarLinea(idx, 'unidadesEnviadas', e.target.value === '' ? null : Number(e.target.value))}
+                      step="any" // Permitir decimales si es necesario para cantidadEnviada
+                      value={linea.cantidadEnviada ?? ''} // Muestra string vacío si es null/undefined
+                      onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
                       style={{ width: 70 }}
                     />
                   </td>
@@ -251,7 +265,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       style={{ width: 90 }}
                     />
                   </td>
-                  <td>{linea.formato}</td>
+                  <td>{FORMATOS_PEDIDO.includes(linea.formato) ? linea.formato : '-'}</td>
                   <td>{linea.comentario}</td>
                   <td>
                     <button
@@ -273,11 +287,12 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       const lineasNormalizadas = nuevasLineas.map(l => ({
                         ...l,
                         preparada: !!l.preparada,
-                        cantidadEnviada: l.cantidadEnviada ?? null,
-                        unidadesEnviadas: l.unidadesEnviadas === '' || l.unidadesEnviadas === undefined ? null : l.unidadesEnviadas,
-                        cantidad: Number(l.cantidad)
+                        peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+                        cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+                        cantidad: Number(l.cantidad) // Asegurar que cantidad sea número
                       }));
                       await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                      // No cerramos el pedido aquí para permitir más ediciones o el envío posterior.
                     }}
                   >
                     Guardar
@@ -287,6 +302,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     onClick={async () => {
                       const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
                       if (nuevasLineas.length === 0) {
+                        // Si no hay líneas válidas pero el pedido original sí tenía, se considera eliminar el pedido.
+                        // Esto es consistente con la lógica previa de eliminar si no hay líneas.
                         await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
                         setPedidoAbierto(null);
                         return;
@@ -294,8 +311,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       const lineasNormalizadas = nuevasLineas.map(l => ({
                         ...l,
                         preparada: !!l.preparada,
-                        cantidadEnviada: l.cantidadEnviada ?? null,
-                        unidadesEnviadas: l.unidadesEnviadas === '' || l.unidadesEnviadas === undefined ? null : l.unidadesEnviadas,
+                        peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+                        cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
                         cantidad: Number(l.cantidad)
                       }));
                       await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);

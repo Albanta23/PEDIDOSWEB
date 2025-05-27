@@ -1,4 +1,5 @@
 // Endpoint simplificado para pruebas de envío de email sin PDF adjunto
+const mailgun = require('mailgun-js');
 
 module.exports = function(app) {
   app.post('/api/enviar-proveedor-test', async (req, res) => {
@@ -13,6 +14,17 @@ module.exports = function(app) {
         fechaPedido
       });
 
+      // Configurar Mailgun con sandbox
+      const mg = mailgun({
+        apiKey: process.env.MAILGUN_API_KEY,
+        domain: process.env.MAILGUN_SANDBOX_DOMAIN
+      });
+
+      console.log('[MAILGUN TEST] Configuración:', {
+        domain: process.env.MAILGUN_SANDBOX_DOMAIN,
+        hasApiKey: !!process.env.MAILGUN_API_KEY
+      });
+
       // Generar contenido del email
       const productosTexto = productos.map(p => 
         `${p.nombre}: ${p.cantidad} unidades (${p.peso || 'N/A'}) - €${p.precio || 'N/A'}`
@@ -22,7 +34,7 @@ module.exports = function(app) {
 
       // Preparar el email
       const emailData = {
-        from: 'fabricaembutidosballesteros@gmail.com',
+        from: process.env.MAILGUN_FROM || 'Pedidos Carnicería <mailgun@' + process.env.MAILGUN_SANDBOX_DOMAIN + '>',
         to: proveedorEmail,
         subject: `🥩 Pedido de Carnicería - ${tienda} (${new Date(fechaPedido).toLocaleDateString()})`,
         text: `
@@ -113,15 +125,22 @@ Carnicería - Sistema de Gestión de Pedidos
       });
 
       // Enviar el email
-      // Aquí se debe integrar el servicio de envío de email deseado (por ejemplo, SMTP, SendGrid, etc.)
-      // Este es un ejemplo genérico y no funcionará hasta que se configure un servicio de envío real
-      await enviarEmailServicioExterno(emailData);
+      const result = await new Promise((resolve, reject) => {
+        mg.messages().send(emailData, (error, body) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(body);
+          }
+        });
+      });
 
-      console.log('[MAILGUN TEST] Email enviado exitosamente');
+      console.log('[MAILGUN TEST] Email enviado exitosamente:', result);
       
       res.status(200).json({ 
         ok: true, 
         message: 'Email de prueba enviado correctamente',
+        messageId: result.id,
         destinatario: proveedorEmail,
         productos: productos.length,
         total: total.toFixed(2)
@@ -136,14 +155,3 @@ Carnicería - Sistema de Gestión de Pedidos
     }
   });
 };
-
-// Función simulada para enviar email a través de un servicio externo
-// Reemplazar esta función con la integración real del servicio de envío de email
-async function enviarEmailServicioExterno(emailData) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('[SERVICIO EXTERNO] Email simulado como enviado:', emailData);
-      resolve();
-    }, 1000);
-  });
-}
