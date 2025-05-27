@@ -19,7 +19,7 @@ const io = new Server(server, {
 // Conexión a MongoDB
 // La variable de entorno MONGODB_URI se configura en el dashboard de Render.
 // Para desarrollo local, puedes definirla en un archivo .env o directamente aquí como fallback.
-const MONGODB_URI = process.env.mongodb; // Utiliza la variable de entorno 'mongodb' de Render
+const MONGODB_URI = process.env.MONGODB_URI; // Usar la variable estándar
 
 if (!MONGODB_URI) {
   console.error('Error: La variable de entorno mongodb no está definida.');
@@ -99,7 +99,7 @@ app.delete('/api/pedidos/:id', async (req, res) => {
 });
 
 // Importar y montar el endpoint de Mailgun para enviar proveedor
-require('./enviarProveedorEmail')(app);
+// require('./enviarProveedorEmail')(app);
 
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
