@@ -3,6 +3,7 @@ const mailjet = require('node-mailjet');
 const fs = require('fs');
 const path = require('path');
 const HistorialProveedor = require('./models/HistorialProveedor');
+const puppeteer = require('puppeteer');
 
 const mailjetClient = mailjet.apiConnect(
   process.env.MAILJET_API_KEY,
@@ -35,11 +36,22 @@ module.exports = function(app) {
       `).join('');
       // Incluir logo2.png como imagen de botón de envío
       const logo2Url = process.env.BASE_URL_LOGO2 || `${req.protocol}://${req.get('host')}/logo2.png`;
-      const botonEnvio = `<button style="background:transparent;border:none;cursor:pointer;"><img src='${logo2Url}' alt='Enviar' style='height:38px;vertical-align:middle;'/></button>`;
       // Reemplazar placeholders en la plantilla
       html = html.replace(/\$\{fecha\}/g, fecha || '-');
       html = html.replace(/\$\{tabla\}/g, htmlTableRows);
-      html = html.replace(/\$\{boton_envio\}/g, botonEnvio);
+      html = html.replace(/\$\{logo2Url\}/g, logo2Url);
+      // Generar PDF desde HTML usando puppeteer
+      let pdfBuffer;
+      try {
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+        await browser.close();
+      } catch (pdfErr) {
+        console.error('[PDF] Error al generar PDF:', pdfErr);
+        pdfBuffer = null;
+      }
       // LOG para comprobar destinatarios principales y CC
       console.log('[MAILJET] Enviando email a:', toList.map(e => e.Email).join(','));
       if (ccList.length > 0) {
@@ -49,7 +61,18 @@ module.exports = function(app) {
       }
       // LOG para depuración: mostrar el HTML final que se envía
       console.log('[MAILJET][DEBUG] HTML enviado al proveedor:\n', html);
-      // Enviar email con Mailjet
+      // LOG para depuración: mostrar si el botón de imprimir está presente
+      if (html.includes('Imprimir PDF')) {
+        console.log('[MAILJET][DEBUG] ✔ La plantilla contiene el botón de imprimir PDF.');
+      } else {
+        console.warn('[MAILJET][DEBUG] ❌ La plantilla NO contiene el botón de imprimir PDF.');
+      }
+      // Enviar email con Mailjet, adjuntando el PDF si se generó
+      const attachments = pdfBuffer ? [{
+        ContentType: 'application/pdf',
+        Filename: `pedido_${fecha || Date.now()}.pdf`,
+        Base64Content: pdfBuffer.toString('base64')
+      }] : [];
       const request = mailjetClient.post('send', { version: 'v3.1' }).request({
         Messages: [
           {
@@ -60,7 +83,8 @@ module.exports = function(app) {
             To: toList,
             Cc: ccList,
             Subject: `Pedido de frescos - ${tienda || ''}`,
-            HTMLPart: html
+            HTMLPart: html,
+            Attachments: attachments
           }
         ]
       });
@@ -73,7 +97,8 @@ module.exports = function(app) {
             tiendaId,
             proveedor: 'proveedor-fresco',
             pedido: { lineas, fecha: fecha || new Date(), tienda },
-            fechaEnvio: new Date()
+            fechaEnvio: new Date(),
+            pdfBase64: pdfBuffer ? pdfBuffer.toString('base64') : undefined
           });
         }
       } catch (histErr) {
@@ -81,11 +106,11 @@ module.exports = function(app) {
       }
       res.json({ ok: true, message: 'Email enviado correctamente al proveedor.' });
     } catch (err) {
-      let errorMsg = 'Error desconocido';
-      if (err && err.message) errorMsg = err.message;
-      if (err && err.response && err.response.body) errorMsg += ' | ' + JSON.stringify(err.response.body);
-      console.error('Error al enviar email con Mailjet:', errorMsg);
-      res.status(500).json({ ok: false, error: errorMsg });
+      let errorMsg2 = 'Error desconocido';
+      if (err && err.message) errorMsg2 = err.message;
+      if (err && err.response && err.response.body) errorMsg2 += ' | ' + JSON.stringify(err.response.body);
+      console.error('Error al enviar email con Mailjet:', errorMsg2);
+      res.status(500).json({ ok: false, error: errorMsg2 });
     }
   });
 };

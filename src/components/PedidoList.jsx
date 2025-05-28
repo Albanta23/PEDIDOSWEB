@@ -721,6 +721,35 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 <img src="/logo_2.jpg" alt="Enviar" style={{height:38,objectFit:'contain',filter:'drop-shadow(0 2px 6px #b71c1c44)'}} />
                 <span style={{color:'#b71c1c',fontWeight:700,fontSize:17}}>{enviandoProveedor ? 'Enviando...' : 'Enviar'}</span>
               </button>
+              <button
+                onClick={async () => {
+                  // Envío de prueba al endpoint /api/enviar-proveedor-test
+                  try {
+                    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:10001'}/api/enviar-proveedor-test`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        tienda: tiendaActual?.nombre || 'Tienda Test',
+                        proveedor: { email: 'javier.cantoral.fernandez@gmail.com', nombre: 'Proveedor Prueba' },
+                        productos: [
+                          { nombre: 'Lomo', cantidad: 2, peso: 1.2, precio: 10.5 },
+                          { nombre: 'Chorizo', cantidad: 1, peso: 0.8, precio: 8.0 }
+                        ],
+                        fechaPedido: new Date().toISOString(),
+                        observaciones: 'Prueba de envío desde botón de test.'
+                      })
+                    });
+                    const data = await res.json().catch(()=>({}));
+                    alert(res.ok ? `✅ Email de prueba enviado: ${data.message || ''}` : `❌ Error: ${data.error || res.status}`);
+                  } catch (e) {
+                    alert('❌ Error de red o backend: ' + (e.message || e));
+                  }
+                }}
+                style={{background:'#ff9800',color:'#fff',border:'none',borderRadius:8,padding:'7px 18px',fontWeight:700,marginLeft:8}}
+                title="Enviar email de prueba a proveedor"
+              >
+                <span role="img" aria-label="test">🧪</span> Envío de prueba
+              </button>
             </div>
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
           </div>

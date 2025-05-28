@@ -12,8 +12,7 @@ const fs = require('fs');
 const https = require('https');
 
 const app = express();
-// const server = http.createServer(app); // Desactivado HTTP, solo HTTPS
-
+const server = http.createServer(app); // ACTIVAR HTTP para desarrollo
 
 // Configuración CORS explícita para frontend en Codespaces y Vercel
 const allowedOrigins = [
@@ -239,8 +238,11 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 });
 
 // SOLO Mailjet para enviar proveedor
-const mailjetProveedorEmail = require('./mailjetProveedorEmail');
-mailjetProveedorEmail(app);
+// const mailjetProveedorEmail = require('./mailjetProveedorEmail');
+// mailjetProveedorEmail(app);
+
+// Endpoint de test de email proveedor (Mailgun)
+require('./mailgunTestEmail')(app);
 
 const PORT = process.env.PORT || 10001;
 secureServer.listen(PORT, () => {
