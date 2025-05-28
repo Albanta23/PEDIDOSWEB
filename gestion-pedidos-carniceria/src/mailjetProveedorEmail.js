@@ -2,6 +2,7 @@
 const mailjet = require('node-mailjet');
 const fs = require('fs');
 const path = require('path');
+const HistorialProveedor = require('./models/HistorialProveedor');
 
 const mailjetClient = mailjet.apiConnect(
   process.env.MAILJET_API_KEY,
@@ -64,6 +65,19 @@ module.exports = function(app) {
         ]
       });
       await request;
+      // Guardar en historial de proveedor tras enviar
+      try {
+        if (tienda && lineas && Array.isArray(lineas)) {
+          await HistorialProveedor.create({
+            tiendaId: tienda,
+            proveedor: 'proveedor-fresco',
+            pedido: { lineas, fecha: fecha || new Date(), tienda },
+            fechaEnvio: new Date()
+          });
+        }
+      } catch (histErr) {
+        console.error('[HISTORIAL PROVEEDOR] Error al guardar historial:', histErr);
+      }
       res.json({ ok: true, message: 'Email enviado correctamente al proveedor.' });
     } catch (err) {
       let errorMsg = 'Error desconocido';
