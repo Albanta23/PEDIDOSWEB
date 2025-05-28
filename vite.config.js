@@ -16,8 +16,8 @@ export default defineConfig({
     environment: 'jsdom',
   },
   server: {
-    proxy: {
-      '/api': 'https://pedidos-backend-0e1s.onrender.com'
-    }
+    // proxy: {
+    //   '/api': 'https://pedidos-backend-0e1s.onrender.com'
+    // }
   },
 });

@@ -7,9 +7,12 @@ const { Server } = require('socket.io');
 const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
+const fs = require('fs');
+const https = require('https');
 
 const app = express();
-const server = http.createServer(app);
+// const server = http.createServer(app); // Desactivado HTTP, solo HTTPS
+
 
 // Configuración CORS explícita para frontend en Codespaces y Vercel
 const allowedOrigins = [
@@ -25,7 +28,14 @@ app.use(cors({
   credentials: true
 }));
 
-const io = new Server(server, {
+// --- HTTPS SERVER ---
+const httpsOptions = {
+  key: fs.readFileSync(__dirname + '/../key.pem'),
+  cert: fs.readFileSync(__dirname + '/../cert.pem')
+};
+const secureServer = https.createServer(httpsOptions, app);
+
+const io = new Server(secureServer, {
   cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -205,7 +215,7 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 const mailjetProveedorEmail = require('./mailjetProveedorEmail');
 mailjetProveedorEmail(app);
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log('Servidor backend escuchando en puerto', PORT);
+const PORT = process.env.PORT || 10001;
+secureServer.listen(PORT, () => {
+  console.log('Servidor backend HTTPS escuchando en puerto', PORT);
 });
