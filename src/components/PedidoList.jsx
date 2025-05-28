@@ -283,52 +283,29 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
-      // 1. Generar PDF como base64
-      const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
-      const doc = new jsPDF();
-      doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-      let y = 28; // texto 1cm más abajo
-      doc.setFontSize(18);
-      doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
-      y += 10;
-      doc.setFontSize(12);
-      if (tiendaActual?.nombre) {
-        doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
-        y += 8;
-      }
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
-      y += 10;
-      doc.setFontSize(13);
-      doc.text('Referencia', 14, y);
-      doc.text('Cantidad', 100, y);
-      y += 7;
-      doc.setLineWidth(0.3);
-      doc.line(14, y, 196, y);
-      y += 4;
-      doc.setFontSize(12);
+      // 1. Generar HTML de la tabla de productos
+      const fecha = new Date().toLocaleDateString();
+      const tiendaNombre = tiendaActual?.nombre || '';
+      let htmlBody = `<h2>Pedido a Proveedor</h2>`;
+      htmlBody += `<div><b>Tienda:</b> ${tiendaNombre}</div>`;
+      htmlBody += `<div><b>Fecha:</b> ${fecha}</div>`;
+      htmlBody += `<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;margin-top:12px;'>`;
+      htmlBody += `<thead><tr><th>Referencia</th><th>Cantidad</th><th>Unidad</th></tr></thead><tbody>`;
       lineas.forEach(l => {
         if (l.referencia && l.cantidad) {
-          doc.text(String(l.referencia), 14, y);
-          doc.text(String(l.cantidad), 100, y);
-          y += 7;
-          if (y > 280) {
-            doc.addPage();
-            y = 28;
-          }
+          htmlBody += `<tr><td>${l.referencia}</td><td>${l.cantidad}</td><td>${l.unidad || 'kg'}</td></tr>`;
         }
       });
-      // Obtener PDF como base64
-      const pdfBase64 = doc.output('datauristring');
-      // 2. Enviar al backend
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor`, {
+      htmlBody += `</tbody></table>`;
+      // 2. Enviar al backend solo el HTML
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:10001'}/api/enviar-proveedor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tienda: tiendaActual?.nombre || '',
-          tiendaId: tiendaActual?.id || '',
-          fecha: new Date().toLocaleDateString(),
-          lineas: lineasProveedor,
-          pdfBase64
+          tienda: tiendaNombre,
+          fecha,
+          lineas,
+          htmlBody
         })
       });
       if (res.ok) {
@@ -339,10 +316,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           setMostrarModalProveedor(false);
         }, 1500);
       } else {
-        setMensajeProveedor("Error al enviar el email al proveedor.");
+        let errorMsg = `Error al enviar el email al proveedor. Código: ${res.status}`;
+        try {
+          const data = await res.json();
+          if (data && data.error) errorMsg += ` - ${data.error}`;
+        } catch {}
+        setMensajeProveedor(errorMsg);
+        console.error('Respuesta backend:', res);
       }
     } catch (e) {
-      setMensajeProveedor("Error al generar o enviar el PDF.");
+      setMensajeProveedor("Error al generar o enviar el HTML: " + (e?.message || e));
+      console.error('Error en enviarProveedorPorEmail:', e);
     }
     setEnviandoProveedor(false);
   }

@@ -5,28 +5,42 @@
   <meta name='viewport' content='width=device-width, initial-scale=1'/>
   <title>Pedido de Frescos - Embutidos Ballesteros SL</title>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f9f6f2; margin: 0; padding: 20px; }
-    .container { background: #fff; border-radius: 10px; max-width: 620px; margin: auto; padding: 32px; box-shadow: 0 2px 10px rgba(110, 73, 36, 0.08); border: 2px solid #a9241f; }
-    h2 { color: #a9241f; margin-top: 0; letter-spacing: 1px; }
-    .logo { display: block; margin: 0 auto 18px auto; max-width: 140px; }
-    table { width: 100%; border-collapse: collapse; margin: 26px 0 20px 0; }
-    th, td { border: 1px solid #cdb196; padding: 10px 8px; text-align: left; }
-    th { background: #f4e8dc; color: #a9241f; font-weight: bold; }
-    .print-btn { background: #a9241f; color: #fff; border: none; border-radius: 4px; padding: 12px 28px; font-size: 17px; cursor: pointer; margin-top: 18px; letter-spacing: 1px; transition: background 0.2s; }
-    .print-btn:hover { background: #d13d35; }
-    .footer { font-size: 13px; color: #907a66; margin-top: 34px; text-align: center; }
-    .empresa { font-weight: bold; color: #a9241f; font-size: 18px; letter-spacing: 1px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6fb; margin: 0; padding: 20px; }
+    .container { background: #fff; border-radius: 18px; max-width: 650px; margin: 32px auto; padding: 38px 32px 32px 32px; box-shadow: 0 4px 24px rgba(110, 73, 36, 0.10); border: 1.5px solid #e0d6c6; }
+    h2 { color: #a9241f; margin-top: 0; letter-spacing: 1px; text-align: center; font-size: 1.7em; }
+    .logo { display: block; margin: 0 auto 18px auto; max-width: 150px; border-radius: 12px; box-shadow: 0 2px 8px rgba(110, 73, 36, 0.08); }
+    table { width: 100%; border-collapse: collapse; margin: 28px 0 20px 0; background: #faf8f6; border-radius: 10px; overflow: hidden; }
+    th, td { border: 1px solid #e0d6c6; padding: 12px 8px; text-align: left; }
+    th { background: #f4e8dc; color: #a9241f; font-weight: 700; }
+    .footer { font-size: 14px; color: #907a66; margin-top: 38px; text-align: center; }
+    .empresa { font-weight: bold; color: #a9241f; font-size: 22px; letter-spacing: 1.5px; text-align: center; margin-bottom: 8px; }
+    .print-btn {
+      background: #a9241f;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 14px 36px;
+      font-size: 18px;
+      cursor: pointer;
+      margin: 0 auto 18px auto;
+      display: block;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 8px rgba(110, 73, 36, 0.08);
+      transition: background 0.2s;
+    }
+    @media print {
+      .print-btn { display: none !important; }
+      body { background: #fff !important; }
+      .container { box-shadow: none !important; border: none !important; }
+    }
   </style>
 </head>
 <body>
   <div class="container" id="pedido-content">
-    <img src="https://raw.githubusercontent.com/ballesterosdigital/gestion-pedidos-carniceria/main/public/logo1.png" alt="Embutidos Ballesteros SL" class="logo" />
+    <img src="logo1.png" alt="Embutidos Ballesteros SL" class="logo" />
     <div class="empresa">Embutidos Ballesteros SL</div>
     <h2>Pedido de Productos Frescos</h2>
-    <p>Estimado proveedor,</p>
-    <p>
-      Le remitimos el pedido de frescos para la tienda de carnicería correspondiente al <b>${fecha}</b>.
-    </p>
+    <p style="font-size:1.1em; color:#444; text-align:center; margin-bottom:18px;">Estimado proveedor,<br>Le remitimos el pedido de frescos para la tienda de carnicería correspondiente al <b>${fecha}</b>.</p>
     <table>
       <thead>
         <tr>
@@ -39,16 +53,8 @@
         ${tabla}
       </tbody>
     </table>
-    <p>
-      Para cualquier consulta o aclaración, quedamos a su disposición.
-    </p>
-    <!-- Botón de envío con logo2.png -->
-    <div style="text-align:center;margin:20px 0;">
-      <button style="background:transparent;border:none;cursor:pointer;">
-        <img src="${logo2Url}" alt="Enviar" style="height:38px;vertical-align:middle;"/>
-      </button>
-    </div>
-    <button class="print-btn" onclick="window.print()">Imprimir PDF</button>
+    <p style="color:#555; font-size:1em; margin-bottom:24px; text-align:center;">Para cualquier consulta o aclaración, quedamos a su disposición.</p>
+    <button class="print-btn" onclick="window.print()">Descargar PDF</button>
     <div class="footer">
       Embutidos Ballesteros SL &mdash; Gracias por su confianza.
     </div>

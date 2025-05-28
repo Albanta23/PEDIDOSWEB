@@ -122,7 +122,7 @@
                 addLog(`✅ PDF generado: ${pdfArrayBuffer.byteLength} bytes, base64: ${pdfBase64String.length} chars`, 'success');
                 
                 // 3. Preparar datos para envío
-                const apiUrl = 'http://localhost:10001';
+                const apiUrl = 'https://pedidos-backend-0e1s.onrender.com';
                 const requestData = {
                     tienda: tienda,
                     fecha: new Date().toLocaleDateString(),
