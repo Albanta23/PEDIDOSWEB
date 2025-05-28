@@ -3,6 +3,7 @@ import TransferenciasPanel from './TransferenciasPanel';
 import { crearPedido, actualizarPedido, obtenerPedidos } from '../services/pedidosService';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { jsPDF } from 'jspdf';
+import axios from 'axios';
 
 // Utilidad para cargar imagen como base64
 async function cargarLogoBase64(url) {
@@ -31,6 +32,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const [mostrarModalProveedor, setMostrarModalProveedor] = useState(false);
   const [enviandoProveedor, setEnviandoProveedor] = useState(false);
   const [mensajeProveedor, setMensajeProveedor] = useState("");
+  const [mostrarHistorialProveedor, setMostrarHistorialProveedor] = useState(false);
+  const [historialProveedor, setHistorialProveedor] = useState([]);
 
   // Clave para localStorage específica de la tienda
   const getStorageKey = () => `pedido_borrador_${tiendaActual?.id || 'default'}`;
@@ -276,7 +279,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   }
 
   // --- Enviar lista de proveedor por email (profesional) ---
-  async function enviarProveedorPorEmail(lineasProveedor, tiendaActual) {
+  async function enviarProveedorPorEmail(lineas, tienda) {
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
@@ -303,7 +306,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       doc.line(14, y, 196, y);
       y += 4;
       doc.setFontSize(12);
-      lineasProveedor.forEach(l => {
+      lineas.forEach(l => {
         if (l.referencia && l.cantidad) {
           doc.text(String(l.referencia), 14, y);
           doc.text(String(l.cantidad), 100, y);
@@ -341,6 +344,33 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       setMensajeProveedor("Error al generar o enviar el PDF.");
     }
     setEnviandoProveedor(false);
+  }
+
+  // Función para guardar en historial de proveedor
+  async function guardarHistorialProveedor(lineas, tienda) {
+    if (!tienda?.id) return;
+    try {
+      await axios.post('/api/historial-proveedor', {
+        tiendaId: tienda.id,
+        proveedor: 'proveedor-fresco',
+        pedido: { lineas, fecha: new Date(), tienda: tienda.nombre }
+      });
+    } catch (e) {
+      // No bloquea el flujo, solo log
+      console.error('Error guardando historial proveedor:', e);
+    }
+  }
+  // Función para consultar historial
+  async function cargarHistorialProveedor() {
+    if (!tiendaActual?.id) return;
+    try {
+      const res = await axios.get(`/api/historial-proveedor/${tiendaActual.id}/proveedor-fresco`);
+      setHistorialProveedor(res.data.historial || []);
+      setMostrarHistorialProveedor(true);
+    } catch (e) {
+      setHistorialProveedor([]);
+      setMostrarHistorialProveedor(true);
+    }
   }
 
   return (
@@ -625,6 +655,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#b71c1c',display:'flex',alignItems:'center'}}>
               <span role="img" aria-label="cerdo" style={{fontSize:32,marginRight:10}}>🐷</span>Lista para proveedor
             </h2>
+            <button onClick={cargarHistorialProveedor} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,marginBottom:10}}>Ver historial de envíos</button>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16,minWidth:400}}>
                 <thead>
@@ -691,6 +722,32 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               </button>
             </div>
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
+          </div>
+        </div>
+      )}
+
+      {/* Modal historial proveedor */}
+      {mostrarHistorialProveedor && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0007',zIndex:4000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:320,maxWidth:600,maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
+            <button onClick={()=>setMostrarHistorialProveedor(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
+            <h2 style={{marginTop:0,marginBottom:16,fontSize:20,color:'#007bff'}}>Historial de pedidos enviados a proveedor</h2>
+            {historialProveedor.length === 0 ? (
+              <div style={{color:'#888',fontStyle:'italic'}}>No hay historial para esta tienda.</div>
+            ) : (
+              <ul style={{padding:0,margin:0,listStyle:'none'}}>
+                {historialProveedor.map((h,i) => (
+                  <li key={i} style={{marginBottom:14,padding:10,background:'#f8f9fa',borderRadius:8,border:'1px solid #e0e6ef'}}>
+                    <div style={{fontWeight:700}}>{h.pedido?.fecha ? new Date(h.pedido.fecha).toLocaleString() : '-'}</div>
+                    <ul style={{margin:'6px 0 0 12px',padding:0}}>
+                      {h.pedido?.lineas?.map((l,idx) => (
+                        <li key={idx}>{l.referencia} - {l.cantidad} {l.unidad}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}

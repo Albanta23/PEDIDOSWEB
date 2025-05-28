@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
+const HistorialProveedor = require('./models/HistorialProveedor'); // Añadido
 const fs = require('fs');
 const https = require('https');
 
@@ -194,6 +195,32 @@ app.patch('/api/avisos/:id/visto', async (req, res) => {
   }
 });
 // --- FIN ENDPOINTS DE AVISOS ---
+
+// Guardar en historial de proveedor
+app.post('/api/historial-proveedor', async (req, res) => {
+  try {
+    const { tiendaId, proveedor, pedido } = req.body;
+    if (!tiendaId || !proveedor || !pedido) {
+      return res.status(400).json({ ok: false, error: 'Faltan datos requeridos' });
+    }
+    const entry = new HistorialProveedor({ tiendaId, proveedor, pedido });
+    await entry.save();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Obtener historial de proveedor por tienda
+app.get('/api/historial-proveedor/:tiendaId/:proveedor', async (req, res) => {
+  try {
+    const { tiendaId, proveedor } = req.params;
+    const historial = await HistorialProveedor.find({ tiendaId, proveedor }).sort({ fechaEnvio: -1 }).limit(50);
+    res.json({ ok: true, historial });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
