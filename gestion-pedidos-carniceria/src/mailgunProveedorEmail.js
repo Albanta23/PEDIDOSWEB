@@ -98,7 +98,43 @@ module.exports = function(app) {
         to: proveedorEmail,
         subject: `Pedido de fresco - ${tienda || ''} (${fecha})`,
         text: `Adjunto pedido de fresco para proveedor.\n\nTienda: ${tienda}\nFecha: ${fecha}\n\nResumen:\n${lineas.map(l => `${l.referencia}: ${l.cantidad}`).join('\n')}`,
-        html: `<p>Adjunto pedido de fresco para proveedor.</p><p><b>Tienda:</b> ${tienda}<br/><b>Fecha:</b> ${fecha}</p><pre>${lineas.map(l => `${l.referencia}: ${l.cantidad}`).join('<br/>')}</pre>`,
+        html: `
+          <p>Adjunto pedido de fresco para proveedor.</p>
+          <p><b>Tienda:</b> ${tienda}<br/><b>Fecha:</b> ${fecha}</p>
+          <pre>${lineas.map(l => `${l.referencia}: ${l.cantidad}`).join('<br/>')}</pre>
+          <img src="https://raw.githubusercontent.com/ballesterosdigital/gestion-pedidos-carniceria/main/public/logo1.png" alt="Embutidos Ballesteros SL" class="logo">
+          <div class="empresa">Embutidos Ballesteros SL</div>
+          <h2>Pedido de Productos Frescos</h2>
+          <p>Estimado proveedor,</p>
+          <p>
+            Le remitimos el pedido de frescos para la tienda de carnicería correspondiente al <b>[Fecha]</b>.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${lineas.map(l => `
+                <tr>
+                  <td>${l.referencia}</td>
+                  <td>${l.cantidad}</td>
+                  <td>${l.unidad || 'kg'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <p>
+            Para cualquier consulta o aclaración, quedamos a su disposición.
+          </p>
+          <button class="print-btn" onclick="window.print()">Imprimir PDF</button>
+          <div class="footer">
+            Embutidos Ballesteros SL &mdash; Gracias por su confianza.
+          </div>
+        `,
         attachment: [
           {
             data: pdfBuffer,

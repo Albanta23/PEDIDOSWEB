@@ -31,7 +31,7 @@ module.exports = function(app) {
       // Email con mejores prácticas anti-spam
       const emailData = {
         from: `Carniceria Ballesteros <${process.env.MAILGUN_FROM}>`,
-        to: proveedorEmail,
+        to: [proveedorEmail, process.env.MAILGUN_COPIA_EMAIL],
         subject: `Pedido ${fechaFormateada} - ${tienda}`, // Asunto más profesional
         text: `
 PEDIDO DE PRODUCTOS CARNICOS
@@ -68,6 +68,7 @@ Carniceria Ballesteros
                     <!-- Header -->
                     <tr>
                         <td style="padding: 30px; text-align: center; background-color: #2c3e50; border-radius: 8px 8px 0 0;">
+                            <img src="https://raw.githubusercontent.com/ballesterosdigital/gestion-pedidos-carniceria/main/public/logo1.png" alt="Logo Carnicería Ballesteros" style="max-width: 120px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;" />
                             <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Carnicería Ballesteros</h1>
                             <p style="color: #ecf0f1; margin: 10px 0 0 0; font-size: 14px;">Pedido de Productos Cárnicos</p>
                         </td>
@@ -133,6 +134,12 @@ Carniceria Ballesteros
                             </table>
                             ` : ''}
                             
+                            <!-- Botón Imprimir PDF -->
+                            <div style="text-align:center; margin: 30px 0;">
+                                <a href="https://ballesterosdigital.es/descargar-pedido-pdf" target="_blank" style="display:inline-block; padding:12px 28px; background:#27ae60; color:#fff; font-size:16px; border-radius:6px; text-decoration:none; font-weight:bold; box-shadow:0 2px 6px rgba(39,174,96,0.15);">Imprimir pedido en PDF</a>
+                                <p style="font-size:12px; color:#888; margin-top:8px;">Si necesita una copia física, pulse el botón para descargar o imprimir el pedido.</p>
+                            </div>
+                            
                         </td>
                     </tr>
                     
@@ -141,7 +148,8 @@ Carniceria Ballesteros
                         <td style="padding: 20px; text-align: center; background-color: #ecf0f1; border-radius: 0 0 8px 8px;">
                             <p style="margin: 0; color: #7f8c8d; font-size: 12px;">
                                 Carnicería Ballesteros - Sistema de Gestión de Pedidos<br>
-                                Para consultas, responda a este email o contacte directamente con su tienda.
+                                Para consultas, responda a este email o contacte directamente con su tienda.<br>
+                                <span style='color:#a9241f; font-weight:bold;'>¿Ves este correo en SPAM? Márcalo como "No es spam" o "Es seguro" para recibir correctamente tus pedidos.</span>
                             </p>
                         </td>
                     </tr>

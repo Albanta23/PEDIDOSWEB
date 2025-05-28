@@ -9,8 +9,12 @@ const mailjetClient = mailjet.apiConnect(
 module.exports = function(app) {
   app.post('/api/enviar-proveedor', async (req, res) => {
     try {
-      const { tienda, fecha, lineas } = req.body;
+      const { tienda, fecha, lineas, destinatarios } = req.body;
       const proveedorEmail = process.env.PROVEEDOR_EMAIL || 'proveedor@ejemplo.com';
+      const toList = [
+        { Email: proveedorEmail, Name: 'Proveedor' },
+        { Email: 'copia@ejemplo.com', Name: 'Copia' } // <-- Añade aquí el destinatario fijo
+      ];
       const fromEmail = process.env.MAILJET_FROM_EMAIL || 'notificaciones@tudominio.com';
       const fromName = process.env.MAILJET_FROM_NAME || 'Pedidos Carnicería';
       const htmlTableRows = lineas.map(l => `
@@ -58,12 +62,7 @@ module.exports = function(app) {
               Email: fromEmail,
               Name: fromName
             },
-            To: [
-              {
-                Email: proveedorEmail,
-                Name: 'Proveedor'
-              }
-            ],
+            To: toList,
             Subject: `Pedido de frescos - ${tienda || ''}`,
             HTMLPart: html
           }

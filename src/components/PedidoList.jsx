@@ -275,6 +275,74 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     doc.save(`pedidos_proveedor_${tiendaActual?.nombre || ''}_${Date.now()}.pdf`);
   }
 
+  // --- Enviar lista de proveedor por email (profesional) ---
+  async function enviarProveedorPorEmail(lineasProveedor, tiendaActual) {
+    setEnviandoProveedor(true);
+    setMensajeProveedor("");
+    try {
+      // 1. Generar PDF como base64
+      const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
+      const doc = new jsPDF();
+      doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
+      let y = 28; // texto 1cm más abajo
+      doc.setFontSize(18);
+      doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
+      y += 10;
+      doc.setFontSize(12);
+      if (tiendaActual?.nombre) {
+        doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
+        y += 8;
+      }
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+      y += 10;
+      doc.setFontSize(13);
+      doc.text('Referencia', 14, y);
+      doc.text('Cantidad', 100, y);
+      y += 7;
+      doc.setLineWidth(0.3);
+      doc.line(14, y, 196, y);
+      y += 4;
+      doc.setFontSize(12);
+      lineasProveedor.forEach(l => {
+        if (l.referencia && l.cantidad) {
+          doc.text(String(l.referencia), 14, y);
+          doc.text(String(l.cantidad), 100, y);
+          y += 7;
+          if (y > 280) {
+            doc.addPage();
+            y = 28;
+          }
+        }
+      });
+      // Obtener PDF como base64
+      const pdfBase64 = doc.output('datauristring');
+      // 2. Enviar al backend
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tienda: tiendaActual?.nombre || '',
+          fecha: new Date().toLocaleDateString(),
+          lineas: lineasProveedor,
+          pdfBase64
+        })
+      });
+      if (res.ok) {
+        setMensajeProveedor("¡Lista enviada al proveedor!");
+        handleProveedorLimpiar();
+        setTimeout(()=>{
+          setMensajeProveedor("");
+          setMostrarModalProveedor(false);
+        }, 1500);
+      } else {
+        setMensajeProveedor("Error al enviar el email al proveedor.");
+      }
+    } catch (e) {
+      setMensajeProveedor("Error al generar o enviar el PDF.");
+    }
+    setEnviandoProveedor(false);
+  }
+
   return (
     <>
       {/* Toast de confirmación de guardado */}
@@ -612,78 +680,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <div style={{display:'flex',gap:10,justifyContent:'flex-end',alignItems:'center'}}>
               <button
                 onClick={async ()=>{
-                  setEnviandoProveedor(true);
-                  setMensajeProveedor("");
-                  try {
-                    // 1. Generar PDF como base64
-                    const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
-                    const doc = new jsPDF();
-                    doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-                    let y = 28;
-                    doc.setFontSize(18);
-                    doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
-                    y += 10;
-                    doc.setFontSize(12);
-                    if (tiendaActual?.nombre) {
-                      doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
-                      y += 8;
-                    }
-                    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
-                    y += 10;
-                    doc.setFontSize(13);
-                    doc.text('Referencia', 14, y);
-                    doc.text('Cantidad', 100, y);
-                    y += 7;
-                    doc.setLineWidth(0.3);
-                    doc.line(14, y, 196, y);
-                    y += 4;
-                    doc.setFontSize(12);
-                    lineasProveedor.forEach(l => {
-                      if (l.referencia && l.cantidad) {
-                        doc.text(String(l.referencia), 14, y);
-                        doc.text(String(l.cantidad), 100, y);
-                        y += 7;
-                        if (y > 280) {
-                          doc.addPage();
-                          y = 28;
-                        }
-                      }
-                    });
-                    const pdfBase64 = doc.output('datauristring');
-                    // 2. Enviar al backend
-                    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        tienda: tiendaActual?.nombre || '',
-                        fecha: new Date().toLocaleDateString(),
-                        lineas: lineasProveedor
-                        // pdfBase64 eliminado
-                      })
-                    });
-                    if (res.ok) {
-                      setMensajeProveedor("¡Lista enviada al proveedor!");
-                      handleProveedorLimpiar();
-                      setTimeout(()=>{
-                        setMensajeProveedor("");
-                        setMostrarModalProveedor(false);
-                      }, 1500);
-                    } else {
-                      let errorMsg = "Error al enviar el email al proveedor.";
-                      try {
-                        const errorData = await res.json();
-                        if (errorData && errorData.error) errorMsg += ` (${errorData.error})`;
-                      } catch (err) {
-                        // Si la respuesta no es JSON, ignorar
-                      }
-                      setMensajeProveedor(errorMsg);
-                      console.error('Error al enviar email proveedor:', res.status, res.statusText);
-                    }
-                  } catch (e) {
-                    setMensajeProveedor("Error al generar o enviar el PDF.");
-                    console.error('Error JS al enviar email proveedor:', e);
-                  }
-                  setEnviandoProveedor(false);
+                  await enviarProveedorPorEmail(lineasProveedor, tiendaActual);
                 }}
                 disabled={enviandoProveedor || lineasProveedor.length === 0 || lineasProveedor.some(l => !l.referencia || !l.cantidad)}
                 style={{background:'#b71c1c',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:17,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1}}

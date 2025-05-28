@@ -156,7 +156,9 @@ async function generarPDFTienda(pedido, tiendaNombre) {
 
 const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
   const [modalPedido, setModalPedido] = useState(null);
-  const [filtro, setFiltro] = useState('dia');
+  const [filtro, setFiltro] = useState('todo'); // Cambiado a 'todo' para mostrar siempre pedidos
+  // Modal sumatorio de peso
+  const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
   // Eliminamos el filtro de tienda, ya que solo debe ver su tienda
 
   // Función para filtrar por fecha
@@ -180,9 +182,31 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
     return true; // 'todo'
   };
 
-  // Mostrar pedidos recibidos en tienda filtrados solo por fecha y por la tienda actual
-  const historico = pedidos.filter(p => (p.estado === 'recibidoTienda' || p.estado === 'entregadoCliente') && filtrarPorFecha(p) && p.tiendaId === tienda.id)
+  // Mostrar pedidos enviados a fábrica (no recibidos ni preparados)
+  const historico = pedidos.filter(p => p.estado === 'enviado' && filtrarPorFecha(p) && p.tiendaId === tienda.id)
     .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
+
+  // Mostrar pedidos preparados o recibidos de fábrica para la tienda
+  const historicoRecibidos = pedidos.filter(p => (p.estado === 'enviadoTienda' || p.estado === 'preparado') && filtrarPorFecha(p) && p.tiendaId === tienda.id)
+    .sort((a, b) => (b.fechaPedido || 0) - (a.fechaPedido || 0));
+
+  // Handler para abrir el modal sumatorio
+  const abrirModalPeso = (lineaIdx, pesoActual, cantidad) => {
+    // Solo permitir sumar pesos en el panel de fábrica
+    return; // Deshabilitado en historiales
+  };
+
+  // Handler para cambiar un valor de peso
+  const cambiarValorPeso = (idx, valor) => {
+    // Solo permitir sumar pesos en el panel de fábrica
+    return; // Deshabilitado en historiales
+  };
+
+  // Handler para aplicar la suma de pesos y guardar en backend
+  const aplicarPesos = async () => {
+    // Solo permitir sumar pesos en el panel de fábrica
+    return; // Deshabilitado en historiales
+  };
 
   return (
     <div style={{
@@ -194,45 +218,35 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
       paddingBottom:40,
       position:'relative',
       zIndex:1,
-      overflow:'hidden'
+      overflow:'hidden',
+      boxSizing:'border-box',
+      width:'100vw',
+      maxWidth:'100vw'
     }}>
-      <div style={{margin:'0 0 18px 0',display:'flex',alignItems:'center',gap:12}}>
-        <label style={{fontWeight:600}}>Filtrar por:</label>
-        <select value={filtro} onChange={e=>setFiltro(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
-          <option value="dia">Día</option>
-          <option value="semana">Semana</option>
-          <option value="mes">Mes</option>
-          <option value="año">Año</option>
-          <option value="todo">Todo</option>
-        </select>
-      </div>
-      {/* Botón de volver solo si NO hay modal de pedido abierto (refuerzo: ocultar y deshabilitar si modalPedido) */}
-      <button
-        style={{
-          position:'fixed',top:24,left:24,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'10px 26px',fontWeight:700,fontSize:18,cursor:!modalPedido?'pointer':'not-allowed',zIndex:2100,boxShadow:'0 2px 8px #007bff33',
-          opacity:!modalPedido?1:0, pointerEvents:!modalPedido?'auto':'none', transition:'opacity 0.2s',
-          visibility:!modalPedido?'visible':'hidden'
-        }}
-        onClick={onVolver}
-        tabIndex={modalPedido ? -1 : 0}
-        aria-hidden={modalPedido ? 'true' : 'false'}
-        disabled={!!modalPedido}
-      >
-        ← Volver
-      </button>
-      <Watermark />
-      <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tienda.nombre}</span></h2>
-      <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos enviados a fábrica</h3>
-      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-      <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+      <style>{`
+        @media (max-width: 900px) {
+          .htp-table {
+            min-width: 500px !important;
+            max-width: 500px !important;
+            font-size: 12px !important;
+          }
+          .htp-table th, .htp-table td {
+            padding: 6px 2px !important;
+          }
+        }
+      `}</style>
+      <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8, textAlign:'center'}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tienda.nombre}</span></h2>
+      <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22, textAlign:'center'}}>Pedidos enviados a fábrica</h3>
+      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', marginBottom: 16}}>
+      <table className="htp-table" style={{minWidth:500, maxWidth:500, fontSize:13, borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
           <tr>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>ID</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Nº Pedido</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Fecha</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Estado</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Líneas</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Acciones</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>ID</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Nº Pedido</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Fecha</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Estado</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Líneas</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -241,17 +255,17 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
           )}
           {historico.map((pedido, idx) => (
             <tr key={`enviado-${pedido.id || pedido._id || `${pedido.numeroPedido}-${pedido.tiendaId}-${idx}`}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
-              <td data-label="ID" title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
-              <td data-label="Nº Pedido" style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
-              <td data-label="Fecha" style={{padding:'10px 8px', fontWeight:600}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+              <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
+              <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
+              <td style={{padding:'10px 8px', fontWeight:600}} title={pedido.fechaPedido || pedido.fechaCreacion}>
                 <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
                 <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
               </td>
-              <td data-label="Estado" style={{padding:'10px 8px'}}>
+              <td style={{padding:'10px 8px'}}>
                 <span style={{display:'inline-block',padding:'4px 14px',borderRadius:16,background:pedido.estado==='borrador'?'#e0e0e0':pedido.estado==='enviado'?'#007bff22':'#00c6ff22',color:pedido.estado==='borrador'?'#555':pedido.estado==='enviado'?'#007bff':'#00c6ff',fontWeight:700, fontSize:14, boxShadow:'0 1px 4px #007bff11'}}>{pedido.estado}</span>
               </td>
-              <td data-label="Líneas" style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
-              <td data-label="Acciones" style={{display:'flex',gap:8, padding:'10px 8px'}}>
+              <td style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
+              <td style={{display:'flex',gap:8, padding:'10px 8px'}}>
                 <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
                   <span role="img" aria-label="ver">🔍</span> Ver
                 </button>
@@ -264,38 +278,38 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
         </tbody>
       </table>
       </div>
-      <h3 style={{marginTop:32,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos preparados o recibidos de fábrica</h3>
-      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-      <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+      <h3 style={{marginTop:32,marginBottom:12, fontWeight:700, color:'#333', fontSize:22, textAlign:'center'}}>Pedidos preparados o recibidos de fábrica</h3>
+      <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', marginBottom: 16}}>
+      <table className="htp-table" style={{minWidth:500, maxWidth:500, fontSize:13, borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
           <tr>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>ID</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Nº Pedido</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Fecha</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Estado</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Líneas</th>
-            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15}}>Acciones</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>ID</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Nº Pedido</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Fecha</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Estado</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Líneas</th>
+            <th style={{padding:'14px 8px', fontWeight:700, fontSize:15, textAlign:'center'}}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {pedidos.length === 0 && (
+          {historicoRecibidos.length === 0 && (
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888', padding:24}}>No hay pedidos preparados o recibidos de fábrica</td></tr>
           )}
-          {pedidos.map((pedido, idx) => {
-            const pendienteAviso = !vistos.includes(pedido.id || pedido._id);
+          {historicoRecibidos.map((pedido, idx) => {
+            const pendienteAviso = !vistos?.includes(pedido.id || pedido._id);
             return (
               <tr key={`${pedido.numeroPedido}-${pedido.tiendaId}-${pedido.id || pedido._id || idx}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
-                <td data-label="ID" title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
-                <td data-label="Nº Pedido" style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
-                <td data-label="Fecha" style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+                <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
+                <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido}</td>
+                <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
                   <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
                   <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
                 </td>
-                <td data-label="Estado" style={{padding:'10px 8px'}}>
+                <td style={{padding:'10px 8px'}}>
                   <span style={{display:'inline-block',padding:'4px 14px',borderRadius:16,background:pedido.estado==='preparado'?'#ffe066':pedido.estado==='enviadoTienda'?'#b2f2bb':'#e0e0e0',color:pedido.estado==='preparado'?'#b8860b':pedido.estado==='enviadoTienda'?'#228c22':'#555',fontWeight:700, fontSize:14, boxShadow:'0 1px 4px #007bff11'}}>{pedido.estado}</span>
                 </td>
-                <td data-label="Líneas" style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
-                <td data-label="Acciones" style={{display:'flex',gap:8, padding:'10px 8px'}}>
+                <td style={{padding:'10px 8px'}}><span style={{background:'#f1f8ff',padding:'4px 12px',borderRadius:12, fontWeight:600}}>{pedido.lineas.length}</span></td>
+                <td style={{display:'flex',gap:8, padding:'10px 8px'}}>
                   <button title="Ver detalles" onClick={() => setModalPedido(pedido)} style={{background:'#fff',border:'1px solid #007bff',color:'#007bff',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',transition:'0.2s',fontSize:15,boxShadow:'0 1px 4px #007bff11'}}>
                     <span role="img" aria-label="ver">🔍</span> Ver
                   </button>
@@ -306,10 +320,10 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
                     <button
                       style={{background:'#fff',color:'#dc3545',border:'1.5px solid #dc3545',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
                       onClick={async () => {
-                        const aviso = avisos.find(a => a.referenciaId === (pedido.id || pedido._id));
+                        const aviso = avisos?.find(a => a.referenciaId === (pedido.id || pedido._id));
                         if (aviso) {
                           await marcarAvisoVisto(aviso._id, tienda.id);
-                          setVistos(prev => [...prev, pedido.id || pedido._id]);
+                          setVistos?.(prev => [...prev, pedido.id || pedido._id]);
                           if (onAvisoVisto) onAvisoVisto(pedido.id || pedido._id);
                         }
                       }}
@@ -333,12 +347,15 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter:'blur(2px)'
         }} onClick={() => setModalPedido(null)}>
-          <div style={{
-            background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 600, width: '90vw',
-            padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
+          <div className="htp-modal" style={{
+            background: '#fff', borderRadius: 18, minWidth: 320, maxWidth: 600, width: '95vw',
+            padding: '24px 24px 32px 24px', boxShadow: '0 8px 40px #007bff33',
             position: 'relative',
             display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-            border: '1.5px solid #e3eaff'
+            border: '1.5px solid #e3eaff',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxSizing: 'border-box'
           }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setModalPedido(null)} style={{
               position: 'absolute', top: 18, right: 22, background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#007bff', lineHeight: 1, fontWeight:700
@@ -508,6 +525,24 @@ const HistoricoTiendaPanel = ({ pedidos, tienda, tiendas, onVolver }) => {
                 🔄 Reutilizar pedido
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal sumatorio de pesos */}
+      {modalPeso.visible && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.35)',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})}>
+          <div style={{background:'#fff',borderRadius:12,padding:32,minWidth:320,maxWidth:400,boxShadow:'0 4px 32px #0002'}} onClick={e=>e.stopPropagation()}>
+            <h3 style={{marginTop:0}}>Sumar pesos para la línea</h3>
+            {modalPeso.valores.map((v, idx) => (
+              <div key={idx} style={{marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
+                <span style={{width:24,display:'inline-block',textAlign:'right'}}>{idx+1}:</span>
+                <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(idx, e.target.value)} style={{width:80,padding:'4px 8px',borderRadius:4,border:'1px solid #ccc'}} />
+                <span>kg</span>
+              </div>
+            ))}
+            <div style={{margin:'12px 0',fontWeight:600}}>Suma total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
+            <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6,fontWeight:600,marginRight:8}}>Aplicar</button>
+            <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6}}>Cancelar</button>
           </div>
         </div>
       )}
