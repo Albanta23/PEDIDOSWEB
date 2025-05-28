@@ -264,15 +264,44 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                   <tr key={idx}>
                     <td>{linea.producto}</td>
                     <td>{linea.cantidad}</td>
-                    <td>
+                    <td style={{position:'relative'}}>
                       <input
                         type="number"
                         min="0"
                         step="any"
-                        value={linea.peso ?? ''} // Muestra string vacío si es null/undefined
+                        value={linea.peso ?? ''}
                         onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                        style={{ width: 70 }}
+                        style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
                       />
+                      {/* Si hay modal de suma, mostrarlo flotante a la derecha del input, sin tapar el input */}
+                      {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
+                        <div style={{
+                          position: 'absolute',
+                          left: 80,
+                          top: 0,
+                          zIndex: 10,
+                          background: '#fff',
+                          border: '1px solid #007bff',
+                          borderRadius: 8,
+                          boxShadow: '0 2px 12px #007bff22',
+                          padding: 12,
+                          minWidth: 160,
+                          minHeight: 60
+                        }}>
+                          <div style={{fontWeight:700,marginBottom:6}}>Sumar pesos</div>
+                          {modalPeso.valores.map((v, i) => (
+                            <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+                              <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(i, e.target.value)} style={{width:60,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc'}} />
+                              <span>kg</span>
+                            </div>
+                          ))}
+                          <div style={{margin:'8px 0',fontWeight:600}}>Total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
+                          <div style={{display:'flex',gap:8,marginTop:6}}>
+                            <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6,fontWeight:600}}>Aplicar</button>
+                            <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6}}>Cancelar</button>
+                          </div>
+                        </div>
+                      )}
                     </td>
                     <td>
                       <input

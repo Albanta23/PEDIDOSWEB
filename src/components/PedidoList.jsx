@@ -683,9 +683,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                   await enviarProveedorPorEmail(lineasProveedor, tiendaActual);
                 }}
                 disabled={enviandoProveedor || lineasProveedor.length === 0 || lineasProveedor.some(l => !l.referencia || !l.cantidad)}
-                style={{background:'#b71c1c',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:17,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1}}
+                style={{background:'none',border:'none',borderRadius:8,padding:0,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1,height:48,minWidth:90,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}
+                title="Enviar lista a proveedor"
               >
-                {enviandoProveedor ? 'Enviando...' : 'Enviar'}
+                <img src="/logo_2.jpg" alt="Enviar" style={{height:38,objectFit:'contain',filter:'drop-shadow(0 2px 6px #b71c1c44)'}} />
+                <span style={{color:'#b71c1c',fontWeight:700,fontSize:17}}>{enviandoProveedor ? 'Enviando...' : 'Enviar'}</span>
               </button>
             </div>
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
