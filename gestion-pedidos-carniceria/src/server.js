@@ -236,6 +236,20 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 // Endpoint de test de email proveedor (Mailgun)
 require('./mailgunTestEmail')(app);
 
+// ATENCIÓN: Este backend debe ejecutarse SOLO por HTTP. Render NO soporta HTTPS interno.
+// No agregar lógica de certificados ni usar https.createServer en este archivo.
+// Si necesitas HTTPS, configúralo a nivel de proxy/reverse proxy externo.
+//
+// Automatización: Lanzar error si se intenta requerir 'https' o certificados.
+const Module = require('module');
+const originalRequire = Module.prototype.require;
+Module.prototype.require = function(moduleName) {
+  if (moduleName === 'https' || moduleName === 'fs' && arguments[1] && /cert|key/i.test(arguments[1])) {
+    throw new Error('No se permite requerir https ni certificados en este backend. Usar solo HTTP.');
+  }
+  return originalRequire.apply(this, arguments);
+};
+
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);
