@@ -97,6 +97,23 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     setPedidoAbierto(null); // Cerrar el modal de edición después de guardar
   };
 
+  // Cambiar valor de peso en el modal de suma
+  const cambiarValorPeso = (i, valor) => {
+    setModalPeso(prev => ({
+      ...prev,
+      valores: prev.valores.map((v, idx) => idx === i ? valor : v)
+    }));
+  };
+
+  // Aplicar pesos sumados a la línea correspondiente
+  const aplicarPesos = () => {
+    if (modalPeso.lineaIdx !== null) {
+      const suma = modalPeso.valores.reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
+      actualizarLinea(modalPeso.lineaIdx, 'peso', suma);
+    }
+    setModalPeso({visible:false, lineaIdx:null, valores:[]});
+  };
+
   return (
     <div style={{
       fontFamily:'Inter, Segoe UI, Arial, sans-serif',
@@ -306,22 +323,40 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 {pedidoAbierto.lineas.map((linea, idx) => (
                   <tr key={idx}>
                     <td>{linea.producto}</td>
-                    <td>{linea.cantidad}</td>
-                    <td style={{position:'relative'}}>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={linea.peso ?? ''}
-                        onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                        style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
-                      />
-                      {/* Si hay modal de suma, mostrarlo flotante a la derecha del input, sin tapar el input */}
+                    <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
+                      {linea.cantidad}
+                      {/* Botón sumatorio solo si cantidad > 1 */}
+                      {linea.cantidad > 1 && (
+                        <button
+                          style={{
+                            background: '#ff9800',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: 28,
+                            height: 28,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: 18,
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px #ff980044',
+                            zIndex: 2
+                          }}
+                          title="Sumar pesos parciales"
+                          onClick={() => setModalPeso({visible:true, lineaIdx:idx, valores:Array.from({length: linea.cantidad}, (_,i)=>modalPeso.visible && modalPeso.lineaIdx===idx && modalPeso.valores.length===linea.cantidad ? modalPeso.valores[i]||'' : '')})}
+                          type="button"
+                        >
+                          ➕
+                        </button>
+                      )}
+                      {/* Si hay modal de suma, mostrarlo flotante debajo de la celda cantidad */}
                       {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
                         <div style={{
                           position: 'absolute',
-                          left: 80,
-                          top: 0,
+                          left: 0,
+                          top: 36,
                           zIndex: 10,
                           background: '#fff',
                           border: '1px solid #007bff',
@@ -345,6 +380,16 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           </div>
                         </div>
                       )}
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={linea.peso ?? ''}
+                        onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+                        style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
+                      />
                     </td>
                     <td>
                       <input
