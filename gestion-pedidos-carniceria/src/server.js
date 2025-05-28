@@ -230,11 +230,7 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 });
 
 // SOLO Mailjet para enviar proveedor
-// const mailjetProveedorEmail = require('./mailjetProveedorEmail');
-// mailjetProveedorEmail(app);
-
-// Endpoint de test de email proveedor (Mailgun)
-require('./mailgunTestEmail')(app);
+require('./mailjetProveedorEmail')(app);
 
 // ATENCIÓN: Este backend debe ejecutarse SOLO por HTTP. Render NO soporta HTTPS interno.
 // No agregar lógica de certificados ni usar https.createServer en este archivo.
