@@ -13,6 +13,7 @@ const estados = {
 const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLineaDetalleChange, onVerHistorico }) => {
   const [pedidoAbierto, setPedidoAbierto] = useState(null);
   const [mostrarHistoricoTransferencias, setMostrarHistoricoTransferencias] = useState(false);
+  const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
 
   // Paleta de colores para los botones de tienda
   const colores = [
@@ -191,7 +192,49 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
             return (
               <button
                 key={key}
-                onClick={() => abrirPedido(pedido)}
+                onClick={() => {
+                  console.log('[DEBUG] Click en miniatura de pedido', pedido);
+                  // Log visual temporal
+                  const msg = document.createElement('div');
+                  msg.textContent = 'Click en miniatura: Pedido ' + (pedido.numeroPedido || 'sin número');
+                  msg.style.position = 'fixed';
+                  msg.style.top = '10px';
+                  msg.style.left = '50%';
+                  msg.style.transform = 'translateX(-50%)';
+                  msg.style.background = '#007bff';
+                  msg.style.color = '#fff';
+                  msg.style.padding = '10px 32px';
+                  msg.style.borderRadius = '8px';
+                  msg.style.fontWeight = 'bold';
+                  msg.style.fontSize = '18px';
+                  msg.style.zIndex = 4000;
+                  document.body.appendChild(msg);
+                  setTimeout(() => msg.remove(), 2000);
+                  // Log completo del pedido
+                  console.log('[DEBUG] Objeto pedido completo:', JSON.stringify(pedido, null, 2));
+                  if (!pedido.lineas || !Array.isArray(pedido.lineas) || pedido.lineas.length === 0 || (!pedido._id && !pedido.id)) {
+                    const err = document.createElement('div');
+                    err.textContent = 'ERROR: El pedido no tiene líneas o identificador. Revisa la consola.';
+                    err.style.position = 'fixed';
+                    err.style.top = '60px';
+                    err.style.left = '50%';
+                    err.style.transform = 'translateX(-50%)';
+                    err.style.background = '#dc3545';
+                    err.style.color = '#fff';
+                    err.style.padding = '10px 32px';
+                    err.style.borderRadius = '8px';
+                    err.style.fontWeight = 'bold';
+                    err.style.fontSize = '18px';
+                    err.style.zIndex = 4000;
+                    document.body.appendChild(err);
+                    setTimeout(() => err.remove(), 4000);
+                    return;
+                  }
+                  abrirPedido(pedido);
+                  setTimeout(() => {
+                    console.log('[DEBUG] Estado pedidoAbierto tras click:', pedidoAbierto);
+                  }, 500);
+                }}
                 style={{
                   minWidth: 180,
                   minHeight: 90,
