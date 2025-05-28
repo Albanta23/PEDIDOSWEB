@@ -53,7 +53,7 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB conectado exitosamente.'))
   .catch(err => console.error('Error de conexión a MongoDB:', err));
 
-app.use(express.json());
+app.use(express.json({ limit: '20mb' })); // Permitir payloads grandes (PDFs, adjuntos)
 
 // Nueva ruta para health check
 app.get('/', (req, res) => {
