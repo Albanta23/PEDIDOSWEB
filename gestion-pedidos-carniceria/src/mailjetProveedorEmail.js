@@ -67,9 +67,10 @@ module.exports = function(app) {
       await request;
       // Guardar en historial de proveedor tras enviar
       try {
-        if (tienda && lineas && Array.isArray(lineas)) {
+        const tiendaId = req.body.tiendaId || tienda; // Prioriza el id, pero si no existe usa el nombre (compatibilidad)
+        if (tiendaId && lineas && Array.isArray(lineas)) {
           await HistorialProveedor.create({
-            tiendaId: tienda,
+            tiendaId,
             proveedor: 'proveedor-fresco',
             pedido: { lineas, fecha: fecha || new Date(), tienda },
             fechaEnvio: new Date()

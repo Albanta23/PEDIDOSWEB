@@ -325,6 +325,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tienda: tiendaActual?.nombre || '',
+          tiendaId: tiendaActual?.id || '',
           fecha: new Date().toLocaleDateString(),
           lineas: lineasProveedor,
           pdfBase64
