@@ -113,20 +113,24 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     }
     currentX = 16;
     doc.text(String(i + 1), currentX + colWidths.num / 2, y, {align: 'center'}); currentX += colWidths.num;
+    
     // Handle potential multi-line for producto
     const productoLines = doc.splitTextToSize(l.producto || '-', colWidths.producto - 2); // -2 for padding
     doc.text(productoLines, currentX, y);
     let productoLineHeight = productoLines.length * 4; // Approximate height based on font size 8
+
     currentX += colWidths.producto;
     doc.text(FORMATOS_PEDIDO.includes(l.formato) ? l.formato : '-', currentX, y); currentX += colWidths.formato;
     doc.text(String(l.cantidad || '-'), currentX + colWidths.pedida / 2, y, { align: 'center' }); currentX += colWidths.pedida;
     doc.text(l.peso !== undefined && l.peso !== null ? String(l.peso) : '-', currentX + colWidths.peso / 2, y, { align: 'center' }); currentX += colWidths.peso;
     doc.text(String(l.cantidadEnviada || '-'), currentX + colWidths.enviada / 2, y, { align: 'center' }); currentX += colWidths.enviada;
     doc.text(l.lote || '-', currentX + colWidths.lote / 2, y, { align: 'center' }); currentX += colWidths.lote;
+    
     // Handle potential multi-line for comentario
     const comentarioLines = doc.splitTextToSize(l.comentario || '-', colWidths.comentario -2);
     doc.text(comentarioLines, currentX, y);
     let comentarioLineHeight = comentarioLines.length * 4;
+
     y += Math.max(productoLineHeight, comentarioLineHeight, 6); // Adjust y based on max line height or default
   });
 
@@ -157,6 +161,8 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
   const [vistos, setVistos] = useState([]);
 
   useEffect(() => {
+    console.log('[DEBUG HistoricoTiendaPanel] pedidos recibidos:', pedidos);
+    console.log('[DEBUG HistoricoTiendaPanel] tiendaId:', tiendaId);
     async function fetchAvisos() {
       const avisosBD = await listarAvisos(tiendaId);
       setAvisos(avisosBD);
@@ -198,7 +204,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       {/* Botón de volver solo si NO hay modal de pedido abierto (refuerzo: ocultar y deshabilitar si modalPedido) */}
       <button
         style={{
-          position:'fixed',top:24,left:24,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'10px 26px',fontWeight:700,fontSize:18,cursor: !modalPedido?'pointer':'not-allowed',zIndex:2100,boxShadow:'0 2px 8px #007bff33',
+          position:'fixed',top:24,left:24,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'10px 26px',fontWeight:700,fontSize:18,cursor:!modalPedido?'pointer':'not-allowed',zIndex:2100,boxShadow:'0 2px 8px #007bff33',
           opacity:!modalPedido?1:0, pointerEvents:!modalPedido?'auto':'none', transition:'opacity 0.2s',
           visibility:!modalPedido?'visible':'hidden'
         }}
@@ -232,7 +238,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
             <tr key={`enviado-${pedido.id || pedido._id || `${pedido.numeroPedido}-${pedido.tiendaId}-${idx}`}`} style={{background: idx%2===0 ? '#fafdff':'#eaf6fb', transition:'background 0.2s'}} onMouseOver={e=>e.currentTarget.style.background='#d0eaff'} onMouseOut={e=>e.currentTarget.style.background=idx%2===0?'#fafdff':'#eaf6fb'}>
               <td title={pedido.id} style={{padding:'10px 8px', fontSize:14, color:'#007bff'}}>{pedido.id?.slice(0,8) || '-'}</td>
               <td style={{padding:'10px 8px', fontWeight:600}}>{pedido.numeroPedido || '-'}</td>
-              <td style={{padding:'10px 8px'}} title={pedido.fechaPedido || pedido.fechaCreacion}>
+              <td style={{padding:'10px 8px', fontWeight:600}} title={pedido.fechaPedido || pedido.fechaCreacion}>
                 <span>{pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : (pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : '-')}</span>
                 <br/><span style={{fontSize:11, color:'#888'}}>{pedido.fechaPedido || pedido.fechaCreacion}</span>
               </td>

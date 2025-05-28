@@ -225,8 +225,8 @@ function App() {
         ...pedido,
         tiendaId: tiendaSeleccionada,
         estado: 'enviado',
-        fechaCreacion: new Date().toISOString(),
-        numeroPedido: nuevoNumero
+        fechaCreacion: new Date().toISOString()
+        // El número de pedido lo asigna el backend
       });
       const data = await obtenerPedidos();
       setPedidos(data);
@@ -269,6 +269,11 @@ function App() {
       console.log('[DEBUG] tiendaSeleccionada:', tiendaSeleccionada);
     }
   }, [tiendaSeleccionada, logueado, modo]);
+
+  useEffect(() => {
+    console.log('[DEBUG App.jsx] VITE_API_URL:', import.meta.env.VITE_API_URL);
+    console.log('[DEBUG App.jsx] tiendaSeleccionada:', tiendaSeleccionada);
+  }, [tiendaSeleccionada]);
 
   if (!modo) {
     return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} />;
@@ -360,7 +365,8 @@ function App() {
         mostrarHistoricoTienda ? (
           <HistoricoTiendaPanel
             pedidos={pedidos}
-            tienda={tiendas.find(t => t.id === tiendaSeleccionada)}
+            tiendaId={tiendaSeleccionada}
+            tiendaNombre={tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
             tiendas={tiendas}
             onVolver={() => setMostrarHistoricoTienda(false)}
             onModificarPedido={(pedidoEditado) => {

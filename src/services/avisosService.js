@@ -2,6 +2,7 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'https://pedidos-backend-0e1s.onrender.com';
 
 export async function listarAvisos(tiendaId) {
+  if (tiendaId === 'clientes') return [];
   const { data } = await axios.get(`${API_URL}/api/avisos`, { params: tiendaId ? { tiendaId } : {} });
   return data;
 }

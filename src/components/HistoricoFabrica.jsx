@@ -328,13 +328,14 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                       <td style={{padding:'6px 8px'}}>{l.producto}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidad}</td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>
-                        {l.cantidad > 1 ? (
-                          <button style={{background:'#eafaf1',border:'1px solid #28a745',borderRadius:4,padding:'2px 8px',cursor:'pointer'}} onClick={() => abrirModalPeso(i, l.peso, l.cantidad)}>
-                            {l.peso ?? '-'} <span style={{fontSize:13, color:'#28a745'}}>✚</span>
-                          </button>
-                        ) : (
-                          l.peso ?? '-'
-                        )}
+                        <div style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>
+                          <span>{l.peso ?? '-'}</span>
+                          {l.cantidad > 1 && (
+                            <button style={{background:'#eafaf1',border:'1px solid #28a745',borderRadius:'50%',padding:'2px 7px',cursor:'pointer',marginLeft:4,display:'flex',alignItems:'center',justifyContent:'center',height:28,width:28}} onClick={() => abrirModalPeso(i, l.peso, l.cantidad)} title="Sumar pesos">
+                              <span style={{fontSize:15, color:'#28a745'}}>✚</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td style={{padding:'6px 8px', textAlign:'center'}}>{l.cantidadEnviada || '-'}</td>
                       <td style={{padding:'6px 8px'}}>{l.formato}</td>

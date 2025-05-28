@@ -83,6 +83,9 @@ const HistoricoTienda = ({ pedidos, tiendaId }) => {
   // Pedidos recibidos de fábrica (preparado o enviadoTienda)
   const pedidosRecibidos = agrupados.filter(p => p.estado === 'preparado' || p.estado === 'enviadoTienda');
 
+  console.log('[DEBUG HistoricoTienda] pedidos recibidos:', pedidos);
+  console.log('[DEBUG HistoricoTienda] tiendaId:', tiendaId);
+
   return (
     <div>
       <Watermark />

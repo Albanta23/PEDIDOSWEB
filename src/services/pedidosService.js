@@ -1,11 +1,15 @@
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL.replace(/\/$/, ''); // Elimina la barra final si existe
-const PEDIDOS_API_ENDPOINT = `${API_BASE_URL}/api/pedidos`; // ej: https://pedidos-backend-0e1s.onrender.com/api/pedidos
+console.log('[DEBUG pedidosService] API_BASE_URL:', API_BASE_URL); // DEBUG
+const PEDIDOS_API_ENDPOINT = `${API_BASE_URL}/api/pedidos`;
+console.log('[DEBUG pedidosService] PEDIDOS_API_ENDPOINT:', PEDIDOS_API_ENDPOINT); // DEBUG
 
 export const obtenerPedidos = async () => {
   try {
+    console.log('[DEBUG] PEDIDOS_API_ENDPOINT:', PEDIDOS_API_ENDPOINT);
     const response = await axios.get(PEDIDOS_API_ENDPOINT);
+    console.log('[DEBUG] Respuesta de /api/pedidos:', response.status, response.data);
     return response.data;
   } catch (error) {
     console.error("Error al obtener pedidos:", error);

@@ -32,9 +32,13 @@ module.exports = function(app) {
           <td>${l.unidad || 'kg'}</td>
         </tr>
       `).join('');
+      // Incluir logo2.png como imagen de botón de envío
+      const logo2Url = process.env.BASE_URL_LOGO2 || `${req.protocol}://${req.get('host')}/logo2.png`;
+      const botonEnvio = `<button style="background:transparent;border:none;cursor:pointer;"><img src='${logo2Url}' alt='Enviar' style='height:38px;vertical-align:middle;'/></button>`;
       // Reemplazar placeholders en la plantilla
       html = html.replace(/\$\{fecha\}/g, fecha || '-');
       html = html.replace(/\$\{tabla\}/g, htmlTableRows);
+      html = html.replace(/\$\{boton_envio\}/g, botonEnvio);
       // LOG para comprobar destinatarios principales y CC
       console.log('[MAILJET] Enviando email a:', toList.map(e => e.Email).join(','));
       if (ccList.length > 0) {
