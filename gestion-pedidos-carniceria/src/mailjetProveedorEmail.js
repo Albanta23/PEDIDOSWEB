@@ -12,8 +12,10 @@ module.exports = function(app) {
       const { tienda, fecha, lineas, destinatarios } = req.body;
       const proveedorEmail = process.env.PROVEEDOR_EMAIL || 'proveedor@ejemplo.com';
       const toList = [
-        { Email: proveedorEmail, Name: 'Proveedor' },
-        { Email: 'copia@ejemplo.com', Name: 'Copia' } // <-- Añade aquí el destinatario fijo
+        { Email: proveedorEmail, Name: 'Proveedor' }
+      ];
+      const ccList = [
+        { Email: process.env.MAILJET_COPIA_EMAIL || 'copia@ejemplo.com', Name: 'Copia' }
       ];
       const fromEmail = process.env.MAILJET_FROM_EMAIL || 'notificaciones@tudominio.com';
       const fromName = process.env.MAILJET_FROM_NAME || 'Pedidos Carnicería';
@@ -63,6 +65,7 @@ module.exports = function(app) {
               Name: fromName
             },
             To: toList,
+            Cc: ccList,
             Subject: `Pedido de frescos - ${tienda || ''}`,
             HTMLPart: html
           }

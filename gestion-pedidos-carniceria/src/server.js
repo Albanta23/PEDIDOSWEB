@@ -201,6 +201,10 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
   });
 });
 
+// SOLO Mailjet para enviar proveedor
+const mailjetProveedorEmail = require('./mailjetProveedorEmail');
+mailjetProveedorEmail(app);
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log('Servidor backend escuchando en puerto', PORT);
