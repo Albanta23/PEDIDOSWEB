@@ -3,30 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name='viewport' content='width=device-width, initial-scale=1'/>
-  <title>Pedido de Frescos - Embutidos Ballesteros SL</title>
+  <title>Pedido de Productos Frescos - Embutidos Ballesteros SL</title>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6fb; margin: 0; padding: 20px; }
-    .container { background: #fff; border-radius: 18px; max-width: 650px; margin: 32px auto; padding: 38px 32px 32px 32px; box-shadow: 0 4px 24px rgba(110, 73, 36, 0.10); border: 1.5px solid #e0d6c6; }
-    h2 { color: #a9241f; margin-top: 0; letter-spacing: 1px; text-align: center; font-size: 1.7em; }
-    .logo { display: block; margin: 0 auto 18px auto; max-width: 150px; border-radius: 12px; box-shadow: 0 2px 8px rgba(110, 73, 36, 0.08); }
-    table { width: 100%; border-collapse: collapse; margin: 28px 0 20px 0; background: #faf8f6; border-radius: 10px; overflow: hidden; }
-    th, td { border: 1px solid #e0d6c6; padding: 12px 8px; text-align: left; }
-    th { background: #f4e8dc; color: #a9241f; font-weight: 700; }
-    .footer { font-size: 14px; color: #907a66; margin-top: 38px; text-align: center; }
-    .empresa { font-weight: bold; color: #a9241f; font-size: 22px; letter-spacing: 1.5px; text-align: center; margin-bottom: 8px; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f4f6fb 60%, #e0d6c6 100%);
+      margin: 0;
+      padding: 32px 10px;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 22px;
+      max-width: 730px;
+      margin: 36px auto;
+      padding: 44px 36px 36px 36px;
+      box-shadow: 0 8px 32px rgba(110, 73, 36, 0.14);
+      border: 1.5px solid #e0d6c6;
+      animation: fadeIn 0.6s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(40px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    h2 {
+      color: #a9241f;
+      margin-top: 0;
+      letter-spacing: 1px;
+      text-align: center;
+      font-size: 2em;
+      font-weight: 800;
+      text-shadow: 0 2px 10px #f4e8dc77;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 18px auto;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(110, 73, 36, 0.12);
+      border: 2px solid #a9241f33;
+      background: #fff;
+      padding: 8px;
+      transition: transform 0.2s;
+      width: 2cm;
+      height: 2cm;
+      object-fit: contain;
+    }
+    .logo:hover { transform: scale(1.04); }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 32px 0 22px 0;
+      background: #faf8f6;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px #e0d6c655;
+      font-size: 1.08em;
+    }
+    th, td {
+      border: 1px solid #e0d6c6;
+      padding: 13px 10px;
+      text-align: left;
+    }
+    th {
+      background: linear-gradient(90deg, #f4e8dc 80%, #fbeee5 100%);
+      color: #a9241f;
+      font-weight: 700;
+      font-size: 1.1em;
+      letter-spacing: 1.1px;
+    }
+    tr:nth-child(even) td {
+      background: #f9f7f4;
+    }
+    tr:hover td {
+      background: #ffe9e7;
+      transition: background 0.2s;
+    }
+    .footer {
+      font-size: 15px;
+      color: #9c8571;
+      margin-top: 38px;
+      text-align: center;
+      opacity: 0.85;
+      font-style: italic;
+    }
+    .footer-contact {
+      font-size: 0.91em;
+      color: #a8936c;
+      margin-top: 6px;
+      margin-bottom: 0;
+      line-height: 1.7;
+    }
+    .footer-contact a {
+      color: #a9241f;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+    .empresa {
+      font-weight: 900;
+      color: #a9241f;
+      font-size: 26px;
+      letter-spacing: 1.7px;
+      text-align: center;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 10px #f4e8dc88;
+    }
     .print-btn {
-      background: #a9241f;
+      background: linear-gradient(90deg, #a9241f 60%, #f4e8dc 100%);
       color: #fff;
       border: none;
-      border-radius: 6px;
-      padding: 14px 36px;
-      font-size: 18px;
+      border-radius: 8px;
+      padding: 16px 44px;
+      font-size: 20px;
       cursor: pointer;
-      margin: 0 auto 18px auto;
+      margin: 0 auto 22px auto;
       display: block;
-      letter-spacing: 1px;
-      box-shadow: 0 2px 8px rgba(110, 73, 36, 0.08);
-      transition: background 0.2s;
+      letter-spacing: 1.3px;
+      font-weight: 700;
+      box-shadow: 0 2px 12px rgba(110, 73, 36, 0.11);
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .print-btn:hover {
+      background: linear-gradient(90deg, #c4362f 80%, #a9241f 100%);
+      color: #fffbe8;
+      box-shadow: 0 6px 24px #c4362f44;
+    }
+    .info {
+      font-size:1.13em;
+      color:#464646;
+      text-align:center;
+      margin-bottom:18px;
+      background: #f4e8dc88;
+      border-radius: 10px;
+      padding: 14px;
+      border-left: 6px solid #a9241f;
+      box-shadow: 0 1px 6px #e0d6c655;
+    }
+    .contacto {
+      color:#5a4634;
+      font-size:1.04em;
+      margin-bottom:24px;
+      margin-top: 6px;
+      text-align:center;
+    }
+    @media (max-width: 800px) {
+      .container { padding: 24px 7vw 20px 7vw; }
+      .logo { max-width: 2cm; max-height: 2cm; width: 2cm; height: 2cm;}
+      h2 { font-size: 1.25em; }
+      .empresa { font-size: 18px;}
+      table { font-size: 0.95em;}
+      .print-btn { font-size: 1em; padding: 12px 18px;}
     }
     @media print {
       .print-btn { display: none !important; }
@@ -40,7 +166,12 @@
     <img src="logo1.png" alt="Embutidos Ballesteros SL" class="logo" />
     <div class="empresa">Embutidos Ballesteros SL</div>
     <h2>Pedido de Productos Frescos</h2>
-    <p style="font-size:1.1em; color:#444; text-align:center; margin-bottom:18px;">Estimado proveedor,<br>Le remitimos el pedido de frescos para la tienda de carnicería correspondiente al <b>${fecha}</b>.</p>
+    <div class="info">
+      <b>Tienda solicitante:</b> ${tienda}
+      <br/>
+      Estimado proveedor,<br>
+      Le remitimos el pedido de frescos para la tienda de carnicería correspondiente al <b>${fecha}</b>.
+    </div>
     <table>
       <thead>
         <tr>
@@ -53,10 +184,17 @@
         ${tabla}
       </tbody>
     </table>
-    <p style="color:#555; font-size:1em; margin-bottom:24px; text-align:center;">Para cualquier consulta o aclaración, quedamos a su disposición.</p>
+    <div class="contacto">
+      Para cualquier consulta o aclaración, quedamos a su disposición.
+    </div>
     <button class="print-btn" onclick="window.print()">Descargar PDF</button>
     <div class="footer">
       Embutidos Ballesteros SL &mdash; Gracias por su confianza.
+      <div class="footer-contact">
+         Carretera Nacional 122, km 242, 49800 Toro Zamora, España · 
+        <a href="mailto:fabricaembutidosballesteros@gmail.com">fabricaembutidosballesteros@gmail.com</a> · 
+        <a href="https://embutidosballesteros.com" target="_blank">embutidosballesteros.com</a>
+      </div>
     </div>
   </div>
 </body>

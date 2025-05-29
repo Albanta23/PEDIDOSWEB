@@ -1,0 +1,6 @@
+
+> gestion-pedidos-carniceria@1.0.0 start
+> node src/server.js
+
+Servidor backend HTTP escuchando en puerto 10001
+MongoDB conectado exitosamente.
