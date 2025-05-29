@@ -12,6 +12,12 @@ const HistorialProveedor = require('./models/HistorialProveedor'); // Añadido
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
 
+// Middleware de logging para depuración de CORS
+app.use((req, res, next) => {
+  console.log(`[CORS] Origin recibido: ${req.headers.origin} | Ruta: ${req.originalUrl}`);
+  next();
+});
+
 // Configuración CORS explícita para frontend en Codespaces y Vercel
 const allowedOrigins = [
   'http://localhost:5173',
@@ -48,25 +54,29 @@ const io = new Server(server, { // Usar el servidor HTTP
   }
 });
 
-// Conexión a MongoDB
-// La variable de entorno MONGODB_URI se configura en el dashboard de Render.
-// Para desarrollo local, puedes definirla en un archivo .env o directamente aquí como fallback.
-const MONGODB_URI = process.env.MONGODB_URI; // Usar la variable estándar
-
+// Conexión a MongoDB robusta: usa Atlas si está definido, si no, usa local SOLO en desarrollo
+let MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
-  console.error('Error: La variable de entorno mongodb no está definida.');
-  // Considera salir del proceso si la conexión a la BD es crítica para el inicio
-  // process.exit(1);
-  // O usa una URI local por defecto para desarrollo si lo prefieres, pero asegúrate de que no se use en producción sin querer.
-  // MONGODB_URI = 'mongodb://localhost:27017/pedidos_db_local'; 
-  // console.warn('Usando URI de MongoDB local por defecto.');
+  // Fallback solo para desarrollo local
+  if (process.env.NODE_ENV !== 'production') {
+    MONGODB_URI = 'mongodb://localhost:27017/pedidos_db_local';
+    console.warn('MONGODB_URI no definida. Usando base de datos local para desarrollo.');
+  } else {
+    console.error('Error: La variable de entorno MONGODB_URI no está definida y no se permite fallback en producción.');
+    process.exit(1);
+  }
 }
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB conectado exitosamente.'))
-  .catch(err => console.error('Error de conexión a MongoDB:', err));
+  .catch(err => {
+    console.error('Error de conexión a MongoDB:', err);
+    process.exit(1);
+  });
 
-app.use(express.json());
+// Middleware para aceptar payloads grandes (hasta 10MB)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Nueva ruta para health check
 app.get('/', (req, res) => {
@@ -243,11 +253,8 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 });
 
 // SOLO Mailjet para enviar proveedor
-// const mailjetProveedorEmail = require('./mailjetProveedorEmail');
-// mailjetProveedorEmail(app);
-
-// Endpoint de test de email proveedor (Mailgun)
-require('./mailgunTestEmail')(app);
+const mailjetProveedorEmail = require('./mailjetProveedorEmail');
+mailjetProveedorEmail(app);
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {

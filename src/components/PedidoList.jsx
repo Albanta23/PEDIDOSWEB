@@ -34,6 +34,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const [mensajeProveedor, setMensajeProveedor] = useState("");
   const [mostrarHistorialProveedor, setMostrarHistorialProveedor] = useState(false);
   const [historialProveedor, setHistorialProveedor] = useState([]);
+  const [mostrarConfirmHistorial, setMostrarConfirmHistorial] = useState(false);
+  const [historialPendiente, setHistorialPendiente] = useState(null);
 
   // Clave para localStorage específica de la tienda
   const getStorageKey = () => `pedido_borrador_${tiendaActual?.id || 'default'}`;
@@ -258,7 +260,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     // Cabecera tabla
     doc.setFontSize(13);
     doc.text('Referencia', 14, y);
-    doc.text('Cantidad', 100, y);
+    doc.text('Cantidad', 80, y);
+    doc.text('Unidad', 120, y);
     y += 7;
     doc.setLineWidth(0.3);
     doc.line(14, y, 196, y);
@@ -267,7 +270,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     lineasProveedor.forEach(l => {
       if (l.referencia && l.cantidad) {
         doc.text(String(l.referencia), 14, y);
-        doc.text(String(l.cantidad), 100, y);
+        doc.text(String(l.cantidad), 80, y);
+        doc.text(String(l.unidad || 'kg'), 120, y);
         y += 7;
         if (y > 280) {
           doc.addPage();
@@ -283,29 +287,52 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
-      // 1. Generar HTML de la tabla de productos
-      const fecha = new Date().toLocaleDateString();
-      const tiendaNombre = tiendaActual?.nombre || '';
-      let htmlBody = `<h2>Pedido a Proveedor</h2>`;
-      htmlBody += `<div><b>Tienda:</b> ${tiendaNombre}</div>`;
-      htmlBody += `<div><b>Fecha:</b> ${fecha}</div>`;
-      htmlBody += `<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;margin-top:12px;'>`;
-      htmlBody += `<thead><tr><th>Referencia</th><th>Cantidad</th><th>Unidad</th></tr></thead><tbody>`;
+      // 1. Generar PDF como base64
+      const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
+      const doc = new jsPDF();
+      doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
+      let y = 28; // texto 1cm más abajo
+      doc.setFontSize(18);
+      doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
+      y += 10;
+      doc.setFontSize(12);
+      if (tiendaActual?.nombre) {
+        doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
+        y += 8;
+      }
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+      y += 10;
+      doc.setFontSize(13);
+      doc.text('Referencia', 14, y);
+      doc.text('Cantidad', 100, y);
+      y += 7;
+      doc.setLineWidth(0.3);
+      doc.line(14, y, 196, y);
+      y += 4;
+      doc.setFontSize(12);
       lineas.forEach(l => {
         if (l.referencia && l.cantidad) {
-          htmlBody += `<tr><td>${l.referencia}</td><td>${l.cantidad}</td><td>${l.unidad || 'kg'}</td></tr>`;
+          doc.text(String(l.referencia), 14, y);
+          doc.text(String(l.cantidad), 100, y);
+          y += 7;
+          if (y > 280) {
+            doc.addPage();
+            y = 28;
+          }
         }
       });
-      htmlBody += `</tbody></table>`;
-      // 2. Enviar al backend solo el HTML
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:10001'}/api/enviar-proveedor`, {
+      // Obtener PDF como base64
+      const pdfBase64 = doc.output('datauristring');
+      // 2. Enviar al backend
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tienda: tiendaNombre,
-          fecha,
-          lineas,
-          htmlBody
+          tienda: tiendaActual?.nombre || '',
+          tiendaId: tiendaActual?.id || '',
+          fecha: new Date().toLocaleDateString(),
+          lineas: lineasProveedor,
+          pdfBase64
         })
       });
       if (res.ok) {
@@ -316,17 +343,10 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           setMostrarModalProveedor(false);
         }, 1500);
       } else {
-        let errorMsg = `Error al enviar el email al proveedor. Código: ${res.status}`;
-        try {
-          const data = await res.json();
-          if (data && data.error) errorMsg += ` - ${data.error}`;
-        } catch {}
-        setMensajeProveedor(errorMsg);
-        console.error('Respuesta backend:', res);
+        setMensajeProveedor("Error al enviar el email al proveedor.");
       }
     } catch (e) {
-      setMensajeProveedor("Error al generar o enviar el HTML: " + (e?.message || e));
-      console.error('Error en enviarProveedorPorEmail:', e);
+      setMensajeProveedor("Error al generar o enviar el PDF.");
     }
     setEnviandoProveedor(false);
   }
@@ -335,7 +355,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   async function guardarHistorialProveedor(lineas, tienda) {
     if (!tienda?.id) return;
     try {
-      await axios.post('/api/historial-proveedor', {
+      const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+      await axios.post(`${API_URL}/api/historial-proveedor`, {
         tiendaId: tienda.id,
         proveedor: 'proveedor-fresco',
         pedido: { lineas, fecha: new Date(), tienda: tienda.nombre }
@@ -697,6 +718,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               <button
                 onClick={async ()=>{
                   await enviarProveedorPorEmail(lineasProveedor, tiendaActual);
+                  setHistorialPendiente({ lineas: lineasProveedor, tienda: tiendaActual });
+                  setMostrarConfirmHistorial(true);
                 }}
                 disabled={enviandoProveedor || lineasProveedor.length === 0 || lineasProveedor.some(l => !l.referencia || !l.cantidad)}
                 style={{background:'none',border:'none',borderRadius:8,padding:0,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1,height:48,minWidth:90,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}
@@ -707,6 +730,29 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               </button>
             </div>
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
+          </div>
+        </div>
+      )}
+
+      {/* Modal visual para confirmar guardado en historial */}
+      {mostrarConfirmHistorial && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#fff',borderRadius:16,padding:36,minWidth:320,maxWidth:400,boxShadow:'0 4px 32px #b71c1c44',textAlign:'center',position:'relative'}}>
+            <button onClick={()=>setMostrarConfirmHistorial(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:18}}>×</button>
+            <div style={{fontSize:38,marginBottom:12,color:'#b71c1c'}}>📦</div>
+            <div style={{fontWeight:900,fontSize:22,marginBottom:10,color:'#b71c1c'}}>¿Guardar este pedido en el historial?</div>
+            <div style={{fontSize:16,marginBottom:24,color:'#333'}}>Podrás consultarlo y descargar el PDF desde el historial de envíos a proveedor.</div>
+            <div style={{display:'flex',gap:18,justifyContent:'center'}}>
+              <button onClick={async()=>{
+                if(historialPendiente){
+                  await guardarHistorialProveedor(historialPendiente.lineas, historialPendiente.tienda);
+                  setMensajeProveedor('Lista archivada en el historial de envíos.');
+                }
+                setMostrarConfirmHistorial(false);
+                setHistorialPendiente(null);
+              }} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:800,fontSize:18,boxShadow:'0 2px 8px #007bff44',letterSpacing:1,cursor:'pointer'}}>Sí, guardar</button>
+              <button onClick={()=>{setMostrarConfirmHistorial(false);setHistorialPendiente(null);}} style={{background:'#888',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:18,cursor:'pointer'}}>No</button>
+            </div>
           </div>
         </div>
       )}

@@ -90,29 +90,36 @@
     <div class="container">
         <h1>🔬 Prueba Exacta del Flujo Frontend</h1>
         <p>Esta página replica <strong>exactamente</strong> el código de <code>PedidoList.jsx</code> para diagnosticar el error <code>AxiosError: Network Error</code>.</p>
-        
         <div class="info">
             <strong>🎯 Objetivo:</strong> Reproducir paso a paso el flujo de envío de email al proveedor para identificar dónde falla la conectividad.
         </div>
-        
-        <button id="testBtn" onclick="runTest()">🚀 Ejecutar Prueba Exacta</button>
-        <button onclick="clearOutput()">🧹 Limpiar</button>
-        
+        <form id="form-envio" onsubmit="enviarTestEmail(event)">
+            <div style="margin:18px 0;display:grid;gap:10px;grid-template-columns:1fr 1fr;align-items:center;">
+                <label for="tienda">Tienda:</label>
+                <input id="tienda" name="tienda" type="text" value="Tienda Test" required />
+                <label for="proveedor">Email proveedor:</label>
+                <input id="proveedor" name="proveedor" type="email" value="javier.cantoral.fernandez@gmail.com" required />
+                <label for="productos">Productos (JSON):</label>
+                <textarea id="productos" name="productos" rows="4" style="grid-column:2;min-width:220px;">[
+  {"referencia": "Lomo", "cantidad": 2},
+  {"referencia": "Chorizo", "cantidad": 1}
+]</textarea>
+            </div>
+            <button type="submit">📧 Probar envío de email</button>
+            <button type="button" onclick="clearOutput()">🧹 Limpiar</button>
+        </form>
         <div id="result"></div>
         <div id="output"></div>
     </div>
-
     <script>
         let outputDiv = document.getElementById('output');
         let resultDiv = document.getElementById('result');
-        
         function log(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
             const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
             outputDiv.textContent += `[${timestamp}] ${prefix} ${message}\n`;
             outputDiv.scrollTop = outputDiv.scrollHeight;
         }
-        
         function showResult(success, message, details = null) {
             const className = success ? 'success' : 'error';
             const icon = success ? '✅' : '❌';
@@ -123,100 +130,50 @@
             html += '</div>';
             resultDiv.innerHTML = html;
         }
-        
         function clearOutput() {
             outputDiv.textContent = '';
             resultDiv.innerHTML = '';
         }
-        
-        async function runTest() {
-            const testBtn = document.getElementById('testBtn');
-            testBtn.disabled = true;
-            testBtn.textContent = '🔄 Ejecutando...';
-            
+        async function enviarTestEmail(e) {
+            e.preventDefault();
             clearOutput();
-            log('Iniciando prueba exacta del flujo frontend', 'info');
-            
+            showResult(true, 'Enviando email...', '');
+            const tienda = document.getElementById('tienda').value;
+            const proveedor = document.getElementById('proveedor').value;
+            let productos;
             try {
-                // 1. Verificar variables de entorno
-                log('📋 Verificando variables de entorno...', 'info');
-                const viteApiUrl = import.meta?.env?.VITE_API_URL;
-                log(`VITE_API_URL: ${viteApiUrl || 'undefined'}`, viteApiUrl ? 'success' : 'warning');
-                
-                // 2. Simular generación de PDF (como en PedidoList.jsx)
-                log('📄 Simulando generación de PDF...', 'info');
-                const pdfBase64String = 'JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKL01lZGlhQm94IFswIDAgNTk1IDg0Ml0KPj4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovUmVzb3VyY2VzIDw8Ci9Gb250IDw8Ci9GMSA0IDAgUgo+Pgo+PgovTWVkaWFCb3ggWzAgMCA1OTUgODQyXQovQ29udGVudHMgNSAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUxCi9CYXNlRm9udCAvSGVsdmV0aWNhCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCi9GMSA4IFRmCjEwMCA3NTAgVGQKKFRlc3QgUERGKSBUagpFVApzdHJlYW0KZW5kb2JqCnhyZWYKMCA2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDI0NSAwMDAwMCBuIAowMDAwMDAwMzI0IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgNgovUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNDE4CiUlRU9G';
-                
-                if (!pdfBase64String) {
-                    throw new Error('No se pudo generar el PDF (base64 vacío)');
-                }
-                log(`PDF generado: ${pdfBase64String.length} caracteres`, 'success');
-                
-                // 3. Configurar datos (como en PedidoList.jsx)
-                log('⚙️ Configurando datos de envío...', 'info');
-                const lineasProveedor = [
-                    { referencia: 'lomo', cantidad: 2 },
-                    { referencia: 'panceta', cantidad: 1 },
-                    { referencia: 'costilla', cantidad: 3 }
-                ];
-                const tiendaActual = { nombre: 'Tienda Test' };
-                
-                // 4. Usar la lógica EXACTA del PedidoList.jsx
-                log('🔗 Configurando URL de API...', 'info');
-                const apiUrl = viteApiUrl || 'http://localhost:10001'; // Fallback como en el código
-                log(`API URL final: ${apiUrl}`, 'info');
-                
-                const url = `${apiUrl}/api/enviar-proveedor`;
-                log(`URL completa: ${url}`, 'info');
-                
-                const requestData = {
-                    tienda: tiendaActual?.nombre || '',
-                    fecha: new Date().toLocaleDateString(),
-                    lineas: lineasProveedor,
-                    pdfBase64: pdfBase64String
-                };
-                
-                log(`Datos a enviar: tienda="${requestData.tienda}", líneas=${requestData.lineas.length}, pdfLength=${requestData.pdfBase64.length}`, 'info');
-                
-                // 5. Hacer la petición EXACTA como en PedidoList.jsx
-                log('📡 Enviando petición al backend...', 'info');
-                
-                const res = await fetch(url, {
+                productos = JSON.parse(document.getElementById('productos').value);
+            } catch (err) {
+                showResult(false, 'Error en el formato de productos', err.message);
+                log('Formato de productos inválido: ' + err.message, 'error');
+                return;
+            }
+            log('Preparando datos para envío...');
+            const data = {
+                tienda,
+                proveedor: { email: proveedor, nombre: 'Proveedor Test' },
+                productos,
+                fechaPedido: new Date().toISOString(),
+                observaciones: 'Prueba de envío desde test-exact-frontend.html'
+            };
+            try {
+                log('Enviando petición a backend...');
+                const res = await fetch('https://scaling-chainsaw-px9jv6jjr4rcrg4-10001.app.github.dev/api/enviar-proveedor', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
+                    body: JSON.stringify(data)
                 });
-                
-                log(`Respuesta recibida: status=${res.status}, ok=${res.ok}`, res.ok ? 'success' : 'warning');
-                
-                const responseText = await res.text();
-                log(`Contenido de respuesta: ${responseText}`, 'info');
-                
+                const result = await res.json().catch(()=>({}));
                 if (res.ok) {
-                    log('¡Lista enviada al proveedor exitosamente!', 'success');
-                    showResult(true, 'Flujo completado exitosamente', 'Email enviado al proveedor');
+                    showResult(true, '¡Email enviado correctamente!', result.message || 'OK');
+                    log('Email enviado correctamente', 'success');
                 } else {
-                    log('Error del servidor al enviar email', 'error');
-                    showResult(false, 'Error del servidor', `Status ${res.status}: ${responseText}`);
+                    showResult(false, 'Error al enviar email', result.error || res.status);
+                    log('Error al enviar email: ' + (result.error || res.status), 'error');
                 }
-                
-            } catch (error) {
-                log(`Error crítico: ${error.message}`, 'error');
-                log(`Tipo de error: ${error.constructor.name}`, 'error');
-                
-                if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                    log('🔍 Diagnóstico: Error de conectividad de red', 'error');
-                    showResult(false, 'Error de conectividad', 'El frontend no puede conectarse al backend');
-                } else if (error.message.includes('ECONNREFUSED')) {
-                    log('🔍 Diagnóstico: Backend no responde', 'error');
-                    showResult(false, 'Backend no disponible', 'El servidor backend no está ejecutándose');
-                } else {
-                    log('🔍 Diagnóstico: Error desconocido', 'error');
-                    showResult(false, 'Error desconocido', error.message);
-                }
-            } finally {
-                testBtn.disabled = false;
-                testBtn.textContent = '🚀 Ejecutar Prueba Exacta';
+            } catch (err) {
+                showResult(false, 'Error de red o backend', err.message);
+                log('Error de red o backend: ' + err.message, 'error');
             }
         }
     </script>
