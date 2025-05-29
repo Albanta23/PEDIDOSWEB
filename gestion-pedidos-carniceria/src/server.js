@@ -12,7 +12,7 @@ const fs = require('fs');
 const https = require('https');
 
 const app = express();
-const server = http.createServer(app); // ACTIVAR HTTP para desarrollo
+const server = http.createServer(app); // Usar solo HTTP, compatible con Render
 
 // Configuración CORS explícita para frontend en Codespaces y Vercel
 const allowedOrigins = [
@@ -42,14 +42,7 @@ app.use(cors({
   credentials: true
 }));
 
-// --- HTTPS SERVER ---
-const httpsOptions = {
-  key: fs.readFileSync(__dirname + '/../key.pem'),
-  cert: fs.readFileSync(__dirname + '/../cert.pem')
-};
-const secureServer = https.createServer(httpsOptions, app);
-
-const io = new Server(secureServer, {
+const io = new Server(server, { // Usar el servidor HTTP
   cors: {
     origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -259,6 +252,6 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 require('./mailgunTestEmail')(app);
 
 const PORT = process.env.PORT || 10001;
-secureServer.listen(PORT, () => {
-  console.log('Servidor backend HTTPS escuchando en puerto', PORT);
+server.listen(PORT, () => {
+  console.log('Servidor backend HTTP escuchando en puerto', PORT);
 });
