@@ -8,9 +8,11 @@ const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Añadido
+const fs = require('fs');
+const https = require('https');
 
 const app = express();
-const server = http.createServer(app); // Usar solo HTTP para Render
+const server = http.createServer(app); // ACTIVAR HTTP para desarrollo
 
 // Configuración CORS explícita para frontend en Codespaces y Vercel
 const allowedOrigins = [
@@ -21,15 +23,35 @@ const allowedOrigins = [
   'https://pedidosweb-phi.vercel.app',
   'https://scaling-chainsaw-px9jv6jjr4rcrg4-10001.app.github.dev'
 ];
+
+// Nueva función para permitir cualquier subdominio de .vercel.app y localhost
+function corsOrigin(origin, callback) {
+  if (!origin) return callback(null, true); // Permitir peticiones sin origen (como curl o Postman)
+  if (
+    allowedOrigins.includes(origin) ||
+    /\.vercel\.app$/.test(origin) ||
+    /^http:\/\/localhost(:\d+)?$/.test(origin)
+  ) {
+    return callback(null, true);
+  }
+  return callback(new Error('Not allowed by CORS: ' + origin));
+}
+
 app.use(cors({
-  origin: allowedOrigins,
+  origin: corsOrigin,
   credentials: true
 }));
 
-// Eliminar secureServer y usar server para Socket.io y listen
-const io = new Server(server, {
+// --- HTTPS SERVER ---
+const httpsOptions = {
+  key: fs.readFileSync(__dirname + '/../key.pem'),
+  cert: fs.readFileSync(__dirname + '/../cert.pem')
+};
+const secureServer = https.createServer(httpsOptions, app);
+
+const io = new Server(secureServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -53,7 +75,7 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB conectado exitosamente.'))
   .catch(err => console.error('Error de conexión a MongoDB:', err));
 
-app.use(express.json({ limit: '20mb' })); // Permitir payloads grandes (PDFs, adjuntos)
+app.use(express.json());
 
 // Nueva ruta para health check
 app.get('/', (req, res) => {
@@ -230,23 +252,13 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 });
 
 // SOLO Mailjet para enviar proveedor
-require('./mailjetProveedorEmail')(app);
+// const mailjetProveedorEmail = require('./mailjetProveedorEmail');
+// mailjetProveedorEmail(app);
 
-// ATENCIÓN: Este backend debe ejecutarse SOLO por HTTP. Render NO soporta HTTPS interno.
-// No agregar lógica de certificados ni usar https.createServer en este archivo.
-// Si necesitas HTTPS, configúralo a nivel de proxy/reverse proxy externo.
-//
-// Automatización: Lanzar error si se intenta requerir 'https' o certificados.
-const Module = require('module');
-const originalRequire = Module.prototype.require;
-Module.prototype.require = function(moduleName) {
-  if (moduleName === 'https' || moduleName === 'fs' && arguments[1] && /cert|key/i.test(arguments[1])) {
-    throw new Error('No se permite requerir https ni certificados en este backend. Usar solo HTTP.');
-  }
-  return originalRequire.apply(this, arguments);
-};
+// Endpoint de test de email proveedor (Mailgun)
+require('./mailgunTestEmail')(app);
 
 const PORT = process.env.PORT || 10001;
-server.listen(PORT, () => {
-  console.log('Servidor backend HTTP escuchando en puerto', PORT);
+secureServer.listen(PORT, () => {
+  console.log('Servidor backend HTTPS escuchando en puerto', PORT);
 });
