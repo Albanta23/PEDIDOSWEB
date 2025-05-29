@@ -8,8 +8,6 @@ const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Añadido
-const fs = require('fs');
-const https = require('https');
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -252,6 +250,6 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 require('./mailgunTestEmail')(app);
 
 const PORT = process.env.PORT || 10001;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);
 });
