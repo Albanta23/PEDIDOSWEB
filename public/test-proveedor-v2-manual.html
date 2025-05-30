@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Manual - Envío Proveedor V2</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { border: 2px solid #007bff; padding: 20px; border-radius: 10px; background: #f8f9fa; }
+        .checkbox-container { margin: 15px 0; padding: 10px; background: #fff; border-radius: 5px; }
+        button { background: #b71c1c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #d32f2f; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #cce7ff; border: 1px solid #99d6ff; color: #004085; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Manual - Envío Proveedor V2</h1>
+        <p>Esta página permite probar manualmente el nuevo endpoint V2 que hemos creado.</p>
+        
+        <div class="checkbox-container">
+            <label>
+                <input type="checkbox" id="forzarTextoPlano" checked>
+                <strong>Forzar texto plano (sin formato HTML)</strong>
+            </label>
+            <p><small>✅ Este checkbox debe estar marcado para usar la plantilla de texto plano</small></p>
+        </div>
+
+        <button onclick="testProveedorV2()">🐷 Enviar Pedido a Proveedor (V2)</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testProveedorV2() {
+            const resultDiv = document.getElementById('result');
+            const forzarTextoPlano = document.getElementById('forzarTextoPlano').checked;
+            
+            resultDiv.innerHTML = '<div class="info">📤 Enviando petición al servidor...</div>';
+            
+            try {
+                // Simular datos exactos del frontend
+                const testData = {
+                    tienda: 'Tienda Test Manual',
+                    tiendaId: 'test-manual-001',
+                    fecha: new Date().toLocaleDateString(),
+                    lineas: [
+                        { referencia: 'lomo', cantidad: 2, unidad: 'kg' },
+                        { referencia: 'panceta', cantidad: 1, unidad: 'kg' },
+                        { referencia: 'costilla', cantidad: 3, unidad: 'kg' }
+                    ],
+                    // PDF válido pequeño en base64
+                    pdfBase64: 'JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovUmVzb3VyY2VzIDw8Ci9Gb250IDw8Ci9GMSA0IDAgUgo+Pgo+PgovQ29udGVudHMgNSAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUxCi9CYXNlRm9udCAvSGVsdmV0aWNhCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCi9GMSA0OEIKVGEKMTI4IDcwMCBUZAooVGVzdCBQREYpIFRqCkVUCmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQ1IDAwMDAwIG4gCjAwMDAwMDAzMjcgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0MjEKJSVFT0Y=',
+                    forzarTextoPlano: forzarTextoPlano
+                };
+
+                console.log('📋 Datos enviados:', testData);
+
+                const response = await fetch('http://localhost:10001/api/enviar-proveedor-v2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.ok) {
+                    resultDiv.innerHTML = \`
+                        <div class="success">
+                            <h3>✅ ¡ÉXITO! Email enviado correctamente</h3>
+                            <p><strong>Mensaje:</strong> \${result.message}</p>
+                            <h4>🔍 Información de depuración:</h4>
+                            <pre>\${JSON.stringify(result.debug, null, 2)}</pre>
+                            <div style="margin-top: 15px;">
+                                <p><strong>Verificaciones:</strong></p>
+                                <ul>
+                                    <li>✅ Texto plano: \${result.debug?.usarTextoPlano ? 'SÍ' : 'NO'}</li>
+                                    <li>✅ PDF adjunto: \${result.debug?.adjuntos > 0 ? 'SÍ' : 'NO'}</li>
+                                    <li>✅ Líneas procesadas: \${result.debug?.lineas || 0}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    \`;
+                } else {
+                    resultDiv.innerHTML = \`
+                        <div class="error">
+                            <h3>❌ Error en el envío</h3>
+                            <p><strong>Error:</strong> \${result.error || 'Error desconocido'}</p>
+                            <pre>\${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    \`;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = \`
+                    <div class="error">
+                        <h3>❌ Error de conexión</h3>
+                        <p><strong>Error:</strong> \${error.message}</p>
+                        <p><small>¿Está el servidor ejecutándose en localhost:10001?</small></p>
+                    </div>
+                \`;
+            }
+        }
+    </script>
+</body>
+</html>

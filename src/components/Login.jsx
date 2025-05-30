@@ -3,7 +3,7 @@ import Watermark from './Watermark';
 
 // Pines por tienda (id: pin)
 const PINES_TIENDAS = {
-  tienda1: '1111',
+  tienda1: '1111', // TIENDA BUS legacy
   tienda2: '2222',
   tienda3: '3333',
   tienda4: '4444',

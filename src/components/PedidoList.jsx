@@ -309,6 +309,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       doc.setFontSize(13);
       doc.text('Referencia', 14, y);
       doc.text('Cantidad', 100, y);
+      doc.text('Unidad', 150, y);
       y += 7;
       doc.setLineWidth(0.3);
       doc.line(14, y, 196, y);
@@ -318,6 +319,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         if (l.referencia && l.cantidad) {
           doc.text(String(l.referencia), 14, y);
           doc.text(String(l.cantidad), 100, y);
+          doc.text(String(l.unidad || 'kg'), 150, y);
           y += 7;
           if (y > 280) {
             doc.addPage();
