@@ -34,12 +34,9 @@ module.exports = function(app) {
           <td>${l.unidad || 'kg'}</td>
         </tr>
       `).join('');
-      // Incluir logo2.png como imagen de botón de envío
-      const logo2Url = process.env.BASE_URL_LOGO2 || `${req.protocol}://${req.get('host')}/logo2.png`;
-      // Reemplazar placeholders en la plantilla
+      // El logo del botón de imprimir PDF ahora es fijo (logo1.png) en la plantilla, no se reemplaza logo2Url
       html = html.replace(/\$\{fecha\}/g, fecha || '-');
       html = html.replace(/\$\{tabla\}/g, htmlTableRows);
-      html = html.replace(/\$\{logo2Url\}/g, logo2Url);
       html = html.replace(/\$\{tienda\}/g, tienda || '-');
       // Generar PDF desde HTML usando puppeteer
       let pdfBuffer;
