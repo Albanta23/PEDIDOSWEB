@@ -39,6 +39,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const [historialProveedor, setHistorialProveedor] = useState([]);
   const [mostrarConfirmHistorial, setMostrarConfirmHistorial] = useState(false);
   const [historialPendiente, setHistorialPendiente] = useState(null);
+  const [forzarTextoPlano, setForzarTextoPlano] = useState(false);
 
   // Clave para localStorage específica de la tienda
   const getStorageKey = () => `pedido_borrador_${tiendaActual?.id || 'default'}`;
@@ -195,7 +196,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
 
   // --- Estado y persistencia para la lista de proveedor (despiece cerdo) ---
   const REFERENCIAS_CERDO = [
-    "LOMO", "PANCETA", "SOLOMILLOS", "COSTILLA", "CHULETERO", "CARRILLERAS", "PIES", "MANTECA", "SECRETO", "PAPADA", "JAMON", "PALETA", "PALETA TIPO YORK", "MAZA DE JAMON"
+    "lomo", "panceta", "solomillos", "costilla", "chuletero", "carrilleras", "pies", "manteca", "secreto", "papada", "jamon", "paleta", "paleta tipo york", "maza de jamon"
   ];
   const getProveedorKey = () => `proveedor_despiece_${tiendaActual?.id || 'default'}`;
   const [lineasProveedor, setLineasProveedor] = useState([]);
@@ -336,7 +337,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         tiendaId: tiendaActual?.id || '',
         fecha: new Date().toLocaleDateString(),
         lineas: lineasProveedor,
-        pdfBase64
+        pdfBase64,
+        forzarTextoPlano: forzarTextoPlano // Usar el valor del checkbox
       };
       
       const res = await fetch(`${API_URL}/api/enviar-proveedor-v2`, {
@@ -382,15 +384,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       const url = `/api/historial-proveedor/historial-proveedor-global/proveedor-fresco`;
       console.log('URL del historial:', url);
       const res = await axios.get(url);
-      console.log('Respuesta del historial:', res.data);
       setHistorialProveedor(res.data.historial || []);
       setMostrarHistorialProveedor(true);
     } catch (e) {
-      console.error('Error al cargar historial proveedor:', e);
-      // Si falla el historial global, intentar con la tienda actual como fallback
+      console.error('Error al cargar historial global:', e);
+      // Fallback con tienda actual si falla el global
       if (tiendaActual?.id) {
         try {
-          console.log('Intentando fallback con tienda actual:', tiendaActual.id);
+          console.log('Intentando fallback con tienda específica...');
           const urlFallback = `/api/historial-proveedor/${tiendaActual.id}/proveedor-fresco`;
           const resFallback = await axios.get(urlFallback);
           setHistorialProveedor(resFallback.data.historial || []);
@@ -689,8 +690,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#b71c1c',display:'flex',alignItems:'center'}}>
               <span role="img" aria-label="cerdo" style={{fontSize:32,marginRight:10}}>🐷</span>Lista para proveedor
             </h2>
+            {/* Checkbox SIEMPRE visible antes de enviar */}
+            <div style={{marginBottom:10}}>
+              <label style={{fontWeight:600,fontSize:15,color:'#b71c1c'}}>
+                <input type="checkbox" checked={forzarTextoPlano} onChange={e => setForzarTextoPlano(e.target.checked)} style={{marginRight:6}} />
+                Forzar texto plano (sin formato HTML)
+              </label>
+            </div>
             <button onClick={cargarHistorialProveedor} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,marginBottom:10}}>Ver historial de envíos</button>
-            <button onClick={() => console.log('DEBUG: tiendaActual =', tiendaActual)} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,marginBottom:10,marginLeft:10}}>Debug Tienda</button>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16,minWidth:400}}>
                 <thead>

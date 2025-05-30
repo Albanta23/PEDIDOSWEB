@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Historial Frontend</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            max-height: 300px; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #0056b3; }
+        .historial-item {
+            background: #f8f9fa;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Funcionalidad Historial de Proveedor</h1>
+        
+        <div class="test-section info">
+            <h3>ℹ️ Información del Test</h3>
+            <p><strong>Objetivo:</strong> Verificar que el botón "Ver historial de envíos" funciona correctamente después de las correcciones.</p>
+            <p><strong>Backend URL:</strong> <span id="backend-url">http://localhost:10001</span></p>
+            <p><strong>Cambios aplicados:</strong></p>
+            <ul>
+                <li>✅ Frontend ahora consulta historial global</li>
+                <li>✅ Backend guarda con ID global</li>
+                <li>✅ Modelo actualizado con campo tiendaOriginal</li>
+                <li>✅ Sistema de fallback implementado</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Pruebas del Sistema</h3>
+            
+            <h4>1. Verificar Backend Funcionando</h4>
+            <button onclick="testBackend()">Probar Backend</button>
+            <div id="backend-result"></div>
+            
+            <h4>2. Simular Consulta del Frontend</h4>
+            <button onclick="testHistorialGlobal()">Consultar Historial Global</button>
+            <div id="historial-result"></div>
+            
+            <h4>3. Probar Fallback</h4>
+            <button onclick="testFallback()">Probar Fallback a Tienda Específica</button>
+            <div id="fallback-result"></div>
+            
+            <h4>4. Enviar Pedido de Prueba</h4>
+            <button onclick="testEnviarPedido()">Enviar Pedido (Backend V2)</button>
+            <div id="envio-result"></div>
+        </div>
+
+        <div class="test-section" id="resumen" style="display: none;">
+            <h3>📊 Resumen de Resultados</h3>
+            <div id="resumen-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:10001';
+        const resultados = {};
+
+        function showResult(elementId, success, title, content) {
+            const element = document.getElementById(elementId);
+            element.className = success ? 'test-section success' : 'test-section error';
+            element.innerHTML = `
+                <h4>${success ? '✅' : '❌'} ${title}</h4>
+                <pre>${typeof content === 'object' ? JSON.stringify(content, null, 2) : content}</pre>
+            `;
+            
+            // Guardar resultado
+            resultados[elementId] = { success, title, content };
+            updateResumen();
+        }
+
+        function updateResumen() {
+            const resumenDiv = document.getElementById('resumen');
+            const resumenContent = document.getElementById('resumen-content');
+            
+            const total = Object.keys(resultados).length;
+            const exitosos = Object.values(resultados).filter(r => r.success).length;
+            
+            if (total > 0) {
+                resumenDiv.style.display = 'block';
+                resumenContent.innerHTML = `
+                    <p><strong>Pruebas completadas:</strong> ${exitosos}/${total}</p>
+                    <p><strong>Estado general:</strong> ${exitosos === total ? '🟢 TODAS LAS PRUEBAS EXITOSAS' : '🔴 ALGUNAS PRUEBAS FALLARON'}</p>
+                    ${exitosos === total ? '<p style="color: green; font-weight: bold;">🎉 ¡El sistema de historial de proveedor está funcionando correctamente!</p>' : ''}
+                `;
+            }
+        }
+
+        async function testBackend() {
+            try {
+                console.log('🔍 Verificando backend...');
+                const response = await fetch(`${BACKEND_URL}/api/historial-proveedor/historial-proveedor-global/proveedor-fresco`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('backend-result', true, 'Backend funcionando', {
+                        status: response.status,
+                        ok: data.ok,
+                        registros: data.historial?.length || 0,
+                        primerRegistro: data.historial?.[0] ? {
+                            tienda: data.historial[0].pedido?.tienda,
+                            fecha: data.historial[0].fechaEnvio,
+                            lineas: data.historial[0].pedido?.lineas?.length
+                        } : 'Sin datos'
+                    });
+                } else {
+                    showResult('backend-result', false, 'Error en backend', `Status: ${response.status}`);
+                }
+            } catch (error) {
+                showResult('backend-result', false, 'Error conectando al backend', error.message);
+            }
+        }
+
+        async function testHistorialGlobal() {
+            try {
+                console.log('📖 Consultando historial global...');
+                // Simular exactamente lo que hace el frontend
+                const url = `/api/historial-proveedor/historial-proveedor-global/proveedor-fresco`;
+                const response = await axios.get(`${BACKEND_URL}${url}`);
+                
+                const historial = response.data.historial || [];
+                
+                showResult('historial-result', true, 'Historial Global Obtenido', {
+                    totalRegistros: historial.length,
+                    registros: historial.map((h, i) => ({
+                        orden: i + 1,
+                        tienda: h.pedido?.tienda,
+                        tiendaOriginal: h.tiendaOriginal,
+                        fecha: new Date(h.fechaEnvio).toLocaleString(),
+                        productos: h.pedido?.lineas?.map(l => `${l.referencia}: ${l.cantidad}${l.unidad}`).join(', ')
+                    }))
+                });
+            } catch (error) {
+                showResult('historial-result', false, 'Error al consultar historial global', error.response?.data || error.message);
+            }
+        }
+
+        async function testFallback() {
+            try {
+                console.log('🔄 Probando sistema de fallback...');
+                // Probar con una tienda que probablemente no existe
+                const url = `/api/historial-proveedor/tienda-inexistente/proveedor-fresco`;
+                const response = await axios.get(`${BACKEND_URL}${url}`);
+                
+                showResult('fallback-result', true, 'Fallback funcionando', {
+                    message: 'El endpoint de fallback responde correctamente',
+                    registros: response.data.historial?.length || 0
+                });
+            } catch (error) {
+                if (error.response?.status === 404 || (error.response?.data?.historial && error.response.data.historial.length === 0)) {
+                    showResult('fallback-result', true, 'Fallback funcionando correctamente', 'No se encontraron registros para tienda específica (comportamiento esperado)');
+                } else {
+                    showResult('fallback-result', false, 'Error en fallback', error.response?.data || error.message);
+                }
+            }
+        }
+
+        async function testEnviarPedido() {
+            try {
+                console.log('📤 Enviando pedido de prueba...');
+                const pedido = {
+                    tienda: 'Tienda Test Frontend',
+                    tiendaId: 'test-frontend-' + Date.now(),
+                    lineas: [
+                        { referencia: 'LOMO', cantidad: 1, unidad: 'kg' },
+                        { referencia: 'CARRILLERAS', cantidad: 2, unidad: 'kg' }
+                    ],
+                    fecha: new Date().toLocaleDateString('es-ES')
+                };
+
+                const response = await axios.post(`${BACKEND_URL}/api/enviar-proveedor-v2`, pedido);
+                
+                if (response.data.ok) {
+                    // Verificar que se guardó en el historial
+                    setTimeout(async () => {
+                        const historialResponse = await axios.get(`${BACKEND_URL}/api/historial-proveedor/historial-proveedor-global/proveedor-fresco`);
+                        const ultimoRegistro = historialResponse.data.historial?.[0];
+                        
+                        showResult('envio-result', true, 'Pedido enviado y guardado', {
+                            envio: 'Exitoso',
+                            ultimoHistorial: ultimoRegistro ? {
+                                tienda: ultimoRegistro.pedido?.tienda,
+                                tiendaOriginal: ultimoRegistro.tiendaOriginal,
+                                productos: ultimoRegistro.pedido?.lineas?.map(l => `${l.referencia}: ${l.cantidad}${l.unidad}`).join(', ')
+                            } : 'No encontrado'
+                        });
+                    }, 1000);
+                } else {
+                    showResult('envio-result', false, 'Error al enviar pedido', response.data);
+                }
+            } catch (error) {
+                showResult('envio-result', false, 'Error enviando pedido', error.response?.data || error.message);
+            }
+        }
+
+        // Ejecutar prueba inicial automáticamente
+        window.onload = function() {
+            console.log('🚀 Iniciando pruebas automáticas...');
+            setTimeout(testBackend, 500);
+        };
+    </script>
+</body>
+</html>

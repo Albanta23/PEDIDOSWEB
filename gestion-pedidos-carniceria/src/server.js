@@ -229,23 +229,6 @@ app.post('/api/historial-proveedor', async (req, res) => {
   }
 });
 
-// Endpoint temporal de debug - DEBE IR ANTES del endpoint genérico
-app.get('/api/historial-proveedor/debug/all-tiendas', async (req, res) => {
-  try {
-    const distintasTiendas = await HistorialProveedor.distinct('tiendaId');
-    const resumen = [];
-    
-    for (const tiendaId of distintasTiendas) {
-      const count = await HistorialProveedor.countDocuments({ tiendaId, proveedor: 'proveedor-fresco' });
-      resumen.push({ tiendaId, count });
-    }
-    
-    res.json({ ok: true, tiendas: resumen });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
 // Obtener historial de proveedor por tienda
 app.get('/api/historial-proveedor/:tiendaId/:proveedor', async (req, res) => {
   try {

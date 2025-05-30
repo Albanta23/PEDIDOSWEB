@@ -120,8 +120,12 @@ module.exports = function(app) {
       try {
         const tiendaId = req.body.tiendaId || tienda; // Prioriza el id, pero si no existe usa el nombre (compatibilidad)
         if (tiendaId && lineas && Array.isArray(lineas)) {
+          // Para historial de proveedor, usar siempre un ID estándar
+          const historialTiendaId = 'historial-proveedor-global';
+          
           await HistorialProveedor.create({
-            tiendaId,
+            tiendaId: historialTiendaId,
+            tiendaOriginal: tiendaId, // Guardamos la tienda original para referencia
             proveedor: 'proveedor-fresco',
             pedido: { lineas, fecha: fecha || new Date(), tienda },
             fechaEnvio: new Date(),
