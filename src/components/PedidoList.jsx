@@ -727,8 +727,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <div style={{display:'flex',gap:10,justifyContent:'flex-end',alignItems:'center',marginBottom:8}}>
               <button onClick={handleProveedorAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>Añadir línea</button>
               <button onClick={handleProveedorLimpiar} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700}}>Limpiar</button>
-              <button onClick={enviarProveedorMailjet} style={{background:'#b71c1c',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
-                <span role="img" aria-label="mail">✉️</span> Enviar pedido a proveedor
+              <button onClick={enviarProveedorMailjet} style={{backgroundImage:'url(logo_2.jpg)',backgroundSize:'contain',backgroundRepeat:'no-repeat',backgroundPosition:'center top',color:'red',border:'none',borderRadius:6,padding:'15px',fontWeight:700,display:'flex',alignItems:'flex-end',justifyContent:'center',textShadow:'1px 1px 2px rgba(255,255,255,0.8)',width:80,height:80,fontSize:'12px'}}>
+                Enviar
               </button>
             </div>
 
