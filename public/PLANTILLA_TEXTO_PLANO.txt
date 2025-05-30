@@ -1,0 +1,21 @@
+Pedido de Productos Frescos - Embutidos Ballesteros SL
+
+Tienda que envía el pedido: ${tienda}
+Fecha: ${fecha}
+
+Estimado proveedor,
+Le remitimos el pedido de frescos para la tienda de carnicería.
+
+Productos:
+${tabla}
+
+Para cualquier consulta o aclaración, quedamos a su disposición.
+
+Descargue e imprima el PDF adjunto para obtener el formato óptimo del pedido.
+
+Embutidos Ballesteros SL
+C/ Ejemplo 123, 29000 Málaga, España
+pedidos@embutidosballesteros.com
+https://embutidosballesteros.com
+
+Gracias por su confianza.

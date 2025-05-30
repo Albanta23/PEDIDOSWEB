@@ -5,6 +5,9 @@ import { FORMATOS_PEDIDO } from '../configFormatos';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 
+// Definir API_URL global seguro para todas las llamadas
+const API_URL = 'https://pedidos-backend-0e1s.onrender.com'; // Servidor de producción
+
 // Utilidad para cargar imagen como base64
 async function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -36,6 +39,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const [historialProveedor, setHistorialProveedor] = useState([]);
   const [mostrarConfirmHistorial, setMostrarConfirmHistorial] = useState(false);
   const [historialPendiente, setHistorialPendiente] = useState(null);
+  const [forzarTextoPlano, setForzarTextoPlano] = useState(false);
 
   // Clave para localStorage específica de la tienda
   const getStorageKey = () => `pedido_borrador_${tiendaActual?.id || 'default'}`;
@@ -282,8 +286,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     doc.save(`pedidos_proveedor_${tiendaActual?.nombre || ''}_${Date.now()}.pdf`);
   }
 
-  // --- Enviar lista de proveedor por email (profesional) ---
-  async function enviarProveedorPorEmail(lineas, tienda) {
+  // --- Enviar lista de proveedor por email usando Mailjet (unificado) ---
+  async function enviarProveedorMailjet() {
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
@@ -291,7 +295,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
       const doc = new jsPDF();
       doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-      let y = 28; // texto 1cm más abajo
+      let y = 28;
       doc.setFontSize(18);
       doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
       y += 10;
@@ -310,7 +314,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       doc.line(14, y, 196, y);
       y += 4;
       doc.setFontSize(12);
-      lineas.forEach(l => {
+      lineasProveedor.forEach(l => {
         if (l.referencia && l.cantidad) {
           doc.text(String(l.referencia), 14, y);
           doc.text(String(l.cantidad), 100, y);
@@ -321,22 +325,27 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           }
         }
       });
-      // Obtener PDF como base64
-      const pdfBase64 = doc.output('datauristring');
+      let pdfBase64 = doc.output('datauristring');
+      if (pdfBase64.startsWith('data:')) {
+        pdfBase64 = pdfBase64.substring(pdfBase64.indexOf(',') + 1);
+      }
       // 2. Enviar al backend
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enviar-proveedor`, {
+      const bodyData = {
+        tienda: tiendaActual?.nombre || '',
+        tiendaId: tiendaActual?.id || '',
+        fecha: new Date().toLocaleDateString(),
+        lineas: lineasProveedor,
+        pdfBase64,
+        forzarTextoPlano: forzarTextoPlano // Usar el valor del checkbox
+      };
+      
+      const res = await fetch(`${API_URL}/api/enviar-proveedor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tienda: tiendaActual?.nombre || '',
-          tiendaId: tiendaActual?.id || '',
-          fecha: new Date().toLocaleDateString(),
-          lineas: lineasProveedor,
-          pdfBase64
-        })
+        body: JSON.stringify(bodyData)
       });
       if (res.ok) {
-        setMensajeProveedor("¡Lista enviada al proveedor!");
+        setMensajeProveedor("¡Pedido enviado al proveedor!");
         handleProveedorLimpiar();
         setTimeout(()=>{
           setMensajeProveedor("");
@@ -355,7 +364,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   async function guardarHistorialProveedor(lineas, tienda) {
     if (!tienda?.id) return;
     try {
-      const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
       await axios.post(`${API_URL}/api/historial-proveedor`, {
         tiendaId: tienda.id,
         proveedor: 'proveedor-fresco',
@@ -661,6 +669,13 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#b71c1c',display:'flex',alignItems:'center'}}>
               <span role="img" aria-label="cerdo" style={{fontSize:32,marginRight:10}}>🐷</span>Lista para proveedor
             </h2>
+            {/* Checkbox SIEMPRE visible antes de enviar */}
+            <div style={{marginBottom:10}}>
+              <label style={{fontWeight:600,fontSize:15,color:'#b71c1c'}}>
+                <input type="checkbox" checked={forzarTextoPlano} onChange={e => setForzarTextoPlano(e.target.checked)} style={{marginRight:6}} />
+                Forzar texto plano (sin formato HTML)
+              </label>
+            </div>
             <button onClick={cargarHistorialProveedor} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,marginBottom:10}}>Ver historial de envíos</button>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16,minWidth:400}}>
@@ -710,25 +725,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <div style={{display:'flex',gap:10,justifyContent:'flex-end',alignItems:'center',marginBottom:8}}>
               <button onClick={handleProveedorAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>Añadir línea</button>
               <button onClick={handleProveedorLimpiar} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700}}>Limpiar</button>
-              <button onClick={()=>exportarProveedorPDF(lineasProveedor, tiendaActual)} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
-                <span role="img" aria-label="pdf">🗎</span> Exportar PDF
+              <button onClick={enviarProveedorMailjet} style={{background:'#b71c1c',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
+                <span role="img" aria-label="mail">✉️</span> Enviar pedido a proveedor
               </button>
             </div>
-            <div style={{display:'flex',gap:10,justifyContent:'flex-end',alignItems:'center'}}>
-              <button
-                onClick={async ()=>{
-                  await enviarProveedorPorEmail(lineasProveedor, tiendaActual);
-                  setHistorialPendiente({ lineas: lineasProveedor, tienda: tiendaActual });
-                  setMostrarConfirmHistorial(true);
-                }}
-                disabled={enviandoProveedor || lineasProveedor.length === 0 || lineasProveedor.some(l => !l.referencia || !l.cantidad)}
-                style={{background:'none',border:'none',borderRadius:8,padding:0,cursor:enviandoProveedor?'wait':'pointer',opacity:enviandoProveedor||lineasProveedor.length===0||lineasProveedor.some(l=>!l.referencia||!l.cantidad)?0.7:1,height:48,minWidth:90,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}
-                title="Enviar lista a proveedor"
-              >
-                <img src="/logo_2.jpg" alt="Enviar" style={{height:38,objectFit:'contain',filter:'drop-shadow(0 2px 6px #b71c1c44)'}} />
-                <span style={{color:'#b71c1c',fontWeight:700,fontSize:17}}>{enviandoProveedor ? 'Enviando...' : 'Enviar'}</span>
-              </button>
-            </div>
+
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
           </div>
         </div>

@@ -23,9 +23,22 @@ module.exports = function(app) {
       const ccList = ccEmail ? [{ Email: ccEmail, Name: 'Copia' }] : [];
       const fromEmail = process.env.MAILJET_FROM_EMAIL || 'notificaciones@tudominio.com';
       const fromName = process.env.MAILJET_FROM_NAME || 'Pedidos Carnicería';
+      
+      // Si se fuerza texto plano desde el frontend, usar plantilla de texto plano
+      // Asegurarse de que forzarTextoPlano se interpreta como booleano
+      const forzarTextoPlano = req.body.forzarTextoPlano === true || req.body.forzarTextoPlano === 'true' || req.body.forzarTextoPlano === 1 || req.body.forzarTextoPlano === '1';
+      
       // Leer plantilla HTML moderna desde archivo externo
-      const plantillaPath = path.join(__dirname, '../../public/PLANTILLA.html');
+      let plantillaPath = path.join(__dirname, '../../public/PLANTILLA.html');
+      if (forzarTextoPlano) {
+        plantillaPath = path.join(__dirname, '../../public/PLANTILLA_TEXTO_PLANO.txt');
+      }
+      
       let html = fs.readFileSync(plantillaPath, 'utf8');
+      // Mejor detección: ignorar comentarios y espacios antes del contenido
+      const htmlTrimmed = html.trimStart().replace(/^<!--.*?-->/s, '').trimStart();
+      // Si forzamos texto plano, isPlainText debe ser true
+      let isPlainText = forzarTextoPlano || (!htmlTrimmed.startsWith('<!DOCTYPE html>') && !htmlTrimmed.startsWith('<html'));
       // Construir filas de la tabla
       const htmlTableRows = (lineas || []).map(l => `
         <tr>
@@ -34,44 +47,57 @@ module.exports = function(app) {
           <td>${l.unidad || 'kg'}</td>
         </tr>
       `).join('');
-      // El logo del botón de imprimir PDF ahora es fijo (logo1.png) en la plantilla, no se reemplaza logo2Url
-      html = html.replace(/\$\{fecha\}/g, fecha || '-');
-      html = html.replace(/\$\{tabla\}/g, htmlTableRows);
-      html = html.replace(/\$\{tienda\}/g, tienda || '-');
-      // Generar PDF desde HTML usando puppeteer
-      let pdfBuffer;
-      try {
-        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-        await browser.close();
-      } catch (pdfErr) {
-        console.error('[PDF] Error al generar PDF:', pdfErr);
-        pdfBuffer = null;
-      }
-      // LOG para comprobar destinatarios principales y CC
-      console.log('[MAILJET] Enviando email a:', toList.map(e => e.Email).join(','));
-      if (ccList.length > 0) {
-        console.log('[MAILJET] Enviando en CC a:', ccList.map(e => e.Email).join(','));
+      // Reemplazos para HTML o texto plano
+      if (isPlainText) {
+        html = html.replace(/\$\{fecha\}/g, fecha || '-');
+        html = html.replace(/\$\{tabla\}/g, (lineas || []).map(l => `- ${l.referencia || ''}: ${l.cantidad || ''} ${l.unidad || 'kg'}`).join('\n'));
+        html = html.replace(/\$\{tienda\}/g, tienda || '-');
       } else {
-        console.log('[MAILJET] Sin destinatario en CC');
+        html = html.replace(/\$\{fecha\}/g, fecha || '-');
+        html = html.replace(/\$\{tabla\}/g, htmlTableRows);
+        html = html.replace(/\$\{tienda\}/g, tienda || '-');
       }
-      // LOG para depuración: mostrar el HTML final que se envía
-      console.log('[MAILJET][DEBUG] HTML enviado al proveedor:\n', html);
-      // LOG para depuración: mostrar si el botón de imprimir está presente
-      if (html.includes('Imprimir PDF')) {
-        console.log('[MAILJET][DEBUG] ✔ La plantilla contiene el botón de imprimir PDF.');
+      // Usar el PDF del frontend si viene en el body
+      let pdfBuffer = null;
+      if (req.body.pdfBase64) {
+        
+        // Elimina el prefijo si viene en formato datauri
+        let base64 = req.body.pdfBase64;
+        if (base64.startsWith('data:application/pdf;base64,')) {
+          base64 = base64.replace('data:application/pdf;base64,', '');
+        } else if (base64.startsWith('data:application/pdf;')) {
+          base64 = base64.substring(base64.indexOf(',') + 1);
+        } else if (base64.startsWith('data:')) {
+          base64 = base64.substring(base64.indexOf(',') + 1);
+        }
+        try {
+          pdfBuffer = Buffer.from(base64, 'base64');
+        } catch (e) {
+          console.error('[PDF] Error al decodificar el PDF base64 recibido:', e);
+          pdfBuffer = null;
+        }
       } else {
-        console.warn('[MAILJET][DEBUG] ❌ La plantilla NO contiene el botón de imprimir PDF.');
+        // Si no viene PDF, intentar generarlo con puppeteer
+        try {
+          const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+          const page = await browser.newPage();
+          await page.setContent(html, { waitUntil: 'networkidle0' });
+          pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+          await browser.close();
+        } catch (pdfErr) {
+          console.error('[PDF] Error al generar PDF:', pdfErr);
+          pdfBuffer = null;
+        }
       }
+      
       // Enviar email con Mailjet, adjuntando el PDF si se generó
       const attachments = pdfBuffer ? [{
         ContentType: 'application/pdf',
         Filename: `pedido_${fecha || Date.now()}.pdf`,
         Base64Content: pdfBuffer.toString('base64')
       }] : [];
-      const request = mailjetClient.post('send', { version: 'v3.1' }).request({
+      
+      const mailjetData = {
         Messages: [
           {
             From: {
@@ -81,11 +107,14 @@ module.exports = function(app) {
             To: toList,
             Cc: ccList,
             Subject: `Pedido de frescos - ${tienda || ''}`,
-            HTMLPart: html,
+            // Si la plantilla es texto plano, usar TextPart, si no, usar HTMLPart
+            ...(isPlainText ? { TextPart: html } : { HTMLPart: html }),
             Attachments: attachments
           }
         ]
-      });
+      };
+      
+      const request = mailjetClient.post('send', { version: 'v3.1' }).request(mailjetData);
       await request;
       // Guardar en historial de proveedor tras enviar
       try {
