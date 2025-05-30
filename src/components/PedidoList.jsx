@@ -339,7 +339,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         forzarTextoPlano: forzarTextoPlano // Usar el valor del checkbox
       };
       
-      const res = await fetch(`${API_URL}/api/enviar-proveedor`, {
+      const res = await fetch(`${API_URL}/api/enviar-proveedor-v2`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bodyData)

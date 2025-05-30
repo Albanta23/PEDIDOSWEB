@@ -260,6 +260,10 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 const mailjetProveedorEmail = require('./mailjetProveedorEmail');
 mailjetProveedorEmail(app);
 
+// Nuevo endpoint V2 mejorado para proveedor
+const mailjetProveedorEmailV2 = require('./mailjetProveedorEmailV2');
+mailjetProveedorEmailV2(app);
+
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);
