@@ -25,7 +25,10 @@ const allowedOrigins = [
   'https://scaling-chainsaw-px9jv6jjr4rcrg4-5173.app.github.dev',
   'https://scaling-chainsaw-px9jv6jjr4rcrg4-3000.app.github.dev',
   'https://pedidosweb-phi.vercel.app',
-  'https://scaling-chainsaw-px9jv6jjr4rcrg4-10001.app.github.dev'
+  'https://scaling-chainsaw-px9jv6jjr4rcrg4-10001.app.github.dev',
+  'https://pedidos-backend-0e1s.onrender.com',
+  'https://pedidos-frontend-0e1s.onrender.com', // Si tienes frontend en Render
+  // Añade aquí cualquier otro dominio de frontend que uses
 ];
 
 // Nueva función para permitir cualquier subdominio de .vercel.app y localhost
@@ -34,6 +37,7 @@ function corsOrigin(origin, callback) {
   if (
     allowedOrigins.includes(origin) ||
     /\.vercel\.app$/.test(origin) ||
+    /\.onrender\.com$/.test(origin) ||
     /^http:\/\/localhost(:\d+)?$/.test(origin)
   ) {
     return callback(null, true);
