@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Guardado automático en historial</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        .step { margin: 10px 0; padding: 10px; background: #e9ecef; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test: Guardado automático en historial de proveedor</h1>
+        <p><strong>Objetivo:</strong> Verificar que cuando se envía un pedido a proveedor, automáticamente se guarde en el historial.</p>
+        
+        <div class="test-section info">
+            <h3>⚙️ Configuración del Test</h3>
+            <div class="step">
+                <strong>Tienda de prueba:</strong> <span id="tienda-nombre">Tienda Test</span> (ID: <span id="tienda-id">test-001</span>)
+            </div>
+            <div class="step">
+                <strong>Backend URL:</strong> <span id="backend-url">http://localhost:10001</span>
+            </div>
+            <div class="step">
+                <strong>Proveedor:</strong> proveedor-fresco (para "la baltrasa")
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Test Steps</h3>
+            <div id="test-steps">
+                <div class="step">
+                    <button class="btn-primary" onclick="step1()">1. Verificar endpoint V2 disponible</button>
+                    <div id="step1-result"></div>
+                </div>
+                <div class="step">
+                    <button class="btn-primary" onclick="step2()">2. Limpiar historial previo (opcional)</button>
+                    <div id="step2-result"></div>
+                </div>
+                <div class="step">
+                    <button class="btn-primary" onclick="step3()">3. Enviar pedido de prueba a proveedor</button>
+                    <div id="step3-result"></div>
+                </div>
+                <div class="step">
+                    <button class="btn-primary" onclick="step4()">4. Verificar que se guardó en historial automáticamente</button>
+                    <div id="step4-result"></div>
+                </div>
+                <div class="step">
+                    <button class="btn-success" onclick="fullTest()">🚀 Ejecutar test completo</button>
+                    <div id="full-test-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Resultados del Test</h3>
+            <div id="test-results">
+                <p>Presiona "Ejecutar test completo" para comenzar...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:10001';
+        const TIENDA_TEST = {
+            id: 'test-001',
+            nombre: 'Tienda Test Automatico'
+        };
+
+        // Datos de prueba
+        const PEDIDO_PRUEBA = {
+            tienda: TIENDA_TEST.nombre,
+            tiendaId: TIENDA_TEST.id,
+            fecha: new Date().toLocaleDateString(),
+            lineas: [
+                { referencia: 'LOMO', cantidad: 2, unidad: 'kg' },
+                { referencia: 'PANCETA', cantidad: 1, unidad: 'kg' },
+                { referencia: 'SOLOMILLOS', cantidad: 3, unidad: 'uds' }
+            ],
+            pdfBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' // Tiny test image
+        };
+
+        async function showResult(elementId, success, title, message, data = null) {
+            const element = document.getElementById(elementId);
+            const className = success ? 'success' : 'error';
+            let content = `<div class="${className}"><strong>${title}</strong><br>${message}`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            content += '</div>';
+            element.innerHTML = content;
+        }
+
+        async function step1() {
+            try {
+                console.log('🔍 Step 1: Verificando endpoint V2...');
+                const response = await fetch(`${BACKEND_URL}/`);
+                const text = await response.text();
+                
+                if (response.ok) {
+                    showResult('step1-result', true, '✅ Backend disponible', `Respuesta: ${text}`);
+                    return true;
+                } else {
+                    showResult('step1-result', false, '❌ Backend no disponible', `Status: ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                showResult('step1-result', false, '❌ Error de conexión', error.message);
+                return false;
+            }
+        }
+
+        async function step2() {
+            try {
+                console.log('🧹 Step 2: Verificando historial previo...');
+                const response = await fetch(`${BACKEND_URL}/api/historial-proveedor/${TIENDA_TEST.id}/proveedor-fresco`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.historial?.length || 0;
+                    showResult('step2-result', true, '📋 Historial verificado', 
+                        `Se encontraron ${count} registros previos en el historial.`, 
+                        { historialCount: count, tiendaId: TIENDA_TEST.id }
+                    );
+                    return true;
+                } else if (response.status === 404) {
+                    showResult('step2-result', true, '📋 Sin historial previo', 'No existe historial previo para esta tienda (normal para primera ejecución).');
+                    return true;
+                } else {
+                    showResult('step2-result', false, '❌ Error al verificar historial', `Status: ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                showResult('step2-result', false, '❌ Error al verificar historial', error.message);
+                return false;
+            }
+        }
+
+        async function step3() {
+            try {
+                console.log('📤 Step 3: Enviando pedido al proveedor...');
+                const response = await fetch(`${BACKEND_URL}/api/enviar-proveedor-v2`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(PEDIDO_PRUEBA)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.ok) {
+                    showResult('step3-result', true, '✅ Pedido enviado exitosamente', 
+                        'El email se envió correctamente al proveedor.', 
+                        { 
+                            message: result.message,
+                            debug: result.debug,
+                            tienda: PEDIDO_PRUEBA.tienda,
+                            lineasEnviadas: PEDIDO_PRUEBA.lineas.length
+                        }
+                    );
+                    return true;
+                } else {
+                    showResult('step3-result', false, '❌ Error al enviar pedido', 
+                        result.error || 'Error desconocido', result);
+                    return false;
+                }
+            } catch (error) {
+                showResult('step3-result', false, '❌ Error de red al enviar pedido', error.message);
+                return false;
+            }
+        }
+
+        async function step4() {
+            try {
+                console.log('🔍 Step 4: Verificando guardado automático en historial...');
+                
+                // Esperar un momento para que se procese el guardado
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const response = await fetch(`${BACKEND_URL}/api/historial-proveedor/${TIENDA_TEST.id}/proveedor-fresco`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const historial = data.historial || [];
+                    
+                    if (historial.length > 0) {
+                        // Buscar el registro más reciente
+                        const ultimoRegistro = historial[historial.length - 1];
+                        const fechaReciente = new Date(ultimoRegistro.fechaEnvio);
+                        const ahora = new Date();
+                        const diferencia = ahora - fechaReciente;
+                        
+                        // Si el registro es de los últimos 5 minutos, considerarlo como el que acabamos de crear
+                        if (diferencia < 5 * 60 * 1000) {
+                            showResult('step4-result', true, '🎉 ¡GUARDADO AUTOMÁTICO FUNCIONA!', 
+                                'Se encontró el registro recién creado en el historial.', 
+                                {
+                                    totalRegistros: historial.length,
+                                    ultimoRegistro: {
+                                        fecha: ultimoRegistro.fechaEnvio,
+                                        tienda: ultimoRegistro.pedido?.tienda,
+                                        lineas: ultimoRegistro.pedido?.lineas?.length || 0,
+                                        tienePDF: !!ultimoRegistro.pdfBase64
+                                    },
+                                    diferenciaTiempo: `${Math.round(diferencia / 1000)} segundos`
+                                }
+                            );
+                            return true;
+                        } else {
+                            showResult('step4-result', false, '⚠️ Registro no encontrado', 
+                                'El historial existe pero no se encontró un registro reciente.', 
+                                { 
+                                    totalRegistros: historial.length,
+                                    ultimaFecha: ultimoRegistro.fechaEnvio,
+                                    diferencia: `${Math.round(diferencia / 1000)} segundos`
+                                }
+                            );
+                            return false;
+                        }
+                    } else {
+                        showResult('step4-result', false, '❌ Historial vacío', 
+                            'El endpoint responde pero el historial está vacío. El guardado automático no funcionó.');
+                        return false;
+                    }
+                } else if (response.status === 404) {
+                    showResult('step4-result', false, '❌ Sin historial creado', 
+                        'No se encontró historial para esta tienda. El guardado automático no funcionó.');
+                    return false;
+                } else {
+                    showResult('step4-result', false, '❌ Error al verificar historial', 
+                        `Status: ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                showResult('step4-result', false, '❌ Error al verificar historial', error.message);
+                return false;
+            }
+        }
+
+        async function fullTest() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<p>🔄 Ejecutando test completo...</p>';
+            
+            const results = {
+                step1: false,
+                step2: false,
+                step3: false,
+                step4: false
+            };
+
+            try {
+                results.step1 = await step1();
+                if (!results.step1) throw new Error('Step 1 falló');
+
+                results.step2 = await step2();
+                if (!results.step2) throw new Error('Step 2 falló');
+
+                results.step3 = await step3();
+                if (!results.step3) throw new Error('Step 3 falló');
+
+                results.step4 = await step4();
+
+                // Mostrar resultado final
+                const success = Object.values(results).every(r => r);
+                const successCount = Object.values(results).filter(r => r).length;
+                
+                showResult('full-test-result', success, 
+                    success ? '🎉 TEST COMPLETO EXITOSO' : `⚠️ TEST PARCIALMENTE EXITOSO (${successCount}/4)`,
+                    success ? 
+                        '¡El guardado automático en historial funciona perfectamente!' :
+                        'Algunos pasos fallaron. Revisa los resultados individuales.',
+                    results
+                );
+
+                resultsDiv.innerHTML = `
+                    <div class="${success ? 'success' : 'error'}">
+                        <h4>${success ? '✅ FUNCIONALIDAD VERIFICADA' : '❌ REQUIERE ATENCIÓN'}</h4>
+                        <p><strong>Resultado:</strong> ${successCount} de 4 pasos completados exitosamente.</p>
+                        <p><strong>Conclusión:</strong> ${success ? 
+                            'El guardado automático en historial está funcionando correctamente. Cada vez que se envía un pedido a proveedor, se guarda automáticamente en el historial.' :
+                            'Hay problemas con la funcionalidad. Revisa los pasos que fallaron.'
+                        }</p>
+                        <pre>${JSON.stringify(results, null, 2)}</pre>
+                    </div>
+                `;
+
+            } catch (error) {
+                showResult('full-test-result', false, '❌ TEST INTERRUMPIDO', `Error: ${error.message}`, results);
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ TEST FALLIDO</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <pre>${JSON.stringify(results, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // Inicialización
+        document.getElementById('tienda-nombre').textContent = TIENDA_TEST.nombre;
+        document.getElementById('tienda-id').textContent = TIENDA_TEST.id;
+        document.getElementById('backend-url').textContent = BACKEND_URL;
+    </script>
+</body>
+</html>

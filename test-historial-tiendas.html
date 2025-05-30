@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Historial Frontend Simulation</title>
+</head>
+<body>
+    <h1>Simulación Frontend - Test Historial</h1>
+    
+    <div id="results"></div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:10001';
+        
+        const tiendas = [
+          { id: 'tienda1', nombre: 'TIENDA BUS' },
+          { id: 'tienda2', nombre: 'TIENDA SALAMANCA 1' },
+          { id: 'tienda3', nombre: 'TIENDA SALAMANCA 2' },
+          { id: 'tienda4', nombre: 'TIENDA PINILLA' },
+          { id: 'tienda5', nombre: 'TIENDA TRES CRUCES' },
+          { id: 'tienda6', nombre: 'TIENDA PLAZA DE ALEMANIA' },
+          { id: 'tienda7', nombre: 'TIENDA AVDA GALICIA' },
+          { id: 'tienda8', nombre: 'TIENDA MORADAS' },
+          { id: 'tienda9', nombre: 'TIENDA FABRICA' },
+          { id: 'tienda10', nombre: 'TIENDA HAM&WINE' },
+          { id: 'clientes', nombre: 'PEDIDOS CLIENTES' }
+        ];
+
+        async function testHistorialParaTienda(tienda) {
+            console.log(`\n=== Testing historial para ${tienda.nombre} (${tienda.id}) ===`);
+            
+            try {
+                const url = `/api/historial-proveedor/${tienda.id}/proveedor-fresco`;
+                console.log('URL:', url);
+                
+                const response = await fetch(`${BACKEND_URL}${url}`);
+                const data = await response.json();
+                
+                console.log('Respuesta:', data);
+                console.log('Número de registros:', data.historial?.length || 0);
+                
+                return {
+                    tienda: tienda,
+                    registros: data.historial?.length || 0,
+                    success: data.ok && data.historial && data.historial.length > 0
+                };
+            } catch (error) {
+                console.error('Error:', error);
+                return {
+                    tienda: tienda,
+                    registros: 0,
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function testAllTiendas() {
+            const results = [];
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Testando todas las tiendas...</h2>';
+            
+            for (const tienda of tiendas) {
+                const result = await testHistorialParaTienda(tienda);
+                results.push(result);
+                
+                resultsDiv.innerHTML += `
+                    <div style="margin: 10px 0; padding: 10px; border: 1px solid ${result.success ? '#28a745' : '#ccc'}; background: ${result.success ? '#d4edda' : '#f8f9fa'}">
+                        <strong>${tienda.nombre} (${tienda.id})</strong><br>
+                        Registros: ${result.registros}<br>
+                        Estado: ${result.success ? '✅ CON HISTORIAL' : '❌ SIN HISTORIAL'}
+                        ${result.error ? `<br>Error: ${result.error}` : ''}
+                    </div>
+                `;
+            }
+            
+            console.log('\n=== RESUMEN ===');
+            const tiendasConHistorial = results.filter(r => r.success);
+            console.log('Tiendas con historial:', tiendasConHistorial.map(r => `${r.tienda.nombre} (${r.registros} registros)`));
+            
+            resultsDiv.innerHTML += `
+                <div style="margin: 20px 0; padding: 15px; border: 2px solid #007bff; background: #e7f3ff">
+                    <h3>Resumen</h3>
+                    <p><strong>Tiendas con historial:</strong> ${tiendasConHistorial.length}/${tiendas.length}</p>
+                    <ul>
+                        ${tiendasConHistorial.map(r => `<li>${r.tienda.nombre}: ${r.registros} registros</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Auto ejecutar
+        testAllTiendas();
+    </script>
+</body>
+</html>

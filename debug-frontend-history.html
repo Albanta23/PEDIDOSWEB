@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Frontend History</title>
+</head>
+<body>
+    <h1>Debug Historial de Proveedor</h1>
+    
+    <div>
+        <h2>1. Verificar datos disponibles en backend</h2>
+        <button onclick="checkBackendData()">Verificar Backend</button>
+        <pre id="backend-result"></pre>
+    </div>
+    
+    <div>
+        <h2>2. Probar con diferentes IDs de tienda</h2>
+        <input type="text" id="tienda-id" placeholder="ID de tienda" value="test-001">
+        <button onclick="testTiendaId()">Probar</button>
+        <pre id="tienda-result"></pre>
+    </div>
+    
+    <div>
+        <h2>3. Verificar todas las tiendas disponibles</h2>
+        <button onclick="checkAllTiendas()">Ver todas las tiendas</button>
+        <pre id="all-tiendas-result"></pre>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:10001';
+
+        async function checkBackendData() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/historial-proveedor/test-001/proveedor-fresco`);
+                const data = await response.json();
+                document.getElementById('backend-result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('backend-result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testTiendaId() {
+            const tiendaId = document.getElementById('tienda-id').value;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/historial-proveedor/${tiendaId}/proveedor-fresco`);
+                const data = await response.json();
+                document.getElementById('tienda-result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('tienda-result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function checkAllTiendas() {
+            try {
+                // MongoDB query para encontrar todas las tiendas únicas
+                const response = await fetch(`${BACKEND_URL}/api/historial-proveedor/debug/all-tiendas`);
+                if (response.status === 404) {
+                    document.getElementById('all-tiendas-result').textContent = 'Endpoint debug no disponible. Vamos a usar otro método.';
+                    
+                    // Probemos con algunos IDs comunes
+                    const commonIds = ['test-001', 'tienda-1', 'tienda-2', 'default', '1', '2'];
+                    let results = [];
+                    
+                    for (const id of commonIds) {
+                        try {
+                            const testResponse = await fetch(`${BACKEND_URL}/api/historial-proveedor/${id}/proveedor-fresco`);
+                            const testData = await testResponse.json();
+                            if (testData.historial && testData.historial.length > 0) {
+                                results.push({ tiendaId: id, count: testData.historial.length });
+                            }
+                        } catch (e) {
+                            // Ignorar errores
+                        }
+                    }
+                    
+                    document.getElementById('all-tiendas-result').textContent = 'Tiendas con historial encontradas:\n' + JSON.stringify(results, null, 2);
+                } else {
+                    const data = await response.json();
+                    document.getElementById('all-tiendas-result').textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                document.getElementById('all-tiendas-result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Auto ejecutar al cargar
+        checkBackendData();
+    </script>
+</body>
+</html>
