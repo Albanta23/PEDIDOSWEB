@@ -149,18 +149,15 @@ module.exports = function(app) {
       // Guardar en historial
       try {
         if (tiendaId && lineas && Array.isArray(lineas)) {
-          // Para historial de proveedor, usar siempre un ID estándar
-          const historialTiendaId = 'historial-proveedor-global';
-          
+          // Guardar SOLO en el historial de la tienda correspondiente
           await HistorialProveedor.create({
-            tiendaId: historialTiendaId,
-            tiendaOriginal: tiendaId, // Guardamos la tienda original para referencia
+            tiendaId: tiendaId, // Guardar con el id de la tienda
             proveedor: 'proveedor-fresco',
             pedido: { lineas, fecha: fecha || new Date(), tienda },
             fechaEnvio: new Date(),
             pdfBase64: pdfBuffer ? pdfBuffer.toString('base64') : undefined
           });
-          console.log('[PROVEEDOR-V2] Guardado en historial global correctamente');
+          console.log('[PROVEEDOR-V2] Guardado en historial de tienda correctamente');
         }
       } catch (histErr) {
         console.error('[PROVEEDOR-V2] Error guardando historial:', histErr.message);

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Historial Proveedor POR TIENDA</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { border: 2px solid #007bff; padding: 20px; border-radius: 10px; background: #f8f9fa; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #cce7ff; border: 1px solid #99d6ff; color: #004085; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        label { font-weight: bold; }
+        input[type=text] { padding: 6px; border-radius: 4px; border: 1px solid #ccc; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔎 Test Historial Proveedor <span style="color:#007bff">POR TIENDA</span></h1>
+        <p>Consulta el historial de envíos a proveedor para un <b>tiendaId</b> concreto.</p>
+        <form id="formHistorial" onsubmit="consultarHistorial(event)">
+            <label for="tiendaId">ID de la tienda:</label>
+            <input type="text" id="tiendaId" value="test-manual-001" required>
+            <button type="submit">Consultar historial</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        async function consultarHistorial(event) {
+            event.preventDefault();
+            const resultDiv = document.getElementById('result');
+            const tiendaId = document.getElementById('tiendaId').value.trim();
+            if (!tiendaId) {
+                resultDiv.innerHTML = '<div class="error">Introduce un ID de tienda válido.</div>';
+                return;
+            }
+            resultDiv.innerHTML = '<div class="info">⏳ Consultando historial para <b>' + tiendaId + '</b>...</div>';
+            try {
+                const url = `http://localhost:10001/api/historial-proveedor/${encodeURIComponent(tiendaId)}/proveedor-fresco`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (response.ok && data.ok) {
+                    if (data.historial && data.historial.length > 0) {
+                        resultDiv.innerHTML = `<div class="success">
+                            <h3>✅ Historial encontrado para <b>${tiendaId}</b></h3>
+                            <p>Total de envíos: <b>${data.historial.length}</b></p>
+                            <pre>${JSON.stringify(data.historial, null, 2)}</pre>
+                        </div>`;
+                    } else {
+                        resultDiv.innerHTML = `<div class="info">
+                            <h3>ℹ️ Sin resultados</h3>
+                            <p>No hay envíos registrados para <b>${tiendaId}</b>.</p>
+                        </div>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">
+                        <h3>❌ Error en la consulta</h3>
+                        <p><strong>Error:</strong> ${data.error || 'Error desconocido'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">
+                    <h3>❌ Error de conexión</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><small>¿Está el servidor ejecutándose en localhost:10001?</small></p>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
