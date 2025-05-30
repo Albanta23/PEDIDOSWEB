@@ -23,6 +23,7 @@
     <img src="https://raw.githubusercontent.com/ballesterosdigital/gestion-pedidos-carniceria/main/public/logo1.png" alt="Embutidos Ballesteros SL" class="logo" />
     <div class="empresa">Embutidos Ballesteros SL</div>
     <h2>Pedido de Productos Frescos</h2>
+    <p><b style="color:#a9241f;font-size:16px;">Tienda que envía el pedido: ${tienda}</b></p>
     <p>Estimado proveedor,</p>
     <p>
       Le remitimos el pedido de frescos para la tienda de carnicería correspondiente al <b>${fecha}</b>.
@@ -42,10 +43,10 @@
     <p>
       Para cualquier consulta o aclaración, quedamos a su disposición.
     </p>
-    <!-- Botón de envío con logo2.png -->
     <div style="text-align:center;margin:20px 0;">
-      <button style="background:transparent;border:none;cursor:pointer;">
-        <img src="${logo2Url}" alt="Enviar" style="height:38px;vertical-align:middle;"/>
+      <button style="background:transparent;border:none;cursor:pointer;" onclick="window.print()">
+        <img src="${logo2Url}" alt="Imprimir PDF" style="height:38px;vertical-align:middle;"/>
+        <span style="font-size:16px;color:#a9241f;margin-left:8px;vertical-align:middle;">Imprimir PDF</span>
       </button>
     </div>
     <button class="print-btn" onclick="window.print()">Imprimir PDF</button>

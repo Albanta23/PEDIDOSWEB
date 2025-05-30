@@ -40,6 +40,7 @@ module.exports = function(app) {
       html = html.replace(/\$\{fecha\}/g, fecha || '-');
       html = html.replace(/\$\{tabla\}/g, htmlTableRows);
       html = html.replace(/\$\{logo2Url\}/g, logo2Url);
+      html = html.replace(/\$\{tienda\}/g, tienda || '-');
       // Generar PDF desde HTML usando puppeteer
       let pdfBuffer;
       try {
