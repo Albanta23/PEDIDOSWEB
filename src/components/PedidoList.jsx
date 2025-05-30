@@ -6,7 +6,7 @@ import { jsPDF } from 'jspdf';
 import axios from 'axios';
 
 // Definir API_URL global seguro para todas las llamadas
-const API_URL = 'https://pedidos-backend-0e1s.onrender.com'; // Servidor de producción
+const API_URL = 'https://pedidos-backend-0e1s.onrender.com'; // Servidor de producción con endpoint V2
 
 // Utilidad para cargar imagen como base64
 async function cargarLogoBase64(url) {
