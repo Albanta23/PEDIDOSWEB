@@ -73,15 +73,42 @@ async function generarPDFAlbaran(pedido) {
 
 const HistoricoTienda = ({ pedidos, tiendaId }) => {
   const [modalPedido, setModalPedido] = useState(null);
-  // Solo mostrar pedidos agrupados (con lineas)
-  const agrupados = pedidos
-    .filter(p => p.tiendaId === tiendaId && p.numeroPedido && p.lineas && p.lineas.length > 0)
-    .sort((a, b) => (a.numeroPedido - b.numeroPedido));
+  const [periodo, setPeriodo] = useState('semana');
+  const [agrupadosFiltrados, setAgrupadosFiltrados] = useState([]);
+
+  // Filtrado por periodo
+  React.useEffect(() => {
+    const ahora = new Date();
+    let fechaInicio;
+    if (periodo === 'mes') {
+      fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    } else if (periodo === 'año') {
+      fechaInicio = new Date(ahora.getFullYear(), 0, 1);
+    } else if (periodo === 'semana') {
+      const diaSemana = ahora.getDay() || 7;
+      fechaInicio = new Date(ahora);
+      fechaInicio.setDate(ahora.getDate() - diaSemana + 1);
+      fechaInicio.setHours(0,0,0,0);
+    } else {
+      fechaInicio = null; // todo
+    }
+    function filtrarPorPeriodo(p) {
+      if (!fechaInicio) return true;
+      const fecha = new Date(p.fechaPedido || p.fechaCreacion);
+      return fecha >= fechaInicio;
+    }
+    setAgrupadosFiltrados(
+      pedidos
+        .filter(p => p.tiendaId === tiendaId && p.numeroPedido && p.lineas && p.lineas.length > 0)
+        .filter(filtrarPorPeriodo)
+        .sort((a, b) => (a.numeroPedido - b.numeroPedido))
+    );
+  }, [pedidos, tiendaId, periodo]);
 
   // Pedidos enviados a fábrica (aún no recibidos de fábrica)
-  const pedidosEnviados = agrupados.filter(p => p.estado === 'enviado');
+  const pedidosEnviados = agrupadosFiltrados.filter(p => p.estado === 'enviado');
   // Pedidos recibidos de fábrica (preparado o enviadoTienda)
-  const pedidosRecibidos = agrupados.filter(p => p.estado === 'preparado' || p.estado === 'enviadoTienda');
+  const pedidosRecibidos = agrupadosFiltrados.filter(p => p.estado === 'preparado' || p.estado === 'enviadoTienda');
 
   console.log('[DEBUG HistoricoTienda] pedidos recibidos:', pedidos);
   console.log('[DEBUG HistoricoTienda] tiendaId:', tiendaId);
@@ -90,6 +117,15 @@ const HistoricoTienda = ({ pedidos, tiendaId }) => {
     <div>
       <Watermark />
       <h2>Histórico de Pedidos</h2>
+      <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:8}}>
+        <label style={{fontWeight:600}}>Periodo:</label>
+        <select value={periodo} onChange={e=>setPeriodo(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
+          <option value="semana">Semana</option>
+          <option value="mes">Mes</option>
+          <option value="año">Año</option>
+          <option value="todo">Todo</option>
+        </select>
+      </div>
       <h3 style={{marginTop:24, marginBottom:8}}>Pedidos enviados a fábrica</h3>
       <table>
         <thead>
