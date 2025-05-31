@@ -1,5 +1,12 @@
 // Servidor Express con Socket.io para pedidos en tiempo real
 require('dotenv').config();
+// DEBUG: Comprobar carga de MAILJET_API_KEY
+if (process.env.MAILJET_API_KEY) {
+  console.log('[DEBUG] MAILJET_API_KEY cargada:', process.env.MAILJET_API_KEY.slice(0, 4) + '...' + process.env.MAILJET_API_KEY.slice(-4));
+} else {
+  console.error('[DEBUG] MAILJET_API_KEY NO está definida');
+}
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -7,7 +14,7 @@ const { Server } = require('socket.io');
 const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
-const HistorialProveedor = require('./models/HistorialProveedor'); // Añadido
+const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -217,26 +224,63 @@ app.patch('/api/avisos/:id/visto', async (req, res) => {
 // Guardar en historial de proveedor
 app.post('/api/historial-proveedor', async (req, res) => {
   try {
-    const { tiendaId, proveedor, pedido } = req.body;
-    if (!tiendaId || !proveedor || !pedido) {
-      return res.status(400).json({ ok: false, error: 'Faltan datos requeridos' });
+    const { tiendaId, tiendaNombre, fechaPedido, lineas, proveedor } = req.body;
+    if (!tiendaId || !fechaPedido || !lineas || !proveedor || !tiendaNombre) {
+      return res.status(400).json({ ok: false, error: 'Faltan datos obligatorios' });
     }
-    const entry = new HistorialProveedor({ tiendaId, proveedor, pedido });
-    await entry.save();
+    await HistorialProveedor.create({
+      tiendaId,
+      tiendaNombre,
+      fechaPedido: new Date(fechaPedido),
+      lineas,
+      proveedor
+    });
     res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
-// Obtener historial de proveedor por tienda
-app.get('/api/historial-proveedor/:tiendaId/:proveedor', async (req, res) => {
+// Endpoint para consultar historial de pedidos a proveedor por tienda y rango de fechas
+app.get('/api/historial-proveedor', async (req, res) => {
   try {
-    const { tiendaId, proveedor } = req.params;
-    const historial = await HistorialProveedor.find({ tiendaId, proveedor }).sort({ fechaEnvio: -1 }).limit(50);
-    res.json({ ok: true, historial });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    const { tiendaId, periodo = 'semana' } = req.query;
+    if (!tiendaId) return res.status(400).json({ ok: false, error: 'Falta tiendaId' });
+
+    // Calcular rango de fechas según el periodo
+    const ahora = new Date();
+    let fechaInicio;
+    if (periodo === 'mes') {
+      fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    } else if (periodo === 'año') {
+      fechaInicio = new Date(ahora.getFullYear(), 0, 1);
+    } else { // semana por defecto
+      const diaSemana = ahora.getDay() || 7;
+      fechaInicio = new Date(ahora);
+      fechaInicio.setDate(ahora.getDate() - diaSemana + 1);
+      fechaInicio.setHours(0,0,0,0);
+    }
+
+    // Buscar solo los pedidos de la tienda y en el rango
+    const historial = await HistorialProveedor.find({
+      tiendaId,
+      fechaEnvio: { $gte: fechaInicio }
+    }).sort({ fechaEnvio: -1 });
+
+    // Agrupar y mapear para frontend: fecha, referencia (tienda/nombre), número de líneas, etc.
+    const resultado = historial.map(item => ({
+      id: item._id,
+      fecha: item.pedido?.fecha || item.fechaEnvio,
+      tienda: item.pedido?.tienda || '',
+      numeroLineas: Array.isArray(item.pedido?.lineas) ? item.pedido.lineas.length : 0,
+      proveedor: item.proveedor,
+      pedido: item.pedido,
+      fechaEnvio: item.fechaEnvio
+    }));
+
+    res.json({ ok: true, historial: resultado });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
@@ -256,11 +300,10 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
   });
 });
 
-// SOLO Mailjet para enviar proveedor
-const mailjetProveedorEmail = require('./mailjetProveedorEmail');
-mailjetProveedorEmail(app);
+// DESACTIVADO: Endpoint antiguo de proveedor (solo historial global)
+// const mailjetProveedorEmail = require('./mailjetProveedorEmail');
+// mailjetProveedorEmail(app);
 
-// Nuevo endpoint V2 mejorado para proveedor
 const mailjetProveedorEmailV2 = require('./mailjetProveedorEmailV2');
 mailjetProveedorEmailV2(app);
 

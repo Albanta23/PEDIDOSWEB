@@ -2,7 +2,7 @@
 const mailjet = require('node-mailjet');
 const fs = require('fs');
 const path = require('path');
-const HistorialProveedor = require('./models/HistorialProveedor');
+const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 
 const mailjetClient = mailjet.apiConnect(
   process.env.MAILJET_API_KEY,
@@ -22,6 +22,9 @@ module.exports = function(app) {
       const ccEmail = process.env.MAILJET_COPIA_EMAIL;
       const fromEmail = process.env.MAILJET_FROM_EMAIL || 'notificaciones@tudominio.com';
       const fromName = process.env.MAILJET_FROM_NAME || 'Pedidos Carnicería';
+      
+      // Imprimir en consola el email del proveedor SOLO en entorno local
+      console.log('[PROVEEDOR-V2] Email proveedor:', proveedorEmail);
       
       const toList = [{ Email: proveedorEmail, Name: 'Proveedor' }];
       const ccList = ccEmail ? [{ Email: ccEmail, Name: 'Copia' }] : [];
@@ -84,7 +87,7 @@ module.exports = function(app) {
       
       console.log('[PROVEEDOR-V2] Contenido procesado, longitud final:', contenido.length);
       
-      // Procesar PDF adjunto
+      // Procesar PDF adjunto SOLO para el email, nunca guardar en DB
       let pdfBuffer = null;
       if (pdfBase64) {
         console.log('[PROVEEDOR-V2] PDF recibido, longitud base64:', pdfBase64.length);
@@ -146,21 +149,21 @@ module.exports = function(app) {
       
       console.log('[PROVEEDOR-V2] Email enviado exitosamente:', result.body?.Messages?.[0]?.Status);
       
-      // Guardar en historial
+      // Guardar en historial individual por tienda (sin PDF, sin global)
       try {
         if (tiendaId && lineas && Array.isArray(lineas)) {
-          // Guardar SOLO en el historial de la tienda correspondiente
           await HistorialProveedor.create({
-            tiendaId: tiendaId, // Guardar con el id de la tienda
+            tiendaId: tiendaId, // Guardar por tienda real
+            tiendaOriginal: tiendaId, // Para referencia
             proveedor: 'proveedor-fresco',
-            pedido: { lineas, fecha: fecha || new Date(), tienda },
-            fechaEnvio: new Date(),
-            pdfBase64: pdfBuffer ? pdfBuffer.toString('base64') : undefined
+            pedido: { lineas, fecha: fecha || new Date(), tienda: 'PEDIDOS CLIENTES' },
+            fechaEnvio: new Date()
+            // No se guarda pdfBase64 ni se guarda en global
           });
-          console.log('[PROVEEDOR-V2] Guardado en historial de tienda correctamente');
+          console.log('[PROVEEDOR-V2] Guardado en historial de tienda correctamente (PEDIDOS CLIENTES)');
         }
       } catch (histErr) {
-        console.error('[PROVEEDOR-V2] Error guardando historial:', histErr.message);
+        console.error('[PROVEEDOR-V2] Error guardando historial por tienda:', histErr.message);
       }
       
       console.log('[PROVEEDOR-V2] === FIN ENDPOINT V2 - ÉXITO ===');
@@ -190,6 +193,33 @@ module.exports = function(app) {
         error: errorMsg,
         endpoint: 'v2'
       });
+    }
+  });
+  
+  // Endpoint SOLO para pruebas: guardar pedido de fresco en historial sin enviar email
+  app.post('/api/guardar-proveedor-v2', async (req, res) => {
+    try {
+      console.log('[GUARDAR-PROVEEDOR-V2] === INICIO ENDPOINT SOLO GUARDADO ===');
+      console.log('[GUARDAR-PROVEEDOR-V2] Body recibido:', JSON.stringify(req.body, null, 2));
+      const { fecha, lineas, tiendaId } = req.body;
+      const tienda = 'pedidos clientes'; // Forzar tienda a "pedidos clientes"
+      if (tiendaId && lineas && Array.isArray(lineas)) {
+        await HistorialProveedor.create({
+          tiendaId: tiendaId, // Guardar por tienda real
+          tiendaOriginal: tiendaId, // Para referencia
+          proveedor: 'proveedor-fresco',
+          pedido: { lineas, fecha: fecha || new Date(), tienda },
+          fechaEnvio: new Date()
+        });
+        console.log('[GUARDAR-PROVEEDOR-V2] Guardado en historial de tienda correctamente');
+        res.json({ ok: true, message: 'Pedido guardado en historial de proveedor (sin email)' });
+      } else {
+        res.status(400).json({ ok: false, error: 'Faltan datos requeridos (tiendaId, lineas)' });
+      }
+      console.log('[GUARDAR-PROVEEDOR-V2] === FIN ENDPOINT SOLO GUARDADO ===');
+    } catch (err) {
+      console.error('[GUARDAR-PROVEEDOR-V2] ERROR:', err.message);
+      res.status(500).json({ ok: false, error: err.message, endpoint: 'guardar-proveedor-v2' });
     }
   });
 };
