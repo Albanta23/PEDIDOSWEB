@@ -758,7 +758,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                   )}
                   {historialProveedor.map((h, idx) => (
                     <tr key={h.id} style={{background:idx%2?'#f8fafd':'#fff'}}>
-                      <td style={{padding:'8px'}}>{h.fecha ? new Date(h.fecha).toLocaleString() : '-'}</td>
+                      <td style={{padding:'8px'}}>{
+                        h.fechaEnvio
+                          ? (() => { 
+                              const d = new Date(h.fechaEnvio); 
+                              return isNaN(d) ? '-' : d.toLocaleString();
+                            })()
+                          : (h.fecha ? (() => { 
+                              const d = new Date(h.fecha); 
+                              return isNaN(d) ? '-' : d.toLocaleString();
+                            })() : '-')
+                      }</td>
                       <td style={{padding:'8px'}}>{h.tienda?.nombre || h.tienda || '-'}</td>
                       <td style={{padding:'8px',textAlign:'center'}}>{h.numeroLineas}</td>
                       <td style={{padding:'8px',display:'flex',gap:8}}>
