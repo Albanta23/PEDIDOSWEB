@@ -209,40 +209,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const getProveedorKey = () => `proveedor_despiece_${tiendaActual?.id || 'default'}`;
   const [lineasProveedor, setLineasProveedor] = useState([]);
 
-  // Inicializar con las referencias del cerdo si está vacío y se abre el modal
-  useEffect(() => {
-    if (!tiendaActual?.id) return;
-    const key = getProveedorKey();
-    const guardadas = localStorage.getItem(key);
-    if (guardadas) {
-      try {
-        const arr = JSON.parse(guardadas);
-        if (Array.isArray(arr) && arr.length > 0) {
-          setLineasProveedor(arr);
-        } else {
-          setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
-        }
-      } catch (e) {
-        setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
-      }
-    } else {
-      setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
-    }
-  }, [tiendaActual?.id, mostrarModalProveedor]);
-
-  // Guardar líneas proveedor en localStorage
-  useEffect(() => {
-    if (tiendaActual?.id) {
-      const key = getProveedorKey();
-      localStorage.setItem(key, JSON.stringify(lineasProveedor));
-    }
-  }, [lineasProveedor, tiendaActual?.id]);
-
   const handleProveedorLineaChange = (idx, campo, valor) => {
     setLineasProveedor(lineasProveedor.map((l, i) => i === idx ? { ...l, [campo]: valor } : l));
   };
   const handleProveedorAgregarLinea = () => {
-    setLineasProveedor([...lineasProveedor, { referencia: '', cantidad: 1 }]);
+    setLineasProveedor([...lineasProveedor, { referencia: '', cantidad: '', unidad: 'kg' }]);
   };
   const handleProveedorEliminarLinea = (idx) => {
     setLineasProveedor(lineasProveedor.filter((_, i) => i !== idx));
@@ -402,6 +373,27 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     if (mostrarHistorialProveedor) cargarHistorialProveedor();
     // eslint-disable-next-line
   }, [mostrarHistorialProveedor, periodoHistorial, tiendaActual?.id]);
+
+  // Inicializar con las referencias del cerdo si está vacío y se abre el modal
+  useEffect(() => {
+    if (!tiendaActual?.id) return;
+    const key = getProveedorKey();
+    const guardadas = localStorage.getItem(key);
+    if (guardadas) {
+      try {
+        const arr = JSON.parse(guardadas);
+        if (Array.isArray(arr) && arr.length > 0) {
+          setLineasProveedor(arr.map(l => ({ ...l, cantidad: '' })));
+        } else {
+          setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
+        }
+      } catch (e) {
+        setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
+      }
+    } else {
+      setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
+    }
+  }, [tiendaActual?.id, mostrarModalProveedor]);
 
   return (
     <>
