@@ -283,18 +283,29 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       </div>
       {/* Edición del pedido abierto */}
       {pedidoAbierto && (
-        <div style={{
+        <div className="modal-editor-fabrica-bg" style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: 'rgba(0,0,0,0.35)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
         }} onClick={() => setPedidoAbierto(null)}>
-          <div style={{
-            background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 700, width: '95vw',
-            padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
-            position: 'relative',
-            display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }} onClick={e => e.stopPropagation()}>
+          <div 
+            className="modal-editor-fabrica"
+            style={{
+              background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 700, width: '95vw',
+              padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
+              position: 'relative',
+              display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              touchAction: 'pan-y',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Handle visual para móvil */}
+            <div className="modal-editor-fabrica-handle" style={{
+              width: 48, height: 6, background: '#e0e0e0', borderRadius: 4, margin: '0 auto 18px auto', display: 'none'
+            }} />
             <h3>
               {tiendas.find(t => t.id === pedidoAbierto.tiendaId)?.nombre || pedidoAbierto.tiendaId} - Nº Pedido: {pedidoAbierto.numeroPedido}
             </h3>
