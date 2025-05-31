@@ -777,6 +777,12 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                           // Generar PDF en pantalla
                           if(h.pedido && h.pedido.lineas && h.tienda) exportarProveedorPDF(h.pedido.lineas, {nombre: h.tienda?.nombre || h.tienda});
                         }} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:6,padding:'4px 12px',fontWeight:600}}>Ver PDF</button>
+                        <button onClick={()=>{
+                          if(h.pedido && Array.isArray(h.pedido.lineas)) {
+                            setLineasProveedor(h.pedido.lineas.map(l => ({...l})));
+                            setMostrarModalProveedor(true);
+                          }
+                        }} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'4px 12px',fontWeight:600}}>Reutilizar</button>
                       </td>
                     </tr>
                   ))}
