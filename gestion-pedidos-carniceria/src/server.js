@@ -15,6 +15,7 @@ const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
+const Transferencia = require('./models/Transferencia');
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -281,6 +282,49 @@ app.get('/api/historial-proveedor', async (req, res) => {
     res.json({ ok: true, historial: resultado });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ENDPOINTS TRANSFERENCIAS
+// Listar todas las transferencias
+app.get('/api/transferencias', async (req, res) => {
+  try {
+    const transferencias = await Transferencia.find().sort({ fecha: -1 });
+    res.json(transferencias);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Crear nueva transferencia
+app.post('/api/transferencias', async (req, res) => {
+  try {
+    const nueva = new Transferencia(req.body);
+    await nueva.save();
+    res.status(201).json(nueva);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Actualizar transferencia
+app.put('/api/transferencias/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const actualizada = await Transferencia.findByIdAndUpdate(id, req.body, { new: true });
+    if (!actualizada) return res.status(404).json({ error: 'No encontrada' });
+    res.json(actualizada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Confirmar transferencia (cambiar estado a recibida)
+app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const confirmada = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
+    if (!confirmada) return res.status(404).json({ error: 'No encontrada' });
+    res.json(confirmada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
