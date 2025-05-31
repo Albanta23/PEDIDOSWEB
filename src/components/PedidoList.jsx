@@ -334,10 +334,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       if (res.ok) {
         setMensajeProveedor("¡Pedido enviado al proveedor!");
         handleProveedorLimpiar();
-        setTimeout(()=>{
-          setMensajeProveedor("");
-          setMostrarModalProveedor(false);
-        }, 1500);
+        // Eliminar el cierre automático del modal, solo cerrar cuando el usuario pulse "Cerrar"
+        // setTimeout(()=>{
+        //   setMensajeProveedor("");
+        //   setMostrarModalProveedor(false);
+        // }, 1500);
       } else {
         setMensajeProveedor("Error al enviar el email al proveedor.");
       }
@@ -713,6 +714,12 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             </div>
 
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
+            {/* Botón cerrar solo cuando hay mensaje de confirmación */}
+            {mensajeProveedor && (
+              <div style={{marginTop:12, display:'flex', justifyContent:'center'}}>
+                <button onClick={() => { setMensajeProveedor(""); setMostrarModalProveedor(false); }} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:700,fontSize:16}}>Cerrar</button>
+              </div>
+            )}
           </div>
         </div>
       )}
