@@ -252,3 +252,25 @@ tr:nth-child(odd) {
     padding: 6px 6px !important;
   }
 }
+
+/* Ajuste para tabla de edición de pedido en FabricaPanel (una sola fila en móvil) */
+@media (max-width: 700px) {
+  .tabla-edicion-fabrica {
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+    min-width: 600px;
+    /* Fuerza scroll horizontal si no cabe */
+  }
+  .tabla-edicion-fabrica thead, .tabla-edicion-fabrica tbody, .tabla-edicion-fabrica tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .tabla-edicion-fabrica td, .tabla-edicion-fabrica th {
+    white-space: nowrap;
+    min-width: 80px;
+    padding: 6px 4px !important;
+    font-size: 13px;
+  }
+}

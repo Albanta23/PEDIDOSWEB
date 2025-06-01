@@ -159,6 +159,9 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
   const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
   const [avisos, setAvisos] = useState([]);
   const [vistos, setVistos] = useState([]);
+  // Pedidos enviados a fábrica (solo enviados, NO borrador)
+  const [periodo, setPeriodo] = useState('semana');
+  const [pedidosFiltrados, setPedidosFiltrados] = useState([]);
 
   useEffect(() => {
     console.log('[DEBUG HistoricoTiendaPanel] pedidos recibidos:', pedidos);
@@ -171,8 +174,32 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
     if (tiendaId) fetchAvisos();
   }, [tiendaId]);
 
+  useEffect(() => {
+    // Filtrado por periodo para enviados y recibidos
+    const ahora = new Date();
+    let fechaInicio;
+    if (periodo === 'mes') {
+      fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    } else if (periodo === 'año') {
+      fechaInicio = new Date(ahora.getFullYear(), 0, 1);
+    } else if (periodo === 'semana') {
+      const diaSemana = ahora.getDay() || 7;
+      fechaInicio = new Date(ahora);
+      fechaInicio.setDate(ahora.getDate() - diaSemana + 1);
+      fechaInicio.setHours(0,0,0,0);
+    } else {
+      fechaInicio = null; // todo
+    }
+    function filtrarPorPeriodo(p) {
+      if (!fechaInicio) return true;
+      const fecha = new Date(p.fechaPedido || p.fechaCreacion);
+      return fecha >= fechaInicio;
+    }
+    setPedidosFiltrados(pedidos.filter(filtrarPorPeriodo));
+  }, [pedidos, periodo]);
+
   // Pedidos enviados a fábrica (solo enviados, NO borrador)
-  const pedidosEnviados = pedidos.filter(p =>
+  const pedidosEnviados = pedidosFiltrados.filter(p =>
     p.tiendaId === tiendaId &&
     (
       (p.lineas && p.lineas.length > 0 && p.estado === 'enviado') ||
@@ -180,7 +207,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
     )
   ).sort((a, b) => ((b.numeroPedido || 0) - (a.numeroPedido || 0)));
   // Pedidos preparados o recibidos de fábrica
-  const pedidosRecibidos = pedidos.filter(p =>
+  const pedidosRecibidos = pedidosFiltrados.filter(p =>
     p.tiendaId === tiendaId &&
     p.numeroPedido &&
     (
@@ -201,6 +228,16 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       zIndex:1,
       overflow:'hidden'
     }}>
+      {/* Filtro de periodo */}
+      <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:8}}>
+        <label style={{fontWeight:600}}>Periodo:</label>
+        <select value={periodo} onChange={e=>setPeriodo(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
+          <option value="semana">Semana</option>
+          <option value="mes">Mes</option>
+          <option value="año">Año</option>
+          <option value="todo">Todo</option>
+        </select>
+      </div>
       {/* Botón de volver solo si NO hay modal de pedido abierto (refuerzo: ocultar y deshabilitar si modalPedido) */}
       <button
         style={{

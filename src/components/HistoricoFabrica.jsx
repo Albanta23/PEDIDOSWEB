@@ -161,14 +161,23 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
   const [modalPedido, setModalPedido] = useState(null);
   const [filtro, setFiltro] = useState('dia');
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState('todas');
-  // Nuevo: estado para el modal sumatorio de peso
   const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
+  // Nuevo: estado para rango de fechas personalizado
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
 
-  // Función para filtrar por fecha
+  // Función para filtrar por fecha o rango personalizado
   const ahora = new Date();
   const filtrarPorFecha = (pedido) => {
     const fecha = new Date(pedido.fechaEnvio || pedido.fechaPedido);
     if (isNaN(fecha)) return false;
+    // Si hay rango personalizado, usarlo
+    if (fechaDesde && fechaHasta) {
+      const desde = new Date(fechaDesde);
+      const hasta = new Date(fechaHasta);
+      hasta.setHours(23,59,59,999); // incluir todo el día hasta
+      return fecha >= desde && fecha <= hasta;
+    }
     if (filtro === 'dia') {
       return fecha.toDateString() === ahora.toDateString();
     } else if (filtro === 'semana') {
@@ -224,7 +233,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
           Volver
         </button>
       </div>
-      <div style={{margin:'18px 0 0 0',display:'flex',alignItems:'center',gap:12}}>
+      <div style={{margin:'18px 0 0 0',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
         <label style={{fontWeight:600}}>Filtrar por:</label>
         <select value={filtro} onChange={e=>setFiltro(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
           <option value="dia">Día</option>
@@ -233,6 +242,12 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
           <option value="año">Año</option>
           <option value="todo">Todo</option>
         </select>
+        {/* Selector de rango de fechas */}
+        <label style={{fontWeight:600,marginLeft:16}}>Desde:</label>
+        <input type="date" value={fechaDesde} onChange={e=>setFechaDesde(e.target.value)} style={{padding:'6px 8px',borderRadius:6}} />
+        <label style={{fontWeight:600}}>Hasta:</label>
+        <input type="date" value={fechaHasta} onChange={e=>setFechaHasta(e.target.value)} style={{padding:'6px 8px',borderRadius:6}} />
+        <button onClick={()=>{setFechaDesde('');setFechaHasta('');}} style={{padding:'6px 12px',borderRadius:6,background:'#eee',border:'1px solid #bbb',color:'#333',fontWeight:500}}>Limpiar fechas</button>
         <label style={{fontWeight:600,marginLeft:16}}>Tienda:</label>
         <select value={tiendaSeleccionada} onChange={e=>setTiendaSeleccionada(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
           <option value="todas">Todas</option>
@@ -257,7 +272,7 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
             <tr><td colSpan={6} style={{textAlign:'center',color:'#888'}}>No hay envíos preparados ni enviados desde fábrica</td></tr>
           )}
           {historico.map((pedido, idx) => (
-            <tr key={pedido.numeroPedido ? `${pedido.numeroPedido}-${pedido.tiendaId}` : `${pedido.id || idx}`}>
+            <tr key={pedido.numeroPedido && pedido.tiendaId ? `${pedido.numeroPedido}-${pedido.tiendaId}-${pedido._id || pedido.id || idx}` : `${pedido._id || pedido.id || idx}`}> 
               <td>{pedido.numeroPedido}</td>
               <td>{tiendas.find(t => t.id === pedido.tiendaId)?.nombre || pedido.tiendaId}</td>
               <td>{pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleString() : (pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-')}</td>

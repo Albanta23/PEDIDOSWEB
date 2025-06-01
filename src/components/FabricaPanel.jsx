@@ -317,7 +317,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <button onClick={cerrarPedido} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
             </div>
             <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-            <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+            <table className="tabla-edicion-fabrica" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
               <thead>
                 <tr>
                   <th>Producto</th>
@@ -337,7 +337,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
                       {linea.cantidad}
                       {/* Botón sumatorio solo si cantidad > 1 */}
-                      {linea.cantidad > 1 && (
+                      {linea.cantidad > 1 && linea.cantidad <= 10 && (
                         <button
                           style={{
                             background: '#ff9800',
@@ -362,12 +362,13 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           ➕
                         </button>
                       )}
-                      {/* Si hay modal de suma, mostrarlo flotante debajo de la celda cantidad */}
+                      {/* Si hay modal de suma, mostrarlo flotante ARRIBA de la celda cantidad */}
                       {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
                         <div style={{
                           position: 'absolute',
                           left: 0,
-                          top: 36,
+                          // Si la fila es una de las 5 primeras, abrir hacia abajo (top:36), si no, hacia arriba (bottom:36)
+                          ...(idx < 5 ? { top: 36 } : { bottom: 36 }),
                           zIndex: 10,
                           background: '#fff',
                           border: '1px solid #007bff',
