@@ -161,6 +161,16 @@ app.put('/api/pedidos/:id', async (req, res) => {
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
     console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
+    // Si el estado cambia a 'enviadoTienda' y antes no lo era, sumar stock
+    if (req.body.estado === 'enviadoTienda') {
+      for (const linea of req.body.lineas) {
+        await Stock.findOneAndUpdate(
+          { producto: linea.producto, tiendaId: req.body.tiendaId },
+          { $inc: { cantidad: Math.abs(linea.cantidadEnviada || linea.cantidad || 0) } },
+          { upsert: true }
+        );
+      }
+    }
     res.json(pedidoActualizado);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -326,6 +336,24 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     const { id } = req.params;
     const transferencia = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
     if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
+
+    // Actualizar stock automáticamente
+    if (transferencia.productos && transferencia.origen && transferencia.destino) {
+      for (const p of transferencia.productos) {
+        // Restar del origen
+        await Stock.findOneAndUpdate(
+          { producto: p.producto, tiendaId: transferencia.origen },
+          { $inc: { cantidad: -Math.abs(p.cantidad) } },
+          { upsert: true }
+        );
+        // Sumar al destino
+        await Stock.findOneAndUpdate(
+          { producto: p.producto, tiendaId: transferencia.destino },
+          { $inc: { cantidad: Math.abs(p.cantidad) } },
+          { upsert: true }
+        );
+      }
+    }
     res.json(transferencia);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -363,7 +391,6 @@ app.post('/api/stock/movimiento', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-// ...existing code...
 
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
