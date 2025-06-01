@@ -456,6 +456,18 @@ app.post('/api/lotes', async (req, res) => {
   try {
     const lote = new Lote(req.body);
     await lote.save();
+    // Registrar movimiento de entrada
+    await MovimientoStock.create({
+      producto: lote.producto,
+      lote: lote._id,
+      tipo: 'entrada',
+      cantidad: lote.cantidadInicial,
+      unidad: req.body.unidad || 'kg',
+      ubicacion: lote.ubicacion,
+      motivo: 'Alta de lote',
+      observaciones: req.body.observaciones || '',
+      fecha: new Date()
+    });
     res.status(201).json(lote);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -493,6 +505,19 @@ app.post('/api/movimientos-stock', async (req, res) => {
   try {
     const movimiento = new MovimientoStock(req.body);
     await movimiento.save();
+    // Si el movimiento afecta a un lote, actualizar cantidadActual
+    if (movimiento.lote) {
+      const lote = await Lote.findById(movimiento.lote);
+      if (lote) {
+        lote.cantidadActual += movimiento.cantidad;
+        // Cambiar estado si se consume o baja
+        if (lote.cantidadActual <= 0) {
+          lote.estado = movimiento.tipo === 'baja' ? 'baja' : 'consumido';
+          lote.cantidadActual = 0;
+        }
+        await lote.save();
+      }
+    }
     res.status(201).json(movimiento);
   } catch (err) {
     res.status(400).json({ error: err.message });
