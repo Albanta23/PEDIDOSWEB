@@ -285,6 +285,58 @@ const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
                 <button onClick={() => generarPDFEnvio(pedido, tiendas)}>
                   PDF
                 </button>
+                <button onClick={() => {
+                  // Reutilizar pedido: crea un nuevo pedido en borrador con las mismas líneas
+                  if (!pedido.lineas || pedido.lineas.length === 0) {
+                    const msg = document.createElement('div');
+                    msg.textContent = 'No se puede reutilizar un pedido sin líneas';
+                    msg.style.position = 'fixed';
+                    msg.style.top = '30px';
+                    msg.style.left = '50%';
+                    msg.style.transform = 'translateX(-50%)';
+                    msg.style.background = '#dc3545';
+                    msg.style.color = '#fff';
+                    msg.style.padding = '12px 32px';
+                    msg.style.borderRadius = '8px';
+                    msg.style.fontWeight = 'bold';
+                    msg.style.fontSize = '18px';
+                    msg.style.zIndex = 3000;
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 6000);
+                    return;
+                  }
+                  if (typeof window !== 'undefined' && window.localStorage) {
+                    const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+                    const nuevo = {
+                      id: 'pedido_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                      tiendaId: pedido.tiendaId,
+                      estado: 'borrador',
+                      lineas: pedido.lineas.map(l => ({ ...l })),
+                      fechaCreacion: new Date().toISOString()
+                    };
+                    pedidos.push(nuevo);
+                    localStorage.setItem('pedidos', JSON.stringify(pedidos));
+                  }
+                  setTimeout(() => {
+                    const msg = document.createElement('div');
+                    msg.textContent = 'Pedido reutilizado';
+                    msg.style.position = 'fixed';
+                    msg.style.top = '30px';
+                    msg.style.left = '50%';
+                    msg.style.transform = 'translateX(-50%)';
+                    msg.style.background = '#28a745';
+                    msg.style.color = '#fff';
+                    msg.style.padding = '12px 32px';
+                    msg.style.borderRadius = '8px';
+                    msg.style.fontWeight = 'bold';
+                    msg.style.fontSize = '18px';
+                    msg.style.zIndex = 3000;
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 4000);
+                  }, 100);
+                }} title="Reutilizar pedido">
+                  🔄 Reutilizar
+                </button>
               </td>
             </tr>
           ))}

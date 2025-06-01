@@ -8,6 +8,9 @@ import axios from 'axios';
 // Definir API_URL global seguro para todas las llamadas
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001'; // Usa la variable de entorno de Vite, o localhost por defecto
 
+// Constante global para el ID de la tienda de clientes
+const TIENDA_CLIENTES_ID = 'PEDIDOS_CLIENTES';
+
 // Utilidad para cargar imagen como base64
 async function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -206,40 +209,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const getProveedorKey = () => `proveedor_despiece_${tiendaActual?.id || 'default'}`;
   const [lineasProveedor, setLineasProveedor] = useState([]);
 
-  // Inicializar con las referencias del cerdo si está vacío y se abre el modal
-  useEffect(() => {
-    if (!tiendaActual?.id) return;
-    const key = getProveedorKey();
-    const guardadas = localStorage.getItem(key);
-    if (guardadas) {
-      try {
-        const arr = JSON.parse(guardadas);
-        if (Array.isArray(arr) && arr.length > 0) {
-          setLineasProveedor(arr);
-        } else {
-          setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
-        }
-      } catch (e) {
-        setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
-      }
-    } else {
-      setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: 1 })));
-    }
-  }, [tiendaActual?.id, mostrarModalProveedor]);
-
-  // Guardar líneas proveedor en localStorage
-  useEffect(() => {
-    if (tiendaActual?.id) {
-      const key = getProveedorKey();
-      localStorage.setItem(key, JSON.stringify(lineasProveedor));
-    }
-  }, [lineasProveedor, tiendaActual?.id]);
-
   const handleProveedorLineaChange = (idx, campo, valor) => {
     setLineasProveedor(lineasProveedor.map((l, i) => i === idx ? { ...l, [campo]: valor } : l));
   };
   const handleProveedorAgregarLinea = () => {
-    setLineasProveedor([...lineasProveedor, { referencia: '', cantidad: 1 }]);
+    setLineasProveedor([...lineasProveedor, { referencia: '', cantidad: '', unidad: 'kg' }]);
   };
   const handleProveedorEliminarLinea = (idx) => {
     setLineasProveedor(lineasProveedor.filter((_, i) => i !== idx));
@@ -338,9 +312,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       }
       // 2. Enviar al backend
       const lineasProveedorMayus = lineasProveedor.map(l => ({ ...l, referencia: l.referencia ? l.referencia.toUpperCase() : '' }));
+      // Normalizar tiendaId para proveedor
+      let tiendaIdEnvio = tiendaActual?.id;
+      if (typeof tiendaIdEnvio === 'string' && tiendaIdEnvio.trim().toLowerCase() === 'clientes') {
+        tiendaIdEnvio = TIENDA_CLIENTES_ID;
+      }
       const bodyData = {
         tienda: tiendaActual?.nombre || '',
-        tiendaId: tiendaActual?.id || '',
+        tiendaId: tiendaIdEnvio,
         fecha: new Date().toLocaleDateString(),
         lineas: lineasProveedorMayus,
         pdfBase64,
@@ -355,10 +334,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       if (res.ok) {
         setMensajeProveedor("¡Pedido enviado al proveedor!");
         handleProveedorLimpiar();
-        setTimeout(()=>{
-          setMensajeProveedor("");
-          setMostrarModalProveedor(false);
-        }, 1500);
+        // Eliminar el cierre automático del modal, solo cerrar cuando el usuario pulse "Cerrar"
+        // setTimeout(()=>{
+        //   setMensajeProveedor("");
+        //   setMostrarModalProveedor(false);
+        // }, 1500);
       } else {
         setMensajeProveedor("Error al enviar el email al proveedor.");
       }
@@ -377,7 +357,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       // Normalizar el ID de tienda para el historial de proveedor
       let tiendaIdHistorial = tiendaActual.id;
       if (typeof tiendaIdHistorial === 'string' && tiendaIdHistorial.trim().toLowerCase() === 'clientes') {
-        tiendaIdHistorial = 'PEDIDOS_CLIENTES';
+        tiendaIdHistorial = TIENDA_CLIENTES_ID;
       }
       // Consulta individual por tienda y periodo
       const res = await fetch(`${API_URL}/api/historial-proveedor?tiendaId=${encodeURIComponent(tiendaIdHistorial)}&periodo=${periodoHistorial}`);
@@ -394,6 +374,27 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     if (mostrarHistorialProveedor) cargarHistorialProveedor();
     // eslint-disable-next-line
   }, [mostrarHistorialProveedor, periodoHistorial, tiendaActual?.id]);
+
+  // Inicializar con las referencias del cerdo si está vacío y se abre el modal
+  useEffect(() => {
+    if (!tiendaActual?.id) return;
+    const key = getProveedorKey();
+    const guardadas = localStorage.getItem(key);
+    if (guardadas) {
+      try {
+        const arr = JSON.parse(guardadas);
+        if (Array.isArray(arr) && arr.length > 0) {
+          setLineasProveedor(arr.map(l => ({ ...l, cantidad: '' })));
+        } else {
+          setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
+        }
+      } catch (e) {
+        setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
+      }
+    } else {
+      setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
+    }
+  }, [tiendaActual?.id, mostrarModalProveedor]);
 
   return (
     <>
@@ -713,6 +714,12 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             </div>
 
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
+            {/* Botón cerrar solo cuando hay mensaje de confirmación */}
+            {mensajeProveedor && (
+              <div style={{marginTop:12, display:'flex', justifyContent:'center'}}>
+                <button onClick={() => { setMensajeProveedor(""); setMostrarModalProveedor(false); }} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:700,fontSize:16}}>Cerrar</button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -750,7 +757,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                   )}
                   {historialProveedor.map((h, idx) => (
                     <tr key={h.id} style={{background:idx%2?'#f8fafd':'#fff'}}>
-                      <td style={{padding:'8px'}}>{h.fecha ? new Date(h.fecha).toLocaleString() : '-'}</td>
+                      <td style={{padding:'8px'}}>{
+                        h.fechaEnvio
+                          ? (() => { 
+                              const d = new Date(h.fechaEnvio); 
+                              return isNaN(d) ? '-' : d.toLocaleString();
+                            })()
+                          : (h.fecha ? (() => { 
+                              const d = new Date(h.fecha); 
+                              return isNaN(d) ? '-' : d.toLocaleString();
+                            })() : '-')
+                      }</td>
                       <td style={{padding:'8px'}}>{h.tienda?.nombre || h.tienda || '-'}</td>
                       <td style={{padding:'8px',textAlign:'center'}}>{h.numeroLineas}</td>
                       <td style={{padding:'8px',display:'flex',gap:8}}>
@@ -759,6 +776,12 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                           // Generar PDF en pantalla
                           if(h.pedido && h.pedido.lineas && h.tienda) exportarProveedorPDF(h.pedido.lineas, {nombre: h.tienda?.nombre || h.tienda});
                         }} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:6,padding:'4px 12px',fontWeight:600}}>Ver PDF</button>
+                        <button onClick={()=>{
+                          if(h.pedido && Array.isArray(h.pedido.lineas)) {
+                            setLineasProveedor(h.pedido.lineas.map(l => ({...l, cantidad: ''})));
+                            setMostrarModalProveedor(true);
+                          }
+                        }} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'4px 12px',fontWeight:600}}>Reutilizar</button>
                       </td>
                     </tr>
                   ))}
