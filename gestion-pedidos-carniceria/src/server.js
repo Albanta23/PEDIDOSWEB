@@ -157,21 +157,31 @@ app.post('/api/pedidos', async (req, res) => {
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
-    // Permitir actualización de todos los campos
+    const pedidoAntes = await Pedido.findById(id);
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
-    console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
-    console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
-    // Si el estado cambia a 'enviadoTienda' y antes no lo era, sumar stock
-    if (req.body.estado === 'enviadoTienda') {
-      for (const linea of req.body.lineas) {
-        await Stock.findOneAndUpdate(
-          { producto: linea.producto, tiendaId: req.body.tiendaId },
-          { $inc: { cantidad: Math.abs(linea.cantidadEnviada || linea.cantidad || 0) } },
-          { upsert: true }
-        );
+    // Si el estado cambia a 'enviadoTienda' y antes no lo era, registrar movimientos de entrada
+    if (pedidoAntes && req.body.estado === 'enviadoTienda' && pedidoAntes.estado !== 'enviadoTienda') {
+      if (pedidoActualizado.lineas && pedidoActualizado.tiendaId) {
+        for (const l of pedidoActualizado.lineas) {
+          // Buscar producto por nombre exacto
+          const producto = await Producto.findOne({ nombre: l.producto });
+          if (producto) {
+            await MovimientoStock.create({
+              producto: producto._id,
+              tipo: 'entrada',
+              cantidad: Math.abs(l.cantidadEnviada || l.cantidad || 0),
+              unidad: l.unidad || 'kg',
+              ubicacion: pedidoActualizado.tiendaId,
+              usuario: req.body.usuario || '',
+              motivo: 'Recepción de pedido',
+              referencia: pedidoActualizado._id,
+              observaciones: l.comentario || '',
+              fecha: new Date()
+            });
+          }
+        }
       }
     }
     res.json(pedidoActualizado);
@@ -343,18 +353,35 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     // Actualizar stock automáticamente
     if (transferencia.productos && transferencia.origen && transferencia.destino) {
       for (const p of transferencia.productos) {
-        // Restar del origen
-        await Stock.findOneAndUpdate(
-          { producto: p.producto, tiendaId: transferencia.origen },
-          { $inc: { cantidad: -Math.abs(p.cantidad) } },
-          { upsert: true }
-        );
-        // Sumar al destino
-        await Stock.findOneAndUpdate(
-          { producto: p.producto, tiendaId: transferencia.destino },
-          { $inc: { cantidad: Math.abs(p.cantidad) } },
-          { upsert: true }
-        );
+        const producto = await Producto.findOne({ nombre: p.producto });
+        if (producto) {
+          // Salida en origen
+          await MovimientoStock.create({
+            producto: producto._id,
+            tipo: 'salida',
+            cantidad: -Math.abs(p.cantidad),
+            unidad: p.unidad || 'kg',
+            ubicacion: transferencia.origen,
+            usuario: transferencia.usuario || '',
+            motivo: 'Transferencia enviada',
+            referencia: transferencia._id,
+            observaciones: p.comentario || '',
+            fecha: new Date()
+          });
+          // Entrada en destino
+          await MovimientoStock.create({
+            producto: producto._id,
+            tipo: 'entrada',
+            cantidad: Math.abs(p.cantidad),
+            unidad: p.unidad || 'kg',
+            ubicacion: transferencia.destino,
+            usuario: transferencia.usuario || '',
+            motivo: 'Transferencia recibida',
+            referencia: transferencia._id,
+            observaciones: p.comentario || '',
+            fecha: new Date()
+          });
+        }
       }
     }
     res.json(transferencia);
