@@ -15,6 +15,7 @@ const mongoose = require('mongoose'); // Añadido
 const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
+const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -283,6 +284,53 @@ app.get('/api/historial-proveedor', async (req, res) => {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
+
+// --- ENDPOINTS DE TRANSFERENCIAS ENTRE TIENDAS ---
+// Listar todas las transferencias
+app.get('/api/transferencias', async (req, res) => {
+  try {
+    const transferencias = await Transferencia.find().sort({ fecha: -1 });
+    res.json(transferencias);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Crear una nueva transferencia
+app.post('/api/transferencias', async (req, res) => {
+  try {
+    const transferencia = new Transferencia(req.body);
+    await transferencia.save();
+    res.status(201).json(transferencia);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Actualizar una transferencia
+app.put('/api/transferencias/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const transferencia = await Transferencia.findByIdAndUpdate(id, req.body, { new: true });
+    if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
+    res.json(transferencia);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Confirmar una transferencia (cambiar estado)
+app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const transferencia = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
+    if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
+    res.json(transferencia);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// ...existing code...
 
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
