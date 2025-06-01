@@ -20,6 +20,7 @@ const Stock = require('./models/Stock'); // Modelo de stock
 const Producto = require('./models/Producto'); // Modelo de producto
 const Lote = require('./models/Lote'); // Modelo de lote
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimiento de stock
+const Receta = require('./models/Receta'); // Modelo de receta
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -546,6 +547,101 @@ app.post('/api/movimientos-stock', async (req, res) => {
       }
     }
     res.status(201).json(movimiento);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS DE RECETAS ---
+// Listar recetas
+app.get('/api/recetas', async (req, res) => {
+  try {
+    const recetas = await Receta.find().populate('productoFinal ingredientes.producto');
+    res.json(recetas);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Crear receta
+app.post('/api/recetas', async (req, res) => {
+  try {
+    const receta = new Receta(req.body);
+    await receta.save();
+    res.status(201).json(receta);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Editar receta
+app.put('/api/recetas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const receta = await Receta.findByIdAndUpdate(id, req.body, { new: true });
+    if (!receta) return res.status(404).json({ error: 'Receta no encontrada' });
+    res.json(receta);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- FABRICACIÓN DE PRODUCTOS EN FÁBRICA ---
+// Endpoint para fabricar producto (con receta o libre)
+app.post('/api/fabricar', async (req, res) => {
+  try {
+    const { recetaId, productoFinal, cantidad, unidad, ingredientes, usuario, loteCodigo, fechaCaducidad, observaciones } = req.body;
+    let receta = null;
+    let ingredientesUsar = [];
+    if (recetaId) {
+      receta = await Receta.findById(recetaId).populate('ingredientes.producto productoFinal');
+      if (!receta) return res.status(400).json({ error: 'Receta no encontrada' });
+      ingredientesUsar = receta.ingredientes.map(i => ({ producto: i.producto._id, cantidad: i.cantidad * cantidad, unidad: i.unidad }));
+    } else if (ingredientes && Array.isArray(ingredientes)) {
+      ingredientesUsar = ingredientes;
+    } else {
+      return res.status(400).json({ error: 'Faltan ingredientes para fabricación libre' });
+    }
+    // Descontar ingredientes del stock y registrar movimientos
+    for (const ing of ingredientesUsar) {
+      await MovimientoStock.create({
+        producto: ing.producto,
+        tipo: 'salida',
+        cantidad: -Math.abs(ing.cantidad),
+        unidad: ing.unidad || 'kg',
+        ubicacion: 'FABRICA',
+        usuario: usuario || '',
+        motivo: 'Fabricación',
+        referencia: null,
+        observaciones: observaciones || '',
+        fecha: new Date()
+      });
+    }
+    // Crear lote del producto final
+    const lote = new Lote({
+      producto: productoFinal,
+      codigo: loteCodigo || `FAB-${Date.now()}`,
+      fechaCaducidad: fechaCaducidad || null,
+      cantidadInicial: cantidad,
+      cantidadActual: cantidad,
+      estado: 'activo',
+      ubicacion: 'FABRICA',
+      observaciones: observaciones || ''
+    });
+    await lote.save();
+    // Registrar movimiento de entrada del producto fabricado
+    await MovimientoStock.create({
+      producto: productoFinal,
+      lote: lote._id,
+      tipo: 'entrada',
+      cantidad: cantidad,
+      unidad: unidad || 'kg',
+      ubicacion: 'FABRICA',
+      usuario: usuario || '',
+      motivo: 'Fabricación',
+      referencia: lote._id,
+      observaciones: observaciones || '',
+      fecha: new Date()
+    });
+    res.status(201).json({ lote, movimientosIngredientes: ingredientesUsar });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
