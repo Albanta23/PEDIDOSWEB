@@ -18,6 +18,8 @@ const HistorialProveedor = require('./models/HistorialProveedor'); // Usar model
 const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
 const Stock = require('./models/Stock'); // Modelo de stock
 const Producto = require('./models/Producto'); // Modelo de producto
+const Lote = require('./models/Lote'); // Modelo de lote
+const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimiento de stock
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -431,6 +433,67 @@ app.patch('/api/productos/:id/desactivar', async (req, res) => {
     const producto = await Producto.findByIdAndUpdate(id, { activo: false }, { new: true });
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(producto);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS DE LOTES ---
+// Listar lotes (por producto o ubicación)
+app.get('/api/lotes', async (req, res) => {
+  try {
+    const filtro = {};
+    if (req.query.producto) filtro.producto = req.query.producto;
+    if (req.query.ubicacion) filtro.ubicacion = req.query.ubicacion;
+    const lotes = await Lote.find(filtro).populate('producto');
+    res.json(lotes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Crear lote
+app.post('/api/lotes', async (req, res) => {
+  try {
+    const lote = new Lote(req.body);
+    await lote.save();
+    res.status(201).json(lote);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Editar lote
+app.put('/api/lotes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lote = await Lote.findByIdAndUpdate(id, req.body, { new: true });
+    if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
+    res.json(lote);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS DE MOVIMIENTOS DE STOCK ---
+// Listar movimientos (por producto, lote, ubicación, tipo, etc.)
+app.get('/api/movimientos-stock', async (req, res) => {
+  try {
+    const filtro = {};
+    if (req.query.producto) filtro.producto = req.query.producto;
+    if (req.query.lote) filtro.lote = req.query.lote;
+    if (req.query.ubicacion) filtro.ubicacion = req.query.ubicacion;
+    if (req.query.tipo) filtro.tipo = req.query.tipo;
+    const movimientos = await MovimientoStock.find(filtro).populate('producto lote');
+    res.json(movimientos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Crear movimiento de stock
+app.post('/api/movimientos-stock', async (req, res) => {
+  try {
+    const movimiento = new MovimientoStock(req.body);
+    await movimiento.save();
+    res.status(201).json(movimiento);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
