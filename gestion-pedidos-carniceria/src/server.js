@@ -17,6 +17,7 @@ const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
 const Stock = require('./models/Stock'); // Modelo de stock
+const Producto = require('./models/Producto'); // Modelo de producto
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -387,6 +388,49 @@ app.post('/api/stock/movimiento', async (req, res) => {
       { new: true, upsert: true }
     );
     res.json(stock);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS DE PRODUCTOS ---
+// Listar productos
+app.get('/api/productos', async (req, res) => {
+  try {
+    const productos = await Producto.find({ activo: true });
+    res.json(productos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Crear producto
+app.post('/api/productos', async (req, res) => {
+  try {
+    const producto = new Producto(req.body);
+    await producto.save();
+    res.status(201).json(producto);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Editar producto
+app.put('/api/productos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const producto = await Producto.findByIdAndUpdate(id, req.body, { new: true });
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json(producto);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Desactivar producto
+app.patch('/api/productos/:id/desactivar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const producto = await Producto.findByIdAndUpdate(id, { activo: false }, { new: true });
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json(producto);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
