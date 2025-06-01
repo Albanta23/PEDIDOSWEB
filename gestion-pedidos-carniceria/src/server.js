@@ -16,6 +16,7 @@ const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
+const Stock = require('./models/Stock'); // Modelo de stock
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -326,6 +327,38 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     const transferencia = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
     if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
     res.json(transferencia);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS DE STOCK ---
+// Obtener stock de una tienda (o fábrica)
+app.get('/api/stock', async (req, res) => {
+  try {
+    const { tiendaId } = req.query;
+    if (!tiendaId) return res.status(400).json({ error: 'Falta tiendaId' });
+    const stock = await Stock.find({ tiendaId });
+    res.json(stock);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Registrar movimiento de stock (entrada/salida)
+app.post('/api/stock/movimiento', async (req, res) => {
+  try {
+    const { producto, tiendaId, cantidad, unidad } = req.body;
+    if (!producto || !tiendaId || typeof cantidad !== 'number') {
+      return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    }
+    // Actualiza stock (suma o resta)
+    const stock = await Stock.findOneAndUpdate(
+      { producto, tiendaId },
+      { $inc: { cantidad }, $set: { unidad: unidad || 'kg' } },
+      { new: true, upsert: true }
+    );
+    res.json(stock);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
