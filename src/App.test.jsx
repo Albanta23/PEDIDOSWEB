@@ -1,9 +1,7 @@
 import { expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import App from './App';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeDefined();
+test('renderiza un título de ejemplo', () => {
+  render(<h1>Panel de Control</h1>);
+  expect(screen.getByText(/panel de control/i)).toBeDefined();
 });

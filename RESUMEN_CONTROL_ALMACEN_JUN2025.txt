@@ -1,0 +1,36 @@
+# RESUMEN DE IMPLEMENTACIÓN - CONTROL DE ALMACÉN (JUNIO 2025)
+
+## FUNCIONALIDAD IMPLEMENTADA
+
+### Backend
+- Modelo centralizado de productos (`Producto.js`) y endpoints REST CRUD.
+- Modelo de lotes con trazabilidad (`Lote.js`) y endpoints REST CRUD.
+- Modelo de movimientos de stock (`MovimientoStock.js`) y endpoints REST CRUD.
+- Modelo de recetas de fabricación (`Receta.js`) y endpoints REST CRUD.
+- Automatización de movimientos de stock al crear lotes, recibir pedidos, transferencias y fabricación.
+- Endpoint para fabricación de productos (con receta o libre), que descuenta ingredientes, crea lote y registra movimientos.
+
+### Frontend
+- Panel profesional de navegación con React Router y menú lateral.
+- Panel de productos: alta, listado y consulta.
+- Panel de lotes: alta, listado y consulta, enlazado a productos.
+- Panel de stock: listado y consulta por producto, lote y ubicación.
+- Panel de movimientos de stock: histórico, filtros avanzados y exportación CSV.
+- Panel de fabricación: interfaz para fabricar productos y consultar recetas.
+- Panel de bajas/ajustes de stock: registro, histórico y exportación CSV.
+
+## FALTA POR IMPLEMENTAR / MEJORAR
+
+- Panel de avisos y notificaciones (frontend y backend).
+- Mejoras de seguridad y roles de usuario.
+- Validaciones avanzadas (caducidad, duplicados, mínimos de stock, etc.).
+- Informes y exportación de datos.
+- Integración de auditoría y logs de usuario.
+
+---
+
+**Estado actual:**
+- El sistema ya permite gestionar productos, lotes y movimientos básicos de stock, con trazabilidad y navegación profesional.
+- Listo para seguir ampliando paneles y lógica según necesidades.
+- Se han realizado pruebas de navegación y dependencias, pero persiste un problema de visualización en Codespaces/Vite que requiere revisión posterior.
+- Se ha realizado backup de todo lo implementado hasta el momento.

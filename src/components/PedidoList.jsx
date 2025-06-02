@@ -738,6 +738,38 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 <option value="año">Año</option>
               </select>
               <button onClick={cargarHistorialProveedor} style={{marginLeft:10,padding:'6px 16px',borderRadius:6,background:'#1976d2',color:'#fff',fontWeight:600}}>Actualizar</button>
+              {/* Botón Exportar a Excel */}
+              <button
+                onClick={async () => {
+                  setCargandoHistorial(true);
+                  setErrorHistorial("");
+                  try {
+                    let tiendaIdHistorial = tiendaActual?.id;
+                    if (typeof tiendaIdHistorial === 'string' && tiendaIdHistorial.trim().toLowerCase() === 'clientes') {
+                      tiendaIdHistorial = TIENDA_CLIENTES_ID;
+                    }
+                    const params = new URLSearchParams({ tiendaId: tiendaIdHistorial, periodo: periodoHistorial });
+                    const url = `${API_URL}/api/exportar/pedidos?${params.toString()}`;
+                    const res = await fetch(url, { method: 'GET' });
+                    if (!res.ok) throw new Error('Error al exportar: ' + res.statusText);
+                    const blob = await res.blob();
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = `pedidos_export_${tiendaIdHistorial}_${periodoHistorial}_${Date.now()}.xlsx`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setErrorHistorial("");
+                  } catch (e) {
+                    setErrorHistorial('Error al exportar a Excel: ' + (e.message || e));
+                  }
+                  setCargandoHistorial(false);
+                }}
+                style={{marginLeft:10,padding:'6px 16px',borderRadius:6,background:'#28a745',color:'#fff',fontWeight:600}}
+                disabled={cargandoHistorial}
+              >
+                {cargandoHistorial ? 'Exportando...' : 'Exportar a Excel'}
+              </button>
             </div>
             {cargandoHistorial && <div>Cargando historial...</div>}
             {errorHistorial && <div style={{color:'#b71c1c',fontWeight:700}}>{errorHistorial}</div>}

@@ -6,6 +6,29 @@ import logo from '../assets/logo1.png';
 import { listarAvisos, marcarAvisoVisto } from '../services/avisosService';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 
+// --- INICIO: Exportar a Excel ---
+function exportarPedidosExcel(tipo, pedidos, tiendaId) {
+  if (!pedidos || pedidos.length === 0) {
+    alert('No hay datos para exportar');
+    return;
+  }
+  const params = new URLSearchParams();
+  if (tiendaId) params.append('tiendaId', tiendaId);
+  // Si quieres filtrar por estado, puedes añadirlo aquí
+  if (tipo === 'enviados') params.append('estado', 'enviado');
+  if (tipo === 'recibidos') params.append('estado', 'enviadoTienda');
+  const url = `/api/exportar/pedidos?${params.toString()}`;
+  const link = document.createElement('a');
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.textContent = 'Descargar Excel';
+  link.download = `pedidos_${tipo}_${Date.now()}.xlsx`;
+  link.href = url;
+  link.click();
+  setTimeout(() => document.body.removeChild(link), 2000);
+}
+// --- FIN: Exportar a Excel ---
+
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -159,9 +182,6 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
   const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
   const [avisos, setAvisos] = useState([]);
   const [vistos, setVistos] = useState([]);
-  // Pedidos enviados a fábrica (solo enviados, NO borrador)
-  const [periodo, setPeriodo] = useState('semana');
-  const [pedidosFiltrados, setPedidosFiltrados] = useState([]);
 
   useEffect(() => {
     console.log('[DEBUG HistoricoTiendaPanel] pedidos recibidos:', pedidos);
@@ -174,32 +194,8 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
     if (tiendaId) fetchAvisos();
   }, [tiendaId]);
 
-  useEffect(() => {
-    // Filtrado por periodo para enviados y recibidos
-    const ahora = new Date();
-    let fechaInicio;
-    if (periodo === 'mes') {
-      fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-    } else if (periodo === 'año') {
-      fechaInicio = new Date(ahora.getFullYear(), 0, 1);
-    } else if (periodo === 'semana') {
-      const diaSemana = ahora.getDay() || 7;
-      fechaInicio = new Date(ahora);
-      fechaInicio.setDate(ahora.getDate() - diaSemana + 1);
-      fechaInicio.setHours(0,0,0,0);
-    } else {
-      fechaInicio = null; // todo
-    }
-    function filtrarPorPeriodo(p) {
-      if (!fechaInicio) return true;
-      const fecha = new Date(p.fechaPedido || p.fechaCreacion);
-      return fecha >= fechaInicio;
-    }
-    setPedidosFiltrados(pedidos.filter(filtrarPorPeriodo));
-  }, [pedidos, periodo]);
-
   // Pedidos enviados a fábrica (solo enviados, NO borrador)
-  const pedidosEnviados = pedidosFiltrados.filter(p =>
+  const pedidosEnviados = pedidos.filter(p =>
     p.tiendaId === tiendaId &&
     (
       (p.lineas && p.lineas.length > 0 && p.estado === 'enviado') ||
@@ -207,7 +203,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
     )
   ).sort((a, b) => ((b.numeroPedido || 0) - (a.numeroPedido || 0)));
   // Pedidos preparados o recibidos de fábrica
-  const pedidosRecibidos = pedidosFiltrados.filter(p =>
+  const pedidosRecibidos = pedidos.filter(p =>
     p.tiendaId === tiendaId &&
     p.numeroPedido &&
     (
@@ -228,16 +224,6 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       zIndex:1,
       overflow:'hidden'
     }}>
-      {/* Filtro de periodo */}
-      <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:8}}>
-        <label style={{fontWeight:600}}>Periodo:</label>
-        <select value={periodo} onChange={e=>setPeriodo(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
-          <option value="semana">Semana</option>
-          <option value="mes">Mes</option>
-          <option value="año">Año</option>
-          <option value="todo">Todo</option>
-        </select>
-      </div>
       {/* Botón de volver solo si NO hay modal de pedido abierto (refuerzo: ocultar y deshabilitar si modalPedido) */}
       <button
         style={{
@@ -255,6 +241,12 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       <Watermark />
       <h2 style={{margin:0, fontWeight:800, fontSize:28, color:'#222', marginBottom:8}}>Histórico de pedidos de <span style={{color:'#007bff'}}>{tiendaNombre}</span></h2>
       <h3 style={{marginTop:24,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos enviados a fábrica</h3>
+      {/* Botón Exportar a Excel ENVIADOS */}
+      <button
+        onClick={() => exportarPedidosExcel('enviados', pedidosEnviados, tiendaId)}
+        style={{marginBottom:12, background:'#1e88e5', color:'#fff', border:'none', borderRadius:8, padding:'8px 22px', fontWeight:700, fontSize:16, cursor:'pointer', boxShadow:'0 1px 4px #007bff22'}}>
+        📥 Exportar a Excel
+      </button>
       <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
       <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>
@@ -297,6 +289,12 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       </table>
       </div>
       <h3 style={{marginTop:32,marginBottom:12, fontWeight:700, color:'#333', fontSize:22}}>Pedidos preparados o recibidos de fábrica</h3>
+      {/* Botón Exportar a Excel RECIBIDOS */}
+      <button
+        onClick={() => exportarPedidosExcel('recibidos', pedidosRecibidos, tiendaId)}
+        style={{marginBottom:12, background:'#43a047', color:'#fff', border:'none', borderRadius:8, padding:'8px 22px', fontWeight:700, fontSize:16, cursor:'pointer', boxShadow:'0 1px 4px #43a04722'}}>
+        📥 Exportar a Excel
+      </button>
       <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
       <table style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
         <thead style={{background:'linear-gradient(90deg,#007bff,#00c6ff)', color:'#fff'}}>

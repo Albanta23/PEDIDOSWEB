@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import './App.css';
 import FabricaPanel from './components/FabricaPanel';
 import Login from './components/Login';
@@ -13,6 +14,13 @@ import Watermark from './components/Watermark';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
 import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
+import ProductosPanel from './components/ProductosPanel';
+import LotesPanel from './components/LotesPanel';
+import StockPanel from './components/StockPanel';
+import MovimientosStockPanel from './components/MovimientosStockPanel';
+import FabricacionPanel from './components/FabricacionPanel';
+import BajasAjustesPanel from './components/BajasAjustesPanel';
+import AvisosPanel from './components/AvisosPanel';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -48,6 +56,9 @@ function App() {
 
   // --- NUEVO: Estado para avisos de nuevos pedidos/traspasos recibidos ---
   const [avisos, setAvisos] = useState([]);
+
+  // --- NUEVO: Estado para roles de usuario ---
+  const [rolUsuario, setRolUsuario] = useState('usuario'); // 'usuario', 'fabrica', 'supervisor', 'admin'
 
   // --- FEEDBACK TEMPORAL ---
   function mostrarMensaje(texto, tipo = 'info', duracion = 2500) {
@@ -212,8 +223,9 @@ function App() {
     }
   };
 
-  const handleLogin = (usuario, tiendaId) => {
+  const handleLogin = (usuario, tiendaId, rol = 'usuario') => {
     setLogueado(true);
+    setRolUsuario(rol);
     if (modo === 'tienda' ) setTiendaSeleccionada(tiendaId);
   };
 
@@ -294,139 +306,42 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <Watermark />
-      {mensaje && (
-        <div style={{
-          position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
-          background: mensaje.tipo === 'success' ? '#28a745' : mensaje.tipo === 'warning' ? '#ffc107' : '#007bff',
-          color: mensaje.tipo === 'success' ? '#fff' : mensaje.tipo === 'warning' ? '#212529' : '#fff',
-          padding: '14px 36px', borderRadius: 10, boxShadow: '0 2px 12px #aaa', zIndex: 1000,
-          fontWeight: 600, fontSize: 18, letterSpacing: 0.5,
-          border: mensaje.tipo === 'success' ? '2px solid #218838' : mensaje.tipo === 'warning' ? '2px solid #ffecb5' : '2px solid #0056b3',
-          minWidth: 320, textAlign: 'center',
-          textShadow: mensaje.tipo === 'success' ? '0 1px 2px #155724' : mensaje.tipo === 'warning' ? '0 1px 2px #856404' : '0 1px 2px #004085'
-        }}>
-          {mensaje.texto}
-        </div>
-      )}
-      {modo === 'tienda' && logueado && !mostrarHistoricoTienda && avisos.length > 0 && (
-        <div style={{
-          position: 'fixed', top: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 3000,
-          display: 'flex', flexDirection: 'column', gap: 10, minWidth: 320, maxWidth: 600, width: '90vw',
-        }}>
-          {avisos.map(aviso => (
-            <div key={aviso.id} style={{
-              background: aviso.tipo === 'pedido' ? '#28a745' : '#007bff',
-              color: '#fff',
-              borderRadius: 10,
-              boxShadow: '0 2px 12px #aaa',
-              padding: '14px 24px',
-              fontWeight: 600,
-              fontSize: 17,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              border: '2px solid #218838',
-              cursor: 'pointer',
-            }}
-            >
-              <span>{aviso.texto}</span>
-              <button
-                style={{marginLeft:18,background:'#fff',color:aviso.tipo==='pedido'?'#28a745':'#007bff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
-                onClick={e => {
-                  e.stopPropagation();
-                  setMostrarHistoricoTienda(true);
-                }}
-              >
-                Ver
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      {(() => { try { console.log('[FRONTEND] Pedidos pendientes (FabricaPanel):', pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado')); } catch(e){} })()}
-      {modo === 'fabrica' ? (
-        mostrarHistoricoFabrica ? (
-          <HistoricoFabrica
-            pedidos={pedidos}
-            tiendas={tiendas}
-            onVolver={() => setMostrarHistoricoFabrica(false)}
-          />
-        ) : (
-          <FabricaPanel
-            pedidos={pedidos}
-            tiendas={tiendas}
-            onEstadoChange={cambiarEstadoPedido}
-            onLineaChange={cambiarEstadoLinea}
-            onLineaDetalleChange={cambiarEstadoLineaDetalle}
-            onVerHistorico={() => setMostrarHistoricoFabrica(true)}
-          />
-        )
-      ) : (
-        mostrarHistoricoTienda ? (
-          <HistoricoTiendaPanel
-            pedidos={pedidos}
-            tiendaId={tiendaSeleccionada}
-            tiendaNombre={tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
-            tiendas={tiendas}
-            onVolver={() => setMostrarHistoricoTienda(false)}
-            onModificarPedido={(pedidoEditado) => {
-              setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
-              mostrarMensaje('Pedido actualizado', 'success');
-            }}
-            onAvisoVisto={avisoId => handleAvisoVisto({ id: avisoId })}
-          >
-            <button
-              style={{position:'absolute',top:18,left:18,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:700,fontSize:16,cursor:'pointer',zIndex:2100}}
-              onClick={() => setMostrarHistoricoTienda(false)}
-            >
-              ← Volver
-            </button>
-          </HistoricoTiendaPanel>
-        ) : (
-          <div>
-            <PedidoList
-              pedidos={pedidos.filter(p => p.tiendaId === tiendaSeleccionada)}
-              onModificar={modificarPedido}
-              onBorrar={borrarPedido}
-              onEditar={handleEditarPedido}
-              modo={"tienda"}
-              tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
-            />
-            <button onClick={() => setMostrarHistoricoTienda(true)} style={{marginLeft:12,background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>Ver histórico de pedidos</button>
-          </div>
-        )
-      )}
-      <ErrorLogger />
-      {modo === 'tienda' && (
-        <>
-          <div style={{
-            position:'fixed',top:60,left:'50%',transform:'translateX(-50%)',background:'#eee',padding:'8px 18px',
-            borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb',
-            minWidth:180, textAlign:'center', fontWeight:600,
-            display:'flex', alignItems:'center', justifyContent:'center', gap:16
-          }}>
-            <span>{tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}</span>
-            <button
-              onClick={() => {
-                setLogueado(false);
-                setTiendaSeleccionada(null);
-                setMostrarHistoricoTienda(false);
-                setPedidoEditando(null);
-                setMensaje(null);
-              }}
-              style={{
-                background:'#dc3545', color:'#fff', border:'none', borderRadius:8, padding:'6px 18px', fontWeight:700, fontSize:16, cursor:'pointer', boxShadow:'0 1px 6px #dc354522',
-                marginLeft:'auto'
-              }}
-              title="Cerrar sesión"
-            >
-              Cerrar
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+    <Router>
+      <div style={{display:'flex',minHeight:'100vh',background:'#f5f7fa'}}>
+        <nav style={{width:220,background:'#1976d2',color:'#fff',padding:'32px 0',display:'flex',flexDirection:'column',gap:18,alignItems:'center',boxShadow:'2px 0 12px #1976d211'}}>
+          <h2 style={{fontWeight:700,fontSize:22,marginBottom:32}}>Almacén</h2>
+          <Link to="/productos" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Productos</Link>
+          <Link to="/lotes" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Lotes</Link>
+          <Link to="/stock" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Stock</Link>
+          <Link to="/movimientos" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Movimientos</Link>
+          <Link to="/fabricacion" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Fabricación</Link>
+          <Link to="/bajas-ajustes" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Bajas/Ajustes</Link>
+          <Link to="/avisos" style={{color:'#fff',textDecoration:'none',fontWeight:600,fontSize:17}}>Avisos</Link>
+        </nav>
+        <main style={{flex:1,padding:'32px 0'}}>
+          <Routes>
+            <Route path="/productos" element={<ProductosPanel />} />
+            <Route path="/lotes" element={<LotesPanel />} />
+            <Route path="/stock" element={<StockPanel />} />
+            <Route path="/movimientos" element={<MovimientosStockPanel />} />
+            <Route path="/fabricacion" element={<FabricacionPanel />} />
+            <Route path="/bajas-ajustes" element={<BajasAjustesPanel />} />
+            <Route path="/avisos" element={<AvisosPanel rolUsuario={rolUsuario} />} />
+            <Route path="*" element={<Navigate to="/productos" />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 
 export default App;
+
+// Ejemplo de integración temporal para pruebas
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <ProductosPanel />
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <LotesPanel />
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <StockPanel />
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <MovimientosStockPanel />
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <FabricacionPanel />
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <BajasAjustesPanel />
+// Puedes añadir una ruta o botón en tu menú principal para acceder a <AvisosPanel />

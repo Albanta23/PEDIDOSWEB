@@ -21,6 +21,7 @@ const Producto = require('./models/Producto'); // Modelo de producto
 const Lote = require('./models/Lote'); // Modelo de lote
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimiento de stock
 const Receta = require('./models/Receta'); // Modelo de receta
+const ExcelJS = require('exceljs');
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -217,9 +218,54 @@ app.get('/api/avisos', async (req, res) => {
   }
 });
 
-// Crear un aviso
-app.post('/api/avisos', async (req, res) => {
+// Middleware simple de roles para avisos (solo ejemplo, para producción usar JWT o similar)
+function requireRole(roles) {
+  return (req, res, next) => {
+    // En producción, extraer el rol del usuario autenticado (por ejemplo, de req.user)
+    // Aquí, para demo, se permite pasar ?rol=admin o ?rol=fabrica en la query
+    const rol = req.query.rol || req.headers['x-rol'] || 'usuario';
+    if (!roles.includes(rol)) {
+      return res.status(403).json({ error: 'No autorizado: rol insuficiente' });
+    }
+    next();
+  };
+}
+
+// Lista estática de IDs de tiendas válidas (debe mantenerse sincronizada con frontend)
+const TIENDAS_VALIDAS = [
+  'tienda1', 'tienda2', 'tienda3', 'tienda4', 'tienda5',
+  'tienda6', 'tienda7', 'tienda8', 'tienda9', 'tienda10', 'clientes'
+];
+
+// Proteger creación de avisos: solo admin, supervisor o fabrica pueden crear
+app.post('/api/avisos', requireRole(['admin', 'supervisor', 'fabrica']), async (req, res) => {
   try {
+    const { titulo, mensaje, tipo, tiendaId } = req.body;
+    if (!titulo || !mensaje || !tipo || !tiendaId) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios (título, mensaje, tipo, tiendaId)' });
+    }
+    if (titulo.length < 3 || mensaje.length < 5) {
+      return res.status(400).json({ error: 'Título o mensaje demasiado corto' });
+    }
+    // Validar existencia real de tienda
+    if (!TIENDAS_VALIDAS.includes(tiendaId)) {
+      return res.status(400).json({ error: 'Tienda destino no existe' });
+    }
+    // Validar duplicados recientes (últimos 10 minutos)
+    const ahora = new Date();
+    const hace10min = new Date(ahora.getTime() - 10*60*1000);
+    const duplicado = await Aviso.findOne({
+      titulo,
+      mensaje,
+      tiendaId,
+      fecha: { $gte: hace10min }
+    });
+    if (duplicado) {
+      return res.status(409).json({ error: 'Ya existe un aviso similar recientemente para esta tienda' });
+    }
+    // (Opcional) Validar que la tienda existe
+    // const tiendaExiste = await Tienda.findOne({ id: tiendaId });
+    // if (!tiendaExiste) return res.status(400).json({ error: 'Tienda destino no existe' });
     const aviso = new Aviso(req.body);
     await aviso.save();
     res.status(201).json(aviso);
@@ -647,6 +693,150 @@ app.post('/api/fabricar', async (req, res) => {
   }
 });
 
+// --- EXPORTACIÓN AVANZADA A EXCEL (MEJORADA) ---
+// Endpoint: /api/exportar/:entidad?filtros
+app.get('/api/exportar/:entidad', async (req, res) => {
+  try {
+    const { entidad } = req.params;
+    let datos = [];
+    let columnas = [];
+    let nombreHoja = 'Datos';
+    // Filtros generales
+    const filtros = { ...req.query };
+    // Eliminar parámetros de paginación o especiales
+    delete filtros.page; delete filtros.limit; delete filtros.sort;
+    // Selección de entidad y datos
+    if (entidad === 'productos') {
+      datos = await Producto.find(filtros);
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Nombre', key: 'nombre' },
+        { header: 'Unidad', key: 'unidad' },
+        { header: 'Stock Mínimo', key: 'stockMinimo' },
+        { header: 'Activo', key: 'activo' },
+        { header: 'Fecha Creación', key: 'createdAt' },
+        { header: 'Última Modificación', key: 'updatedAt' }
+      ];
+      nombreHoja = 'Productos';
+    } else if (entidad === 'avisos') {
+      datos = await Aviso.find(filtros);
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Tipo', key: 'tipo' },
+        { header: 'Referencia', key: 'referenciaId' },
+        { header: 'Tienda', key: 'tiendaId' },
+        { header: 'Texto', key: 'texto' },
+        { header: 'Fecha', key: 'fecha' },
+        { header: 'Visto Por', key: 'vistoPor' }
+      ];
+      nombreHoja = 'Avisos';
+    } else if (entidad === 'movimientos') {
+      datos = await MovimientoStock.find(filtros).populate('producto lote');
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Producto', key: 'producto' },
+        { header: 'Lote', key: 'lote' },
+        { header: 'Tipo', key: 'tipo' },
+        { header: 'Cantidad', key: 'cantidad' },
+        { header: 'Unidad', key: 'unidad' },
+        { header: 'Ubicación', key: 'ubicacion' },
+        { header: 'Motivo', key: 'motivo' },
+        { header: 'Referencia', key: 'referencia' },
+        { header: 'Observaciones', key: 'observaciones' },
+        { header: 'Fecha', key: 'fecha' }
+      ];
+      nombreHoja = 'Movimientos';
+    } else if (entidad === 'transferencias') {
+      datos = await Transferencia.find(filtros);
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Origen', key: 'origen' },
+        { header: 'Destino', key: 'destino' },
+        { header: 'Estado', key: 'estado' },
+        { header: 'Usuario', key: 'usuario' },
+        { header: 'Fecha', key: 'fecha' },
+        { header: 'Productos', key: 'productos' }
+      ];
+      nombreHoja = 'Transferencias';
+    } else if (entidad === 'lotes') {
+      datos = await Lote.find(filtros).populate('producto');
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Producto', key: 'producto' },
+        { header: 'Código', key: 'codigo' },
+        { header: 'Cantidad Inicial', key: 'cantidadInicial' },
+        { header: 'Cantidad Actual', key: 'cantidadActual' },
+        { header: 'Estado', key: 'estado' },
+        { header: 'Ubicación', key: 'ubicacion' },
+        { header: 'Fecha Caducidad', key: 'fechaCaducidad' },
+        { header: 'Observaciones', key: 'observaciones' },
+        { header: 'Fecha Creación', key: 'createdAt' }
+      ];
+      nombreHoja = 'Lotes';
+    } else if (entidad === 'recetas') {
+      datos = await Receta.find(filtros).populate('productoFinal ingredientes.producto');
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Producto Final', key: 'productoFinal' },
+        { header: 'Ingredientes', key: 'ingredientes' },
+        { header: 'Fecha Creación', key: 'createdAt' }
+      ];
+      nombreHoja = 'Recetas';
+    } else if (entidad === 'pedidos') {
+      datos = await Pedido.find(filtros);
+      columnas = [
+        { header: 'ID', key: '_id' },
+        { header: 'Número Pedido', key: 'numeroPedido' },
+        { header: 'Tienda', key: 'tiendaId' },
+        { header: 'Estado', key: 'estado' },
+        { header: 'Fecha Pedido', key: 'fechaPedido' },
+        { header: 'Fecha Envío', key: 'fechaEnvio' },
+        { header: 'Fecha Recepción', key: 'fechaRecepcion' },
+        { header: 'Usuario', key: 'usuario' },
+        { header: 'Total Líneas', key: 'lineas' }
+      ];
+      nombreHoja = 'Pedidos';
+    } else {
+      return res.status(400).json({ error: 'Entidad no soportada para exportación' });
+    }
+    // Crear workbook y worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(nombreHoja);
+    worksheet.columns = columnas;
+    // Formatear datos para Excel (avanzado)
+    datos.forEach(d => {
+      const row = {};
+      columnas.forEach(col => {
+        if (col.key === 'producto' && d.producto && d.producto.nombre) {
+          row[col.key] = d.producto.nombre;
+        } else if (col.key === 'productoFinal' && d.productoFinal && d.productoFinal.nombre) {
+          row[col.key] = d.productoFinal.nombre;
+        } else if (col.key === 'lote' && d.lote && d.lote.codigo) {
+          row[col.key] = d.lote.codigo;
+        } else if (col.key === 'ingredientes' && Array.isArray(d.ingredientes)) {
+          row[col.key] = d.ingredientes.map(i => `${i.producto?.nombre || i.producto}: ${i.cantidad} ${i.unidad}`).join('; ');
+        } else if (col.key === 'vistoPor' && Array.isArray(d.vistoPor)) {
+          row[col.key] = d.vistoPor.join(', ');
+        } else if (col.key === 'productos' && Array.isArray(d.productos)) {
+          row[col.key] = d.productos.map(p => `${p.producto || ''} (${p.cantidad || ''})`).join('; ');
+        } else if (col.key === 'lineas' && Array.isArray(d.lineas)) {
+          row[col.key] = d.lineas.length;
+        } else {
+          row[col.key] = d[col.key] || '';
+        }
+      });
+      worksheet.addRow(row);
+    });
+    // Cabeceras para descarga
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${entidad}_export_${Date.now()}.xlsx`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
   console.log('Cliente conectado:', socket.id);
@@ -669,6 +859,64 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 
 const mailjetProveedorEmailV2 = require('./mailjetProveedorEmailV2');
 mailjetProveedorEmailV2(app);
+
+// === AVISOS AUTOMÁTICOS DE STOCK BAJO Y CADUCIDAD PRÓXIMA ===
+const AVISO_STOCK_MINIMO = 5; // kg o unidades mínimas para aviso
+const AVISO_DIAS_CADUCIDAD = 5; // días antes de caducidad para aviso
+
+async function generarAvisosAutomaticos() {
+  // 1. Avisos de stock bajo
+  const stocks = await Stock.find({});
+  for (const s of stocks) {
+    if (s.cantidad <= AVISO_STOCK_MINIMO) {
+      // Buscar si ya existe un aviso activo para este producto y tienda
+      const existe = await Aviso.findOne({
+        tipo: 'stock',
+        referenciaId: s.producto + '_' + s.tiendaId,
+        tiendaId: s.tiendaId,
+        texto: { $regex: 'Stock bajo' },
+        fecha: { $gte: new Date(Date.now() - 1000*60*60*24) } // Solo uno por día
+      });
+      if (!existe) {
+        // Buscar nombre del producto
+        const prod = await Producto.findOne({ _id: s.producto });
+        await Aviso.create({
+          tipo: 'stock',
+          referenciaId: s.producto + '_' + s.tiendaId,
+          tiendaId: s.tiendaId,
+          texto: `Stock bajo de ${prod ? prod.nombre : s.producto} en ${s.tiendaId}: ${s.cantidad} ${s.unidad}`
+        });
+      }
+    }
+  }
+  // 2. Avisos de caducidad próxima
+  const hoy = new Date();
+  const fechaLimite = new Date(hoy.getTime() + AVISO_DIAS_CADUCIDAD*24*60*60*1000);
+  const lotes = await Lote.find({ fechaCaducidad: { $lte: fechaLimite, $gte: hoy }, estado: 'activo' });
+  for (const l of lotes) {
+    // Buscar si ya existe un aviso para este lote
+    const existe = await Aviso.findOne({
+      tipo: 'caducidad',
+      referenciaId: l._id.toString(),
+      tiendaId: l.ubicacion,
+      texto: { $regex: 'caducidad' },
+      fecha: { $gte: new Date(Date.now() - 1000*60*60*24) }
+    });
+    if (!existe) {
+      const prod = await Producto.findOne({ _id: l.producto });
+      await Aviso.create({
+        tipo: 'caducidad',
+        referenciaId: l._id.toString(),
+        tiendaId: l.ubicacion,
+        texto: `Lote ${l.codigo} (${prod ? prod.nombre : l.producto}) caduca el ${l.fechaCaducidad.toLocaleDateString()}`
+      });
+    }
+  }
+}
+// Ejecutar cada 30 minutos
+setInterval(generarAvisosAutomaticos, 1000*60*30);
+// Ejecutar al iniciar
+setTimeout(generarAvisosAutomaticos, 10000);
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {

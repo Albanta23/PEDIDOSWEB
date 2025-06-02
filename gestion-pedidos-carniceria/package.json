@@ -14,7 +14,7 @@
     "express": "^5.1.0",
     "mailgun-js": "^0.22.0",
     "mongodb": "^6.16.0",
-    "mongoose": "^8.15.1",
+    "mongoose": "^8.15.0",
     "node-mailjet": "^6.0.8",
     "nodemailer": "^7.0.3",
     "puppeteer": "^24.9.0",

@@ -17,6 +17,8 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
     observaciones: ''
   });
   const [cargando, setCargando] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const [errorExport, setErrorExport] = useState("");
 
   useEffect(() => {
     cargarTransferencias();
@@ -82,6 +84,43 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
   return (
     <div style={{marginTop:24}}>
       <h2>{modoFabrica ? 'Devoluciones de tiendas a fábrica' : 'Traspasos y devoluciones entre tiendas/fábrica'}</h2>
+      {/* Botón Exportar a Excel */}
+      <div style={{marginBottom:14, display:'flex', alignItems:'center', gap:12}}>
+        <button
+          onClick={async () => {
+            setExportando(true);
+            setErrorExport("");
+            try {
+              // Filtros activos: origen, destino, fechas, etc.
+              let query = [];
+              if (form.origen) query.push(`origen=${encodeURIComponent(form.origen)}`);
+              if (form.destino) query.push(`destino=${encodeURIComponent(form.destino)}`);
+              if (filtroTienda) query.push(`filtroTienda=${encodeURIComponent(filtroTienda)}`);
+              if (filtroFechaDesde) query.push(`fechaDesde=${encodeURIComponent(filtroFechaDesde)}`);
+              if (filtroFechaHasta) query.push(`fechaHasta=${encodeURIComponent(filtroFechaHasta)}`);
+              const url = `/api/exportar/transferencias` + (query.length ? `?${query.join('&')}` : '');
+              const res = await fetch(url, { method: 'GET' });
+              if (!res.ok) throw new Error('Error al exportar: ' + res.statusText);
+              const blob = await res.blob();
+              const link = document.createElement('a');
+              link.href = window.URL.createObjectURL(blob);
+              link.download = `transferencias_export_${Date.now()}.xlsx`;
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+            } catch (e) {
+              setErrorExport('Error al exportar a Excel: ' + (e.message || e));
+            }
+            setExportando(false);
+          }}
+          style={{padding:'7px 18px',borderRadius:6,background:'#28a745',color:'#fff',fontWeight:600,fontSize:15}}
+          disabled={exportando}
+        >
+          {exportando ? 'Exportando...' : 'Exportar a Excel'}
+        </button>
+        {exportando && <span style={{color:'#1976d2',fontWeight:600}}>Generando archivo...</span>}
+        {errorExport && <span style={{color:'#b71c1c',fontWeight:700}}>{errorExport}</span>}
+      </div>
       {!modoFabrica && (
         <div style={{marginBottom:24,background:'#f9f9f9',padding:16,borderRadius:8}}>
           <h4>Crear nuevo traspaso o devolución</h4>
