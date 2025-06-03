@@ -4,3 +4,41 @@
 
 Servidor backend HTTP escuchando en puerto 10001
 MongoDB conectado exitosamente.
+
+> gestion-pedidos-carniceria@1.0.0 start
+> node src/server.js
+
+[DEBUG] MAILJET_API_KEY cargada: dd6f...db01
+Servidor backend HTTP escuchando en puerto 10001
+Error de conexión a MongoDB: MongooseServerSelectionError: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+    at _handleConnectionErrors (/workspaces/PEDIDOSWEB/gestion-pedidos-carniceria/node_modules/mongoose/lib/connection.js:1165:11)
+    at NativeConnection.openUri (/workspaces/PEDIDOSWEB/gestion-pedidos-carniceria/node_modules/mongoose/lib/connection.js:1096:11) {
+  errorLabelSet: Set(0) {},
+  reason: TopologyDescription {
+    type: 'Unknown',
+    servers: Map(1) { 'localhost:27017' => [ServerDescription] },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: null,
+    maxElectionId: null,
+    maxSetVersion: null,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: null
+  },
+  code: undefined,
+  cause: TopologyDescription {
+    type: 'Unknown',
+    servers: Map(1) { 'localhost:27017' => [ServerDescription] },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: null,
+    maxElectionId: null,
+    maxSetVersion: null,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: null
+  }
+}
