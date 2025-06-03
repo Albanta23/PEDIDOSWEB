@@ -21,6 +21,7 @@ const Producto = require('./models/Producto'); // Modelo de producto
 const Lote = require('./models/Lote'); // Modelo de lote
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimiento de stock
 const Receta = require('./models/Receta'); // Modelo de receta
+const ClienteProveedor = require('./models/ClienteProveedor'); // Modelo de clientes/proveedores
 const ExcelJS = require('exceljs');
 
 const app = express();
@@ -921,4 +922,49 @@ setTimeout(generarAvisosAutomaticos, 10000);
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);
+});
+
+// --- ENDPOINTS CLIENTES Y PROVEEDORES ---
+app.get('/api/clientesproveedores', async (req, res) => {
+  try {
+    const { tipo } = req.query;
+    let filtro = {};
+    if (tipo === 'cliente') filtro.tipo = 'cliente';
+    if (tipo === 'proveedor') filtro.tipo = 'proveedor';
+    const docs = await ClienteProveedor.find(filtro).sort({ nombre: 1 });
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/clientesproveedores', async (req, res) => {
+  try {
+    const doc = req.body;
+    if (!doc.tipo) doc.tipo = 'cliente'; // Por defecto cliente si no se especifica
+    await ClienteProveedor.create(doc);
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.put('/api/clientesproveedores/:id', async (req, res) => {
+  try {
+    const doc = req.body;
+    if (!doc.tipo) doc.tipo = 'cliente';
+    await ClienteProveedor.findByIdAndUpdate(req.params.id, doc);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/clientesproveedores/:id', async (req, res) => {
+  try {
+    await ClienteProveedor.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
