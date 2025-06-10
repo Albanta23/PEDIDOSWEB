@@ -367,7 +367,8 @@ app.post('/api/productos/importar', async (req, res) => {
       return {
         referencia: prodExcel['Cód.'] || prodExcel['Cod.'] || prodExcel['Código'] || '',
         nombre: prodExcel['Descripción'] || prodExcel['Nombre'] || '',
-        familia: prodExcel['C.Fam.'] || prodExcel['Nombre Familia'] || '',
+        // Si existe el nombre de familia, úsalo; si no, usa el código de familia
+        familia: prodExcel['Nombre Familia'] || prodExcel['C.Fam.'] || '',
         unidad: prodExcel['Unidad'] || 'kg',
         activo: prodExcel['Activo'] !== undefined ? Boolean(prodExcel['Activo']) : true,
         descripcion: prodExcel['Descripción'] || '',
