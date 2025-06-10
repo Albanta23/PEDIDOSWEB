@@ -13,6 +13,7 @@ import Watermark from './components/Watermark';
 import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
 import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
+import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -42,6 +43,7 @@ function App() {
   const [mostrarHistoricoFabrica, setMostrarHistoricoFabrica] = useState(false);
   const [mostrarHistoricoTienda, setMostrarHistoricoTienda] = useState(false);
   const [pedidoEditando, setPedidoEditando] = useState(null);
+  const [mostrarGestion, setMostrarGestion] = useState(false);
 
   // --- ESTADO PARA FEEDBACK UX ---
   const [mensaje, setMensaje] = useState(null);
@@ -275,8 +277,11 @@ function App() {
     console.log('[DEBUG App.jsx] tiendaSeleccionada:', tiendaSeleccionada);
   }, [tiendaSeleccionada]);
 
-  if (!modo) {
-    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} />;
+  if (!modo && !mostrarGestion) {
+    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} />;
+  }
+  if (mostrarGestion) {
+    return <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />;
   }
 
   if (!logueado) {
@@ -424,6 +429,9 @@ function App() {
             </button>
           </div>
         </>
+      )}
+      {mostrarGestion && (
+        <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />
       )}
     </div>
   );

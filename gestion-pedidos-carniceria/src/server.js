@@ -16,11 +16,7 @@ const Pedido = require('./models/Pedido'); // Añadido
 const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
-const Stock = require('./models/Stock'); // Modelo de stock
-const Producto = require('./models/Producto'); // Modelo de producto
-const Lote = require('./models/Lote'); // Modelo de lote
-const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimiento de stock
-const Receta = require('./models/Receta'); // Modelo de receta
+const Producto = require('./models/Producto'); // Importar modelo de productos
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -35,25 +31,29 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://scaling-chainsaw-px9jv6jjr4rcrg4-5173.app.github.dev',
-  'https://scaling-chainsaw-px9jv6jjr4rcrg4-3000.app.github.dev',
   'https://pedidosweb-phi.vercel.app',
-  'https://scaling-chainsaw-px9jv6jjr4rcrg4-10001.app.github.dev',
   'https://pedidos-backend-0e1s.onrender.com',
-  'https://pedidos-frontend-0e1s.onrender.com', // Si tienes frontend en Render
-  // Añade aquí cualquier otro dominio de frontend que uses
+  // No incluyas aquí URLs efímeras de Codespaces, se permite por regex
 ];
 
-// Nueva función para permitir cualquier subdominio de .vercel.app y localhost
+// Permitir cualquier subdominio de app.github.dev y dominios válidos
 function corsOrigin(origin, callback) {
-  if (!origin) return callback(null, true); // Permitir peticiones sin origen (como curl o Postman)
+  if (!origin) return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
+  const originLc = origin.toLowerCase();
+  const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
+  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+  const matchGithubDev = githubDevRegex.test(originLc);
+  const matchVercel = /\.vercel\.app$/.test(originLc);
+  const matchRender = /\.onrender\.com$/.test(originLc);
+  const matchLocalhost = /^http:\/\/localhost(:\d+)?$/.test(originLc);
   if (
-    allowedOrigins.includes(origin) ||
-    /\.vercel\.app$/.test(origin) ||
-    /\.onrender\.com$/.test(origin) ||
-    /^http:\/\/localhost(:\d+)?$/.test(origin)
+    allowedOriginsLc.includes(originLc) ||
+    matchVercel ||
+    matchRender ||
+    matchLocalhost ||
+    matchGithubDev
   ) {
-    return callback(null, true);
+    return callback(null, origin); // Refleja el origin válido
   }
   return callback(new Error('Not allowed by CORS: ' + origin));
 }
@@ -63,9 +63,24 @@ app.use(cors({
   credentials: true
 }));
 
-const io = new Server(server, { // Usar el servidor HTTP
+// --- Socket.IO: CORS seguro y compatible con subdominios efímeros ---
+const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+const io = new Server(server, {
   cors: {
-    origin: corsOrigin,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const originLc = origin.toLowerCase();
+      if (
+        allowedOrigins.includes(originLc) ||
+        githubDevRegex.test(originLc) ||
+        originLc.endsWith('.vercel.app') ||
+        originLc.endsWith('.onrender.com') ||
+        originLc.startsWith('http://localhost')
+      ) {
+        return callback(null, origin); // Refleja el origin válido
+      }
+      return callback(new Error('Not allowed by CORS (Socket.IO): ' + origin));
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -158,33 +173,13 @@ app.post('/api/pedidos', async (req, res) => {
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const pedidoAntes = await Pedido.findById(id);
+    console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
+    // Permitir actualización de todos los campos
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
+    console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
     io.emit('pedido_actualizado', pedidoActualizado);
-    // Si el estado cambia a 'enviadoTienda' y antes no lo era, registrar movimientos de entrada
-    if (pedidoAntes && req.body.estado === 'enviadoTienda' && pedidoAntes.estado !== 'enviadoTienda') {
-      if (pedidoActualizado.lineas && pedidoActualizado.tiendaId) {
-        for (const l of pedidoActualizado.lineas) {
-          // Buscar producto por nombre exacto
-          const producto = await Producto.findOne({ nombre: l.producto });
-          if (producto) {
-            await MovimientoStock.create({
-              producto: producto._id,
-              tipo: 'entrada',
-              cantidad: Math.abs(l.cantidadEnviada || l.cantidad || 0),
-              unidad: l.unidad || 'kg',
-              ubicacion: pedidoActualizado.tiendaId,
-              usuario: req.body.usuario || '',
-              motivo: 'Recepción de pedido',
-              referencia: pedidoActualizado._id,
-              observaciones: l.comentario || '',
-              fecha: new Date()
-            });
-          }
-        }
-      }
-    }
+    console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
     res.json(pedidoActualizado);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -350,300 +345,40 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     const { id } = req.params;
     const transferencia = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
     if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
-
-    // Actualizar stock automáticamente
-    if (transferencia.productos && transferencia.origen && transferencia.destino) {
-      for (const p of transferencia.productos) {
-        const producto = await Producto.findOne({ nombre: p.producto });
-        if (producto) {
-          // Salida en origen
-          await MovimientoStock.create({
-            producto: producto._id,
-            tipo: 'salida',
-            cantidad: -Math.abs(p.cantidad),
-            unidad: p.unidad || 'kg',
-            ubicacion: transferencia.origen,
-            usuario: transferencia.usuario || '',
-            motivo: 'Transferencia enviada',
-            referencia: transferencia._id,
-            observaciones: p.comentario || '',
-            fecha: new Date()
-          });
-          // Entrada en destino
-          await MovimientoStock.create({
-            producto: producto._id,
-            tipo: 'entrada',
-            cantidad: Math.abs(p.cantidad),
-            unidad: p.unidad || 'kg',
-            ubicacion: transferencia.destino,
-            usuario: transferencia.usuario || '',
-            motivo: 'Transferencia recibida',
-            referencia: transferencia._id,
-            observaciones: p.comentario || '',
-            fecha: new Date()
-          });
-        }
-      }
-    }
     res.json(transferencia);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// --- ENDPOINTS DE STOCK ---
-// Obtener stock de una tienda (o fábrica)
-app.get('/api/stock', async (req, res) => {
+// --- ENDPOINT: Importar productos desde Excel (bulk upsert) ---
+app.post('/api/productos/importar', async (req, res) => {
   try {
-    const { tiendaId } = req.query;
-    if (!tiendaId) return res.status(400).json({ error: 'Falta tiendaId' });
-    const stock = await Stock.find({ tiendaId });
-    res.json(stock);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Registrar movimiento de stock (entrada/salida)
-app.post('/api/stock/movimiento', async (req, res) => {
-  try {
-    const { producto, tiendaId, cantidad, unidad } = req.body;
-    if (!producto || !tiendaId || typeof cantidad !== 'number') {
-      return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    const productos = req.body.productos;
+    if (!Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No se recibieron productos para importar' });
     }
-    // Actualiza stock (suma o resta)
-    const stock = await Stock.findOneAndUpdate(
-      { producto, tiendaId },
-      { $inc: { cantidad }, $set: { unidad: unidad || 'kg' } },
-      { new: true, upsert: true }
-    );
-    res.json(stock);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// --- ENDPOINTS DE PRODUCTOS ---
-// Listar productos
-app.get('/api/productos', async (req, res) => {
-  try {
-    const productos = await Producto.find({ activo: true });
-    res.json(productos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-// Crear producto
-app.post('/api/productos', async (req, res) => {
-  try {
-    const producto = new Producto(req.body);
-    await producto.save();
-    res.status(201).json(producto);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-// Editar producto
-app.put('/api/productos/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const producto = await Producto.findByIdAndUpdate(id, req.body, { new: true });
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(producto);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-// Desactivar producto
-app.patch('/api/productos/:id/desactivar', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const producto = await Producto.findByIdAndUpdate(id, { activo: false }, { new: true });
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(producto);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// --- ENDPOINTS DE LOTES ---
-// Listar lotes (por producto o ubicación)
-app.get('/api/lotes', async (req, res) => {
-  try {
-    const filtro = {};
-    if (req.query.producto) filtro.producto = req.query.producto;
-    if (req.query.ubicacion) filtro.ubicacion = req.query.ubicacion;
-    const lotes = await Lote.find(filtro).populate('producto');
-    res.json(lotes);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-// Crear lote
-app.post('/api/lotes', async (req, res) => {
-  try {
-    const lote = new Lote(req.body);
-    await lote.save();
-    // Registrar movimiento de entrada
-    await MovimientoStock.create({
-      producto: lote.producto,
-      lote: lote._id,
-      tipo: 'entrada',
-      cantidad: lote.cantidadInicial,
-      unidad: req.body.unidad || 'kg',
-      ubicacion: lote.ubicacion,
-      motivo: 'Alta de lote',
-      observaciones: req.body.observaciones || '',
-      fecha: new Date()
-    });
-    res.status(201).json(lote);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-// Editar lote
-app.put('/api/lotes/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const lote = await Lote.findByIdAndUpdate(id, req.body, { new: true });
-    if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
-    res.json(lote);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// --- ENDPOINTS DE MOVIMIENTOS DE STOCK ---
-// Listar movimientos (por producto, lote, ubicación, tipo, etc.)
-app.get('/api/movimientos-stock', async (req, res) => {
-  try {
-    const filtro = {};
-    if (req.query.producto) filtro.producto = req.query.producto;
-    if (req.query.lote) filtro.lote = req.query.lote;
-    if (req.query.ubicacion) filtro.ubicacion = req.query.ubicacion;
-    if (req.query.tipo) filtro.tipo = req.query.tipo;
-    const movimientos = await MovimientoStock.find(filtro).populate('producto lote');
-    res.json(movimientos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-// Crear movimiento de stock
-app.post('/api/movimientos-stock', async (req, res) => {
-  try {
-    const movimiento = new MovimientoStock(req.body);
-    await movimiento.save();
-    // Si el movimiento afecta a un lote, actualizar cantidadActual
-    if (movimiento.lote) {
-      const lote = await Lote.findById(movimiento.lote);
-      if (lote) {
-        lote.cantidadActual += movimiento.cantidad;
-        // Cambiar estado si se consume o baja
-        if (lote.cantidadActual <= 0) {
-          lote.estado = movimiento.tipo === 'baja' ? 'baja' : 'consumido';
-          lote.cantidadActual = 0;
+    let insertados = 0, actualizados = 0, errores = [];
+    for (const prod of productos) {
+      if (!prod.nombre) continue;
+      try {
+        const filtro = prod.referencia ? { referencia: prod.referencia } : { nombre: prod.nombre };
+        // Buscar si ya existe
+        const existente = await Producto.findOne(filtro);
+        if (existente) {
+          await Producto.updateOne(filtro, { $set: prod });
+          actualizados++;
+        } else {
+          await Producto.create(prod);
+          insertados++;
         }
-        await lote.save();
+      } catch (e) {
+        errores.push({ nombre: prod.nombre, error: e.message });
       }
     }
-    res.status(201).json(movimiento);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// --- ENDPOINTS DE RECETAS ---
-// Listar recetas
-app.get('/api/recetas', async (req, res) => {
-  try {
-    const recetas = await Receta.find().populate('productoFinal ingredientes.producto');
-    res.json(recetas);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-// Crear receta
-app.post('/api/recetas', async (req, res) => {
-  try {
-    const receta = new Receta(req.body);
-    await receta.save();
-    res.status(201).json(receta);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-// Editar receta
-app.put('/api/recetas/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const receta = await Receta.findByIdAndUpdate(id, req.body, { new: true });
-    if (!receta) return res.status(404).json({ error: 'Receta no encontrada' });
-    res.json(receta);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// --- FABRICACIÓN DE PRODUCTOS EN FÁBRICA ---
-// Endpoint para fabricar producto (con receta o libre)
-app.post('/api/fabricar', async (req, res) => {
-  try {
-    const { recetaId, productoFinal, cantidad, unidad, ingredientes, usuario, loteCodigo, fechaCaducidad, observaciones } = req.body;
-    let receta = null;
-    let ingredientesUsar = [];
-    if (recetaId) {
-      receta = await Receta.findById(recetaId).populate('ingredientes.producto productoFinal');
-      if (!receta) return res.status(400).json({ error: 'Receta no encontrada' });
-      ingredientesUsar = receta.ingredientes.map(i => ({ producto: i.producto._id, cantidad: i.cantidad * cantidad, unidad: i.unidad }));
-    } else if (ingredientes && Array.isArray(ingredientes)) {
-      ingredientesUsar = ingredientes;
-    } else {
-      return res.status(400).json({ error: 'Faltan ingredientes para fabricación libre' });
-    }
-    // Descontar ingredientes del stock y registrar movimientos
-    for (const ing of ingredientesUsar) {
-      await MovimientoStock.create({
-        producto: ing.producto,
-        tipo: 'salida',
-        cantidad: -Math.abs(ing.cantidad),
-        unidad: ing.unidad || 'kg',
-        ubicacion: 'FABRICA',
-        usuario: usuario || '',
-        motivo: 'Fabricación',
-        referencia: null,
-        observaciones: observaciones || '',
-        fecha: new Date()
-      });
-    }
-    // Crear lote del producto final
-    const lote = new Lote({
-      producto: productoFinal,
-      codigo: loteCodigo || `FAB-${Date.now()}`,
-      fechaCaducidad: fechaCaducidad || null,
-      cantidadInicial: cantidad,
-      cantidadActual: cantidad,
-      estado: 'activo',
-      ubicacion: 'FABRICA',
-      observaciones: observaciones || ''
-    });
-    await lote.save();
-    // Registrar movimiento de entrada del producto fabricado
-    await MovimientoStock.create({
-      producto: productoFinal,
-      lote: lote._id,
-      tipo: 'entrada',
-      cantidad: cantidad,
-      unidad: unidad || 'kg',
-      ubicacion: 'FABRICA',
-      usuario: usuario || '',
-      motivo: 'Fabricación',
-      referencia: lote._id,
-      observaciones: observaciones || '',
-      fecha: new Date()
-    });
-    res.status(201).json({ lote, movimientosIngredientes: ingredientesUsar });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.json({ ok: true, insertados, actualizados, errores });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 

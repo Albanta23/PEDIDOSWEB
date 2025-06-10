@@ -4,14 +4,24 @@ const fs = require('fs');
 const path = require('path');
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 
-const mailjetClient = mailjet.apiConnect(
-  process.env.MAILJET_API_KEY,
-  process.env.MAILJET_API_SECRET
-);
+// Inicialización segura de Mailjet
+let mailjetClient = null;
+const hasMailjetCreds = process.env.MAILJET_API_KEY && process.env.MAILJET_API_SECRET;
+if (hasMailjetCreds) {
+  mailjetClient = mailjet.apiConnect(
+    process.env.MAILJET_API_KEY,
+    process.env.MAILJET_API_SECRET
+  );
+} else {
+  console.warn('[MAILJET] API_KEY o API_SECRET no definidos. El envío de emails está DESACTIVADO.');
+}
 
 module.exports = function(app) {
   app.post('/api/enviar-proveedor-v2', async (req, res) => {
     try {
+      if (!hasMailjetCreds) {
+        return res.status(500).json({ ok: false, error: 'Mailjet API_KEY o API_SECRET no definidos. El envío de emails está desactivado.' });
+      }
       console.log('[PROVEEDOR-V2] === INICIO ENDPOINT V2 ===');
       console.log('[PROVEEDOR-V2] Body recibido:', JSON.stringify(req.body, null, 2));
       

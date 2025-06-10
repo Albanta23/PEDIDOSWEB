@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { FaIndustry, FaCashRegister } from "react-icons/fa";
+import { FaIndustry, FaCashRegister, FaTools } from "react-icons/fa";
 import logo from "../assets/logo1.png";
 import Watermark from './Watermark';
 import SupervisionPanel from './SupervisionPanel';
 
-export default function SeleccionModo({ onSeleccion, pedidos, tiendas }) {
+export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion }) {
   const [showSupervision, setShowSupervision] = useState(false);
   return (
     <div
@@ -81,6 +81,27 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas }) {
         >
           <FaCashRegister size={48} style={{ marginBottom: 10 }} />
           Tienda
+        </button>
+        <button
+          onClick={onGestion}
+          style={{
+            width: 120,
+            height: 120,
+            background: "#1976d2",
+            color: "#fff",
+            border: "none",
+            borderRadius: 16,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 18,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #bbb",
+          }}
+        >
+          <FaTools size={48} style={{ marginBottom: 10 }} />
+          Gestión
         </button>
       </div>
       {showSupervision && (
