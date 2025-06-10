@@ -354,29 +354,82 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
 // --- ENDPOINT: Importar productos desde Excel (bulk upsert) ---
 app.post('/api/productos/importar', async (req, res) => {
   try {
+    console.log('[IMPORTAR][HEADERS]', req.headers);
+    console.log('[IMPORTAR][RAW BODY]', JSON.stringify(req.body));
     const productos = req.body.productos;
+    console.log('[IMPORTAR] Recibidos productos:', productos?.length, productos?.[0]);
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ ok: false, error: 'No se recibieron productos para importar' });
     }
     let insertados = 0, actualizados = 0, errores = [];
+    // Función para mapear los campos del Excel a los del modelo Producto
+    function mapearProductoExcel(prodExcel) {
+      return {
+        referencia: prodExcel['Cód.'] || prodExcel['Cod.'] || prodExcel['Código'] || '',
+        nombre: prodExcel['Descripción'] || prodExcel['Nombre'] || '',
+        familia: prodExcel['C.Fam.'] || prodExcel['Nombre Familia'] || '',
+        unidad: prodExcel['Unidad'] || 'kg',
+        activo: prodExcel['Activo'] !== undefined ? Boolean(prodExcel['Activo']) : true,
+        descripcion: prodExcel['Descripción'] || '',
+        // Puedes añadir más campos si el modelo se amplía
+      };
+    }
     for (const prod of productos) {
-      if (!prod.nombre) continue;
+      // Mapear campos del Excel al modelo Producto
+      const prodMapeado = mapearProductoExcel(prod);
+      if (!prodMapeado.nombre) continue;
       try {
-        const filtro = prod.referencia ? { referencia: prod.referencia } : { nombre: prod.nombre };
+        const filtro = prodMapeado.referencia ? { referencia: prodMapeado.referencia } : { nombre: prodMapeado.nombre };
         // Buscar si ya existe
         const existente = await Producto.findOne(filtro);
         if (existente) {
-          await Producto.updateOne(filtro, { $set: prod });
+          await Producto.updateOne(filtro, { $set: prodMapeado });
           actualizados++;
         } else {
-          await Producto.create(prod);
+          await Producto.create(prodMapeado);
           insertados++;
         }
+      } catch (e) {
+        errores.push({ nombre: prodMapeado.nombre, error: e.message });
+        console.error('[IMPORTAR][ERROR]', prodMapeado.nombre, e.message);
+      }
+    }
+    console.log('[IMPORTAR] Resultado:', {insertados, actualizados, errores});
+    res.json({ ok: true, insertados, actualizados, errores });
+  } catch (e) {
+    console.error('[IMPORTAR][FATAL]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- ENDPOINT: Obtener todos los productos ---
+app.get('/api/productos', async (req, res) => {
+  try {
+    const productos = await Producto.find();
+    res.json(productos);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- ENDPOINT: Actualizar productos masivamente ---
+app.post('/api/productos/actualizar-masivo', async (req, res) => {
+  try {
+    const productos = req.body.productos;
+    if (!Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No se recibieron productos para actualizar' });
+    }
+    let actualizados = 0, errores = [];
+    for (const prod of productos) {
+      if (!prod._id) continue;
+      try {
+        await Producto.updateOne({ _id: prod._id }, { $set: prod });
+        actualizados++;
       } catch (e) {
         errores.push({ nombre: prod.nombre, error: e.message });
       }
     }
-    res.json({ ok: true, insertados, actualizados, errores });
+    res.json({ ok: true, actualizados, errores });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

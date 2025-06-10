@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
@@ -20,6 +20,9 @@ export default function GestionMantenimientoPanel({ onClose }) {
   const [importando, setImportando] = useState(false);
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
+  const [productosDB, setProductosDB] = useState([]);
+  const [editMode, setEditMode] = useState(false);
+  const [productosEditados, setProductosEditados] = useState({});
 
   const handlePin = (e) => {
     e.preventDefault();
@@ -53,6 +56,16 @@ export default function GestionMantenimientoPanel({ onClose }) {
     }
   };
 
+  // Cargar productos de la base de datos al montar
+  useEffect(() => {
+    if (acceso && tab === 'productos') {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+      axios.get(`${API_URL}/api/productos`)
+        .then(res => setProductosDB(res.data))
+        .catch(() => setProductosDB([]));
+    }
+  }, [acceso, tab]);
+
   return (
     <div style={{ minHeight: '100vh', background: '#f4f6f8', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: 24, background: '#1976d2', color: '#fff', fontSize: 28, fontWeight: 800, letterSpacing: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -83,6 +96,56 @@ export default function GestionMantenimientoPanel({ onClose }) {
                   {importando && <span style={{marginLeft:12, color:'#1976d2'}}>Importando...</span>}
                   {importError && <div style={{color:'#d32f2f',marginTop:8}}>{importError}</div>}
                   {importSuccess && <div style={{color:'#388e3c',marginTop:8}}>{importSuccess}</div>}
+                </div>
+                {/* Tabla de productos en base de datos */}
+                <div style={{marginTop:32}}>
+                  <h3 style={{color:'#1976d2'}}>Productos en base de datos</h3>
+                  <button onClick={()=>setEditMode(!editMode)} style={{marginBottom:12,background:editMode?'#d32f2f':'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}}>
+                    {editMode ? 'Cancelar edición' : 'Editar productos'}
+                  </button>
+                  {editMode && <button
+                    onClick={async()=>{
+                      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+                      try {
+                        await axios.post(`${API_URL}/api/productos/actualizar-masivo`, { productos: Object.values(productosEditados) });
+                        setEditMode(false);
+                        setProductosEditados({});
+                        // Recargar productos
+                        const res = await axios.get(`${API_URL}/api/productos`);
+                        setProductosDB(res.data);
+                      } catch(e) {
+                        alert('Error al guardar cambios: '+(e.response?.data?.error||e.message));
+                      }
+                    }}
+                    style={{marginLeft:8,background:'#388e3c',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}}>
+                    Guardar cambios
+                  </button>}
+                  <div style={{maxHeight:320,overflow:'auto',border:'1px solid #eee',borderRadius:8,marginTop:16}}>
+                    <table style={{width:'100%',fontSize:13}}>
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Referencia</th>
+                          <th>Unidad</th>
+                          <th>Familia</th>
+                          <th>Activo</th>
+                          <th>Descripción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productosDB.map((prod,i) => (
+                          <tr key={prod._id||i} style={{background:i%2?'#fafdff':'#fff'}}>
+                            <td>{editMode ? <input value={productosEditados[prod._id]?.nombre ?? prod.nombre} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombre:e.target.value}}))} /> : prod.nombre}</td>
+                            <td>{editMode ? <input value={productosEditados[prod._id]?.referencia ?? prod.referencia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],referencia:e.target.value}}))} /> : prod.referencia}</td>
+                            <td>{editMode ? <input value={productosEditados[prod._id]?.unidad ?? prod.unidad} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],unidad:e.target.value}}))} /> : prod.unidad}</td>
+                            <td>{editMode ? <input value={productosEditados[prod._id]?.familia ?? prod.familia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],familia:e.target.value}}))} /> : prod.familia}</td>
+                            <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.activo ?? prod.activo} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],activo:e.target.checked}}))} /> : (prod.activo ? 'Sí' : 'No')}</td>
+                            <td>{editMode ? <input value={productosEditados[prod._id]?.descripcion ?? prod.descripcion} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],descripcion:e.target.value}}))} /> : prod.descripcion}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
                 {productos.length > 0 && (
                   <div>
