@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
 
 const PIN = '1973';
 
@@ -23,6 +24,7 @@ export default function GestionMantenimientoPanel({ onClose }) {
   const [productosDB, setProductosDB] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [productosEditados, setProductosEditados] = useState({});
+  const [filtroFamilia, setFiltroFamilia] = useState('');
 
   const handlePin = (e) => {
     e.preventDefault();
@@ -66,6 +68,53 @@ export default function GestionMantenimientoPanel({ onClose }) {
     }
   }, [acceso, tab]);
 
+  // Obtener lista de familias únicas
+  const familias = Array.from(new Set(productosDB.map(p => p.familia).filter(f => f && f.trim() !== '')));
+
+  // Filtrar productos por familia
+  const productosFiltrados = filtroFamilia ? productosDB.filter(p => p.familia === filtroFamilia) : productosDB;
+
+  // Exportar productos filtrados a PDF
+  const exportarProductosPDF = async () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Listado de productos', 14, 18);
+    if (filtroFamilia) {
+      doc.setFontSize(13);
+      doc.text(`Familia: ${filtroFamilia}`, 14, 28);
+    }
+    let y = filtroFamilia ? 36 : 28;
+    doc.setFontSize(11);
+    // Cabecera
+    doc.text('Nombre', 14, y);
+    doc.text('Referencia', 54, y);
+    doc.text('Unidad', 84, y);
+    doc.text('Familia', 104, y);
+    doc.text('Activo', 134, y);
+    doc.text('Fabricable', 154, y);
+    doc.text('Descripción', 174, y);
+    y += 7;
+    doc.setLineWidth(0.2);
+    doc.line(14, y, 200, y);
+    y += 4;
+    doc.setFontSize(10);
+    productosFiltrados.forEach((p, i) => {
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(String(p.nombre || '-'), 14, y);
+      doc.text(String(p.referencia || '-'), 54, y);
+      doc.text(String(p.unidad || '-'), 84, y);
+      doc.text(String(p.familia || '-'), 104, y);
+      doc.text(p.activo ? 'Sí' : 'No', 134, y);
+      doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 154, y);
+      doc.text(String(p.descripcion || '-').substring(0, 30), 174, y);
+      y += 7;
+    });
+    doc.save(`productos_${filtroFamilia || 'todas'}_${Date.now()}.pdf`);
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#f4f6f8', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: 24, background: '#1976d2', color: '#fff', fontSize: 28, fontWeight: 800, letterSpacing: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -100,6 +149,15 @@ export default function GestionMantenimientoPanel({ onClose }) {
                 {/* Tabla de productos en base de datos */}
                 <div style={{marginTop:32}}>
                   <h3 style={{color:'#1976d2'}}>Productos en base de datos</h3>
+                  {/* Filtro de familia y botón PDF */}
+                  <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:12}}>
+                    <label style={{fontWeight:600}}>Familia:</label>
+                    <select value={filtroFamilia} onChange={e=>setFiltroFamilia(e.target.value)} style={{padding:'6px 12px',borderRadius:6}}>
+                      <option value=''>Todas</option>
+                      {familias.map(f=>(<option key={f} value={f}>{f}</option>))}
+                    </select>
+                    <button onClick={exportarProductosPDF} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}}>Exportar PDF</button>
+                  </div>
                   <button onClick={()=>setEditMode(!editMode)} style={{marginBottom:12,background:editMode?'#d32f2f':'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}}>
                     {editMode ? 'Cancelar edición' : 'Editar productos'}
                   </button>
@@ -129,17 +187,19 @@ export default function GestionMantenimientoPanel({ onClose }) {
                           <th>Unidad</th>
                           <th>Familia</th>
                           <th>Activo</th>
+                          <th>Fabricable</th>
                           <th>Descripción</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {productosDB.map((prod,i) => (
+                        {productosFiltrados.map((prod,i) => (
                           <tr key={prod._id||i} style={{background:i%2?'#fafdff':'#fff'}}>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.nombre ?? prod.nombre} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombre:e.target.value}}))} /> : prod.nombre}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.referencia ?? prod.referencia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],referencia:e.target.value}}))} /> : prod.referencia}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.unidad ?? prod.unidad} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],unidad:e.target.value}}))} /> : prod.unidad}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.familia ?? prod.familia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],familia:e.target.value}}))} /> : prod.familia}</td>
                             <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.activo ?? prod.activo} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],activo:e.target.checked}}))} /> : (prod.activo ? 'Sí' : 'No')}</td>
+                            <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.fabricable ?? prod.fabricable ?? false} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],fabricable:e.target.checked}}))} /> : (prod.fabricable !== undefined ? (prod.fabricable ? 'Sí' : 'No') : '-')}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.descripcion ?? prod.descripcion} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],descripcion:e.target.value}}))} /> : prod.descripcion}</td>
                           </tr>
                         ))}
