@@ -32,7 +32,6 @@ async function cargarLogoBase64(url) {
 
 export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onVerHistoricoPedidos }) {
   const { productos, cargando } = useProductos();
-  const [mostrarTransferencias, setMostrarTransferencias] = useState(false);
   const [creandoNuevo, setCreandoNuevo] = useState(false);
   const [lineasEdit, setLineasEdit] = useState([]);
   const [logGuardado, setLogGuardado] = useState(false);
@@ -447,17 +446,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         <div style={{position:'fixed',top:24,right:24,zIndex:3000,background:'#28a745',color:'#fff',padding:'16px 32px',borderRadius:10,boxShadow:'0 2px 12px #0003',fontWeight:700,fontSize:17,transition:'opacity 0.3s'}}>✔ Líneas guardadas como borrador</div>
       )}
       
-      {/* Modal de transferencias */}
-      {mostrarTransferencias && (
-        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:400,maxWidth:900,maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
-            <button onClick={()=>setMostrarTransferencias(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
-            <h2 style={{marginTop:0}}>Traspasos y devoluciones</h2>
-            <TransferenciasPanel tiendas={tiendaActual ? [tiendaActual, ...((window.tiendas || []).filter(t => t.nombre !== tiendaActual.nombre))] : (window.tiendas || [])} tiendaActual={tiendaActual} modoFabrica={false} />
-          </div>
-        </div>
-      )}
-
       {/* Editor visual unificado para crear pedido */}
       {creandoNuevo && (
         <div style={{ border: "2px solid #007bff", margin: 12, padding: 20, background: '#fafdff', borderRadius: 14, boxShadow:'0 2px 12px #007bff11', maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', position:'relative' }}>
@@ -582,101 +570,68 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         </div>
       )}
 
-      {/* Botones de acción principales */}
+      {/* Ordenar visualmente el panel de tiendas: separar claramente acciones principales, historial y utilidades */}
       <div style={{
         marginTop: 56,
         padding: '32px 0',
         display: 'flex',
-        gap: 12,
+        gap: 18,
         justifyContent: 'center',
         alignItems: 'center',
-        flexWrap: 'nowrap',
+        flexWrap: 'wrap',
         width: '100%',
         maxWidth: 900,
         marginLeft: 'auto',
         marginRight: 'auto',
         background: '#f8fafd',
         borderRadius: 14,
-        boxShadow: '0 2px 12px #007bff11'
+        boxShadow: '0 2px 12px #007bff11',
+        border: '1px solid #e0e6ef',
       }}>
         <button 
           onClick={handleEditarPedidoBorrador} 
           style={{
-            background: '#007bff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            padding: '0 10px',
-            fontWeight: 700,
-            minWidth: 120,
-            maxWidth: 150,
-            fontSize: 15,
-            height: 48,
-            whiteSpace: 'normal',
-            textAlign: 'center',
-            lineHeight: '1.2',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            background: '#007bff', color: '#fff', border: 'none', borderRadius: 8, padding: '0 10px', fontWeight: 700, minWidth: 120, maxWidth: 150, fontSize: 15, height: 48, whiteSpace: 'normal', textAlign: 'center', lineHeight: '1.2', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow:'0 2px 8px #007bff33'
           }}
         >
           <span>+ Crear<br/>pedido</span>
         </button>
-        {/* Botón cerdo para proveedor */}
         <button onClick={() => setMostrarModalProveedor(true)} style={{background:'#ffb6b6',color:'#b71c1c',border:'none',borderRadius:8,padding:'7px 18px',fontWeight:700,fontSize:18,display:'flex',alignItems:'center',flexDirection:'column',boxShadow:'0 2px 8px #ffb6b644'}} title="Enviar lista a proveedor">
           <span role="img" aria-label="cerdo" style={{fontSize:28,marginBottom:2}}>🐷</span>
           <span style={{lineHeight:'1.1',textAlign:'center'}}>Pedidos<br/>de fresco</span>
         </button>
-        {/* Mostrar el botón de confirmar solo si se está creando un pedido */}
         {creandoNuevo && (
           <button 
             onClick={handleConfirmarYEnviarPedido} 
             style={{
-              background: '#ff9800',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              padding: '0 10px',
-              fontWeight: 700,
-              minWidth: 120,
-              maxWidth: 150,
-              fontSize: 15,
-              height: 48,
-              whiteSpace: 'normal',
-              textAlign: 'center',
-              lineHeight: '1.2',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              background: '#ff9800', color: '#fff', border: 'none', borderRadius: 8, padding: '0 10px', fontWeight: 700, minWidth: 120, maxWidth: 150, fontSize: 15, height: 48, whiteSpace: 'normal', textAlign: 'center', lineHeight: '1.2', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow:'0 2px 8px #ff980044'
             }}
           >
             <span>Confirmar y<br/>enviar pedido</span>
           </button>
         )}
-        <button 
-          onClick={() => setMostrarTransferencias(true)} 
-          style={{
-            background: '#00b894',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            padding: '0 10px',
-            fontWeight: 600,
-            minWidth: 120,
-            maxWidth: 150,
-            fontSize: 15,
-            height: 48,
-            whiteSpace: 'normal',
-            textAlign: 'center',
-            lineHeight: '1.2',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <span>Traspasos y<br/>devoluciones</span>
-        </button>
       </div>
+      <div style={{
+        marginTop: 32,
+        marginBottom: 24,
+        padding: '18px 0',
+        background: '#f1f8ff',
+        borderRadius: 12,
+        boxShadow: '0 1px 8px #007bff11',
+        maxWidth: 900,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        border: '1px solid #e0e6ef'
+      }}>
+        <button onClick={onVerHistoricoPedidos} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:16,boxShadow:'0 2px 8px #1976d244'}}>Ver historial de pedidos</button>
+        <button onClick={()=>setMostrarHistorialProveedor(true)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:16,boxShadow:'0 2px 8px #00b89444'}}>Historial de compras a proveedor</button>
+      </div>
+
       {/* Modal para crear y enviar lista al proveedor */}
       {mostrarModalProveedor && (
         <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0007',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}}>

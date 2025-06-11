@@ -16,6 +16,12 @@ import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosSer
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
 import { ProductosProvider } from './components/ProductosContext';
 import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate
+} from 'react-router-dom';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -280,6 +286,31 @@ function App() {
     console.log('[DEBUG App.jsx] tiendaSeleccionada:', tiendaSeleccionada);
   }, [tiendaSeleccionada]);
 
+  // NUEVO: componente para navegación en panel de tienda
+  function TiendaPanelNavegacion({ tiendaSeleccionada, pedidos, onModificar, onBorrar, onEditar, onVerHistorico }) {
+    const navigate = useNavigate();
+    return (
+      <div>
+        <PedidoList
+          pedidos={pedidos}
+          onModificar={onModificar}
+          onBorrar={onBorrar}
+          onEditar={onEditar}
+          modo={"tienda"}
+          tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
+        />
+        <div style={{display:'flex',gap:12,marginTop:18}}>
+          <button onClick={onVerHistorico} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
+            Ver histórico de pedidos
+          </button>
+          <button onClick={() => navigate(`/almacen/${tiendaSeleccionada}`)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
+            Gestión de almacén
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!modo && !mostrarGestion) {
     return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} />;
   }
@@ -303,151 +334,150 @@ function App() {
 
   return (
     <ProductosProvider>
-      <div className="App">
-        <Watermark />
-        {mensaje && (
-          <div style={{
-            position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
-            background: mensaje.tipo === 'success' ? '#28a745' : mensaje.tipo === 'warning' ? '#ffc107' : '#007bff',
-            color: mensaje.tipo === 'success' ? '#fff' : mensaje.tipo === 'warning' ? '#212529' : '#fff',
-            padding: '14px 36px', borderRadius: 10, boxShadow: '0 2px 12px #aaa', zIndex: 1000,
-            fontWeight: 600, fontSize: 18, letterSpacing: 0.5,
-            border: mensaje.tipo === 'success' ? '2px solid #218838' : mensaje.tipo === 'warning' ? '2px solid #ffecb5' : '2px solid #0056b3',
-            minWidth: 320, textAlign: 'center',
-            textShadow: mensaje.tipo === 'success' ? '0 1px 2px #155724' : mensaje.tipo === 'warning' ? '0 1px 2px #856404' : '0 1px 2px #004085'
-          }}>
-            {mensaje.texto}
-          </div>
-        )}
-        {modo === 'tienda' && logueado && !mostrarHistoricoTienda && !mostrarAlmacenTienda && avisos.length > 0 && (
-          <div style={{
-            position: 'fixed', top: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 3000,
-            display: 'flex', flexDirection: 'column', gap: 10, minWidth: 320, maxWidth: 600, width: '90vw',
-          }}>
-            {avisos.map(aviso => (
-              <div key={aviso.id} style={{
-                background: aviso.tipo === 'pedido' ? '#28a745' : '#007bff',
-                color: '#fff',
-                borderRadius: 10,
-                boxShadow: '0 2px 12px #aaa',
-                padding: '14px 24px',
-                fontWeight: 600,
-                fontSize: 17,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                border: '2px solid #218838',
-                cursor: 'pointer',
-              }}
-              >
-                <span>{aviso.texto}</span>
-                <button
-                  style={{marginLeft:18,background:'#fff',color:aviso.tipo==='pedido'?'#28a745':'#007bff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
-                  onClick={e => {
-                    e.stopPropagation();
-                    setMostrarHistoricoTienda(true);
-                  }}
-                >
-                  Ver
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        {(() => { try { console.log('[FRONTEND] Pedidos pendientes (FabricaPanel):', pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado')); } catch(e){} })()}
-        {modo === 'fabrica' ? (
-          mostrarHistoricoFabrica ? (
-            <HistoricoFabrica
-              pedidos={pedidos}
-              tiendas={tiendas}
-              onVolver={() => setMostrarHistoricoFabrica(false)}
-            />
-          ) : (
-            <FabricaPanel
-              pedidos={pedidos}
-              tiendas={tiendas}
-              onEstadoChange={cambiarEstadoPedido}
-              onLineaChange={cambiarEstadoLinea}
-              onLineaDetalleChange={cambiarEstadoLineaDetalle}
-              onVerHistorico={() => setMostrarHistoricoFabrica(true)}
-            />
-          )
-        ) : (
-          mostrarHistoricoTienda ? (
-            <HistoricoTiendaPanel
-              pedidos={pedidos}
-              tiendaId={tiendaSeleccionada}
-              tiendaNombre={tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
-              tiendas={tiendas}
-              onVolver={() => setMostrarHistoricoTienda(false)}
-              onModificarPedido={(pedidoEditado) => {
-                setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
-                mostrarMensaje('Pedido actualizado', 'success');
-              }}
-              onAvisoVisto={avisoId => handleAvisoVisto({ id: avisoId })}
-            >
-              <button
-                style={{position:'absolute',top:18,left:18,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:700,fontSize:16,cursor:'pointer',zIndex:2100}}
-                onClick={() => setMostrarHistoricoTienda(false)}
-              >
-                ← Volver
-              </button>
-            </HistoricoTiendaPanel>
-          ) : (
-            <div>
-              <PedidoList
-                pedidos={pedidos.filter(p => p.tiendaId === tiendaSeleccionada)}
-                onModificar={modificarPedido}
-                onBorrar={borrarPedido}
-                onEditar={handleEditarPedido}
-                modo={"tienda"}
-                tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
-              />
-              <div style={{display:'flex',gap:12,marginTop:18}}>
-                <button onClick={() => setMostrarHistoricoTienda(true)} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
-                  Ver histórico de pedidos
-                </button>
-                <button onClick={() => setMostrarAlmacenTienda(true)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
-                  Gestión de almacén
-                </button>
-              </div>
+      <Router>
+        <Routes>
+          <Route path="/almacen/:idTienda" element={<AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />} />
+          <Route path="/*" element={
+            <div className="App">
+              <Watermark />
+              {mensaje && (
+                <div style={{
+                  position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
+                  background: mensaje.tipo === 'success' ? '#28a745' : mensaje.tipo === 'warning' ? '#ffc107' : '#007bff',
+                  color: mensaje.tipo === 'success' ? '#fff' : mensaje.tipo === 'warning' ? '#212529' : '#fff',
+                  padding: '14px 36px', borderRadius: 10, boxShadow: '0 2px 12px #aaa', zIndex: 1000,
+                  fontWeight: 600, fontSize: 18, letterSpacing: 0.5,
+                  border: mensaje.tipo === 'success' ? '2px solid #218838' : mensaje.tipo === 'warning' ? '2px solid #ffecb5' : '2px solid #0056b3',
+                  minWidth: 320, textAlign: 'center',
+                  textShadow: mensaje.tipo === 'success' ? '0 1px 2px #155724' : mensaje.tipo === 'warning' ? '0 1px 2px #856404' : '0 1px 2px #004085'
+                }}>
+                  {mensaje.texto}
+                </div>
+              )}
+              {modo === 'tienda' && logueado && !mostrarHistoricoTienda && !mostrarAlmacenTienda && avisos.length > 0 && (
+                <div style={{
+                  position: 'fixed', top: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 3000,
+                  display: 'flex', flexDirection: 'column', gap: 10, minWidth: 320, maxWidth: 600, width: '90vw',
+                }}>
+                  {avisos.map(aviso => (
+                    <div key={aviso.id} style={{
+                      background: aviso.tipo === 'pedido' ? '#28a745' : '#007bff',
+                      color: '#fff',
+                      borderRadius: 10,
+                      boxShadow: '0 2px 12px #aaa',
+                      padding: '14px 24px',
+                      fontWeight: 600,
+                      fontSize: 17,
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      border: '2px solid #218838',
+                      cursor: 'pointer',
+                    }}
+                    >
+                      <span>{aviso.texto}</span>
+                      <button
+                        style={{marginLeft:18,background:'#fff',color:aviso.tipo==='pedido'?'#28a745':'#007bff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer',fontSize:15}}
+                        onClick={e => {
+                          e.stopPropagation();
+                          setMostrarHistoricoTienda(true);
+                        }}
+                      >
+                        Ver
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(() => { try { console.log('[FRONTEND] Pedidos pendientes (FabricaPanel):', pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado')); } catch(e){} })()}
+              {modo === 'fabrica' ? (
+                mostrarHistoricoFabrica ? (
+                  <HistoricoFabrica
+                    pedidos={pedidos}
+                    tiendas={tiendas}
+                    onVolver={() => setMostrarHistoricoFabrica(false)}
+                  />
+                ) : (
+                  <FabricaPanel
+                    pedidos={pedidos}
+                    tiendas={tiendas}
+                    onEstadoChange={cambiarEstadoPedido}
+                    onLineaChange={cambiarEstadoLinea}
+                    onLineaDetalleChange={cambiarEstadoLineaDetalle}
+                    onVerHistorico={() => setMostrarHistoricoFabrica(true)}
+                  />
+                )
+              ) : (
+                mostrarHistoricoTienda ? (
+                  <HistoricoTiendaPanel
+                    pedidos={pedidos}
+                    tiendaId={tiendaSeleccionada}
+                    tiendaNombre={tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}
+                    tiendas={tiendas}
+                    onVolver={() => setMostrarHistoricoTienda(false)}
+                    onModificarPedido={(pedidoEditado) => {
+                      setPedidos(prev => prev.map(p => p.id === pedidoEditado.id ? pedidoEditado : p));
+                      mostrarMensaje('Pedido actualizado', 'success');
+                    }}
+                    onAvisoVisto={avisoId => handleAvisoVisto({ id: avisoId })}
+                  >
+                    <button
+                      style={{position:'absolute',top:18,left:18,background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:700,fontSize:16,cursor:'pointer',zIndex:2100}}
+                      onClick={() => setMostrarHistoricoTienda(false)}
+                    >
+                      ← Volver
+                    </button>
+                  </HistoricoTiendaPanel>
+                ) : (
+                  <div>
+                    <TiendaPanelNavegacion
+                      tiendaSeleccionada={tiendaSeleccionada}
+                      pedidos={pedidos.filter(p => p.tiendaId === tiendaSeleccionada)}
+                      onModificar={modificarPedido}
+                      onBorrar={borrarPedido}
+                      onEditar={handleEditarPedido}
+                      onVerHistorico={() => setMostrarHistoricoTienda(true)}
+                    />
+                  </div>
+                )
+              )}
+              {modo === 'tienda' && logueado && mostrarAlmacenTienda && (
+                <AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />
+              )}
+              <ErrorLogger />
+              {modo === 'tienda' && (
+                <>
+                  <div style={{
+                    position:'fixed',top:60,left:'50%',transform:'translateX(-50%)',background:'#eee',padding:'8px 18px',
+                    borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb',
+                    minWidth:180, textAlign:'center', fontWeight:600,
+                    display:'flex', alignItems:'center', justifyContent:'center', gap:16
+                  }}>
+                    <span>{tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}</span>
+                    <button
+                      onClick={() => {
+                        setLogueado(false);
+                        setTiendaSeleccionada(null);
+                        setMostrarHistoricoTienda(false);
+                        setPedidoEditando(null);
+                        setMensaje(null);
+                      }}
+                      style={{
+                        background:'#dc3545', color:'#fff', border:'none', borderRadius:8, padding:'6px 18px', fontWeight:700, fontSize:16, cursor:'pointer', boxShadow:'0 1px 6px #dc354522',
+                        marginLeft:'auto'
+                      }}
+                      title="Cerrar sesión"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </>
+              )}
+              {mostrarGestion && (
+                <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />
+              )}
             </div>
-          )
-        )}
-        {modo === 'tienda' && logueado && mostrarAlmacenTienda && (
-          <AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />
-        )}
-        <ErrorLogger />
-        {modo === 'tienda' && (
-          <>
-            <div style={{
-              position:'fixed',top:60,left:'50%',transform:'translateX(-50%)',background:'#eee',padding:'8px 18px',
-              borderRadius:8,fontSize:15,zIndex:2000,color:'#333',boxShadow:'0 1px 6px #bbb',
-              minWidth:180, textAlign:'center', fontWeight:600,
-              display:'flex', alignItems:'center', justifyContent:'center', gap:16
-            }}>
-              <span>{tiendas.find(t => t.id === tiendaSeleccionada)?.nombre || ''}</span>
-              <button
-                onClick={() => {
-                  setLogueado(false);
-                  setTiendaSeleccionada(null);
-                  setMostrarHistoricoTienda(false);
-                  setPedidoEditando(null);
-                  setMensaje(null);
-                }}
-                style={{
-                  background:'#dc3545', color:'#fff', border:'none', borderRadius:8, padding:'6px 18px', fontWeight:700, fontSize:16, cursor:'pointer', boxShadow:'0 1px 6px #dc354522',
-                  marginLeft:'auto'
-                }}
-                title="Cerrar sesión"
-              >
-                Cerrar
-              </button>
-            </div>
-          </>
-        )}
-        {mostrarGestion && (
-          <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />
-        )}
-      </div>
+          } />
+        </Routes>
+      </Router>
     </ProductosProvider>
   );
 }
