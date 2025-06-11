@@ -525,16 +525,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
                     />
                   </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Fabricable</label>
-                    <input 
-                      type="checkbox" 
-                      checked={!!linea.fabricable} 
-                      onChange={e => handleLineaChange(i, 'fabricable', e.target.checked)} 
-                      style={{width:22, height:22, accentColor:'#1976d2'}}
-                      title="¿Es fabricable?"
-                    />
-                  </div>
                   <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
                 </li>
               ))}
