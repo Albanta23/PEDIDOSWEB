@@ -51,9 +51,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   // Función para actualizar una línea editada
   const actualizarLinea = (idx, campo, valor) => {
-    setPedidoAbierto(prev => ({
-      ...prev,
-      lineas: prev.lineas.map((l, i) => {
+    setPedidoAbierto(prev => {
+      const nuevasLineas = prev.lineas.map((l, i) => {
         if (i === idx) {
           let nuevoValor = valor;
           if (campo === 'peso' || campo === 'cantidadEnviada') {
@@ -65,8 +64,23 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           return { ...l, [campo]: nuevoValor };
         }
         return l;
-      })
-    }));
+      });
+      // Guardado automático al editar cualquier campo de línea
+      if (prev._id || prev.id) {
+        const lineasNormalizadas = nuevasLineas.map(l => ({
+          ...l,
+          preparada: !!l.preparada,
+          peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+          cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+          cantidad: Number(l.cantidad)
+        }));
+        onLineaDetalleChange(prev._id || prev.id, null, lineasNormalizadas);
+      }
+      return {
+        ...prev,
+        lineas: nuevasLineas
+      };
+    });
   };
 
   // Función para borrar una línea
