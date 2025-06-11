@@ -3,6 +3,7 @@ import Watermark from './Watermark';
 import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
 import { FORMATOS_PEDIDO } from '../configFormatos';
+import { useProductos } from './ProductosContext';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -14,6 +15,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   const [pedidoAbierto, setPedidoAbierto] = useState(null);
   const [mostrarHistoricoTransferencias, setMostrarHistoricoTransferencias] = useState(false);
   const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
+  const { productos } = useProductos();
 
   // Paleta de colores para los botones de tienda
   const colores = [
@@ -112,6 +114,14 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       actualizarLinea(modalPeso.lineaIdx, 'peso', suma);
     }
     setModalPeso({visible:false, lineaIdx:null, valores:[]});
+  };
+
+  // Función para autocompletar/reemplazar producto por nombre si se introduce referencia
+  const autocompletarProducto = (valor) => {
+    if (!valor) return valor;
+    const productoEncontrado = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+    if (productoEncontrado) return productoEncontrado.nombre;
+    return valor;
   };
 
   return (
@@ -333,9 +343,33 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <tbody>
                 {pedidoAbierto.lineas.map((linea, idx) => (
                   <tr key={idx}>
-                    <td>{linea.producto}</td>
+                    <td>
+                      <input
+                        list="productos-lista-global"
+                        value={linea.producto}
+                        onChange={e => {
+                          const valor = autocompletarProducto(e.target.value);
+                          actualizarLinea(idx, 'producto', valor);
+                        }}
+                        placeholder="Producto"
+                        style={{ width: 120, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px' }}
+                      />
+                      <datalist id="productos-lista-global">
+                        {productos.map(prod => (
+                          <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                            {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                          </option>
+                        ))}
+                      </datalist>
+                    </td>
                     <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
-                      {linea.cantidad}
+                      <input
+                        type="number"
+                        min="1"
+                        value={linea.cantidad}
+                        onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
+                        style={{ width: 60 }}
+                      />
                       {/* Botón sumatorio solo si cantidad > 1 */}
                       {linea.cantidad > 1 && linea.cantidad <= 10 && (
                         <button
@@ -407,8 +441,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       <input
                         type="number"
                         min="0"
-                        step="any" // Permitir decimales si es necesario para cantidadEnviada
-                        value={linea.cantidadEnviada ?? ''} // Muestra string vacío si es null/undefined
+                        step="any"
+                        value={linea.cantidadEnviada ?? ''}
                         onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
                         style={{ width: 70 }}
                       />
@@ -421,8 +455,21 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                         style={{ width: 90 }}
                       />
                     </td>
-                    <td>{FORMATOS_PEDIDO.includes(linea.formato) ? linea.formato : '-'}</td>
-                    <td>{linea.comentario}</td>
+                    <td>
+                      <select value={linea.formato} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
+                        {FORMATOS_PEDIDO.map(f => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={linea.comentario ?? ''}
+                        onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
+                        style={{ width: 110 }}
+                      />
+                    </td>
                     <td>
                       <button
                         style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
@@ -434,6 +481,23 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     </td>
                   </tr>
                 ))}
+                {/* Botón para añadir línea */}
+                <tr>
+                  <td colSpan="8" style={{textAlign:'left', paddingTop:8}}>
+                    <button
+                      style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}}
+                      onClick={() => setPedidoAbierto(prev => ({
+                        ...prev,
+                        lineas: [
+                          ...prev.lineas,
+                          { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false }
+                        ]
+                      }))}
+                    >
+                      Añadir línea
+                    </button>
+                  </td>
+                </tr>
                 <tr>
                   <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
                     <button
