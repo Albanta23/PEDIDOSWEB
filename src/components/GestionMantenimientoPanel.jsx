@@ -101,8 +101,8 @@ export default function GestionMantenimientoPanel({ onClose }) {
     doc.text('Nombre', 8, y);
     doc.text('Referencia', 48, y);
     doc.text('Unidad', 74, y);
-    doc.text('Familia', 92, y);
-    doc.text('Nombre Familia', 120, y);
+    doc.text('Número de familia', 92, y);
+    doc.text('Nombre Familia', 122, y); // desplazada a la derecha
     doc.text('Activo', 160, y);
     doc.text('Fabricable', 175, y);
     y += 6;
@@ -118,8 +118,8 @@ export default function GestionMantenimientoPanel({ onClose }) {
       doc.text(String(p.nombre || '-'), 8, y, { maxWidth: 38 });
       doc.text(String(p.referencia || '-'), 48, y, { maxWidth: 24 });
       doc.text(String(p.unidad || '-'), 74, y, { maxWidth: 16 });
-      doc.text(String(p.familia || '-'), 92, y, { maxWidth: 26 });
-      doc.text(String(p.nombreFamilia || '-'), 120, y, { maxWidth: 38 });
+      doc.text(String(p.familia || '-'), 92, y, { maxWidth: 28 });
+      doc.text(String(p.nombreFamilia || '-'), 122, y, { maxWidth: 54 }); // más ancho para nombres largos
       doc.text(p.activo ? 'Sí' : 'No', 160, y);
       doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 175, y);
       y += 6;
@@ -197,7 +197,7 @@ export default function GestionMantenimientoPanel({ onClose }) {
                           <th>Nombre</th>
                           <th>Referencia</th>
                           <th>Unidad</th>
-                          <th>Familia</th>
+                          <th>Número de familia</th>
                           <th>Nombre Familia</th>
                           <th>Activo</th>
                           <th>Fabricable</th>
