@@ -4,6 +4,7 @@ import { crearPedido, actualizarPedido, obtenerPedidos } from '../services/pedid
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
+import { useProductos } from './ProductosContext';
 
 // Definir API_URL global seguro para todas las llamadas
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001'; // Usa la variable de entorno de Vite, o localhost por defecto
@@ -30,6 +31,7 @@ async function cargarLogoBase64(url) {
 }
 
 export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onVerHistoricoPedidos }) {
+  const { productos, cargando } = useProductos();
   const [mostrarTransferencias, setMostrarTransferencias] = useState(false);
   const [creandoNuevo, setCreandoNuevo] = useState(false);
   const [lineasEdit, setLineasEdit] = useState([]);
@@ -434,9 +436,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               {tiendaActual.nombre}
             </div>
           )}
-          
           <b style={{fontSize:18, color:'#007bff'}}>Nuevo pedido (borrador)</b>
-          
           {/* Indicador de guardado */}
           {logGuardado && (
             <div style={{
@@ -457,7 +457,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               Líneas guardadas ✔
             </div>
           )}
-          
           <div style={{background:'#f8f9fa',padding:16,borderRadius:10,margin:'14px 0'}}>
             <ul style={{padding:0, margin:0, listStyle:'none'}}>
               {lineasEdit.length === 0 && (
@@ -472,18 +471,26 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                   background:'#fff',
                   borderRadius:10,
                   boxShadow:'0 1px 6px #007bff11',
-                  padding:'12px 28px 12px 18px', // padding-right aumentado
+                  padding:'12px 28px 12px 18px',
                   border:'1px solid #e0e6ef',
                   position:'relative'
                 }}>
                   <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
                     <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Producto</label>
                     <input 
+                      list={`productos-lista-global`}
                       value={linea.producto} 
                       onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
                       placeholder="Producto" 
                       style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
                     />
+                    <datalist id="productos-lista-global">
+                      {productos.map(p => (
+                        <option key={p._id || p.referencia || p.nombre} value={p.nombre}>
+                          {p.nombre} {p.referencia ? `(${p.referencia})` : ''}
+                        </option>
+                      ))}
+                    </datalist>
                   </div>
                   <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:70}}>
                     <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Cantidad</label>
@@ -496,29 +503,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
                     />
                   </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:80}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Peso (kg)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={linea.peso ?? ''}
-                      onChange={e => handleLineaChange(i, 'peso', e.target.value === '' ? null : parseFloat(e.target.value))}
-                      placeholder="Peso (kg)"
-                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
-                    />
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Formato</label>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Unidad</label>
                     <select 
-                      value={linea.formato || ''} 
+                      value={linea.formato || 'kg'} 
                       onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
                       style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
                     >
-                      <option value="">Formato</option>
-                      {FORMATOS_PEDIDO.map(f => (
-                        <option key={f} value={f}>{f}</option>
-                      ))}
+                      <option value="kg">Kilos</option>
+                      <option value="uds">Unidades</option>
+                      <option value="piezas">Piezas</option>
+                      <option value="caja">Caja</option>
                     </select>
                   </div>
                   <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>
@@ -530,11 +525,20 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
                     />
                   </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
+                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Fabricable</label>
+                    <input 
+                      type="checkbox" 
+                      checked={!!linea.fabricable} 
+                      onChange={e => handleLineaChange(i, 'fabricable', e.target.checked)} 
+                      style={{width:22, height:22, accentColor:'#1976d2'}}
+                      title="¿Es fabricable?"
+                    />
+                  </div>
                   <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
                 </li>
               ))}
             </ul>
-            
             <div style={{display:'flex', gap:10, marginTop:12, alignItems:'center', justifyContent:'flex-end'}}>
               <button onClick={handleAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>
                 Añadir línea
