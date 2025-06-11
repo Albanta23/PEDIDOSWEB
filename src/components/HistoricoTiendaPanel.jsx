@@ -5,6 +5,7 @@ import { DATOS_EMPRESA } from '../configDatosEmpresa';
 import logo from '../assets/logo1.png';
 import { listarAvisos, marcarAvisoVisto } from '../services/avisosService';
 import { FORMATOS_PEDIDO } from '../configFormatos';
+import { useProductos } from './ProductosContext';
 
 function cargarLogoBase64(url) {
   return new Promise((resolve, reject) => {
@@ -155,6 +156,7 @@ async function generarPDFTienda(pedido, tiendaNombre) {
 }
 
 const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido, onAvisoVisto }) => {
+  const { productos } = useProductos();
   const [modalPedido, setModalPedido] = useState(null);
   const [editandoLineas, setEditandoLineas] = useState(null); // Si no es null, es el array de líneas editables
   const [avisos, setAvisos] = useState([]);
@@ -416,7 +418,19 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
                         editandoLineas ? (
                           <>
                             <td style={{padding:'8px 10px'}}>
-                              <input value={l.producto} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,producto:e.target.value}:li))} style={{width:100}} />
+                              <input
+                                list={`productos-lista-global`}
+                                value={l.producto}
+                                onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,producto:e.target.value}:li))}
+                                style={{width:100}}
+                              />
+                              <datalist id="productos-lista-global">
+                                {productos.map(prod => (
+                                  <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                                    {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                                  </option>
+                                ))}
+                              </datalist>
                             </td>
                             <td style={{padding:'8px 10px'}}>
                               <input value={l.formato} onChange={e => setEditandoLineas(editandoLineas.map((li,ix)=>ix===i?{...li,formato:e.target.value}:li))} style={{width:80}} />

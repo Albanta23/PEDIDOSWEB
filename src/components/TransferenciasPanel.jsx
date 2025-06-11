@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { listarTransferencias, crearTransferencia, actualizarTransferencia, confirmarTransferencia } from '../services/transferenciasService';
+import { useProductos } from './ProductosContext';
 
 const estados = {
   pendiente: 'Pendiente',
@@ -9,6 +10,7 @@ const estados = {
 };
 
 export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica, filtroTienda, filtroFechaDesde, filtroFechaHasta, filtrarTransferencias }) {
+  const { productos } = useProductos();
   const [transferencias, setTransferencias] = useState([]);
   const [form, setForm] = useState({
     origen: '',
@@ -100,7 +102,21 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
           </div>
           {form.productos.map((p, idx) => (
             <div key={idx} style={{display:'flex',gap:8,marginTop:8,alignItems:'center'}}>
-              <input type='text' placeholder='Producto' value={p.producto} onChange={e => handleProductoChange(idx, 'producto', e.target.value)} style={{width:120}} />
+              <input
+                list={`productos-lista-global`}
+                type='text'
+                placeholder='Producto'
+                value={p.producto}
+                onChange={e => handleProductoChange(idx, 'producto', e.target.value)}
+                style={{width:120}}
+              />
+              <datalist id="productos-lista-global">
+                {productos.map(prod => (
+                  <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                    {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                  </option>
+                ))}
+              </datalist>
               <input type='number' min={1} placeholder='Cantidad' value={p.cantidad} onChange={e => handleProductoChange(idx, 'cantidad', e.target.value)} style={{width:70}} />
               <input type='text' placeholder='Lote' value={p.lote} onChange={e => handleProductoChange(idx, 'lote', e.target.value)} style={{width:80}} />
               <input type='text' placeholder='Comentario' value={p.comentario} onChange={e => handleProductoChange(idx, 'comentario', e.target.value)} style={{width:120}} />

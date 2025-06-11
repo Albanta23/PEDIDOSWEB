@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { jsPDF } from "jspdf";
 import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
+import { useProductos } from './ProductosContext';
 
 // Utilidad para cargar imagen como base64 y devolver una promesa
 function cargarLogoBase64(url) {
@@ -158,6 +159,7 @@ async function generarPDFEnvio(pedido, tiendas) {
 }
 
 const HistoricoFabrica = ({ pedidos, tiendas, onVolver }) => {
+  const { productos } = useProductos();
   const [modalPedido, setModalPedido] = useState(null);
   const [filtro, setFiltro] = useState('dia');
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState('todas');
