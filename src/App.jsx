@@ -15,7 +15,7 @@ import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from '.
 import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
 import { ProductosProvider } from './components/ProductosContext';
-import AlmacenTiendaPanel from './AlmacenTiendaPanel';
+import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
