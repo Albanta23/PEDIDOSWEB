@@ -6,6 +6,7 @@ const ProductoSchema = new mongoose.Schema({
   referencia: { type: String, unique: true },
   unidad: { type: String, default: 'kg' },
   familia: { type: String },
+  nombreFamilia: { type: String }, // Nuevo campo para el nombre de la familia
   activo: { type: Boolean, default: true },
   descripcion: { type: String },
 }, { timestamps: true });

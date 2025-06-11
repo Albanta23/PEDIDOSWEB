@@ -367,8 +367,9 @@ app.post('/api/productos/importar', async (req, res) => {
       return {
         referencia: prodExcel['Cód.'] || prodExcel['Cod.'] || prodExcel['Código'] || '',
         nombre: prodExcel['Descripción'] || prodExcel['Nombre'] || '',
-        // Si existe el nombre de familia, úsalo; si no, usa el código de familia
-        familia: prodExcel['Nombre Familia'] || prodExcel['C.Fam.'] || '',
+        // Guardar ambos campos: código y nombre de familia
+        familia: prodExcel['C.Fam.'] || prodExcel['Familia'] || '',
+        nombreFamilia: prodExcel['Nombre Familia'] || '',
         unidad: prodExcel['Unidad'] || 'kg',
         activo: prodExcel['Activo'] !== undefined ? Boolean(prodExcel['Activo']) : true,
         descripcion: prodExcel['Descripción'] || '',
@@ -431,6 +432,17 @@ app.post('/api/productos/actualizar-masivo', async (req, res) => {
       }
     }
     res.json({ ok: true, actualizados, errores });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- ENDPOINT: Borrar producto por ID ---
+app.delete('/api/productos/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    await Producto.findByIdAndDelete(id);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

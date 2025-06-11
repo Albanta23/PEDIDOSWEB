@@ -74,43 +74,57 @@ export default function GestionMantenimientoPanel({ onClose }) {
   // Filtrar productos por familia
   const productosFiltrados = filtroFamilia ? productosDB.filter(p => p.familia === filtroFamilia) : productosDB;
 
+  // Eliminar producto
+  const handleBorrarProducto = async (id) => {
+    if (!window.confirm('¿Seguro que quieres borrar este producto?')) return;
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+    try {
+      await axios.delete(`${API_URL}/api/productos/${id}`);
+      setProductosDB(productosDB.filter(p => p._id !== id));
+    } catch (e) {
+      alert('Error al borrar producto: ' + (e.response?.data?.error || e.message));
+    }
+  };
+
   // Exportar productos filtrados a PDF
   const exportarProductosPDF = async () => {
     const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('Listado de productos', 14, 18);
+    doc.setFontSize(13); // Más pequeño para que quepan los campos
+    doc.text('Listado de productos', 14, 16);
     if (filtroFamilia) {
-      doc.setFontSize(13);
-      doc.text(`Familia: ${filtroFamilia}`, 14, 28);
+      doc.setFontSize(10);
+      doc.text(`Familia: ${filtroFamilia}`, 14, 22);
     }
-    let y = filtroFamilia ? 36 : 28;
-    doc.setFontSize(11);
+    let y = filtroFamilia ? 28 : 22;
+    doc.setFontSize(8);
     // Cabecera
-    doc.text('Nombre', 14, y);
-    doc.text('Referencia', 54, y);
-    doc.text('Unidad', 84, y);
-    doc.text('Familia', 104, y);
-    doc.text('Activo', 134, y);
-    doc.text('Fabricable', 154, y);
-    doc.text('Descripción', 174, y);
-    y += 7;
+    doc.text('Nombre', 8, y);
+    doc.text('Referencia', 38, y);
+    doc.text('Unidad', 60, y);
+    doc.text('Familia', 75, y);
+    doc.text('Nombre Familia', 95, y);
+    doc.text('Activo', 125, y);
+    doc.text('Fabricable', 140, y);
+    doc.text('Descripción', 160, y);
+    y += 6;
     doc.setLineWidth(0.2);
-    doc.line(14, y, 200, y);
-    y += 4;
-    doc.setFontSize(10);
+    doc.line(8, y, 200, y);
+    y += 3;
+    doc.setFontSize(7);
     productosFiltrados.forEach((p, i) => {
       if (y > 280) {
         doc.addPage();
         y = 20;
       }
-      doc.text(String(p.nombre || '-'), 14, y);
-      doc.text(String(p.referencia || '-'), 54, y);
-      doc.text(String(p.unidad || '-'), 84, y);
-      doc.text(String(p.familia || '-'), 104, y);
-      doc.text(p.activo ? 'Sí' : 'No', 134, y);
-      doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 154, y);
-      doc.text(String(p.descripcion || '-').substring(0, 30), 174, y);
-      y += 7;
+      doc.text(String(p.nombre || '-'), 8, y);
+      doc.text(String(p.referencia || '-'), 38, y);
+      doc.text(String(p.unidad || '-'), 60, y);
+      doc.text(String(p.familia || '-'), 75, y);
+      doc.text(String(p.nombreFamilia || '-'), 95, y);
+      doc.text(p.activo ? 'Sí' : 'No', 125, y);
+      doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 140, y);
+      doc.text(String(p.descripcion || '-').substring(0, 30), 160, y);
+      y += 6;
     });
     doc.save(`productos_${filtroFamilia || 'todas'}_${Date.now()}.pdf`);
   };
@@ -186,9 +200,11 @@ export default function GestionMantenimientoPanel({ onClose }) {
                           <th>Referencia</th>
                           <th>Unidad</th>
                           <th>Familia</th>
+                          <th>Nombre Familia</th>
                           <th>Activo</th>
                           <th>Fabricable</th>
                           <th>Descripción</th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -198,9 +214,11 @@ export default function GestionMantenimientoPanel({ onClose }) {
                             <td>{editMode ? <input value={productosEditados[prod._id]?.referencia ?? prod.referencia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],referencia:e.target.value}}))} /> : prod.referencia}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.unidad ?? prod.unidad} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],unidad:e.target.value}}))} /> : prod.unidad}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.familia ?? prod.familia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],familia:e.target.value}}))} /> : prod.familia}</td>
+                            <td>{editMode ? <input value={productosEditados[prod._id]?.nombreFamilia ?? prod.nombreFamilia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombreFamilia:e.target.value}}))} /> : prod.nombreFamilia}</td>
                             <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.activo ?? prod.activo} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],activo:e.target.checked}}))} /> : (prod.activo ? 'Sí' : 'No')}</td>
                             <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.fabricable ?? prod.fabricable ?? false} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],fabricable:e.target.checked}}))} /> : (prod.fabricable !== undefined ? (prod.fabricable ? 'Sí' : 'No') : '-')}</td>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.descripcion ?? prod.descripcion} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],descripcion:e.target.value}}))} /> : prod.descripcion}</td>
+                            <td><button onClick={()=>handleBorrarProducto(prod._id)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:18}} title="Borrar">🗑</button></td>
                           </tr>
                         ))}
                       </tbody>
