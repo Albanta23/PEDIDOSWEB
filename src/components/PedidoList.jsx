@@ -205,13 +205,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
   };
 
-  const handleEliminarLinea = (idx) => {
-    const nuevasLineas = lineasEdit.filter((_, i) => i !== idx);
-    setLineasEdit(nuevasLineas);
+  const handleAgregarLinea = () => {
+    const nuevas = [...lineasEdit, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }];
+    setLineasEdit(ordenarLineasPorFamilia(nuevas));
   };
 
-  const handleAgregarLinea = () => {
-    setLineasEdit([...lineasEdit, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
+  const handleEliminarLinea = (idx) => {
+    const nuevas = lineasEdit.filter((_, i) => i !== idx);
+    setLineasEdit(ordenarLineasPorFamilia(nuevas));
   };
 
   const handleLineaChange = (idx, campo, valor) => {
@@ -227,7 +228,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     const nuevasLineas = lineasEdit.map((linea, i) => 
       i === idx ? { ...linea, [campo]: valor } : linea
     );
-    setLineasEdit(nuevasLineas);
+    setLineasEdit(ordenarLineasPorFamilia(nuevasLineas));
   };
 
   const handleCancelar = () => {
