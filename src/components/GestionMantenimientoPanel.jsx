@@ -89,23 +89,22 @@ export default function GestionMantenimientoPanel({ onClose }) {
   // Exportar productos filtrados a PDF
   const exportarProductosPDF = async () => {
     const doc = new jsPDF();
-    doc.setFontSize(13); // Más pequeño para que quepan los campos
-    doc.text('Listado de productos', 14, 16);
+    doc.setFontSize(13); // Tamaño pequeño
+    doc.text('Listado de productos', 10, 16);
     if (filtroFamilia) {
       doc.setFontSize(10);
-      doc.text(`Familia: ${filtroFamilia}`, 14, 22);
+      doc.text(`Familia: ${filtroFamilia}`, 10, 22);
     }
     let y = filtroFamilia ? 28 : 22;
     doc.setFontSize(8);
     // Cabecera
     doc.text('Nombre', 8, y);
-    doc.text('Referencia', 38, y);
-    doc.text('Unidad', 60, y);
-    doc.text('Familia', 75, y);
-    doc.text('Nombre Familia', 95, y);
-    doc.text('Activo', 125, y);
-    doc.text('Fabricable', 140, y);
-    doc.text('Descripción', 160, y);
+    doc.text('Referencia', 48, y);
+    doc.text('Unidad', 74, y);
+    doc.text('Familia', 92, y);
+    doc.text('Nombre Familia', 120, y);
+    doc.text('Activo', 160, y);
+    doc.text('Fabricable', 175, y);
     y += 6;
     doc.setLineWidth(0.2);
     doc.line(8, y, 200, y);
@@ -116,14 +115,13 @@ export default function GestionMantenimientoPanel({ onClose }) {
         doc.addPage();
         y = 20;
       }
-      doc.text(String(p.nombre || '-'), 8, y);
-      doc.text(String(p.referencia || '-'), 38, y);
-      doc.text(String(p.unidad || '-'), 60, y);
-      doc.text(String(p.familia || '-'), 75, y);
-      doc.text(String(p.nombreFamilia || '-'), 95, y);
-      doc.text(p.activo ? 'Sí' : 'No', 125, y);
-      doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 140, y);
-      doc.text(String(p.descripcion || '-').substring(0, 30), 160, y);
+      doc.text(String(p.nombre || '-'), 8, y, { maxWidth: 38 });
+      doc.text(String(p.referencia || '-'), 48, y, { maxWidth: 24 });
+      doc.text(String(p.unidad || '-'), 74, y, { maxWidth: 16 });
+      doc.text(String(p.familia || '-'), 92, y, { maxWidth: 26 });
+      doc.text(String(p.nombreFamilia || '-'), 120, y, { maxWidth: 38 });
+      doc.text(p.activo ? 'Sí' : 'No', 160, y);
+      doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 175, y);
       y += 6;
     });
     doc.save(`productos_${filtroFamilia || 'todas'}_${Date.now()}.pdf`);
@@ -203,7 +201,6 @@ export default function GestionMantenimientoPanel({ onClose }) {
                           <th>Nombre Familia</th>
                           <th>Activo</th>
                           <th>Fabricable</th>
-                          <th>Descripción</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -217,7 +214,6 @@ export default function GestionMantenimientoPanel({ onClose }) {
                             <td>{editMode ? <input value={productosEditados[prod._id]?.nombreFamilia ?? prod.nombreFamilia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombreFamilia:e.target.value}}))} /> : prod.nombreFamilia}</td>
                             <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.activo ?? prod.activo} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],activo:e.target.checked}}))} /> : (prod.activo ? 'Sí' : 'No')}</td>
                             <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.fabricable ?? prod.fabricable ?? false} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],fabricable:e.target.checked}}))} /> : (prod.fabricable !== undefined ? (prod.fabricable ? 'Sí' : 'No') : '-')}</td>
-                            <td>{editMode ? <input value={productosEditados[prod._id]?.descripcion ?? prod.descripcion} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],descripcion:e.target.value}}))} /> : prod.descripcion}</td>
                             <td><button onClick={()=>handleBorrarProducto(prod._id)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:18}} title="Borrar">🗑</button></td>
                           </tr>
                         ))}
