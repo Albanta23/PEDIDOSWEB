@@ -1,0 +1,16 @@
+// Modelo de movimiento de stock para almacén de tienda
+const mongoose = require('mongoose');
+
+const MovimientoStockSchema = new mongoose.Schema({
+  tiendaId: { type: String, required: true },
+  producto: { type: String, required: true },
+  cantidad: { type: Number, required: true },
+  unidad: { type: String, default: 'kg' },
+  lote: { type: String },
+  fecha: { type: Date, default: Date.now },
+  tipo: { type: String, enum: ['entrada', 'baja', 'transferencia_salida', 'transferencia_entrada', 'devolucion_salida', 'devolucion_entrada'], required: true }, // entrada: pedido recibido, baja: caducidad/deterioro
+  motivo: { type: String }, // Ej: "Pedido fábrica", "Caducidad", "Deterioro"
+  pedidoId: { type: String }, // Si viene de un pedido
+});
+
+module.exports = mongoose.model('MovimientoStock', MovimientoStockSchema);

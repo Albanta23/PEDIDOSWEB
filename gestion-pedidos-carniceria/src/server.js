@@ -17,6 +17,7 @@ const Aviso = require('./models/Aviso'); // Añadido
 const HistorialProveedor = require('./models/HistorialProveedor'); // Usar modelo global
 const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
 const Producto = require('./models/Producto'); // Importar modelo de productos
+const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimientos de almacén
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -173,11 +174,13 @@ app.post('/api/pedidos', async (req, res) => {
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('[BACKEND] PUT /api/pedidos/:id', id, 'Body:', req.body);
-    // Permitir actualización de todos los campos
+    const pedidoPrevio = await Pedido.findById(id);
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
-    console.log('[BACKEND] Pedido actualizado:', pedidoActualizado);
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
+    // Si el estado cambió a 'enviadoTienda' y antes no lo estaba, registrar entradas
+    if (pedidoActualizado.estado === 'enviadoTienda' && pedidoPrevio.estado !== 'enviadoTienda') {
+      await registrarEntradasStockPorPedido(pedidoActualizado);
+    }
     io.emit('pedido_actualizado', pedidoActualizado);
     console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
     res.json(pedidoActualizado);
@@ -339,12 +342,27 @@ app.put('/api/transferencias/:id', async (req, res) => {
   }
 });
 
-// Confirmar una transferencia (cambiar estado)
+// Confirmar una transferencia (cambiar estado y reflejar movimientos de stock solo al recibir)
 app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
   try {
     const { id } = req.params;
     const transferencia = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
     if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
+    // Solo al confirmar, registrar movimientos de stock reales
+    for (const prod of transferencia.productos) {
+      // Entrada en destino (si no existe ya)
+      await MovimientoStock.create({
+        tiendaId: transferencia.destino,
+        producto: prod.producto,
+        cantidad: prod.cantidad,
+        unidad: prod.unidad || 'kg',
+        lote: prod.lote || '',
+        motivo: 'Transferencia recibida de ' + transferencia.origen,
+        tipo: transferencia.destino === 'TIENDA FABRICA' ? 'devolucion_entrada' : 'transferencia_entrada',
+        fecha: new Date(),
+        transferenciaId: transferencia._id.toString()
+      });
+    }
     res.json(transferencia);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -448,6 +466,78 @@ app.delete('/api/productos/:id', async (req, res) => {
   }
 });
 
+// --- ENDPOINTS DE MOVIMIENTOS DE STOCK ---
+// Consultar movimientos de stock de una tienda (con filtros)
+app.get('/api/movimientos-stock', async (req, res) => {
+  try {
+    const { tiendaId, producto, lote, desde, hasta } = req.query;
+    const filtro = {};
+    if (tiendaId) filtro.tiendaId = tiendaId;
+    if (producto) filtro.producto = producto;
+    if (lote) filtro.lote = lote;
+    if (desde || hasta) {
+      filtro.fecha = {};
+      if (desde) filtro.fecha.$gte = new Date(desde);
+      if (hasta) filtro.fecha.$lte = new Date(hasta);
+    }
+    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
+    res.json(movimientos);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Registrar baja de stock
+app.post('/api/movimientos-stock/baja', async (req, res) => {
+  try {
+    const { tiendaId, producto, cantidad, unidad, lote, motivo } = req.body;
+    if (!tiendaId || !producto || !cantidad || !motivo) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios para la baja' });
+    }
+    const mov = await MovimientoStock.create({
+      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'baja', fecha: new Date()
+    });
+    res.json(mov);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Registrar entrada de stock (por pedido recibido de fábrica)
+app.post('/api/movimientos-stock/entrada', async (req, res) => {
+  try {
+    const { tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId } = req.body;
+    if (!tiendaId || !producto || !cantidad) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios para la entrada' });
+    }
+    const mov = await MovimientoStock.create({
+      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'entrada', pedidoId, fecha: new Date()
+    });
+    res.json(mov);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// --- REGISTRO AUTOMÁTICO DE ENTRADAS DE STOCK AL ENVIAR PEDIDO A TIENDA ---
+const registrarEntradasStockPorPedido = async (pedido) => {
+  if (!pedido || !pedido.tiendaId || !Array.isArray(pedido.lineas)) return;
+  for (const linea of pedido.lineas) {
+    if (!linea.producto || !linea.cantidadEnviada) continue;
+    await MovimientoStock.create({
+      tiendaId: pedido.tiendaId,
+      producto: linea.producto,
+      cantidad: linea.cantidadEnviada,
+      unidad: linea.formato || 'kg',
+      lote: linea.lote || '',
+      motivo: 'Pedido fábrica',
+      tipo: 'entrada',
+      pedidoId: pedido._id?.toString() || pedido.id?.toString() || '',
+      fecha: new Date()
+    });
+  }
+};
+
 // WebSocket para tiempo real
 io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
   console.log('Cliente conectado:', socket.id);
@@ -470,6 +560,56 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 
 const mailjetProveedorEmailV2 = require('./mailjetProveedorEmailV2');
 mailjetProveedorEmailV2(app);
+
+// --- ENDPOINT: Registrar transferencia entre tiendas y reflejar en movimientos de stock ---
+app.post('/api/transferencias/registrar', async (req, res) => {
+  try {
+    const { origenId, destinoId, productos, observaciones, usuario } = req.body;
+    if (!origenId || !destinoId || !Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ error: 'Faltan datos para la transferencia' });
+    }
+    // Registrar transferencia en colección Transferencia
+    const transferencia = await Transferencia.create({
+      origen: origenId,
+      destino: destinoId,
+      productos,
+      observaciones,
+      usuario,
+      fecha: new Date(),
+      estado: 'realizada'
+    });
+    // Registrar movimientos de stock: salida en origen, entrada en destino
+    for (const prod of productos) {
+      // Salida en origen
+      await MovimientoStock.create({
+        tiendaId: origenId,
+        producto: prod.producto,
+        cantidad: prod.cantidad,
+        unidad: prod.unidad || 'kg',
+        lote: prod.lote || '',
+        motivo: 'Transferencia a ' + destinoId,
+        tipo: 'transferencia_salida',
+        fecha: new Date(),
+        transferenciaId: transferencia._id.toString()
+      });
+      // Entrada en destino
+      await MovimientoStock.create({
+        tiendaId: destinoId,
+        producto: prod.producto,
+        cantidad: prod.cantidad,
+        unidad: prod.unidad || 'kg',
+        lote: prod.lote || '',
+        motivo: 'Transferencia desde ' + origenId,
+        tipo: 'transferencia_entrada',
+        fecha: new Date(),
+        transferenciaId: transferencia._id.toString()
+      });
+    }
+    res.json({ ok: true, transferencia });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
