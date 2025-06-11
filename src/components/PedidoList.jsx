@@ -99,6 +99,22 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
   };
 
+  // Utilidad para obtener la familia de un producto dado su nombre
+  const obtenerFamiliaProducto = (nombreProducto) => {
+    const prod = productos.find(p => p.nombre === nombreProducto);
+    return prod?.nombreFamilia || prod?.familia || '';
+  };
+
+  const ordenarLineasPorFamilia = (lineas) => {
+    return [...lineas].sort((a, b) => {
+      const famA = obtenerFamiliaProducto(a.producto)?.toLowerCase() || '';
+      const famB = obtenerFamiliaProducto(b.producto)?.toLowerCase() || '';
+      if (famA < famB) return -1;
+      if (famA > famB) return 1;
+      return 0;
+    });
+  };
+
   const handleGuardarLineas = () => {
     if (lineasEdit.length === 0) {
       alert('No hay líneas para guardar.');
@@ -106,11 +122,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
 
     // Filtrar solo líneas válidas
-    const lineasValidas = lineasEdit.filter(l => l.producto && l.cantidad > 0);
+    let lineasValidas = lineasEdit.filter(l => l.producto && l.cantidad > 0);
     if (lineasValidas.length === 0) {
       alert('No hay líneas válidas para guardar.');
       return;
     }
+
+    // ORDENAR por familia antes de guardar
+    lineasValidas = ordenarLineasPorFamilia(lineasValidas);
 
     // Crear o actualizar pedido en borrador
     let pedidoBorrador = pedidos.find(p => p.estado === 'borrador' && (p.tiendaId === tiendaActual?.id || p.tienda?.id === tiendaActual?.id));
@@ -144,11 +163,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
 
   const handleConfirmarYEnviarPedido = async () => {
     // Filtrar líneas válidas
-    const lineasValidas = lineasEdit.filter(l => l.producto && l.cantidad > 0);
+    let lineasValidas = lineasEdit.filter(l => l.producto && l.cantidad > 0);
     if (lineasValidas.length === 0) {
       alert('El pedido no tiene líneas válidas.');
       return;
     }
+
+    // ORDENAR por familia antes de enviar
+    lineasValidas = ordenarLineasPorFamilia(lineasValidas);
 
     try {
       // Crear el pedido con estado 'enviado'
