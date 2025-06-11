@@ -15,6 +15,7 @@ import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from '.
 import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
 import { ProductosProvider } from './components/ProductosContext';
+import AlmacenTiendaPanel from './AlmacenTiendaPanel';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -45,6 +46,7 @@ function App() {
   const [mostrarHistoricoTienda, setMostrarHistoricoTienda] = useState(false);
   const [pedidoEditando, setPedidoEditando] = useState(null);
   const [mostrarGestion, setMostrarGestion] = useState(false);
+  const [mostrarAlmacenTienda, setMostrarAlmacenTienda] = useState(false);
 
   // --- ESTADO PARA FEEDBACK UX ---
   const [mensaje, setMensaje] = useState(null);
@@ -317,7 +319,7 @@ function App() {
             {mensaje.texto}
           </div>
         )}
-        {modo === 'tienda' && logueado && !mostrarHistoricoTienda && avisos.length > 0 && (
+        {modo === 'tienda' && logueado && !mostrarHistoricoTienda && !mostrarAlmacenTienda && avisos.length > 0 && (
           <div style={{
             position: 'fixed', top: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 3000,
             display: 'flex', flexDirection: 'column', gap: 10, minWidth: 320, maxWidth: 600, width: '90vw',
@@ -399,9 +401,19 @@ function App() {
                 modo={"tienda"}
                 tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
               />
-              <button onClick={() => setMostrarHistoricoTienda(true)} style={{marginLeft:12,background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>Ver histórico de pedidos</button>
+              <div style={{display:'flex',gap:12,marginTop:18}}>
+                <button onClick={() => setMostrarHistoricoTienda(true)} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
+                  Ver histórico de pedidos
+                </button>
+                <button onClick={() => setMostrarAlmacenTienda(true)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
+                  Gestión de almacén
+                </button>
+              </div>
             </div>
           )
+        )}
+        {modo === 'tienda' && logueado && mostrarAlmacenTienda && (
+          <AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />
         )}
         <ErrorLogger />
         {modo === 'tienda' && (
