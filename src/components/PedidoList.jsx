@@ -407,6 +407,16 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
   }, [tiendaActual?.id, mostrarModalProveedor]);
 
+  // Añadir función para validar si el producto existe
+  const productoValido = (valor) => {
+    if (!valor) return true;
+    // Buscar por nombre o referencia
+    return productos.some(p =>
+      (p.nombre && p.nombre.toLowerCase() === valor.toLowerCase()) ||
+      (p.referencia && p.referencia.toLowerCase() === valor.toLowerCase())
+    );
+  };
+
   return (
     <>
       {/* Toast de confirmación de guardado */}
@@ -428,23 +438,10 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       {/* Editor visual unificado para crear pedido */}
       {creandoNuevo && (
         <div style={{ border: "2px solid #007bff", margin: 12, padding: 20, background: '#fafdff', borderRadius: 14, boxShadow:'0 2px 12px #007bff11', maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', position:'relative' }}>
-          {/* Nombre de la tienda */}
-          {tiendaActual?.nombre && (
-            <div style={{
-              textAlign: 'center',
-              fontSize: 28,
-              fontWeight: 900,
-              color: '#007bff',
-              marginBottom: 18,
-              letterSpacing: 1,
-              background: '#eaf4ff',
-              borderRadius: 10,
-              padding: '12px 0',
-              boxShadow: '0 2px 8px #007bff11'
-            }}>
-              {tiendaActual.nombre}
-            </div>
-          )}
+          {/* Resumen visual fijo */}
+          <div style={{position:'sticky',top:0,background:'#eaf4ff',padding:'8px 0 8px 0',zIndex:2,borderBottom:'1px solid #e0e6ef',marginBottom:12,borderRadius:8,fontWeight:600,fontSize:16,color:'#007bff',textAlign:'center'}}>
+            Resumen: {lineasEdit.length} líneas · {lineasEdit.reduce((a,l)=>a+(Number(l.cantidad)||0),0)} unidades · {new Set(lineasEdit.map(l=>l.producto)).size} productos únicos
+          </div>
           <b style={{fontSize:18, color:'#007bff'}}>Nuevo pedido (borrador)</b>
           {/* Indicador de guardado */}
           {logGuardado && (
@@ -491,8 +488,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       value={linea.producto} 
                       onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
                       placeholder="Producto" 
-                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                      style={{
+                        width:'100%',
+                        border:'1px solid '+(productoValido(linea.producto)?'#bbb':'#dc3545'),
+                        borderRadius:6,
+                        padding:'6px 8px',
+                        background: productoValido(linea.producto)?'#fff':'#fff0f0'
+                      }} 
                     />
+                    {!productoValido(linea.producto) && (
+                      <span style={{color:'#dc3545',fontSize:12,marginTop:2}}>Producto no encontrado</span>
+                    )}
                     <datalist id="productos-lista-global">
                       {productos.map(p => (
                         <option key={p._id || p.referencia || p.nombre} value={p.nombre}>
