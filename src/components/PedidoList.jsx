@@ -628,8 +628,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         alignItems: 'center',
         border: '1px solid #e0e6ef'
       }}>
-        <button onClick={onVerHistoricoPedidos} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:16,boxShadow:'0 2px 8px #1976d244'}}>Ver historial de pedidos</button>
-        <button onClick={()=>setMostrarHistorialProveedor(true)} style={{background:'#00b894',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:16,boxShadow:'0 2px 8px #00b89444'}}>Historial de compras a proveedor</button>
       </div>
 
       {/* Modal para crear y enviar lista al proveedor */}
