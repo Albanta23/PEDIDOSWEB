@@ -27,7 +27,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   useEffect(() => {
     if (!tienda) return;
     setCargando(true);
-    getMovimientosStock({ tiendaId: tienda.id })
+    // Normalizar el ID de clientes para movimientos de stock
+    let tiendaIdStock = tienda.id;
+    if (typeof tiendaIdStock === 'string' && tiendaIdStock.trim().toLowerCase() === 'clientes') {
+      tiendaIdStock = 'PEDIDOS_CLIENTES';
+    }
+    getMovimientosStock({ tiendaId: tiendaIdStock })
       .then(movs => {
         setMovimientos(movs);
         setCargando(false);
@@ -39,7 +44,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   useEffect(() => {
     if (!tienda) return;
     setCargando(true);
-    getMovimientosStock({ tiendaId: tienda.id })
+    // Normalizar el ID de clientes para movimientos de stock
+    let tiendaIdStock = tienda.id;
+    if (typeof tiendaIdStock === 'string' && tiendaIdStock.trim().toLowerCase() === 'clientes') {
+      tiendaIdStock = 'PEDIDOS_CLIENTES';
+    }
+    getMovimientosStock({ tiendaId: tiendaIdStock })
       .then(movs => {
         setMovimientos(movs);
         setCargando(false);
@@ -47,7 +57,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       .catch(() => setCargando(false));
     // Suscribirse a eventos de transferencias confirmadas si hay WebSocket/socket.io
     if (window.socket) {
-      const handler = () => getMovimientosStock({ tiendaId: tienda.id }).then(setMovimientos);
+      const handler = () => getMovimientosStock({ tiendaId: tiendaIdStock }).then(setMovimientos);
       window.socket.on('transferencia_confirmada', handler);
       return () => window.socket.off('transferencia_confirmada', handler);
     }
