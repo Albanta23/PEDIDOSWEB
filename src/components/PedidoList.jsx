@@ -798,6 +798,9 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               <button onClick={enviarProveedorMailjet} style={{backgroundImage:'url(logo_2.jpg)',backgroundSize:'contain',backgroundRepeat:'no-repeat',backgroundPosition:'center top',color:'red',border:'none',borderRadius:6,padding:'15px',fontWeight:700,display:'flex',alignItems:'flex-end',justifyContent:'center',textShadow:'1px 1px 2px rgba(255,255,255,0.8)',width:80,height:80,fontSize:'12px'}}>
                 Enviar
               </button>
+              <button onClick={()=>setMostrarHistorialProveedor(true)} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,marginLeft:8}}>
+                <span role="img" aria-label="historial" style={{marginRight:6}}>📦</span>Ver historial de envíos
+              </button>
             </div>
 
             {mensajeProveedor && <div style={{marginTop:16,color:'#388e3c',fontWeight:700,fontSize:16}}>{mensajeProveedor}</div>}
