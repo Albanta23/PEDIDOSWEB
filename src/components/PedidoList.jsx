@@ -180,7 +180,8 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         tienda: tiendaActual,
         lineas: lineasValidas.map(l => ({
           ...l,
-          cantidadEnviada: l.cantidad // Inicializar cantidadEnviada con la cantidad pedida
+          cantidadEnviada: l.cantidad, // Inicializar cantidadEnviada con la cantidad pedida
+          formato: l.formato || 'kg' // Asegurar que el formato se traslada correctamente
         }))
       };
 
@@ -480,84 +481,115 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 <li style={{color:'#888',fontStyle:'italic',marginBottom:8}}>No hay líneas. Añade una para comenzar.</li>
               )}
               {lineasEdit.map((linea, i) => (
-                <li key={i} style={{
-                  marginBottom:12,
-                  display:'flex',
-                  gap:18,
-                  alignItems:'flex-end',
-                  background:'#fff',
-                  borderRadius:10,
-                  boxShadow:'0 1px 6px #007bff11',
-                  padding:'12px 28px 12px 18px',
-                  border:'1px solid #e0e6ef',
-                  position:'relative'
-                }}>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Producto</label>
-                    <input 
-                      list={`productos-lista-global`}
-                      value={linea.producto} 
-                      onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
-                      placeholder="Producto" 
-                      style={{
-                        width:'100%',
-                        border:'1px solid '+(productoValido(linea.producto)?'#bbb':'#dc3545'),
-                        borderRadius:6,
-                        padding:'6px 8px',
-                        background: productoValido(linea.producto)?'#fff':'#fff0f0'
-                      }} 
-                    />
-                    {!productoValido(linea.producto) && (
-                      <span style={{color:'#dc3545',fontSize:12,marginTop:2}}>Producto no encontrado</span>
-                    )}
-                    <datalist id="productos-lista-global">
-                      {productos.map(p => (
-                        <option key={p._id || p.referencia || p.nombre} value={p.nombre}>
-                          {p.nombre} {p.referencia ? `(${p.referencia})` : ''}
-                        </option>
-                      ))}
-                    </datalist>
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:70}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Cantidad</label>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      value={linea.cantidad} 
-                      onChange={e => handleLineaChange(i, 'cantidad', Number(e.target.value))} 
-                      placeholder="Cantidad" 
-                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                    />
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Unidad</label>
-                    <select 
-                      value={linea.formato || 'kg'} 
-                      onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
-                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
-                    >
-                      <option value="kg">Kilos</option>
-                      <option value="uds">Unidades</option>
-                      <option value="piezas">Piezas</option>
-                      <option value="caja">Caja</option>
-                    </select>
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>
-                    <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Comentario</label>
-                    <input 
-                      value={linea.comentario||''} 
-                      onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
-                      placeholder="Comentario" 
-                      style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                    />
-                  </div>
-                  <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
-                </li>
+                linea.esComentario ? (
+                  <li key={i} style={{
+                    marginBottom:12,
+                    display:'flex',
+                    alignItems:'center',
+                    background:'#f3f3f3',
+                    borderRadius:10,
+                    boxShadow:'0 1px 6px #007bff11',
+                    padding:'12px 28px 12px 18px',
+                    border:'1px solid #e0e6ef',
+                    position:'relative',
+                    fontStyle:'italic',
+                    color:'#555',
+                    opacity:0.85
+                  }}>
+                    <span style={{flex:1}}>📝 <input 
+                      value={linea.comentario||''}
+                      onChange={e => handleLineaChange(i, 'comentario', e.target.value)}
+                      placeholder="Comentario libre"
+                      style={{width:'90%', border:'none', background:'transparent', fontStyle:'italic', color:'#555', fontSize:15}}
+                    /></span>
+                    <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar comentario">🗑</button>
+                  </li>
+                ) : (
+                  <li key={i} style={{
+                    marginBottom:12,
+                    display:'flex',
+                    gap:18,
+                    alignItems:'flex-end',
+                    background:'#fff',
+                    borderRadius:10,
+                    boxShadow:'0 1px 6px #007bff11',
+                    padding:'12px 28px 12px 18px',
+                    border:'1px solid #e0e6ef',
+                    position:'relative'
+                  }}>
+                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
+                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Producto</label>
+                      <input 
+                        list={`productos-lista-global`}
+                        value={linea.producto} 
+                        onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
+                        placeholder="Producto" 
+                        style={{
+                          width:'100%',
+                          border:'1px solid '+(productoValido(linea.producto)?'#bbb':'#dc3545'),
+                          borderRadius:6,
+                          padding:'6px 8px',
+                          background: productoValido(linea.producto)?'#fff':'#fff0f0'
+                        }} 
+                      />
+                      {!productoValido(linea.producto) && (
+                        <span style={{color:'#dc3545',fontSize:12,marginTop:2}}>Producto no encontrado</span>
+                      )}
+                      <datalist id="productos-lista-global">
+                        {productos.map(p => (
+                          <option key={p._id || p.referencia || p.nombre} value={p.nombre}>
+                            {p.nombre} {p.referencia ? `(${p.referencia})` : ''}
+                          </option>
+                        ))}
+                      </datalist>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:70}}>
+                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Cantidad</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={linea.cantidad} 
+                        onChange={e => handleLineaChange(i, 'cantidad', Number(e.target.value))} 
+                        placeholder="Cantidad" 
+                        style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                      />
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
+                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Unidad</label>
+                      <select 
+                        value={linea.formato || 'kg'} 
+                        onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
+                        style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
+                      >
+                        <option value="kg">Kilos</option>
+                        <option value="uds">Unidades</option>
+                        <option value="piezas">Piezas</option>
+                        <option value="caja">Caja</option>
+                      </select>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>
+                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Comentario</label>
+                      <input 
+                        value={linea.comentario||''} 
+                        onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
+                        placeholder="Comentario" 
+                        style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                      />
+                    </div>
+                    <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
+                  </li>
+                )
               ))}
             </ul>
             <div style={{display:'flex', gap:10, marginTop:12, alignItems:'center', justifyContent:'flex-end'}}>
               <button onClick={handleAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>
                 Añadir línea
+              </button>
+              <button onClick={() => {
+                const nuevas = [...lineasEdit, { esComentario: true, comentario: '' }];
+                setLineasEdit(ordenarLineasPorFamilia(nuevas));
+              }} style={{background:'#bbb',color:'#333',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #bbb8'}}>
+                Añadir comentario
               </button>
               <button onClick={handleGuardarLineas} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:6,padding:'9px 26px',fontWeight:800,boxShadow:'0 2px 8px #ffc10744',fontSize:17,letterSpacing:1}}>
                 💾 Guardar líneas
@@ -638,10 +670,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#b71c1c',display:'flex',alignItems:'center'}}>
               <span role="img" aria-label="cerdo" style={{fontSize:32,marginRight:10}}>🐷</span>Lista para proveedor
             </h2>
-            {/* Botón historial dentro del modal */}
-            <div style={{marginBottom:18, display:'flex', justifyContent:'flex-end'}}>
-              <button onClick={()=>setMostrarHistorialProveedor(true)} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'7px 18px',fontWeight:700,fontSize:15,boxShadow:'0 2px 8px #1976d244'}}>Ver historial de envíos</button>
-            </div>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16,minWidth:400}}>
                 <thead>
