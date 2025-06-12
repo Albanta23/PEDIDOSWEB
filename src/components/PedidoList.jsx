@@ -458,6 +458,25 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     // eslint-disable-next-line
   }, [mostrarHistorialProveedor, periodoHistorial, tiendaActual?.id]);
 
+  // Normaliza el campo formato de líneas antiguas a los nuevos valores válidos
+  function normalizarFormato(formato) {
+    if (!formato) return 'Bolsas';
+    // Mapear antiguos a nuevos
+    const mapa = {
+      'kg': 'Kilos',
+      'uds': 'Unidades',
+      'caja': 'Cajas',
+      'piezas': 'Bolsas',
+      'bolsa': 'Bolsas',
+      'bolsas': 'Bolsas',
+      'kilos': 'Kilos',
+      'unidades': 'Unidades',
+      'cajas': 'Cajas',
+    };
+    const f = String(formato).toLowerCase();
+    return mapa[f] || formato;
+  }
+
   // Inicializar con las referencias del cerdo si está vacío y se abre el modal
   useEffect(() => {
     if (!tiendaActual?.id) return;
@@ -614,14 +633,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
                         <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Unidad</label>
                         <select 
-                          value={linea.formato || 'kg'} 
+                          value={normalizarFormato(linea.formato) || 'Bolsas'} 
                           onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
                           style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
                         >
-                          <option value="kg">Kilos</option>
-                          <option value="uds">Unidades</option>
-                          <option value="piezas">Piezas</option>
-                          <option value="caja">Caja</option>
+                          <option value="Cajas">Cajas</option>
+                          <option value="Bolsas">Bolsas</option>
+                          <option value="Kilos">Kilos</option>
+                          <option value="Unidades">Unidades</option>
                         </select>
                       </div>
                       <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>

@@ -35,13 +35,33 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     pedidosPorTienda[p.tiendaId].push(p);
   });
 
+  // Normaliza el campo formato de líneas antiguas a los nuevos valores válidos
+  function normalizarFormato(formato) {
+    if (!formato) return 'Bolsas';
+    // Mapear antiguos a nuevos
+    const mapa = {
+      'kg': 'Kilos',
+      'uds': 'Unidades',
+      'caja': 'Cajas',
+      'piezas': 'Bolsas', // Cambio solicitado: piezas -> bolsas
+      'bolsa': 'Bolsas',
+      'bolsas': 'Bolsas',
+      'kilos': 'Kilos',
+      'unidades': 'Unidades',
+      'cajas': 'Cajas',
+    };
+    const f = String(formato).toLowerCase();
+    return mapa[f] || formato;
+  }
+
   // Función para abrir un pedido concreto
   const abrirPedido = (pedido) => {
     const lineasNormalizadas = pedido.lineas.map(l => {
       if (l.esComentario === true || l.esComentario === 'true' || (typeof l.esComentario !== 'undefined' && l.esComentario)) {
         return { esComentario: true, comentario: l.comentario || '' };
       }
-      return { ...l }; // Mantener las demás propiedades para líneas de producto
+      // Normalizar formato aquí
+      return { ...l, formato: normalizarFormato(l.formato) };
     });
     
     setPedidoAbierto({
