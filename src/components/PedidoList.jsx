@@ -82,6 +82,18 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
   }, [lineasEdit, tiendaActual?.id]);
 
+  // Guardado automático cada 30 segundos mientras el editor está abierto
+  useEffect(() => {
+    if (!creandoNuevo) return;
+    const interval = setInterval(() => {
+      if (tiendaActual?.id && lineasEdit.length > 0) {
+        const key = getStorageKey();
+        localStorage.setItem(key, JSON.stringify(lineasEdit));
+      }
+    }, 30000); // 30 segundos
+    return () => clearInterval(interval);
+  }, [creandoNuevo, lineasEdit, tiendaActual?.id]);
+
   // Función para limpiar localStorage cuando se envía el pedido
   const limpiarStorage = () => {
     if (tiendaActual?.id) {
