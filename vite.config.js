@@ -16,6 +16,11 @@ export default defineConfig({
     environment: 'jsdom',
   },
   server: {
+    hmr: {
+      protocol: 'wss',
+      host: `${process.env.CODESPACE_NAME}-3000.app.github.dev`,
+      clientPort: 443
+    },
     // proxy: {
     //   '/api': 'https://pedidos-backend-0e1s.onrender.com'
     // }

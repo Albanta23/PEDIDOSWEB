@@ -105,11 +105,36 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   };
 
   const ordenarLineasPorFamilia = (lineas) => {
+    // Esta función ordenará las líneas de producto por familia y nombre,
+    // y colocará todas las líneas de comentario después de las líneas de producto,
+    // manteniendo el orden relativo entre los comentarios.
     return [...lineas].sort((a, b) => {
+      const aEsComentario = a.esComentario || false;
+      const bEsComentario = b.esComentario || false;
+
+      if (aEsComentario && bEsComentario) {
+        return 0; // Mantener orden relativo entre comentarios
+      }
+      if (aEsComentario) {
+        return 1; // Comentarios después de líneas de producto
+      }
+      if (bEsComentario) {
+        return -1; // Comentarios después de líneas de producto
+      }
+
+      // Ambas son líneas de producto, ordenar por familia y luego por nombre
       const famA = obtenerFamiliaProducto(a.producto)?.toLowerCase() || '';
       const famB = obtenerFamiliaProducto(b.producto)?.toLowerCase() || '';
+
       if (famA < famB) return -1;
       if (famA > famB) return 1;
+
+      // Si las familias son iguales, ordenar por nombre de producto
+      const nombreA = a.producto?.toLowerCase() || '';
+      const nombreB = b.producto?.toLowerCase() || '';
+      if (nombreA < nombreB) return -1;
+      if (nombreA > nombreB) return 1;
+      
       return 0;
     });
   };
@@ -120,15 +145,18 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       return;
     }
 
-    // Filtrar solo líneas válidas
-    let lineasValidas = lineasEdit.filter(l => l.producto && l.cantidad > 0);
-    if (lineasValidas.length === 0) {
+    // Filtrar líneas válidas: productos con nombre y cantidad, o comentarios.
+    const lineasParaGuardar = lineasEdit.filter(l => 
+      (l.esComentario && typeof l.comentario === 'string') || 
+      (!l.esComentario && l.producto && l.cantidad > 0)
+    );
+
+    if (lineasParaGuardar.length === 0) {
       alert('No hay líneas válidas para guardar.');
       return;
     }
 
-    // ORDENAR por familia antes de guardar
-    lineasValidas = ordenarLineasPorFamilia(lineasValidas);
+    const lineasOrdenadas = ordenarLineasPorFamilia(lineasParaGuardar);
 
     // Crear o actualizar pedido en borrador
     let pedidoBorrador = pedidos.find(p => p.estado === 'borrador' && (p.tiendaId === tiendaActual?.id || p.tienda?.id === tiendaActual?.id));
@@ -138,7 +166,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       pedidoBorrador = {
         id: 'borrador_' + (tiendaActual?.id || 'default'),
         estado: 'borrador',
-        lineas: lineasValidas,
+        lineas: lineasOrdenadas,
         tienda: tiendaActual,
         tiendaId: tiendaActual?.id,
         fechaPedido: new Date().toISOString(),
@@ -148,7 +176,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       }
     } else {
       // Actualizar pedido borrador existente
-      const actualizado = { ...pedidoBorrador, lineas: lineasValidas, estado: 'borrador' };
+      const actualizado = { ...pedidoBorrador, lineas: lineasOrdenadas, estado: 'borrador' };
       if (typeof onModificar === 'function') {
         onModificar(pedidoBorrador.id, actualizado);
       }
@@ -161,15 +189,18 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   };
 
   const handleConfirmarYEnviarPedido = async () => {
-    // Filtrar líneas válidas
-    let lineasValidas = lineasEdit.filter(l => l.producto && l.cantidad > 0);
-    if (lineasValidas.length === 0) {
+    // Filtrar líneas válidas: productos con nombre y cantidad, o comentarios.
+    const lineasParaEnviar = lineasEdit.filter(l => 
+      (l.esComentario && typeof l.comentario === 'string') || 
+      (!l.esComentario && l.producto && l.cantidad > 0)
+    );
+
+    if (lineasParaEnviar.length === 0) {
       alert('El pedido no tiene líneas válidas.');
       return;
     }
 
-    // ORDENAR por familia antes de enviar
-    lineasValidas = ordenarLineasPorFamilia(lineasValidas);
+    const lineasOrdenadasYFiltradas = ordenarLineasPorFamilia(lineasParaEnviar);
 
     try {
       // Crear el pedido con estado 'enviado'
@@ -178,11 +209,23 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
         fechaPedido: new Date().toISOString(),
         tiendaId: tiendaActual?.id,
         tienda: tiendaActual,
-        lineas: lineasValidas.map(l => ({
-          ...l,
-          cantidadEnviada: l.cantidad, // Inicializar cantidadEnviada con la cantidad pedida
-          formato: l.formato || 'kg' // Asegurar que el formato se traslada correctamente
-        }))
+        lineas: lineasOrdenadasYFiltradas.map(l => {
+          if (l.esComentario) {
+            return {
+              esComentario: true,
+              comentario: l.comentario || '' // Asegurar que el comentario sea string
+            };
+          }
+          // Es una línea de producto
+          return {
+            producto: l.producto,
+            cantidad: l.cantidad,
+            formato: l.formato,
+            // Mantener el comentario de la línea de producto si existe
+            comentario: l.comentario || '', 
+            cantidadEnviada: l.cantidad // Inicializar cantidadEnviada con la cantidad pedida
+          };
+        })
       };
 
       await crearPedido(nuevoPedido);
@@ -208,6 +251,12 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const handleAgregarLinea = () => {
     const nuevas = [...lineasEdit, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }];
     setLineasEdit(ordenarLineasPorFamilia(nuevas));
+  };
+
+  const handleAgregarLineaComentario = () => {
+    const nuevas = [...lineasEdit, { esComentario: true, comentario: '' }];
+    // No es necesario ordenar por familia para líneas de comentario, se pueden añadir al final
+    setLineasEdit(nuevas);
   };
 
   const handleEliminarLinea = (idx) => {
@@ -480,115 +529,121 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               {lineasEdit.length === 0 && (
                 <li style={{color:'#888',fontStyle:'italic',marginBottom:8}}>No hay líneas. Añade una para comenzar.</li>
               )}
-              {lineasEdit.map((linea, i) => (
-                linea.esComentario ? (
-                  <li key={i} style={{
-                    marginBottom:12,
-                    display:'flex',
-                    alignItems:'center',
-                    background:'#f3f3f3',
-                    borderRadius:10,
-                    boxShadow:'0 1px 6px #007bff11',
-                    padding:'12px 28px 12px 18px',
-                    border:'1px solid #e0e6ef',
-                    position:'relative',
-                    fontStyle:'italic',
-                    color:'#555',
-                    opacity:0.85
-                  }}>
-                    <span style={{flex:1}}>📝 <input 
-                      value={linea.comentario||''}
-                      onChange={e => handleLineaChange(i, 'comentario', e.target.value)}
-                      placeholder="Comentario libre"
-                      style={{width:'90%', border:'none', background:'transparent', fontStyle:'italic', color:'#555', fontSize:15}}
-                    /></span>
-                    <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar comentario">🗑</button>
-                  </li>
-                ) : (
-                  <li key={i} style={{
-                    marginBottom:12,
-                    display:'flex',
-                    gap:18,
-                    alignItems:'flex-end',
-                    background:'#fff',
-                    borderRadius:10,
-                    boxShadow:'0 1px 6px #007bff11',
-                    padding:'12px 28px 12px 18px',
-                    border:'1px solid #e0e6ef',
-                    position:'relative'
-                  }}>
-                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
-                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Producto</label>
+              {lineasEdit.map((linea, i) => {
+                return (
+                  linea.esComentario ? (
+                    <li key={i} style={{
+                      marginBottom:12,
+                      display:'flex',
+                      gap:18,
+                      alignItems:'center',
+                      background:'#fffbe6',
+                      borderRadius:10,
+                      boxShadow:'0 1px 6px #b8860b1f',
+                      padding:'10px 18px',
+                      border:'1px solid #ffe58f',
+                      position:'relative'
+                    }}>
+                      <span style={{fontSize:18, marginRight:8, color: '#b8860b'}}>📝</span>
                       <input 
-                        list={`productos-lista-global`}
-                        value={linea.producto} 
-                        onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
-                        placeholder="Producto" 
+                        value={linea.comentario || ''} 
+                        onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
+                        placeholder="Escribe tu comentario aquí..." 
                         style={{
-                          width:'100%',
-                          border:'1px solid '+(productoValido(linea.producto)?'#bbb':'#dc3545'),
-                          borderRadius:6,
-                          padding:'6px 8px',
-                          background: productoValido(linea.producto)?'#fff':'#fff0f0'
+                          flexGrow:1, 
+                          border:'none', 
+                          background:'transparent', 
+                          padding:'6px 0px', 
+                          fontSize:'1em',
+                          color: '#b8860b',
+                          fontStyle: 'italic',
                         }} 
                       />
-                      {!productoValido(linea.producto) && (
-                        <span style={{color:'#dc3545',fontSize:12,marginTop:2}}>Producto no encontrado</span>
-                      )}
-                      <datalist id="productos-lista-global">
-                        {productos.map(p => (
-                          <option key={p._id || p.referencia || p.nombre} value={p.nombre}>
-                            {p.nombre} {p.referencia ? `(${p.referencia})` : ''}
-                          </option>
-                        ))}
-                      </datalist>
-                    </div>
-                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:70}}>
-                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Cantidad</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        value={linea.cantidad} 
-                        onChange={e => handleLineaChange(i, 'cantidad', Number(e.target.value))} 
-                        placeholder="Cantidad" 
-                        style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                      />
-                    </div>
-                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
-                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Unidad</label>
-                      <select 
-                        value={linea.formato || 'kg'} 
-                        onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
-                        style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
-                      >
-                        <option value="kg">Kilos</option>
-                        <option value="uds">Unidades</option>
-                        <option value="piezas">Piezas</option>
-                        <option value="caja">Caja</option>
-                      </select>
-                    </div>
-                    <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>
-                      <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Comentario</label>
-                      <input 
-                        value={linea.comentario||''} 
-                        onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
-                        placeholder="Comentario" 
-                        style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
-                      />
-                    </div>
-                    <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
-                  </li>
-                )
-              ))}
+                      <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:20,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar comentario">🗑</button>
+                    </li>
+                  ) : (
+                    <li key={i} style={{
+                      marginBottom:12,
+                      display:'flex',
+                      gap:18,
+                      alignItems:'flex-end',
+                      background:'#fff',
+                      borderRadius:10,
+                      boxShadow:'0 1px 6px #007bff11',
+                      padding:'12px 28px 12px 18px',
+                      border:'1px solid #e0e6ef',
+                      position:'relative'
+                    }}>
+                      <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:110}}>
+                        <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Producto</label>
+                        <input 
+                          list={`productos-lista-global`}
+                          value={linea.producto} 
+                          onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
+                          placeholder="Producto" 
+                          style={{
+                            width:'100%',
+                            border:'1px solid '+(productoValido(linea.producto)?'#bbb':'#dc3545'),
+                            borderRadius:6,
+                            padding:'6px 8px',
+                            background: productoValido(linea.producto)?'#fff':'#fff0f0'
+                          }} 
+                        />
+                        {!productoValido(linea.producto) && (
+                          <span style={{color:'#dc3545',fontSize:12,marginTop:2}}>Producto no encontrado</span>
+                        )}
+                        <datalist id="productos-lista-global">
+                          {productos.map(p => (
+                            <option key={p._id || p.referencia || p.nombre} value={p.nombre}>
+                              {p.nombre} {p.referencia ? `(${p.referencia})` : ''}
+                            </option>
+                          ))}
+                        </datalist>
+                      </div>
+                      <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:70}}>
+                        <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Cantidad</label>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          value={linea.cantidad} 
+                          onChange={e => handleLineaChange(i, 'cantidad', Number(e.target.value))} 
+                          placeholder="Cantidad" 
+                          style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                        />
+                      </div>
+                      <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:90}}>
+                        <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Unidad</label>
+                        <select 
+                          value={linea.formato || 'kg'} 
+                          onChange={e => handleLineaChange(i, 'formato', e.target.value)} 
+                          style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}}
+                        >
+                          <option value="kg">Kilos</option>
+                          <option value="uds">Unidades</option>
+                          <option value="piezas">Piezas</option>
+                          <option value="caja">Caja</option>
+                        </select>
+                      </div>
+                      <div style={{display:'flex',flexDirection:'column',gap:3,minWidth:130}}>
+                        <label style={{fontWeight:500,fontSize:13,color:'#007bff'}}>Comentario</label>
+                        <input 
+                          value={linea.comentario||''} 
+                          onChange={e => handleLineaChange(i, 'comentario', e.target.value)} 
+                          placeholder="Comentario" 
+                          style={{width:'100%', border:'1px solid #bbb', borderRadius:6, padding:'6px 8px'}} 
+                        />
+                      </div>
+                      <button onClick={() => handleEliminarLinea(i)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:22,marginLeft:8,alignSelf:'center',position:'relative',zIndex:1}} title="Eliminar línea">🗑</button>
+                    </li>
+                  )
+                );
+              })}
             </ul>
             <div style={{display:'flex', gap:10, marginTop:12, alignItems:'center', justifyContent:'flex-end'}}>
               <button onClick={handleAgregarLinea} style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #00c6ff44'}}>
                 Añadir línea
               </button>
-              <button onClick={() => {
-                const nuevas = [...lineasEdit, { esComentario: true, comentario: '' }];
-                setLineasEdit(ordenarLineasPorFamilia(nuevas));
-              }} style={{background:'#bbb',color:'#333',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #bbb8'}}>
+              <button onClick={handleAgregarLineaComentario} style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,boxShadow:'0 2px 8px #6c757d44'}}>
                 Añadir comentario
               </button>
               <button onClick={handleGuardarLineas} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:6,padding:'9px 26px',fontWeight:800,boxShadow:'0 2px 8px #ffc10744',fontSize:17,letterSpacing:1}}>

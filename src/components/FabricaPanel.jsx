@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Watermark from './Watermark';
 import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
@@ -22,7 +22,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     '#1976d2', '#388e3c', '#fbc02d', '#d32f2f', '#7b1fa2', '#00838f', '#c2185b', '#ffa000', '#455a64', '#5d4037'
   ];
 
-  // Pedidos pendientes: solo los que están en 'enviado' o 'preparado'
+  // Pedidos pendientes: solo los que están en 'enviado' o 'preparado' (no mostrar cerrados)
   const pedidosPendientes = pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado');
 
   // Estado para forzar refresco visual tras guardar/enviar
@@ -37,9 +37,16 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   // Función para abrir un pedido concreto
   const abrirPedido = (pedido) => {
+    const lineasNormalizadas = pedido.lineas.map(l => {
+      if (l.esComentario === true || l.esComentario === 'true' || (typeof l.esComentario !== 'undefined' && l.esComentario)) {
+        return { esComentario: true, comentario: l.comentario || '' };
+      }
+      return { ...l }; // Mantener las demás propiedades para líneas de producto
+    });
+    
     setPedidoAbierto({
       ...pedido,
-      lineas: pedido.lineas.map(l => ({ ...l }))
+      lineas: lineasNormalizadas
     });
   };
 
@@ -54,6 +61,15 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     setPedidoAbierto(prev => {
       const nuevasLineas = prev.lineas.map((l, i) => {
         if (i === idx) {
+          // Si es una línea de comentario, solo se puede editar el campo 'comentario'
+          if (l.esComentario) {
+            if (campo === 'comentario') {
+              return { ...l, comentario: valor };
+            }
+            return l; // No permitir editar otros campos en comentarios
+          }
+
+          // Lógica existente para líneas de producto
           let nuevoValor = valor;
           if (campo === 'peso' || campo === 'cantidadEnviada') {
             nuevoValor = valor === '' ? null : parseFloat(valor);
@@ -67,13 +83,18 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       });
       // Guardado automático al editar cualquier campo de línea
       if (prev._id || prev.id) {
-        const lineasNormalizadas = nuevasLineas.map(l => ({
-          ...l,
-          preparada: !!l.preparada,
-          peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-          cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-          cantidad: Number(l.cantidad)
-        }));
+        const lineasNormalizadas = nuevasLineas.map(l => {
+          if (l.esComentario) {
+            return { esComentario: true, comentario: l.comentario || '' };
+          }
+          return {
+            ...l,
+            preparada: !!l.preparada,
+            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+            cantidad: Number(l.cantidad)
+          };
+        });
         onLineaDetalleChange(prev._id || prev.id, null, lineasNormalizadas);
       }
       return {
@@ -93,24 +114,33 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
 
   // Guardar edición de un pedido
   const guardarEdicion = async () => {
-    const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null)); // Asegurar que cantidad exista
-    if (nuevasLineas.length === 0 && pedidoAbierto.lineas.length > 0) { // Si todas las líneas se borraron o invalidaron
-      // Opcional: decidir si eliminar el pedido o simplemente no guardar líneas vacías
-      // Por ahora, si había líneas y ahora no hay válidas, no hacemos nada o podríamos eliminar el pedido.
-      // await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
-      // setPedidoAbierto(null);
-      // return;
+    // Filtrar líneas de producto válidas y mantener todas las líneas de comentario
+    const lineasParaGuardar = pedidoAbierto.lineas.filter(l => 
+      l.esComentario || 
+      (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
+    );
+
+    if (lineasParaGuardar.length === 0 && pedidoAbierto.lineas.some(l => !l.esComentario)) {
+      // Si todas las líneas de PRODUCTO se borraron o invalidaron, considerar opciones
+      // Por ahora, no hacemos nada o podríamos eliminar el pedido si no quedan líneas de producto.
     }
-    // Asegurarse de que el peso se incluye y es un número
-    const lineasNormalizadas = nuevasLineas.map(l => ({
-      ...l,
-      preparada: !!l.preparada, // Mantener la lógica de preparada
-      peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-      cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-      cantidad: Number(l.cantidad) // Asegurar que cantidad también sea número
-    }));
+
+    const lineasNormalizadas = lineasParaGuardar.map(l => {
+      if (l.esComentario) {
+        return { esComentario: true, comentario: l.comentario || '' };
+      }
+      // Normalización para líneas de producto
+      return {
+        ...l,
+        preparada: !!l.preparada,
+        peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+        cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+        cantidad: Number(l.cantidad)
+      };
+    });
+
     await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-    setPedidoAbierto(null); // Cerrar el modal de edición después de guardar
+    setPedidoAbierto(null); 
   };
 
   // Cambiar valor de peso en el modal de suma
@@ -137,6 +167,39 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     if (productoEncontrado) return productoEncontrado.nombre;
     return valor;
   };
+
+  const debounceTimer = useRef(null);
+  const lastLineasRef = useRef(null);
+
+  // Guardado automático con debounce de 30 segundos
+  useEffect(() => {
+    if (!pedidoAbierto) return;
+    if (!pedidoAbierto._id && !pedidoAbierto.id) return;
+    if (!pedidoAbierto.lineas) return;
+    // Si las líneas no han cambiado, no hacer nada
+    if (JSON.stringify(pedidoAbierto.lineas) === lastLineasRef.current) return;
+    lastLineasRef.current = JSON.stringify(pedidoAbierto.lineas);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      // Guardar solo si sigue abierto
+      if (pedidoAbierto && (pedidoAbierto._id || pedidoAbierto.id)) {
+        const lineasNormalizadas = pedidoAbierto.lineas.map(l => {
+          if (l.esComentario) {
+            return { esComentario: true, comentario: l.comentario || '' };
+          }
+          return {
+            ...l,
+            preparada: !!l.preparada,
+            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+            cantidad: Number(l.cantidad)
+          };
+        });
+        onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+      }
+    }, 30000); // 30 segundos
+    return () => debounceTimer.current && clearTimeout(debounceTimer.current);
+  }, [pedidoAbierto]);
 
   return (
     <div style={{
@@ -355,151 +418,203 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 </tr>
               </thead>
               <tbody>
-                {pedidoAbierto.lineas.map((linea, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <input
-                        list="productos-lista-global"
-                        value={linea.producto}
-                        onChange={e => {
-                          const valor = autocompletarProducto(e.target.value);
-                          actualizarLinea(idx, 'producto', valor);
-                        }}
-                        placeholder="Producto"
-                        style={{ width: 120, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px' }}
-                      />
-                      <datalist id="productos-lista-global">
-                        {productos.map(prod => (
-                          <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                            {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
-                      <input
-                        type="number"
-                        min="1"
-                        value={linea.cantidad}
-                        onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                        style={{ width: 60 }}
-                      />
-                      {/* Botón sumatorio solo si cantidad > 1 */}
-                      {linea.cantidad > 1 && linea.cantidad <= 10 && (
-                        <button
-                          style={{
-                            background: '#ff9800',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: 28,
-                            height: 28,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: 18,
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px #ff980044',
-                            zIndex: 2
-                          }}
-                          title="Sumar pesos parciales"
-                          onClick={() => setModalPeso({visible:true, lineaIdx:idx, valores:Array.from({length: linea.cantidad}, (_,i)=>modalPeso.visible && modalPeso.lineaIdx===idx && modalPeso.valores.length===linea.cantidad ? modalPeso.valores[i]||'' : '')})}
-                          type="button"
-                        >
-                          ➕
-                        </button>
-                      )}
-                      {/* Si hay modal de suma, mostrarlo flotante ARRIBA de la celda cantidad */}
-                      {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
-                        <div style={{
-                          position: 'absolute',
-                          left: 0,
-                          // Si la fila es una de las 5 primeras, abrir hacia abajo (top:36), si no, hacia arriba (bottom:36)
-                          ...(idx < 5 ? { top: 36 } : { bottom: 36 }),
-                          zIndex: 10,
-                          background: '#fff',
-                          border: '1px solid #007bff',
-                          borderRadius: 8,
-                          boxShadow: '0 2px 12px #007bff22',
-                          padding: 12,
-                          minWidth: 160,
-                          minHeight: 60
-                        }}>
-                          <div style={{fontWeight:700,marginBottom:6}}>Sumar pesos</div>
-                          {modalPeso.valores.map((v, i) => (
-                            <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                              <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(i, e.target.value)} style={{width:60,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc'}} />
-                              <span>kg</span>
-                            </div>
-                          ))}
-                          <div style={{margin:'8px 0',fontWeight:600}}>Total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
-                          <div style={{display:'flex',gap:8,marginTop:6}}>
-                            <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6,fontWeight:600}}>Aplicar</button>
-                            <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6}}>Cancelar</button>
+                {pedidoAbierto.lineas.map((linea, idx) => {
+                  // Verificar si es comentario con diferentes validaciones
+                  const esComentarioValido = linea.esComentario === true || 
+                                           linea.esComentario === 'true' || 
+                                           (typeof linea.esComentario !== 'undefined' && linea.esComentario);
+
+                  if (esComentarioValido) {
+                    return (
+                      <tr key={`comment-${idx}`} style={{ backgroundColor: '#fffbe6', border: '2px solid #ffe58f' }}>
+                        <td colSpan="8" style={{ padding: '12px', textAlign: 'left' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontSize: 20, color: '#b8860b' }}>📝</span>
+                            <span style={{ fontWeight: 'bold', color: '#b8860b', fontSize: 16 }}>COMENTARIO:</span>
+                            <input
+                              type="text"
+                              value={linea.comentario || ''}
+                              onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
+                              placeholder="Escribe aquí tu comentario..."
+                              style={{ 
+                                flexGrow: 1, 
+                                border: '1px dashed #b8860b', 
+                                borderRadius: 6, 
+                                padding: '8px 12px', 
+                                background: '#fffdf7',
+                                fontStyle: 'italic',
+                                fontSize: 15,
+                                color: '#b8860b'
+                              }}
+                            />
+                            <button
+                              style={{
+                                background:'#dc3545',
+                                color:'#fff',
+                                border:'none',
+                                borderRadius:6,
+                                padding:'6px 12px',
+                                fontWeight:600,
+                                cursor:'pointer',
+                                fontSize: 14
+                              }}
+                              onClick={() => borrarLinea(idx)}
+                              title="Eliminar comentario"
+                            >
+                              🗑 Eliminar
+                            </button>
                           </div>
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={linea.peso ?? ''}
-                        onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                        style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={linea.cantidadEnviada ?? ''}
-                        onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
-                        style={{ width: 70 }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={linea.lote ?? ''}
-                        onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                        style={{ width: 90 }}
-                      />
-                    </td>
-                    <td>
-                      <select value={linea.formato} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
-                        {FORMATOS_PEDIDO.map(f => (
-                          <option key={f} value={f}>{f}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={linea.comentario ?? ''}
-                        onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                        style={{ width: 110 }}
-                      />
-                    </td>
-                    <td>
-                      <button
-                        style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
-                        onClick={() => borrarLinea(idx)}
-                        title="Eliminar línea"
-                      >
-                        🗑
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  // Renderizado normal para líneas de producto
+                  return (
+                    <tr key={idx}>
+                      <td>
+                        <input
+                          list="productos-lista-global"
+                          value={linea.producto}
+                          onChange={e => {
+                            const valor = autocompletarProducto(e.target.value);
+                            actualizarLinea(idx, 'producto', valor);
+                          }}
+                          placeholder="Producto"
+                          style={{ width: 120, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px' }}
+                        />
+                        <datalist id="productos-lista-global">
+                          {productos.map(prod => (
+                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                            </option>
+                          ))}
+                        </datalist>
+                      </td>
+                      <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
+                        <input
+                          type="number"
+                          min="1"
+                          value={linea.cantidad}
+                          onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
+                          style={{ width: 60 }}
+                        />
+                        {/* Botón sumatorio solo si cantidad > 1 */}
+                        {linea.cantidad > 1 && linea.cantidad <= 10 && (
+                          <button
+                            style={{
+                              background: '#ff9800',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: 28,
+                              height: 28,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: 18,
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 8px #ff980044',
+                              zIndex: 2
+                            }}
+                            title="Sumar pesos parciales"
+                            onClick={() => setModalPeso({visible:true, lineaIdx:idx, valores:Array.from({length: linea.cantidad}, (_,i)=>modalPeso.visible && modalPeso.lineaIdx===idx && modalPeso.valores.length===linea.cantidad ? modalPeso.valores[i]||'' : '')})}
+                            type="button"
+                          >
+                            ➕
+                          </button>
+                        )}
+                        {/* Si hay modal de suma, mostrarlo flotante ARRIBA de la celda cantidad */}
+                        {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
+                          <div style={{
+                            position: 'absolute',
+                            left: 0,
+                            // Si la fila es una de las 5 primeras, abrir hacia abajo (top:36), si no, hacia arriba (bottom:36)
+                            ...(idx < 5 ? { top: 36 } : { bottom: 36 }),
+                            zIndex: 10,
+                            background: '#fff',
+                            border: '1px solid #007bff',
+                            borderRadius: 8,
+                            boxShadow: '0 2px 12px #007bff22',
+                            padding: 12,
+                            minWidth: 160,
+                            minHeight: 60
+                          }}>
+                            <div style={{fontWeight:700,marginBottom:6}}>Sumar pesos</div>
+                            {modalPeso.valores.map((v, i) => (
+                              <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+                                <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(i, e.target.value)} style={{width:60,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc'}} />
+                                <span>kg</span>
+                              </div>
+                            ))}
+                            <div style={{margin:'8px 0',fontWeight:600}}>Total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
+                            <div style={{display:'flex',gap:8,marginTop:6}}>
+                              <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6,fontWeight:600}}>Aplicar</button>
+                              <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6}}>Cancelar</button>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={linea.peso ?? ''}
+                          onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+                          style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={linea.cantidadEnviada ?? ''}
+                          onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
+                          style={{ width: 70 }}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={linea.lote ?? ''}
+                          onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
+                          style={{ width: 90 }}
+                        />
+                      </td>
+                      <td>
+                        <select value={linea.formato} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
+                          {FORMATOS_PEDIDO.map(f => (
+                            <option key={f} value={f}>{f}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={linea.comentario ?? ''}
+                          onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
+                          style={{ width: 110 }}
+                        />
+                      </td>
+                      <td>
+                        <button
+                          style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
+                          onClick={() => borrarLinea(idx)}
+                          title="Eliminar línea"
+                        >
+                          🗑
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {/* Botón para añadir línea */}
                 <tr>
                   <td colSpan="8" style={{textAlign:'left', paddingTop:8}}>
                     <button
-                      style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}}
+                      style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8, marginRight: 12}}
                       onClick={() => setPedidoAbierto(prev => ({
                         ...prev,
                         lineas: [
@@ -508,7 +623,21 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                         ]
                       }))}
                     >
-                      Añadir línea
+                      Añadir línea de producto
+                    </button>
+                    <button
+                      style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}}
+                      onClick={() => {
+                        setPedidoAbierto(prev => ({
+                          ...prev,
+                          lineas: [
+                            ...prev.lineas,
+                            { esComentario: true, comentario: '' }
+                          ]
+                        }));
+                      }}
+                    >
+                      Añadir comentario
                     </button>
                   </td>
                 </tr>
@@ -517,14 +646,24 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <button
                       style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
                       onClick={async () => {
-                        const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
-                        const lineasNormalizadas = nuevasLineas.map(l => ({
-                          ...l,
-                          preparada: !!l.preparada,
-                          peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                          cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                          cantidad: Number(l.cantidad) // Asegurar que cantidad sea número
-                        }));
+                        // Filtrar líneas de producto válidas y mantener todas las líneas de comentario
+                        const lineasParaGuardar = pedidoAbierto.lineas.filter(l => 
+                          l.esComentario || 
+                          (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
+                        );
+
+                        const lineasNormalizadas = lineasParaGuardar.map(l => {
+                          if (l.esComentario) {
+                            return { esComentario: true, comentario: l.comentario || '' };
+                          }
+                          return {
+                            ...l,
+                            preparada: !!l.preparada,
+                            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+                            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+                            cantidad: Number(l.cantidad)
+                          };
+                        });
                         await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
                         // No cerramos el pedido aquí para permitir más ediciones o el envío posterior.
                       }}
@@ -534,21 +673,32 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <button
                       style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
                       onClick={async () => {
-                        const nuevasLineas = pedidoAbierto.lineas.filter(l => l.producto && (l.cantidad !== undefined && l.cantidad !== null));
-                        if (nuevasLineas.length === 0) {
-                          // Si no hay líneas válidas pero el pedido original sí tenía, se considera eliminar el pedido.
-                          // Esto es consistente con la lógica previa de eliminar si no hay líneas.
+                        // Filtrar líneas de producto válidas y mantener todas las líneas de comentario
+                        const lineasParaEnviar = pedidoAbierto.lineas.filter(l => 
+                          l.esComentario || 
+                          (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
+                        );
+
+                        if (!lineasParaEnviar.some(l => !l.esComentario) && pedidoAbierto.lineas.some(l => !l.esComentario)) {
+                          // Si no quedan líneas de PRODUCTO válidas pero el pedido original sí tenía, se considera eliminar el pedido.
                           await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
                           setPedidoAbierto(null);
                           return;
                         }
-                        const lineasNormalizadas = nuevasLineas.map(l => ({
-                          ...l,
-                          preparada: !!l.preparada,
-                          peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                          cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                          cantidad: Number(l.cantidad)
-                        }));
+                        
+                        const lineasNormalizadas = lineasParaEnviar.map(l => {
+                           if (l.esComentario) {
+                            return { esComentario: true, comentario: l.comentario || '' };
+                          }
+                          return {
+                            ...l,
+                            preparada: !!l.preparada,
+                            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
+                            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
+                            cantidad: Number(l.cantidad)
+                          };
+                        });
+
                         await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
                         await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
                         setPedidoAbierto(null);
