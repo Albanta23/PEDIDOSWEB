@@ -439,12 +439,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               </thead>
               <tbody>
                 {pedidoAbierto.lineas.map((linea, idx) => {
-                  // Verificar si es comentario con diferentes validaciones
-                  const esComentarioValido = linea.esComentario === true || 
-                                           linea.esComentario === 'true' || 
-                                           (typeof linea.esComentario !== 'undefined' && linea.esComentario);
-
-                  if (esComentarioValido) {
+                  // Renderizado de línea de comentario
+                  if (linea.esComentario === true || linea.esComentario === 'true' || (typeof linea.esComentario !== 'undefined' && linea.esComentario)) {
                     return (
                       <tr key={`comment-${idx}`} style={{ backgroundColor: '#fffbe6', border: '2px solid #ffe58f' }}>
                         <td colSpan="8" style={{ padding: '12px', textAlign: 'left' }}>
@@ -639,7 +635,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                         ...prev,
                         lineas: [
                           ...prev.lineas,
-                          { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false }
+                          { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false, esComentario: false }
                         ]
                       }))}
                     >
