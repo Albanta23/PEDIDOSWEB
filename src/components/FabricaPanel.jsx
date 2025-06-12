@@ -580,7 +580,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           type="number"
                           min="0"
                           step="any"
-                          value={linea.peso ?? ''}
+                          value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
                           onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
                           style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
                         />
@@ -590,7 +590,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           type="number"
                           min="0"
                           step="any"
-                          value={linea.cantidadEnviada ?? ''}
+                          value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
                           onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
                           style={{ width: 70 }}
                         />
@@ -598,13 +598,13 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       <td>
                         <input
                           type="text"
-                          value={linea.lote ?? ''}
+                          value={linea.lote === null || linea.lote === undefined ? '' : linea.lote}
                           onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
                           style={{ width: 90 }}
                         />
                       </td>
                       <td>
-                        <select value={linea.formato} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
+                        <select value={linea.formato || ''} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
                           {FORMATOS_PEDIDO.map(f => (
                             <option key={f} value={f}>{f}</option>
                           ))}
@@ -613,7 +613,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                       <td>
                         <input
                           type="text"
-                          value={linea.comentario ?? ''}
+                          value={linea.comentario === null || linea.comentario === undefined ? '' : linea.comentario}
                           onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
                           style={{ width: 110 }}
                         />
