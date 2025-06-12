@@ -265,15 +265,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   };
 
   const handleLineaChange = (idx, campo, valor) => {
-    // Si el campo es 'producto', intentamos autocompletar por referencia
-    if (campo === 'producto') {
-      // Buscar si el valor coincide exactamente con una referencia de producto
-      const productoEncontrado = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === String(valor).toLowerCase());
-      if (productoEncontrado) {
-        // Reemplazar el valor por el nombre del producto
-        valor = productoEncontrado.nombre;
-      }
-    }
     const nuevasLineas = lineasEdit.map((linea, i) => 
       i === idx ? { ...linea, [campo]: valor } : linea
     );
@@ -599,6 +590,18 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                           list={`productos-lista-global`}
                           value={linea.producto} 
                           onChange={e => handleLineaChange(i, 'producto', e.target.value)} 
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              // Buscar si el valor coincide exactamente con una referencia de producto
+                              const productoEncontrado = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === String(e.target.value).toLowerCase());
+                              if (productoEncontrado) {
+                                handleLineaChange(i, 'producto', productoEncontrado.nombre);
+                                // Opcional: seleccionar el input tras autocompletar
+                                e.target.select();
+                                e.preventDefault();
+                              }
+                            }
+                          }}
                           placeholder="Producto" 
                           style={{
                             width:'100%',
