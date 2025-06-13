@@ -544,6 +544,8 @@ const registrarEntradasStockPorPedido = async (pedido) => {
       console.log(`[DEBUG] Línea ${idx} omitida: producto=${linea.producto}, cantidadEnviada=${linea.cantidadEnviada}`);
       continue;
     }
+    // Log de depuración para ver el peso que se va a guardar
+    console.log(`[DEBUG] MovimientoStock: producto=${linea.producto}, cantidadEnviada=${linea.cantidadEnviada}, peso=${linea.peso}, linea=`, JSON.stringify(linea));
     await MovimientoStock.create({
       tiendaId: pedido.tiendaId,
       producto: linea.producto,
