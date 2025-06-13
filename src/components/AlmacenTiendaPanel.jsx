@@ -20,12 +20,14 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
   const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
   const [filtroFamilia, setFiltroFamilia] = useState('');
+  const [filtroTipoMovimiento, setFiltroTipoMovimiento] = useState('');
   // Baja de producto
   const [productoBaja, setProductoBaja] = useState('');
   const [cantidadBaja, setCantidadBaja] = useState('');
   const [unidadBaja, setUnidadBaja] = useState('kg');
   const [loteBaja, setLoteBaja] = useState('');
   const [motivoBaja, setMotivoBaja] = useState('');
+  const [pesoBaja, setPesoBaja] = useState('');
 
   // Forzar que el id de la tienda clientes sea siempre 'PEDIDOS_CLIENTES' (usando useMemo para evitar bucles)
   const tiendaForzada = useMemo(() => {
@@ -79,9 +81,9 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   }
 
   // Baja de producto
-  const registrarBaja = async (producto, cantidad, unidad, lote, motivo) => {
+  const registrarBaja = async (producto, cantidad, unidad, lote, motivo, peso) => {
     if (!tienda) return;
-    await registrarBajaStock({ tiendaId: tienda.id, producto, cantidad, unidad, lote, motivo });
+    await registrarBajaStock({ tiendaId: tienda.id, producto, cantidad, unidad, lote, motivo, peso });
     // Refrescar movimientos tras registrar baja
     const movs = await getMovimientosStock({ tiendaId: tienda.id });
     setMovimientos(movs);
@@ -119,12 +121,25 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     );
   });
 
+  // Autocompletar producto por referencia o nombre
+  function autocompletarProducto(valor) {
+    if (!valor) return valor;
+    // Si coincide exactamente con una referencia, devolver el nombre
+    const prodPorRef = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+    if (prodPorRef) return prodPorRef.nombre;
+    // Si coincide exactamente con un nombre, devolver el nombre
+    const prodPorNombre = productos.find(p => p.nombre && String(p.nombre).toLowerCase() === String(valor).toLowerCase());
+    if (prodPorNombre) return prodPorNombre.nombre;
+    return valor;
+  }
+
   return (
     <div style={{padding:32, maxWidth:900, margin:'0 auto'}}>
       <h2>Gestión de almacén de {tienda?.nombre || 'Tienda'}</h2>
       <button onClick={() => navigate ? navigate(-1) : window.history.back()} style={{position:'absolute',top:24,right:32,background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Volver</button>
       <div style={{display:'flex',gap:24,marginBottom:24}}>
         <button onClick={()=>setTab('stock')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='stock'?'#007bff':'#eee',color:tab==='stock'?'#fff':'#333',fontWeight:700}}>Stock</button>
+        <button onClick={()=>setTab('movimientos')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='movimientos'?'#673ab7':'#eee',color:tab==='movimientos'?'#fff':'#333',fontWeight:700}}>Diario de movimientos</button>
         <button onClick={()=>setTab('bajas')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='bajas'?'#dc3545':'#eee',color:tab==='bajas'?'#fff':'#333',fontWeight:700}}>Bajas</button>
         <button onClick={()=>setTab('transferencias')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='transferencias'?'#28a745':'#eee',color:tab==='transferencias'?'#fff':'#333',fontWeight:700}}>Transferencias</button>
         <button onClick={()=>navigate(`/compras-proveedor/${tienda?.id}`)} style={{padding:'8px 24px',border:'none',borderRadius:6,background:'#ff9800',color:'#fff',fontWeight:700}}>Compras a proveedor</button>
@@ -134,7 +149,18 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
           {/* Formulario para añadir stock manualmente */}
           <div style={{background:'#f8fafd',padding:16,borderRadius:8,marginBottom:18,boxShadow:'0 2px 8px #007bff11',display:'flex',gap:14,alignItems:'center',flexWrap:'wrap'}}>
             <b style={{color:'#007bff'}}>Añadir stock manualmente</b>
-            <input placeholder="Producto" value={productoBaja} onChange={e=>setProductoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:120}} />
+            <input
+              list="productos-alta-stock"
+              placeholder="Producto"
+              value={productoBaja}
+              onChange={e => setProductoBaja(autocompletarProducto(e.target.value))}
+              style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}
+            />
+            <datalist id="productos-alta-stock">
+              {productos.map((p,i) => (
+                <option key={i} value={p.nombre}>{p.referencia ? `${p.referencia} - ${p.nombre}` : p.nombre}</option>
+              ))}
+            </datalist>
             <input type="number" min="0" step="any" placeholder="Cantidad" value={cantidadBaja} onChange={e=>setCantidadBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
             <select value={unidadBaja} onChange={e=>setUnidadBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}}>
               <option value="kg">kg</option>
@@ -142,12 +168,13 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
             </select>
             <input placeholder="Lote" value={loteBaja} onChange={e=>setLoteBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
             <input placeholder="Motivo" value={motivoBaja} onChange={e=>setMotivoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:120}} />
+            <input type="number" min="0" step="any" placeholder="Peso (kg)" value={pesoBaja} onChange={e=>setPesoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
             <button
               onClick={async ()=>{
                 if(!productoBaja || !cantidadBaja || !motivoBaja){ alert('Rellena todos los campos'); return; }
                 const { registrarEntradaStock } = await import('../services/movimientosStockService');
-                await registrarEntradaStock({ tiendaId: tienda.id, producto: productoBaja, cantidad: cantidadBaja, unidad: unidadBaja, lote: loteBaja, motivo: motivoBaja });
-                setProductoBaja(''); setCantidadBaja(''); setUnidadBaja('kg'); setLoteBaja(''); setMotivoBaja('');
+                await registrarEntradaStock({ tiendaId: tienda.id, producto: productoBaja, cantidad: cantidadBaja, unidad: unidadBaja, lote: loteBaja, motivo: motivoBaja, peso: pesoBaja });
+                setProductoBaja(''); setCantidadBaja(''); setUnidadBaja('kg'); setLoteBaja(''); setMotivoBaja(''); setPesoBaja('');
                 // Refrescar movimientos tras registrar entrada
                 const movs = await getMovimientosStock({ tiendaId: tienda.id });
                 setMovimientos(movs);
@@ -244,6 +271,76 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
               </tbody>
             </table>
           )}
+        </div>
+      )}
+      {tab==='movimientos' && (
+        <div>
+          <h3 style={{color:'#673ab7'}}>Diario de movimientos de almacén</h3>
+          <div style={{display:'flex',gap:16,marginBottom:16,flexWrap:'wrap'}}>
+            <input placeholder="Filtrar producto" value={filtroProducto} onChange={e=>setFiltroProducto(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
+            <input placeholder="Filtrar lote" value={filtroLote} onChange={e=>setFiltroLote(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
+            <select value={filtroFamilia} onChange={e=>setFiltroFamilia(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}>
+              <option value="">Todas las familias</option>
+              {familias.map(([num, nombre], idx) => (
+                <option key={idx} value={num}>{num} - {nombre}</option>
+              ))}
+            </select>
+            <select value={filtroTipoMovimiento||''} onChange={e=>setFiltroTipoMovimiento(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:140}}>
+              <option value="">Todos los tipos</option>
+              <option value="entrada">Entrada</option>
+              <option value="baja">Baja</option>
+              <option value="transferencia_entrada">Transferencia entrada</option>
+              <option value="transferencia_salida">Transferencia salida</option>
+              <option value="devolucion_entrada">Devolución entrada</option>
+              <option value="devolucion_salida">Devolución salida</option>
+            </select>
+            <label style={{display:'flex',alignItems:'center',gap:4}}>
+              Desde
+              <input type="date" value={filtroFechaDesde} onChange={e=>setFiltroFechaDesde(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
+            </label>
+            <label style={{display:'flex',alignItems:'center',gap:4}}>
+              Hasta
+              <input type="date" value={filtroFechaHasta} onChange={e=>setFiltroFechaHasta(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
+            </label>
+          </div>
+          <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #673ab711'}}>
+            <thead>
+              <tr style={{background:'#ede7f6'}}>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+                <th>Lote</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movimientos.filter(mov => {
+                // Filtros combinados
+                const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
+                const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
+                return (
+                  (!filtroProducto || mov.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
+                  (!filtroLote || (mov.lote && mov.lote.toLowerCase().includes(filtroLote.toLowerCase()))) &&
+                  (!filtroFamilia || familia === filtroFamilia) &&
+                  (!filtroTipoMovimiento || mov.tipo === filtroTipoMovimiento) &&
+                  (!filtroFechaDesde || (mov.fecha && mov.fecha >= filtroFechaDesde)) &&
+                  (!filtroFechaHasta || (mov.fecha && mov.fecha <= filtroFechaHasta))
+                );
+              }).map((mov, idx) => (
+                <tr key={idx}>
+                  <td>{mov.fecha ? new Date(mov.fecha).toLocaleString() : '-'}</td>
+                  <td>{mov.tipo}</td>
+                  <td>{mov.producto}</td>
+                  <td>{mov.cantidad}</td>
+                  <td>{mov.unidad}</td>
+                  <td>{mov.lote}</td>
+                  <td>{mov.motivo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
       {tab==='bajas' && (

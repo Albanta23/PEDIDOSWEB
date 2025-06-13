@@ -503,12 +503,12 @@ app.get('/api/movimientos-stock', async (req, res) => {
 // Registrar baja de stock
 app.post('/api/movimientos-stock/baja', async (req, res) => {
   try {
-    const { tiendaId, producto, cantidad, unidad, lote, motivo } = req.body;
+    const { tiendaId, producto, cantidad, unidad, lote, motivo, peso } = req.body;
     if (!tiendaId || !producto || !cantidad || !motivo) {
       return res.status(400).json({ error: 'Faltan datos obligatorios para la baja' });
     }
     const mov = await MovimientoStock.create({
-      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'baja', fecha: new Date()
+      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'baja', fecha: new Date(), peso
     });
     res.json(mov);
   } catch (e) {
@@ -519,12 +519,12 @@ app.post('/api/movimientos-stock/baja', async (req, res) => {
 // Registrar entrada de stock (por pedido recibido de fábrica)
 app.post('/api/movimientos-stock/entrada', async (req, res) => {
   try {
-    const { tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId } = req.body;
+    const { tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso } = req.body;
     if (!tiendaId || !producto || !cantidad) {
       return res.status(400).json({ error: 'Faltan datos obligatorios para la entrada' });
     }
     const mov = await MovimientoStock.create({
-      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'entrada', pedidoId, fecha: new Date()
+      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'entrada', pedidoId, fecha: new Date(), peso
     });
     res.json(mov);
   } catch (e) {

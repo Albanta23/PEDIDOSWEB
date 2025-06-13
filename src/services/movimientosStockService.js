@@ -18,21 +18,21 @@ export async function getMovimientosStock({ tiendaId, producto, lote, desde, has
   return await res.json();
 }
 
-export async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo }) {
+export async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {
   const res = await fetch(`${API_URL}/movimientos-stock/baja`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tiendaId, producto, cantidad, unidad, lote, motivo })
+    body: JSON.stringify({ tiendaId, producto, cantidad, unidad, lote, motivo, peso })
   });
   if (!res.ok) throw new Error('Error al registrar baja de stock');
   return await res.json();
 }
 
-export async function registrarEntradaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId }) {
+export async function registrarEntradaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso }) {
   const res = await fetch(`${API_URL}/movimientos-stock/entrada`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId })
+    body: JSON.stringify({ tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso })
   });
   if (!res.ok) throw new Error('Error al registrar entrada de stock');
   return await res.json();
