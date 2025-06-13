@@ -205,6 +205,31 @@ export default function GestionMantenimientoPanel({ onClose }) {
                         </tr>
                       </thead>
                       <tbody>
+                        {editMode && (
+                          <tr style={{background:'#e8f5e9'}}>
+                            <td><input value={productosEditados['nuevo']?.nombre||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],nombre:e.target.value}}))} placeholder="Nombre" /></td>
+                            <td><input value={productosEditados['nuevo']?.referencia||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],referencia:e.target.value}}))} placeholder="Referencia" /></td>
+                            <td><input value={productosEditados['nuevo']?.unidad||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],unidad:e.target.value}}))} placeholder="Unidad" /></td>
+                            <td><input value={productosEditados['nuevo']?.familia||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],familia:e.target.value}}))} placeholder="Familia" /></td>
+                            <td><input value={productosEditados['nuevo']?.nombreFamilia||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],nombreFamilia:e.target.value}}))} placeholder="Nombre Familia" /></td>
+                            <td><input type="checkbox" checked={productosEditados['nuevo']?.activo??true} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],activo:e.target.checked}}))} /></td>
+                            <td><input type="checkbox" checked={productosEditados['nuevo']?.fabricable??false} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],fabricable:e.target.checked}}))} /></td>
+                            <td>
+                              <button onClick={async()=>{
+                                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+                                try {
+                                  const nuevo = productosEditados['nuevo'];
+                                  if (!nuevo?.nombre) return alert('El nombre es obligatorio');
+                                  const res = await axios.post(`${API_URL}/api/productos`, nuevo);
+                                  setProductosDB(p=>[res.data,...p]);
+                                  setProductosEditados(p=>{const c={...p};delete c['nuevo'];return c;});
+                                } catch(e) {
+                                  alert('Error al crear producto: '+(e.response?.data?.error||e.message));
+                                }
+                              }} style={{background:'#388e3c',color:'#fff',border:'none',borderRadius:8,padding:'4px 12px',fontWeight:700,cursor:'pointer'}}>Añadir</button>
+                            </td>
+                          </tr>
+                        )}
                         {productosFiltrados.map((prod,i) => (
                           <tr key={prod._id||i} style={{background:i%2?'#fafdff':'#fff'}}>
                             <td>{editMode ? <input value={productosEditados[prod._id]?.nombre ?? prod.nombre} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombre:e.target.value}}))} /> : prod.nombre}</td>

@@ -392,20 +392,22 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       {pedidoAbierto && (
         <div className="modal-editor-fabrica-bg" style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          background: 'rgba(0,0,0,0.35)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+          background: '#fff', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: 0, padding: 0
         }} onClick={() => setPedidoAbierto(null)}>
           <div 
             className="modal-editor-fabrica"
             style={{
-              background: '#fff', borderRadius: 18, minWidth: 380, maxWidth: 700, width: '95vw',
-              padding: '36px 36px 40px 36px', boxShadow: '0 8px 40px #007bff33',
+              background: '#fff', borderRadius: 0, minWidth: '100vw', maxWidth: '100vw', width: '100vw',
+              minHeight: '100vh', maxHeight: '100vh', height: '100vh',
+              padding: '36px 36px 40px 36px', boxShadow: 'none',
               position: 'relative',
               display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-              maxHeight: '90vh',
               overflowY: 'auto',
               touchAction: 'pan-y',
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
+              margin: 0
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -496,7 +498,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                             actualizarLinea(idx, 'producto', valor);
                           }}
                           placeholder="Producto"
-                          style={{ width: 120, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px' }}
+                          style={{ width: 260, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px', fontSize: 15 }}
                         />
                         <datalist id="productos-lista-global">
                           {productos.map(prod => (

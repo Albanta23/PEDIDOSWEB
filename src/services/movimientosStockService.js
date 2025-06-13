@@ -1,6 +1,10 @@
 // Servicio para consultar y registrar movimientos de stock de almacén de tienda
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001/api';
+// Asegurarse de que la URL base termina en /api
+let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001/api';
+if (!API_URL.endsWith('/api')) {
+  API_URL = API_URL.replace(/\/?$/, '/api');
+}
 
 export async function getMovimientosStock({ tiendaId, producto, lote, desde, hasta }) {
   const params = new URLSearchParams();
