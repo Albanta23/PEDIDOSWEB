@@ -553,7 +553,8 @@ const registrarEntradasStockPorPedido = async (pedido) => {
       motivo: 'Pedido fábrica',
       tipo: 'entrada',
       pedidoId: pedido._id?.toString() || pedido.id?.toString() || '',
-      fecha: new Date()
+      fecha: new Date(),
+      peso: linea.peso ?? null // Copiar el peso si existe
     });
     movimientosCreados++;
     console.log(`[DEBUG] Movimiento de stock creado para producto=${linea.producto}, cantidad=${linea.cantidadEnviada}`);
