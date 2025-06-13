@@ -32,8 +32,10 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://pedidosweb-phi.vercel.app',
+  'https://pedidosweb-phi.vercel.app', // Desarrollo
+  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev', // Codespace actual
   'https://pedidos-backend-0e1s.onrender.com',
+  'https://pedidosweb-phi.vercel.app', // Producción (añadido explícitamente)
   // No incluyas aquí URLs efímeras de Codespaces, se permite por regex
 ];
 
@@ -177,9 +179,20 @@ app.put('/api/pedidos/:id', async (req, res) => {
     const pedidoPrevio = await Pedido.findById(id);
     const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
     if (!pedidoActualizado) return res.status(404).json({ error: 'Pedido no encontrado' });
+    // LOG para depuración de estados
+    console.log('[DEBUG] Estado previo:', pedidoPrevio.estado, '| Estado actualizado:', pedidoActualizado.estado);
+    // LOG para ver lineas y cantidadEnviada
+    if (pedidoActualizado.lineas) {
+      pedidoActualizado.lineas.forEach((l, idx) => {
+        console.log(`[DEBUG] Línea ${idx}: producto=${l.producto}, cantidadEnviada=${l.cantidadEnviada}`);
+      });
+    }
     // Si el estado cambió a 'enviadoTienda' y antes no lo estaba, registrar entradas
     if (pedidoActualizado.estado === 'enviadoTienda' && pedidoPrevio.estado !== 'enviadoTienda') {
+      console.log('[DEBUG] Registrando movimientos de stock para pedido', pedidoActualizado.numeroPedido);
       await registrarEntradasStockPorPedido(pedidoActualizado);
+    } else {
+      console.log('[DEBUG] No se cumplen condiciones para registrar movimientos de stock');
     }
     io.emit('pedido_actualizado', pedidoActualizado);
     console.log('[BACKEND] Emitiendo evento pedido_actualizado:', pedidoActualizado);
@@ -521,9 +534,16 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
 
 // --- REGISTRO AUTOMÁTICO DE ENTRADAS DE STOCK AL ENVIAR PEDIDO A TIENDA ---
 const registrarEntradasStockPorPedido = async (pedido) => {
-  if (!pedido || !pedido.tiendaId || !Array.isArray(pedido.lineas)) return;
-  for (const linea of pedido.lineas) {
-    if (!linea.producto || !linea.cantidadEnviada) continue;
+  if (!pedido || !pedido.tiendaId || !Array.isArray(pedido.lineas)) {
+    console.log('[DEBUG] Pedido inválido para registrar movimientos de stock');
+    return;
+  }
+  let movimientosCreados = 0;
+  for (const [idx, linea] of pedido.lineas.entries()) {
+    if (!linea.producto || !linea.cantidadEnviada) {
+      console.log(`[DEBUG] Línea ${idx} omitida: producto=${linea.producto}, cantidadEnviada=${linea.cantidadEnviada}`);
+      continue;
+    }
     await MovimientoStock.create({
       tiendaId: pedido.tiendaId,
       producto: linea.producto,
@@ -535,7 +555,10 @@ const registrarEntradasStockPorPedido = async (pedido) => {
       pedidoId: pedido._id?.toString() || pedido.id?.toString() || '',
       fecha: new Date()
     });
+    movimientosCreados++;
+    console.log(`[DEBUG] Movimiento de stock creado para producto=${linea.producto}, cantidad=${linea.cantidadEnviada}`);
   }
+  console.log(`[DEBUG] Total movimientos de stock creados: ${movimientosCreados}`);
 };
 
 // WebSocket para tiempo real

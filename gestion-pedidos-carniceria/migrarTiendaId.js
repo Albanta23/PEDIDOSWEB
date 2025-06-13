@@ -12,19 +12,36 @@ const { MongoClient } = require('mongodb');
   try {
     await client.connect();
     const db = client.db(); // Usa el nombre de tu base de datos si es necesario: client.db('NOMBRE_DB')
+
+    // --- MIGRAR tiendaId 'clientes' a 'PEDIDOS_CLIENTES' en pedidos ---
+    const pedidos = db.collection('pedidos');
+    const resPedidos = await pedidos.updateMany(
+      { tiendaId: 'clientes' },
+      { $set: { tiendaId: 'PEDIDOS_CLIENTES' } }
+    );
+    console.log(`Pedidos actualizados: ${resPedidos.modifiedCount}`);
+
+    // --- MIGRAR tiendaId 'clientes' a 'PEDIDOS_CLIENTES' en movimientos de stock ---
+    const movs = db.collection('movimientostocks');
+    const resMovs = await movs.updateMany(
+      { tiendaId: 'clientes' },
+      { $set: { tiendaId: 'PEDIDOS_CLIENTES' } }
+    );
+    console.log(`Movimientos de stock actualizados: ${resMovs.modifiedCount}`);
+
+    // --- MIGRAR tiendaId como ObjectId a string en historialproveedors (mantener lo anterior) ---
     const col = db.collection('historialproveedors');
-    // Encuentra documentos donde tiendaId es ObjectId
     const docs = await col.find({ tiendaId: { $type: 7 } }).toArray();
     if (docs.length === 0) {
-      console.log('No hay documentos con tiendaId como ObjectId. Nada que migrar.');
-      process.exit(0);
-    }
-    for (const doc of docs) {
-      await col.updateOne(
-        { _id: doc._id },
-        { $set: { tiendaId: doc.tiendaId.toString() } }
-      );
-      console.log(`Actualizado _id=${doc._id}: tiendaId -> ${doc.tiendaId.toString()}`);
+      console.log('No hay documentos con tiendaId como ObjectId. Nada que migrar en historialproveedors.');
+    } else {
+      for (const doc of docs) {
+        await col.updateOne(
+          { _id: doc._id },
+          { $set: { tiendaId: doc.tiendaId.toString() } }
+        );
+        console.log(`Actualizado _id=${doc._id}: tiendaId -> ${doc.tiendaId.toString()}`);
+      }
     }
     console.log('Migración completada.');
   } catch (e) {
