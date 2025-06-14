@@ -34,7 +34,8 @@ const tiendas = [
   { id: 'tienda8', nombre: 'TIENDA MORADAS' },
   { id: 'tienda9', nombre: 'TIENDA FABRICA' },
   { id: 'tienda10', nombre: 'TIENDA HAM&WINE' },
-  { id: 'clientes', nombre: 'PEDIDOS CLIENTES' }
+  { id: 'clientes', nombre: 'PEDIDOS CLIENTES' },
+  { id: 'tiendaPruebas', nombre: 'TIENDA PRUEBAS' }
 ];
 window.tiendas = tiendas;
 

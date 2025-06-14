@@ -14,7 +14,8 @@ const PINES_TIENDAS = {
   tienda9: '9999',
   tienda10: '1010',
   clientes: '0000',
-  fabrica: 'fabrica' // Si quieres un pin para fábrica
+  fabrica: 'fabrica', // Si quieres un pin para fábrica
+  tiendaPruebas: '1234' // TIENDA PRUEBAS
 };
 
 const Login = ({ tipo, onLogin, tiendas, pinSupervisor }) => {
