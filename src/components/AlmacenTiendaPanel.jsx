@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getMovimientosStock, registrarBajaStock } from '../services/movimientosStockService';
 import TransferenciasPanel from './TransferenciasPanel';
 import { useProductos } from './ProductosContext';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function AlmacenTiendaPanel({ tiendaActual }) {
   const navigate = typeof useNavigate === 'function' ? useNavigate() : null;
@@ -132,6 +134,58 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     if (prodPorNombre) return prodPorNombre.nombre;
     return valor;
   }
+
+  // --- Lógica de filtrado y orden para la tabla de movimientos ---
+  const movimientosFiltradosOrdenados = useMemo(() => {
+    return movimientos.filter(mov => {
+      const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
+      const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
+      return (
+        (!filtroProducto || mov.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
+        (!filtroLote || (mov.lote && mov.lote.toLowerCase().includes(filtroLote.toLowerCase()))) &&
+        (!filtroFamilia || familia === filtroFamilia) &&
+        (!filtroTipoMovimiento || mov.tipo === filtroTipoMovimiento) &&
+        (!filtroFechaDesde || (mov.fecha && mov.fecha >= filtroFechaDesde)) &&
+        (!filtroFechaHasta || (mov.fecha && mov.fecha <= filtroFechaHasta))
+      );
+    }).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  }, [movimientos, productos, filtroProducto, filtroLote, filtroFamilia, filtroTipoMovimiento, filtroFechaDesde, filtroFechaHasta]);
+
+  // Exportar diario de movimientos a PDF (usando los datos visualizados)
+  const exportarMovimientosPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Diario de Movimientos', 14, 14);
+    let saldoPeso = 0;
+    const rows = movimientosFiltradosOrdenados.map(mov => {
+      const peso = Number(mov.peso) || 0;
+      if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
+        saldoPeso += peso;
+      } else if (["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo)) {
+        saldoPeso -= peso;
+      }
+      return [
+        mov.fecha ? new Date(mov.fecha).toLocaleString() : '-',
+        mov.tipo,
+        mov.producto,
+        mov.cantidad,
+        mov.unidad,
+        peso.toFixed(2),
+        saldoPeso.toFixed(2),
+        mov.lote,
+        mov.motivo
+      ];
+    });
+    autoTable(doc, {
+      head: [[
+        'Fecha', 'Tipo', 'Producto', 'Cantidad', 'Unidad', 'Peso (kg)', 'PESO TOTAL (kg)', 'Lote', 'Motivo'
+      ]],
+      body: rows,
+      startY: 20,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [103, 58, 183] }
+    });
+    doc.save('diario_movimientos.pdf');
+  };
 
   return (
     <div style={{padding:32, maxWidth:900, margin:'0 auto'}}>
@@ -303,6 +357,11 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
               <input type="date" value={filtroFechaHasta} onChange={e=>setFiltroFechaHasta(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
             </label>
           </div>
+          <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:12}}>
+            <button onClick={exportarMovimientosPDF} style={{background:'#673ab7',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
+              Exportar PDF
+            </button>
+          </div>
           <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #673ab711'}}>
             <thead>
               <tr style={{background:'#ede7f6'}}>
@@ -311,34 +370,52 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                 <th>Producto</th>
                 <th>Cantidad</th>
                 <th>Unidad</th>
+                <th>Peso (kg)</th>
+                <th>PESO TOTAL (kg)</th>
                 <th>Lote</th>
                 <th>Motivo</th>
               </tr>
             </thead>
             <tbody>
-              {movimientos.filter(mov => {
-                // Filtros combinados
-                const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
-                const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
-                return (
-                  (!filtroProducto || mov.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
-                  (!filtroLote || (mov.lote && mov.lote.toLowerCase().includes(filtroLote.toLowerCase()))) &&
-                  (!filtroFamilia || familia === filtroFamilia) &&
-                  (!filtroTipoMovimiento || mov.tipo === filtroTipoMovimiento) &&
-                  (!filtroFechaDesde || (mov.fecha && mov.fecha >= filtroFechaDesde)) &&
-                  (!filtroFechaHasta || (mov.fecha && mov.fecha <= filtroFechaHasta))
-                );
-              }).map((mov, idx) => (
-                <tr key={idx}>
-                  <td>{mov.fecha ? new Date(mov.fecha).toLocaleString() : '-'}</td>
-                  <td>{mov.tipo}</td>
-                  <td>{mov.producto}</td>
-                  <td>{mov.cantidad}</td>
-                  <td>{mov.unidad}</td>
-                  <td>{mov.lote}</td>
-                  <td>{mov.motivo}</td>
-                </tr>
-              ))}
+              {(() => {
+                // Filtrar y ordenar movimientos por fecha ascendente (antiguos primero)
+                const movsFiltrados = movimientos.filter(mov => {
+                  // Filtros combinados
+                  const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
+                  const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
+                  return (
+                    (!filtroProducto || mov.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
+                    (!filtroLote || (mov.lote && mov.lote.toLowerCase().includes(filtroLote.toLowerCase()))) &&
+                    (!filtroFamilia || familia === filtroFamilia) &&
+                    (!filtroTipoMovimiento || mov.tipo === filtroTipoMovimiento) &&
+                    (!filtroFechaDesde || (mov.fecha && mov.fecha >= filtroFechaDesde)) &&
+                    (!filtroFechaHasta || (mov.fecha && mov.fecha <= filtroFechaHasta))
+                  );
+                }).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                // Calcular saldo progresivo
+                let saldoPeso = 0;
+                return movsFiltrados.map((mov, idx) => {
+                  const peso = Number(mov.peso) || 0;
+                  if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
+                    saldoPeso += peso;
+                  } else if (["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo)) {
+                    saldoPeso -= peso;
+                  }
+                  return (
+                    <tr key={idx}>
+                      <td>{mov.fecha ? new Date(mov.fecha).toLocaleString() : '-'}</td>
+                      <td>{mov.tipo}</td>
+                      <td>{mov.producto}</td>
+                      <td>{mov.cantidad}</td>
+                      <td>{mov.unidad}</td>
+                      <td>{peso.toFixed(2)}</td>
+                      <td>{saldoPeso.toFixed(2)}</td>
+                      <td>{mov.lote}</td>
+                      <td>{mov.motivo}</td>
+                    </tr>
+                  );
+                });
+              })()}
             </tbody>
           </table>
         </div>
@@ -365,11 +442,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
             </select>
             <input placeholder="Lote" value={loteBaja} onChange={e=>setLoteBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
             <input placeholder="Motivo de la baja" value={motivoBaja} onChange={e=>setMotivoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}} />
+            <input type="number" min="0" step="any" placeholder="Peso (kg)" value={pesoBaja} onChange={e=>setPesoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
             <button
               onClick={() => {
-                if(!productoBaja || !cantidadBaja || !motivoBaja){ alert('Rellena todos los campos'); return; }
-                registrarBaja(productoBaja, cantidadBaja, unidadBaja, loteBaja, motivoBaja);
-                setProductoBaja(''); setCantidadBaja(''); setUnidadBaja('kg'); setLoteBaja(''); setMotivoBaja('');
+                if(!productoBaja || (!cantidadBaja && !pesoBaja) || !motivoBaja){ alert('Rellena todos los campos y al menos cantidad o peso.'); return; }
+                registrarBaja(productoBaja, cantidadBaja || 0, unidadBaja, loteBaja, motivoBaja, pesoBaja || 0);
+                setProductoBaja(''); setCantidadBaja(''); setUnidadBaja('kg'); setLoteBaja(''); setMotivoBaja(''); setPesoBaja('');
               }}
               style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
               Aceptar baja
@@ -378,7 +456,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
           <h4>Histórico de bajas</h4>
           <ul style={{background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #007bff11',padding:'12px 18px'}}>
             {movimientos.filter(m => m.tipo === 'baja').map((b,idx)=>(
-              <li key={idx}>{b.fecha}: {b.producto} - {b.cantidad} {b.unidad} (Lote: {b.lote}) [{b.motivo}]</li>
+              <li key={idx}>{b.fecha}: {b.producto} - {b.cantidad} {b.unidad} {(b.peso ? `(${b.peso} kg)` : '')} (Lote: {b.lote}) [{b.motivo}]</li>
             ))}
           </ul>
         </div>
