@@ -176,15 +176,34 @@ export default function GestionMantenimientoPanel({ onClose }) {
                   {editMode && <button
                     onClick={async()=>{
                       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
-                      try {
-                        await axios.post(`${API_URL}/api/productos/actualizar-masivo`, { productos: Object.values(productosEditados) });
+                      // Si hay línea nueva pendiente, crearla primero
+                      if (productosEditados['nuevo'] && productosEditados['nuevo'].nombre) {
+                        try {
+                          const res = await axios.post(`${API_URL}/api/productos`, productosEditados['nuevo']);
+                          setProductosDB(p=>[res.data,...p]);
+                          setProductosEditados(p=>{const c={...p};delete c['nuevo'];return c;});
+                        } catch(e) {
+                          alert('Error al crear producto nuevo: '+(e.response?.data?.error||e.message));
+                          return;
+                        }
+                      }
+                      // Guardar cambios de productos editados existentes
+                      const nuevosEditados = {...productosEditados};
+                      delete nuevosEditados['nuevo'];
+                      if (Object.keys(nuevosEditados).length > 0) {
+                        try {
+                          await axios.post(`${API_URL}/api/productos/actualizar-masivo`, { productos: Object.values(nuevosEditados) });
+                          setEditMode(false);
+                          setProductosEditados({});
+                          // Recargar productos
+                          const res = await axios.get(`${API_URL}/api/productos`);
+                          setProductosDB(res.data);
+                        } catch(e) {
+                          alert('Error al guardar cambios: '+(e.response?.data?.error||e.message));
+                        }
+                      } else {
                         setEditMode(false);
                         setProductosEditados({});
-                        // Recargar productos
-                        const res = await axios.get(`${API_URL}/api/productos`);
-                        setProductosDB(res.data);
-                      } catch(e) {
-                        alert('Error al guardar cambios: '+(e.response?.data?.error||e.message));
                       }
                     }}
                     style={{marginLeft:8,background:'#388e3c',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}}>
@@ -209,16 +228,85 @@ export default function GestionMantenimientoPanel({ onClose }) {
                           <tr style={{background:'#e8f5e9'}}>
                             <td><input value={productosEditados['nuevo']?.nombre||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],nombre:e.target.value}}))} placeholder="Nombre" /></td>
                             <td><input value={productosEditados['nuevo']?.referencia||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],referencia:e.target.value}}))} placeholder="Referencia" /></td>
-                            <td><input value={productosEditados['nuevo']?.unidad||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],unidad:e.target.value}}))} placeholder="Unidad" /></td>
-                            <td><input value={productosEditados['nuevo']?.familia||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],familia:e.target.value}}))} placeholder="Familia" /></td>
-                            <td><input value={productosEditados['nuevo']?.nombreFamilia||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],nombreFamilia:e.target.value}}))} placeholder="Nombre Familia" /></td>
+                            <td>
+                              <select value={productosEditados['nuevo']?.unidad||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],unidad:e.target.value}}))}>
+                                <option value="">Selecciona unidad</option>
+                                {/* Unidades estándar */}
+                                {['kg','ud','caja','bandeja','pieza','l','ml','g','mg','m','cm','mm'].map(u => (
+                                  <option key={u} value={u}>{u}</option>
+                                ))}
+                                {/* Unidades de la base de datos, excluyendo las estándar */}
+                                {[...new Set(productosDB.map(p=>p.unidad).filter(Boolean).filter(u=>!['kg','ud','caja','bandeja','pieza','l','ml','g','mg','m','cm','mm'].includes(u)))].map(u=>(
+                                  <option key={u} value={u}>{u}</option>
+                                ))}
+                                <option value="otro">Otro...</option>
+                              </select>
+                              {productosEditados['nuevo']?.unidad==='otro' && (
+                                <input style={{marginTop:4}} placeholder="Unidad personalizada" value={productosEditados['nuevo']?.unidadPersonalizada||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],unidad: e.target.value, unidadPersonalizada: e.target.value}}))} />
+                              )}
+                            </td>
+                            <td>
+                              <select value={productosEditados['nuevo']?.familia||''} onChange={e=>{
+                                const nuevaFamilia = e.target.value;
+                                let nuevoNombreFamilia = productosEditados['nuevo']?.nombreFamilia;
+                                if (nuevaFamilia && nuevaFamilia !== 'otro') {
+                                  // Buscar el nombreFamilia correspondiente a la familia seleccionada
+                                  const prod = productosDB.find(p => p.familia === nuevaFamilia && p.nombreFamilia);
+                                  if (prod) nuevoNombreFamilia = prod.nombreFamilia;
+                                }
+                                setProductosEditados(p=>({
+                                  ...p,
+                                  nuevo:{
+                                    ...p['nuevo'],
+                                    familia: nuevaFamilia,
+                                    nombreFamilia: nuevoNombreFamilia
+                                  }
+                                }));
+                              }}>
+                                <option value="">Selecciona nº familia</option>
+                                {[...new Set(productosDB.map(p=>p.familia).filter(Boolean))].map(f=>(<option key={f} value={f}>{f}</option>))}
+                                <option value="otro">Otro...</option>
+                              </select>
+                              {productosEditados['nuevo']?.familia==='otro' && (
+                                <input style={{marginTop:4}} placeholder="Nº familia personalizado" value={productosEditados['nuevo']?.familiaPersonalizada||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],familia: e.target.value, familiaPersonalizada: e.target.value}}))} />
+                              )}
+                            </td>
+                            <td>
+                              <select value={productosEditados['nuevo']?.nombreFamilia||''} onChange={e=>{
+                                const nuevoNombreFamilia = e.target.value;
+                                let nuevaFamilia = productosEditados['nuevo']?.familia;
+                                if (nuevoNombreFamilia && nuevoNombreFamilia !== 'otro') {
+                                  // Buscar la familia correspondiente al nombreFamilia seleccionado
+                                  const prod = productosDB.find(p => p.nombreFamilia === nuevoNombreFamilia && p.familia);
+                                  if (prod) nuevaFamilia = prod.familia;
+                                }
+                                setProductosEditados(p=>({
+                                  ...p,
+                                  nuevo:{
+                                    ...p['nuevo'],
+                                    nombreFamilia: nuevoNombreFamilia,
+                                    familia: nuevaFamilia
+                                  }
+                                }));
+                              }}>
+                                <option value="">Selecciona nombre familia</option>
+                                {[...new Set(productosDB.map(p=>p.nombreFamilia).filter(Boolean))].map(nf=>(<option key={nf} value={nf}>{nf}</option>))}
+                                <option value="otro">Otro...</option>
+                              </select>
+                              {productosEditados['nuevo']?.nombreFamilia==='otro' && (
+                                <input style={{marginTop:4}} placeholder="Nombre familia personalizado" value={productosEditados['nuevo']?.nombreFamiliaPersonalizada||''} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],nombreFamilia: e.target.value, nombreFamiliaPersonalizada: e.target.value}}))} />
+                              )}
+                            </td>
                             <td><input type="checkbox" checked={productosEditados['nuevo']?.activo??true} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],activo:e.target.checked}}))} /></td>
                             <td><input type="checkbox" checked={productosEditados['nuevo']?.fabricable??false} onChange={e=>setProductosEditados(p=>({...p,nuevo:{...p['nuevo'],fabricable:e.target.checked}}))} /></td>
                             <td>
                               <button onClick={async()=>{
                                 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
                                 try {
-                                  const nuevo = productosEditados['nuevo'];
+                                  let nuevo = {...productosEditados['nuevo']};
+                                  if(nuevo.unidad==='otro') nuevo.unidad = nuevo.unidadPersonalizada||'';
+                                  if(nuevo.familia==='otro') nuevo.familia = nuevo.familiaPersonalizada||'';
+                                  if(nuevo.nombreFamilia==='otro') nuevo.nombreFamilia = nuevo.nombreFamiliaPersonalizada||'';
                                   if (!nuevo?.nombre) return alert('El nombre es obligatorio');
                                   const res = await axios.post(`${API_URL}/api/productos`, nuevo);
                                   setProductosDB(p=>[res.data,...p]);
@@ -232,13 +320,45 @@ export default function GestionMantenimientoPanel({ onClose }) {
                         )}
                         {productosFiltrados.map((prod,i) => (
                           <tr key={prod._id||i} style={{background:i%2?'#fafdff':'#fff'}}>
-                            <td>{editMode ? <input value={productosEditados[prod._id]?.nombre ?? prod.nombre} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombre:e.target.value}}))} /> : prod.nombre}</td>
-                            <td>{editMode ? <input value={productosEditados[prod._id]?.referencia ?? prod.referencia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],referencia:e.target.value}}))} /> : prod.referencia}</td>
-                            <td>{editMode ? <input value={productosEditados[prod._id]?.unidad ?? prod.unidad} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],unidad:e.target.value}}))} /> : prod.unidad}</td>
-                            <td>{editMode ? <input value={productosEditados[prod._id]?.familia ?? prod.familia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],familia:e.target.value}}))} /> : prod.familia}</td>
-                            <td>{editMode ? <input value={productosEditados[prod._id]?.nombreFamilia ?? prod.nombreFamilia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombreFamilia:e.target.value}}))} /> : prod.nombreFamilia}</td>
-                            <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.activo ?? prod.activo} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],activo:e.target.checked}}))} /> : (prod.activo ? 'Sí' : 'No')}</td>
-                            <td>{editMode ? <input type="checkbox" checked={productosEditados[prod._id]?.fabricable ?? prod.fabricable ?? false} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],fabricable:e.target.checked}}))} /> : (prod.fabricable !== undefined ? (prod.fabricable ? 'Sí' : 'No') : '-')}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="nombre" value={productosEditados[prod._id]?.nombre ?? prod.nombre} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],nombre:e.target.value}}))} /> : prod.nombre}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="referencia" value={productosEditados[prod._id]?.referencia ?? prod.referencia} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],referencia:e.target.value}}))} /> : prod.referencia}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="unidad" value={productosEditados[prod._id]?.unidad ?? prod.unidad} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],unidad:e.target.value}}))} /> : prod.unidad}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="familia" value={productosEditados[prod._id]?.familia ?? prod.familia} onChange={e=>{
+                              const nuevaFamilia = e.target.value;
+                              let nuevoNombreFamilia = productosEditados[prod._id]?.nombreFamilia ?? prod.nombreFamilia;
+                              if (nuevaFamilia) {
+                                const pMatch = productosDB.find(p => p.familia === nuevaFamilia && p.nombreFamilia);
+                                if (pMatch) nuevoNombreFamilia = pMatch.nombreFamilia;
+                              }
+                              setProductosEditados(p=>({
+                                ...p,
+                                [prod._id]:{
+                                  ...prod,
+                                  ...p[prod._id],
+                                  familia: nuevaFamilia,
+                                  nombreFamilia: nuevoNombreFamilia
+                                }
+                              }));
+                            }} /> : prod.familia}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="nombreFamilia" value={productosEditados[prod._id]?.nombreFamilia ?? prod.nombreFamilia} onChange={e=>{
+                              const nuevoNombreFamilia = e.target.value;
+                              let nuevaFamilia = productosEditados[prod._id]?.familia ?? prod.familia;
+                              if (nuevoNombreFamilia) {
+                                const pMatch = productosDB.find(p => p.nombreFamilia === nuevoNombreFamilia && p.familia);
+                                if (pMatch) nuevaFamilia = pMatch.familia;
+                              }
+                              setProductosEditados(p=>({
+                                ...p,
+                                [prod._id]:{
+                                  ...prod,
+                                  ...p[prod._id],
+                                  nombreFamilia: nuevoNombreFamilia,
+                                  familia: nuevaFamilia
+                                }
+                              }));
+                            }} /> : prod.nombreFamilia}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="activo" type="checkbox" checked={productosEditados[prod._id]?.activo ?? prod.activo} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],activo:e.target.checked}}))} /> : (prod.activo ? 'Sí' : 'No')}</td>
+                            <td>{editMode ? <input data-prod-id={prod._id} data-campo="fabricable" type="checkbox" checked={productosEditados[prod._id]?.fabricable ?? prod.fabricable ?? false} onChange={e=>setProductosEditados(p=>({...p,[prod._id]:{...prod,...p[prod._id],fabricable:e.target.checked}}))} /> : (prod.fabricable !== undefined ? (prod.fabricable ? 'Sí' : 'No') : '-')}</td>
                             <td><button onClick={()=>handleBorrarProducto(prod._id)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:18}} title="Borrar">🗑</button></td>
                           </tr>
                         ))}
