@@ -5,6 +5,8 @@ import TransferenciasPanel from './TransferenciasPanel';
 import { useProductos } from './ProductosContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 export default function AlmacenTiendaPanel({ tiendaActual }) {
   const navigate = typeof useNavigate === 'function' ? useNavigate() : null;
@@ -151,38 +153,87 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     }).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
   }, [movimientos, productos, filtroProducto, filtroLote, filtroFamilia, filtroTipoMovimiento, filtroFechaDesde, filtroFechaHasta]);
 
-  // Exportar diario de movimientos a PDF (usando los datos visualizados)
-  const exportarMovimientosPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Diario de Movimientos', 14, 14);
-    let saldoPeso = 0;
+  // Exportar diario de movimientos a Excel
+  const exportarMovimientosExcel = () => {
+    if (!movimientosFiltradosOrdenados || movimientosFiltradosOrdenados.length === 0) {
+      alert('No hay movimientos para exportar.');
+      return;
+    }
+    let pesoAcumulado = 0;
     const rows = movimientosFiltradosOrdenados.map(mov => {
       const peso = Number(mov.peso) || 0;
       if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
-        saldoPeso += peso;
+        pesoAcumulado += peso;
       } else if (["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo)) {
-        saldoPeso -= peso;
+        pesoAcumulado -= peso;
+      }
+      return {
+        Fecha: mov.fecha ? mov.fecha.split('T')[0] : (mov.fecha ? new Date(mov.fecha).toLocaleDateString() : ''),
+        Hora: mov.fecha ? (mov.fecha.split('T')[1]?.substring(0,5) || new Date(mov.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : '',
+        Producto: mov.producto || '',
+        Lote: mov.lote || '',
+        Cantidad: mov.cantidad ?? '',
+        'Peso (kg)': mov.peso ?? '',
+        'PESO TOTAL (kg)': pesoAcumulado.toFixed(2),
+        Tipo: mov.tipo || '',
+        Motivo: mov.motivo || ''
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Movimientos');
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), 'diario_movimientos.xlsx');
+  };
+
+  // Mejorar exportación PDF: asegurar que los datos se exportan correctamente
+  const exportarMovimientosPDF = () => {
+    if (!movimientosFiltradosOrdenados || movimientosFiltradosOrdenados.length === 0) {
+      alert('No hay movimientos para exportar.');
+      return;
+    }
+    let pesoAcumulado = 0;
+    const rows = movimientosFiltradosOrdenados.map(mov => {
+      const peso = Number(mov.peso) || 0;
+      if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
+        pesoAcumulado += peso;
+      } else if (["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo)) {
+        pesoAcumulado -= peso;
       }
       return [
-        mov.fecha ? new Date(mov.fecha).toLocaleString() : '-',
-        mov.tipo,
-        mov.producto,
-        mov.cantidad,
-        mov.unidad,
-        peso.toFixed(2),
-        saldoPeso.toFixed(2),
-        mov.lote,
-        mov.motivo
+        mov.fecha ? mov.fecha.split('T')[0] : (mov.fecha ? new Date(mov.fecha).toLocaleDateString() : ''),
+        mov.fecha ? (mov.fecha.split('T')[1]?.substring(0,5) || new Date(mov.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : '',
+        mov.producto || '',
+        mov.lote || '',
+        mov.cantidad ?? '',
+        mov.peso ?? '',
+        pesoAcumulado.toFixed(2),
+        mov.tipo || '',
+        mov.motivo || ''
       ];
     });
+    // Construir descripción de filtros activos
+    let filtros = [];
+    if (filtroProducto) filtros.push(`producto: ${filtroProducto}`);
+    if (filtroLote) filtros.push(`lote: ${filtroLote}`);
+    if (filtroFamilia) filtros.push(`familia: ${filtroFamilia}`);
+    if (filtroTipoMovimiento) filtros.push(`tipo: ${filtroTipoMovimiento}`);
+    if (filtroFechaDesde) filtros.push(`desde: ${filtroFechaDesde}`);
+    if (filtroFechaHasta) filtros.push(`hasta: ${filtroFechaHasta}`);
+    const filtrosTexto = filtros.length > 0 ? `por ${filtros.join(', ')}` : 'global';
+    const nombreTienda = tiendaForzada?.nombre || tiendaForzada?.id || 'Tienda';
+    const cabecera = `Movimientos de productos ${filtrosTexto} de la tienda ${nombreTienda}`;
+
+    const doc = new jsPDF();
+    doc.text(cabecera, 14, 14);
     autoTable(doc, {
       head: [[
-        'Fecha', 'Tipo', 'Producto', 'Cantidad', 'Unidad', 'Peso (kg)', 'PESO TOTAL (kg)', 'Lote', 'Motivo'
+        'Fecha', 'Hora', 'Producto', 'Lote', 'Cantidad', 'Peso (kg)', 'PESO TOTAL (kg)', 'Tipo', 'Motivo'
       ]],
       body: rows,
-      startY: 20,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [103, 58, 183] }
+      headStyles: { fillColor: [103, 58, 183] },
+      margin: { top: 20 }
     });
     doc.save('diario_movimientos.pdf');
   };
@@ -360,6 +411,9 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
           <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:12}}>
             <button onClick={exportarMovimientosPDF} style={{background:'#673ab7',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
               Exportar PDF
+            </button>
+            <button onClick={exportarMovimientosExcel} style={{background:'#388e3c',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
+              Exportar Excel
             </button>
           </div>
           <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #673ab711'}}>
