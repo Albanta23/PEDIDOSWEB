@@ -3,9 +3,24 @@ import { FaIndustry, FaCashRegister, FaTools } from "react-icons/fa";
 import logo from "../assets/logo1.png";
 import Watermark from './Watermark';
 import SupervisionPanel from './SupervisionPanel';
+import { useAppUpdates } from '../hooks/useAppUpdates';
 
 export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion }) {
   const [showSupervision, setShowSupervision] = useState(false);
+  const { updateAvailable, forceUpdate } = useAppUpdates();
+  const [showUpdateMsg, setShowUpdateMsg] = useState(false);
+
+  React.useEffect(() => {
+    if (updateAvailable) {
+      setShowUpdateMsg(true);
+      const timer = setTimeout(() => {
+        setShowUpdateMsg(false);
+        forceUpdate();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [updateAvailable, forceUpdate]);
+
   return (
     <div
       style={{
@@ -17,6 +32,24 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
         background: "#f4f6f8",
       }}
     >
+      {showUpdateMsg && (
+        <div style={{
+          position: 'fixed',
+          top: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#1976d2',
+          color: '#fff',
+          padding: '16px 32px',
+          borderRadius: 12,
+          boxShadow: '0 2px 12px #0003',
+          zIndex: 9999,
+          fontSize: 20,
+          fontWeight: 500,
+        }}>
+          ¡Nueva versión disponible! Actualizando la aplicación...
+        </div>
+      )}
       <Watermark />
       <img
         src={logo}
