@@ -1,0 +1,158 @@
+/* Estilos para las notificaciones de actualización */
+.update-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.update-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  gap: 16px;
+}
+
+.update-icon {
+  font-size: 24px;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.update-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.update-text h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.update-text p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.update-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.update-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.update-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.update-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.update-button.primary {
+  background: white;
+  color: #667eea;
+}
+
+.update-button.primary:hover:not(:disabled) {
+  background: #f8f9ff;
+}
+
+.update-button.primary:disabled {
+  background: rgba(255, 255, 255, 0.5);
+  color: rgba(102, 126, 234, 0.5);
+  cursor: not-allowed;
+}
+
+.update-button.secondary {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.update-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .update-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .update-text h3 {
+    font-size: 15px;
+  }
+  
+  .update-text p {
+    font-size: 13px;
+  }
+  
+  .update-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .update-button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .update-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .update-button {
+    width: 100%;
+    max-width: 200px;
+  }
+}
