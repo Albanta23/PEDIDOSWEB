@@ -479,6 +479,21 @@ app.delete('/api/productos/:id', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Crear producto individual ---
+app.post('/api/productos', async (req, res) => {
+  try {
+    const nuevo = req.body;
+    if (!nuevo.nombre) return res.status(400).json({ ok: false, error: 'El nombre es obligatorio' });
+    // Validar unicidad por nombre o referencia
+    const existe = await Producto.findOne({ $or: [ { nombre: nuevo.nombre }, { referencia: nuevo.referencia } ] });
+    if (existe) return res.status(400).json({ ok: false, error: 'Ya existe un producto con ese nombre o referencia' });
+    const creado = await Producto.create(nuevo);
+    res.json(creado);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // --- ENDPOINTS DE MOVIMIENTOS DE STOCK ---
 // Consultar movimientos de stock de una tienda (con filtros)
 app.get('/api/movimientos-stock', async (req, res) => {
