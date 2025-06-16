@@ -188,39 +188,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     return valor;
   };
 
-  const debounceTimer = useRef(null);
-  const lastLineasRef = useRef(null);
-
-  // Guardado automático con debounce de 30 segundos
-  useEffect(() => {
-    if (!pedidoAbierto) return;
-    if (!pedidoAbierto._id && !pedidoAbierto.id) return;
-    if (!pedidoAbierto.lineas) return;
-    // Si las líneas no han cambiado, no hacer nada
-    if (JSON.stringify(pedidoAbierto.lineas) === lastLineasRef.current) return;
-    lastLineasRef.current = JSON.stringify(pedidoAbierto.lineas);
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      // Guardar solo si sigue abierto
-      if (pedidoAbierto && (pedidoAbierto._id || pedidoAbierto.id)) {
-        const lineasNormalizadas = pedidoAbierto.lineas.map(l => {
-          if (l.esComentario) {
-            return { esComentario: true, comentario: l.comentario || '' };
-          }
-          return {
-            ...l,
-            preparada: !!l.preparada,
-            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-            cantidad: Number(l.cantidad)
-          };
-        });
-        onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-      }
-    }, 30000); // 30 segundos
-    return () => debounceTimer.current && clearTimeout(debounceTimer.current);
-  }, [pedidoAbierto]);
-
   return (
     <div style={{
       fontFamily:'Inter, Segoe UI, Arial, sans-serif',
