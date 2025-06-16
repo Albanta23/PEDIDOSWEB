@@ -33,6 +33,10 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   const [motivoBaja, setMotivoBaja] = useState('');
   const [pesoBaja, setPesoBaja] = useState('');
 
+  // Estado para selección múltiple en bajas
+  const [busquedaMulti, setBusquedaMulti] = useState('');
+  const [seleccionMulti, setSeleccionMulti] = useState([]);
+
   // Forzar que el id de la tienda clientes sea siempre 'PEDIDOS_CLIENTES' (usando useMemo para evitar bucles)
   const tiendaForzada = useMemo(() => {
     if (tienda && typeof tienda.id === 'string' && tienda.id.trim().toLowerCase() === 'clientes') {
@@ -485,10 +489,10 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       {tab==='bajas' && (
         <div>
           <h3>Registrar baja de producto</h3>
+          {/* Formulario individual clásico (opcional, se puede dejar) */}
           <div style={{display:'flex',gap:16,marginBottom:18,alignItems:'center',flexWrap:'wrap'}}>
             <select value={productoBaja} onChange={e=>{
               setProductoBaja(e.target.value);
-              // Autocompletar lote y unidad si existe
               const prod = movimientos.find(s=>s.producto===e.target.value);
               if(prod){ setUnidadBaja(prod.unidad); setLoteBaja(prod.lote); }
             }} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:120}}>

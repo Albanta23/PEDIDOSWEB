@@ -511,6 +511,32 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     );
   };
 
+  // --- Selección múltiple de productos para añadir varias líneas ---
+  const [busquedaMulti, setBusquedaMulti] = useState('');
+  const [seleccionMulti, setSeleccionMulti] = useState([]);
+
+  const productosFiltradosMulti = React.useMemo(() => {
+    const texto = busquedaMulti.trim().toLowerCase();
+    if (!texto) return productos;
+    return productos.filter(p =>
+      (p.nombre && p.nombre.toLowerCase().includes(texto)) ||
+      (p.referencia && p.referencia.toLowerCase().includes(texto))
+    );
+  }, [busquedaMulti, productos]);
+
+  const handleAnadirSeleccionados = () => {
+    if (seleccionMulti.length === 0) return;
+    const nuevas = [...lineasEdit];
+    seleccionMulti.forEach(nombre => {
+      if (!nuevas.some(l => l.producto === nombre)) {
+        nuevas.push({ producto: nombre, cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' });
+      }
+    });
+    setLineasEdit(ordenarLineasPorFamilia(nuevas));
+    setSeleccionMulti([]);
+    setBusquedaMulti('');
+  };
+
   return (
     <>
       {/* Toast de confirmación de guardado */}
@@ -521,6 +547,44 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       {/* Editor visual unificado para crear pedido */}
       {creandoNuevo && (
         <div style={{ border: "2px solid #007bff", margin: 12, padding: 20, background: '#fafdff', borderRadius: 14, boxShadow:'0 2px 12px #007bff11', maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', position:'relative' }}>
+          {/* NUEVO: Selección múltiple de productos */}
+          <div style={{marginBottom:18,background:'#f8fafd',padding:12,borderRadius:8}}>
+            <b style={{color:'#007bff'}}>Buscar y marcar productos para añadir varias líneas</b>
+            <input
+              type="text"
+              placeholder="Buscar producto por nombre o referencia"
+              value={busquedaMulti}
+              onChange={e=>setBusquedaMulti(e.target.value)}
+              style={{marginLeft:12,padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}
+            />
+            <div style={{maxHeight:180,overflowY:'auto',marginTop:8,display:'flex',flexWrap:'wrap',gap:8}}>
+              {productosFiltradosMulti.map(p => (
+                <label key={p.nombre} style={{display:'flex',alignItems:'center',gap:6,background:seleccionMulti.includes(p.nombre)?'#e3f2fd':'#fff',border:'1px solid #ccc',borderRadius:4,padding:'4px 10px',cursor:'pointer'}}>
+                  <input
+                    type="checkbox"
+                    checked={seleccionMulti.includes(p.nombre)}
+                    onChange={e => {
+                      if (e.target.checked) setSeleccionMulti(arr => [...arr, p.nombre]);
+                      else setSeleccionMulti(arr => arr.filter(n => n !== p.nombre));
+                    }}
+                  />
+                  {p.nombre} {p.referencia ? <span style={{color:'#888',fontSize:13}}>({p.referencia})</span> : ''}
+                </label>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:10,marginTop:10,alignItems:'center',flexWrap:'wrap'}}>
+              <button
+                onClick={handleAnadirSeleccionados}
+                disabled={seleccionMulti.length === 0}
+                style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
+                Añadir seleccionados
+              </button>
+              <span style={{marginLeft:16,color:'#888',fontSize:13}}>
+                {seleccionMulti.length} producto(s) marcado(s)
+              </span>
+            </div>
+          </div>
+
           {/* Resumen visual fijo */}
           <div style={{position:'sticky',top:0,background:'#eaf4ff',padding:'8px 0 8px 0',zIndex:2,borderBottom:'1px solid #e0e6ef',marginBottom:12,borderRadius:8,fontWeight:600,fontSize:16,color:'#007bff',textAlign:'center'}}>
             Resumen: {lineasEdit.length} líneas · {lineasEdit.reduce((a,l)=>a+(Number(l.cantidad)||0),0)} unidades · {new Set(lineasEdit.map(l=>l.producto)).size} productos únicos
@@ -877,11 +941,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       <td style={{padding:'8px',textAlign:'center'}}>{h.numeroLineas}</td>
                       <td style={{padding:'8px',display:'flex',gap:8}}>
                         <button onClick={()=>setEnvioExpandido(h.id)} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:6,padding:'4px 12px',fontWeight:600}}>Ver detalles</button>
-                        <button onClick={()=>{
+                        <button onClick={() => {
                           // Generar PDF en pantalla
                           if(h.pedido && h.pedido.lineas && h.tienda) exportarProveedorPDF(h.pedido.lineas, {nombre: h.tienda?.nombre || h.tienda});
                         }} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:6,padding:'4px 12px',fontWeight:600}}>Ver PDF</button>
-                        <button onClick={()=>{
+                        <button onClick={() => {
                           if(h.pedido && Array.isArray(h.pedido.lineas)) {
                             setLineasProveedor(h.pedido.lineas.map(l => ({...l, cantidad: ''})));
                             setMostrarModalProveedor(true);

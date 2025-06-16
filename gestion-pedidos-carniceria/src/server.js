@@ -169,7 +169,14 @@ app.post('/api/pedidos', async (req, res) => {
         return res.status(400).json({ error: err2.message });
       }
     }
-    res.status(400).json({ error: err.message });
+    // LOG DETALLADO DE ERROR
+    console.error('[ERROR /api/pedidos]', {
+      message: err.message,
+      name: err.name,
+      errors: err.errors,
+      body: req.body
+    });
+    res.status(400).json({ error: err.message, details: err.errors });
   }
 });
 
