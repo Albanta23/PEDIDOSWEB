@@ -54,21 +54,34 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     return mapa[f] || formato;
   }
 
-  // Función para abrir un pedido concreto
+  // --- BORRADOR LOCAL ---
+  // Al abrir un pedido, si hay borrador local, cargarlo automáticamente
   const abrirPedido = (pedido) => {
-    const lineasNormalizadas = pedido.lineas.map(l => {
+    const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
+    let pedidoBorrador = null;
+    try {
+      const borradorStr = localStorage.getItem(borradorKey);
+      if (borradorStr) pedidoBorrador = JSON.parse(borradorStr);
+    } catch {}
+    const base = pedidoBorrador || pedido;
+    const lineasNormalizadas = base.lineas.map(l => {
       if (l.esComentario === true || l.esComentario === 'true' || (typeof l.esComentario !== 'undefined' && l.esComentario)) {
         return { esComentario: true, comentario: l.comentario || '' };
       }
-      // Normalizar formato aquí
       return { ...l, formato: normalizarFormato(l.formato) };
     });
-    
-    setPedidoAbierto({
-      ...pedido,
-      lineas: lineasNormalizadas
-    });
+    setPedidoAbierto({ ...base, lineas: lineasNormalizadas });
   };
+
+  // Guardar automáticamente en localStorage cada vez que cambia el pedido abierto
+  useEffect(() => {
+    if (!pedidoAbierto) return;
+    if (!pedidoAbierto._id && !pedidoAbierto.id) return;
+    const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
+    try {
+      localStorage.setItem(borradorKey, JSON.stringify(pedidoAbierto));
+    } catch {}
+  }, [pedidoAbierto]);
 
   // Función para cerrar el pedido abierto
   const cerrarPedido = () => {
@@ -101,22 +114,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
         }
         return l;
       });
-      // Guardado automático al editar cualquier campo de línea
-      if (prev._id || prev.id) {
-        const lineasNormalizadas = nuevasLineas.map(l => {
-          if (l.esComentario) {
-            return { esComentario: true, comentario: l.comentario || '' };
-          }
-          return {
-            ...l,
-            preparada: !!l.preparada,
-            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-            cantidad: Number(l.cantidad)
-          };
-        });
-        onLineaDetalleChange(prev._id || prev.id, null, lineasNormalizadas);
-      }
       return {
         ...prev,
         lineas: nuevasLineas
@@ -160,7 +157,10 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     });
 
     await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-    setPedidoAbierto(null); 
+    // Limpiar borrador local tras guardar
+    const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
+    try { localStorage.removeItem(borradorKey); } catch {}
+    setPedidoAbierto(null);
   };
 
   // Cambiar valor de peso en el modal de suma
@@ -683,7 +683,10 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           };
                         });
                         await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-                        // No cerramos el pedido aquí para permitir más ediciones o el envío posterior.
+                        // Limpiar borrador local tras guardar
+                        const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
+                        try { localStorage.removeItem(borradorKey); } catch {}
+                        setPedidoAbierto(null);
                       }}
                     >
                       Guardar
