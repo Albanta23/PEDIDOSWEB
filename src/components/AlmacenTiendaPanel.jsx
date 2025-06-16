@@ -125,15 +125,23 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     );
   });
 
-  // Autocompletar producto por referencia o nombre
+  // Autocompletar producto por referencia o nombre (robusto, tolerante a parciales)
   function autocompletarProducto(valor) {
     if (!valor) return valor;
-    // Si coincide exactamente con una referencia, devolver el nombre
-    const prodPorRef = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === String(valor).toLowerCase());
-    if (prodPorRef) return prodPorRef.nombre;
-    // Si coincide exactamente con un nombre, devolver el nombre
-    const prodPorNombre = productos.find(p => p.nombre && String(p.nombre).toLowerCase() === String(valor).toLowerCase());
-    if (prodPorNombre) return prodPorNombre.nombre;
+    const normalizado = String(valor).trim().toLowerCase();
+    // Coincidencia exacta por referencia
+    let prod = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === normalizado);
+    if (prod) return prod.nombre;
+    // Coincidencia exacta por nombre
+    prod = productos.find(p => p.nombre && String(p.nombre).toLowerCase() === normalizado);
+    if (prod) return prod.nombre;
+    // Coincidencia parcial por referencia
+    prod = productos.find(p => p.referencia && String(p.referencia).toLowerCase().startsWith(normalizado));
+    if (prod) return prod.nombre;
+    // Coincidencia parcial por nombre
+    prod = productos.find(p => p.nombre && String(p.nombre).toLowerCase().startsWith(normalizado));
+    if (prod) return prod.nombre;
+    // Si no se reconoce, devolver el valor original (y se puede mostrar feedback visual en el input)
     return valor;
   }
 
