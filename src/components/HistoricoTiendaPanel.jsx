@@ -155,6 +155,11 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   }
 }
 
+// Función utilitaria para normalizar IDs de tienda
+function normalizarId(id) {
+  return (id || '').toString().trim().toLowerCase().replace(/\s+/g, '');
+}
+
 const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onModificarPedido, onAvisoVisto }) => {
   const { productos } = useProductos();
   const [modalPedido, setModalPedido] = useState(null);
@@ -197,12 +202,23 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
       const fecha = new Date(p.fechaPedido || p.fechaCreacion);
       return fecha >= fechaInicio;
     }
-    setPedidosFiltrados(pedidos.filter(filtrarPorPeriodo));
+    function soloFecha(d) {
+      if (!d) return null;
+      const date = new Date(d);
+      if (isNaN(date)) return null;
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+    setPedidosFiltrados(pedidos.filter(p => {
+      if (!fechaInicio) return true;
+      const fechaPedido = soloFecha(p.fechaPedido || p.fechaCreacion);
+      if (!fechaPedido) return true; // Si la fecha es inválida, no filtrar
+      return fechaPedido >= soloFecha(fechaInicio);
+    }));
   }, [pedidos, periodo]);
 
   // Pedidos enviados a fábrica (solo enviados, NO borrador)
   const pedidosEnviados = pedidosFiltrados.filter(p =>
-    p.tiendaId === tiendaId &&
+    normalizarId(p.tiendaId) === normalizarId(tiendaId) &&
     (
       (p.lineas && p.lineas.length > 0 && p.estado === 'enviado') ||
       (p.estado === 'borrador' && p.fechaCreacion && p.numeroPedido)
@@ -210,7 +226,7 @@ const HistoricoTiendaPanel = ({ pedidos, tiendaId, tiendaNombre, onVolver, onMod
   ).sort((a, b) => ((b.numeroPedido || 0) - (a.numeroPedido || 0)));
   // Pedidos preparados o recibidos de fábrica
   const pedidosRecibidos = pedidosFiltrados.filter(p =>
-    p.tiendaId === tiendaId &&
+    normalizarId(p.tiendaId) === normalizarId(tiendaId) &&
     p.numeroPedido &&
     (
       (p.lineas && p.lineas.length > 0 && (p.estado === 'preparado' || p.estado === 'enviadoTienda')) ||
