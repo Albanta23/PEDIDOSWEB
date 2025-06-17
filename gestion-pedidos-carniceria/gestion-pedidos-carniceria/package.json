@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@sendgrid/mail": "^8.1.5"
+    "@sendgrid/mail": "^8.1.5",
+    "express-rate-limit": "^7.5.0"
   }
 }
