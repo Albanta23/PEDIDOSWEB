@@ -514,15 +514,25 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   // --- Selección múltiple de productos para añadir varias líneas ---
   const [busquedaMulti, setBusquedaMulti] = useState('');
   const [seleccionMulti, setSeleccionMulti] = useState([]);
+  const [filtroFamiliaMulti, setFiltroFamiliaMulti] = useState('');
+
+  // Obtener familias únicas de los productos
+  const familiasUnicas = React.useMemo(() => {
+    const setFamilias = new Set();
+    productos.forEach(p => {
+      if (p.familia || p.nombreFamilia) setFamilias.add(p.nombreFamilia || p.familia);
+    });
+    return Array.from(setFamilias).filter(Boolean).sort();
+  }, [productos]);
 
   const productosFiltradosMulti = React.useMemo(() => {
     const texto = busquedaMulti.trim().toLowerCase();
-    if (!texto) return productos;
-    return productos.filter(p =>
-      (p.nombre && p.nombre.toLowerCase().includes(texto)) ||
-      (p.referencia && p.referencia.toLowerCase().includes(texto))
-    );
-  }, [busquedaMulti, productos]);
+    return productos.filter(p => {
+      const coincideTexto = !texto || (p.nombre && p.nombre.toLowerCase().includes(texto)) || (p.referencia && p.referencia.toLowerCase().includes(texto));
+      const coincideFamilia = !filtroFamiliaMulti || (p.nombreFamilia || p.familia) === filtroFamiliaMulti;
+      return coincideTexto && coincideFamilia;
+    });
+  }, [busquedaMulti, filtroFamiliaMulti, productos]);
 
   const handleAnadirSeleccionados = () => {
     if (seleccionMulti.length === 0) return;
@@ -550,13 +560,21 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           {/* NUEVO: Selección múltiple de productos */}
           <div style={{marginBottom:18,background:'#f8fafd',padding:12,borderRadius:8}}>
             <b style={{color:'#007bff'}}>Buscar y marcar productos para añadir varias líneas</b>
-            <input
-              type="text"
-              placeholder="Buscar producto por nombre o referencia"
-              value={busquedaMulti}
-              onChange={e=>setBusquedaMulti(e.target.value)}
-              style={{marginLeft:12,padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}
-            />
+            <div style={{display:'flex',alignItems:'center',gap:12,marginTop:8,marginBottom:8}}>
+              <input
+                type="text"
+                placeholder="Buscar producto por nombre o referencia"
+                value={busquedaMulti}
+                onChange={e=>setBusquedaMulti(e.target.value)}
+                style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}
+              />
+              <select value={filtroFamiliaMulti} onChange={e=>setFiltroFamiliaMulti(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:140}}>
+                <option value="">Todas las familias</option>
+                {familiasUnicas.map(fam => (
+                  <option key={fam} value={fam}>{fam}</option>
+                ))}
+              </select>
+            </div>
             <div style={{maxHeight:180,overflowY:'auto',marginTop:8,display:'flex',flexWrap:'wrap',gap:8}}>
               {productosFiltradosMulti.map(p => (
                 <label key={p.nombre} style={{display:'flex',alignItems:'center',gap:6,background:seleccionMulti.includes(p.nombre)?'#e3f2fd':'#fff',border:'1px solid #ccc',borderRadius:4,padding:'4px 10px',cursor:'pointer'}}>
