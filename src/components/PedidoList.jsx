@@ -295,6 +295,13 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
   const getProveedorKey = () => `proveedor_despiece_${tiendaActual?.id || 'default'}`;
   const [lineasProveedor, setLineasProveedor] = useState([]);
 
+  // Guardar en localStorage cada vez que se edita la lista
+  useEffect(() => {
+    if (mostrarModalProveedor && tiendaActual?.id) {
+      localStorage.setItem(getProveedorKey(), JSON.stringify(lineasProveedor));
+    }
+  }, [lineasProveedor, mostrarModalProveedor, tiendaActual?.id]);
+
   const handleProveedorLineaChange = (idx, campo, valor) => {
     setLineasProveedor(lineasProveedor.map((l, i) => i === idx ? { ...l, [campo]: valor } : l));
   };
@@ -489,7 +496,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       try {
         const arr = JSON.parse(guardadas);
         if (Array.isArray(arr) && arr.length > 0) {
-          setLineasProveedor(arr.map(l => ({ ...l, cantidad: '' })));
+          setLineasProveedor(arr);
         } else {
           setLineasProveedor(REFERENCIAS_CERDO.map(ref => ({ referencia: ref, cantidad: '', unidad: 'kg' })));
         }
@@ -892,8 +899,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
               <button onClick={()=>exportarProveedorPDF(lineasProveedor, tiendaActual)} style={{background:'#ffc107',color:'#333',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700}}>
                 Ver PDF
               </button>
-              <button onClick={enviarProveedorMailjet} style={{backgroundImage:'url(logo_2.jpg)',backgroundSize:'contain',backgroundRepeat:'no-repeat',backgroundPosition:'center top',color:'red',border:'none',borderRadius:6,padding:'15px',fontWeight:700,display:'flex',alignItems:'flex-end',justifyContent:'center',textShadow:'1px 1px 2px rgba(255,255,255,0.8)',width:80,height:80,fontSize:'12px'}}>
-                Enviar
+              <button 
+                onClick={enviarProveedorMailjet}
+                disabled={enviandoProveedor || !!mensajeProveedor}
+                aria-disabled={enviandoProveedor || !!mensajeProveedor}
+                style={{
+                  backgroundImage:'url(logo_2.jpg)',backgroundSize:'contain',backgroundRepeat:'no-repeat',backgroundPosition:'center top',color:'red',border:'none',borderRadius:6,padding:'15px',fontWeight:700,display:'flex',alignItems:'flex-end',justifyContent:'center',textShadow:'1px 1px 2px rgba(255,255,255,0.8)',width:80,height:80,fontSize:'12px',
+                  opacity: (enviandoProveedor || !!mensajeProveedor) ? 0.5 : 1,
+                  cursor: (enviandoProveedor || !!mensajeProveedor) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {enviandoProveedor ? 'Enviando...' : 'Enviar'}
               </button>
               <button onClick={()=>setMostrarHistorialProveedor(true)} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:6,padding:'7px 18px',fontWeight:700,marginLeft:8}}>
                 <span role="img" aria-label="historial" style={{marginRight:6}}>📦</span>Ver historial de envíos
