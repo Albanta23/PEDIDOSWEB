@@ -5,6 +5,8 @@ import { useProductos } from './ProductosContext';
 export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange }) {
   const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   useEffect(() => {
     setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
   }, [pedido]);
@@ -29,14 +31,24 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
 
   // Nuevo handler robusto para pedidos existentes (edición)
   const handleGuardarYEnviar = async () => {
-    if (!pedido || (!pedido._id && !pedido.id) || !onLineaDetalleChange || !onEstadoChange) {
-      if (onSend) onSend(getLineasNormalizadas()); // fallback para creación
+    setError('');
+    setLoading(true);
+    try {
+      if (!pedido || (!pedido._id && !pedido.id) || !onLineaDetalleChange || !onEstadoChange) {
+        if (onSend) await onSend(getLineasNormalizadas());
+        setLoading(false);
+        return;
+      }
+      const lineasNormalizadas = getLineasNormalizadas();
+      await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
+      await onEstadoChange(pedido._id || pedido.id, 'enviadoTienda');
+      if (onSend) await onSend(lineasNormalizadas);
+    } catch (e) {
+      setError('Error al guardar y enviar el pedido. Intenta de nuevo.');
       return;
+    } finally {
+      setLoading(false);
     }
-    const lineasNormalizadas = getLineasNormalizadas();
-    await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
-    await onEstadoChange(pedido._id || pedido.id, 'enviadoTienda');
-    if (onSend) onSend(lineasNormalizadas); // notifica al padre para cerrar
   };
 
   return (
@@ -156,16 +168,17 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
           </tr>
           <tr>
             <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
-              {onSave && <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}} onClick={()=>onSave(getLineasNormalizadas())}>Guardar</button>}
+              {onSave && <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}} onClick={()=>onSave(getLineasNormalizadas())} disabled={loading}>Guardar</button>}
               {onSend && pedido && (pedido._id || pedido.id) && onLineaDetalleChange && onEstadoChange && (
-                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={handleGuardarYEnviar}>Guardar y enviar</button>
+                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={handleGuardarYEnviar} disabled={loading}>Guardar y enviar</button>
               )}
               {onSend && (!pedido || (!pedido._id && !pedido.id)) && (
-                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())}>Guardar y enviar</button>
+                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())} disabled={loading}>Guardar y enviar</button>
               )}
-              {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel}>Cancelar</button>}
+              {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cancelar</button>}
             </td>
           </tr>
+          {error && <tr><td colSpan="8" style={{color:'red',textAlign:'center',fontWeight:600}}>{error}</td></tr>}
         </tbody>
       </table>
     </div>
