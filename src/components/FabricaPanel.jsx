@@ -490,16 +490,19 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 onSend={async (lineasNormalizadas) => {
                   if (!lineasNormalizadas.length) return;
                   const tiendaObj = tiendas.find(t => t.id === tiendaNuevaPedido);
+                  // 1. Crear pedido en estado 'enviado'
                   const nuevoPedido = {
                     tiendaId: tiendaNuevaPedido,
                     tiendaNombre: tiendaObj?.nombre || tiendaNuevaPedido,
                     fechaPedido: new Date().toISOString(),
-                    estado: 'enviadoTienda', // <-- Directamente enviadoTienda
+                    estado: 'enviado',
                     lineas: lineasNormalizadas,
                     creadoEnFabrica: true
                   };
                   try {
-                    await import('../services/pedidosService').then(mod => mod.crearPedido(nuevoPedido));
+                    const creado = await import('../services/pedidosService').then(mod => mod.crearPedido(nuevoPedido));
+                    // 2. Actualizar a 'enviadoTienda' para disparar movimientos de stock
+                    await import('../services/pedidosService').then(mod => mod.actualizarPedido(creado._id || creado.id, { ...creado, estado: 'enviadoTienda' }));
                     setModalCrearPedido(false);
                     setTiendaNuevaPedido('');
                     setPedidoAbierto(null);
