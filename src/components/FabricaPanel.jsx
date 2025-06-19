@@ -710,7 +710,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <button
                       style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
                       onClick={async () => {
-                        // Filtrar líneas de producto válidas y mantener todas las líneas de comentario
+                        // Guardar y enviar pedido
                         const lineasParaEnviar = pedidoAbierto.lineas.filter(l => 
                           l.esComentario || 
                           (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
@@ -722,7 +722,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                           setPedidoAbierto(null);
                           return;
                         }
-                        
                         const lineasNormalizadas = lineasParaEnviar.map(l => {
                            if (l.esComentario) {
                             return { esComentario: true, comentario: l.comentario || '' };
@@ -735,13 +734,15 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                             cantidad: Number(l.cantidad)
                           };
                         });
-
                         await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
                         await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
+                        // Limpiar borrador local tras guardar y enviar
+                        const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
+                        try { localStorage.removeItem(borradorKey); } catch {}
                         setPedidoAbierto(null);
                       }}
                     >
-                      Enviar pedido
+                      Guardar y enviar
                     </button>
                   </td>
                 </tr>
