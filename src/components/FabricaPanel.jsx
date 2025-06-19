@@ -4,6 +4,7 @@ import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
+import PedidoForm from './PedidoForm';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -15,6 +16,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   const [pedidoAbierto, setPedidoAbierto] = useState(null);
   const [mostrarHistoricoTransferencias, setMostrarHistoricoTransferencias] = useState(false);
   const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
+  const [modalCrearPedido, setModalCrearPedido] = useState(false);
+  const [tiendaNuevaPedido, setTiendaNuevaPedido] = useState('');
   const { productos } = useProductos();
 
   // Paleta de colores para los botones de tienda
@@ -188,6 +191,30 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     return valor;
   };
 
+  // Función para crear pedido manual de tienda desde fábrica
+  const handleCrearPedidoTienda = async (pedido) => {
+    if (!tiendaNuevaPedido) return;
+    const tiendaObj = tiendas.find(t => t.id === tiendaNuevaPedido);
+    const nuevoPedido = {
+      tiendaId: tiendaNuevaPedido,
+      tiendaNombre: tiendaObj?.nombre || tiendaNuevaPedido,
+      fechaPedido: new Date().toISOString(),
+      estado: 'enviado',
+      lineas: pedido.lineas,
+      creadoEnFabrica: true
+    };
+    try {
+      await import('../services/pedidosService').then(mod => mod.crearPedido(nuevoPedido));
+      setModalCrearPedido(false);
+      setTiendaNuevaPedido('');
+      // Opcional: mostrar mensaje de éxito
+      // Si tienes acceso a setPedidos, podrías actualizar el estado aquí
+      // Si no, el nuevo pedido aparecerá en la próxima recarga automática
+    } catch (e) {
+      alert('Error al crear pedido: ' + (e?.message || e));
+    }
+  };
+
   return (
     <div style={{
       fontFamily:'Inter, Segoe UI, Arial, sans-serif',
@@ -239,11 +266,11 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
             <span role="img" aria-label="histórico" style={{marginRight:8}}>📦</span>Historial de envíos
           </button>
           <button
-            onClick={()=>setMostrarHistoricoTransferencias(true)}
+            onClick={()=>setModalCrearPedido(true)}
             style={{
-              minWidth: 150,
+              minWidth: 180,
               height: 44,
-              background:'#00b894',
+              background:'#28a745',
               color:'#fff',
               border:'none',
               borderRadius:12,
@@ -253,12 +280,12 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               display:'flex',
               alignItems:'center',
               justifyContent:'center',
-              boxShadow:'0 1px 4px #00b89422',
+              boxShadow:'0 1px 4px #28a74522',
               padding:'0 18px',
               letterSpacing:0.2
             }}
           >
-            <span role="img" aria-label="devoluciones" style={{marginRight:8}}>↩️</span>Devoluciones
+            <span role="img" aria-label="nuevo-pedido" style={{marginRight:8}}>📝</span>Crear pedido tienda
           </button>
         </div>
       </div>
@@ -699,6 +726,25 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               </tbody>
             </table>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal para crear pedido manual de tienda */}
+      {modalCrearPedido && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:340,maxWidth:700,maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
+            <button onClick={()=>setModalCrearPedido(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
+            <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#28a745'}}>Crear pedido manual para tienda</h2>
+            <div style={{marginBottom:18}}>
+              <label htmlFor="tienda-nueva-pedido" style={{fontWeight:600}}>Selecciona tienda:</label>
+              <select id="tienda-nueva-pedido" value={tiendaNuevaPedido} onChange={e=>setTiendaNuevaPedido(e.target.value)} style={{marginLeft:12,padding:8,borderRadius:6,border:'1px solid #bbb',minWidth:180}}>
+                <option value="">-- Selecciona tienda --</option>
+                {tiendas.filter(t=>t.id!=='clientes').map(t=>(<option key={t.id} value={t.id}>{t.nombre}</option>))}
+              </select>
+            </div>
+            {tiendaNuevaPedido && (
+              <PedidoForm onAdd={handleCrearPedidoTienda} />
+            )}
           </div>
         </div>
       )}
