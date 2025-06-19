@@ -4,7 +4,7 @@ import TransferenciasPanel from './TransferenciasPanel';
 import logo from '../assets/logo1.png';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
-import PedidoForm from './PedidoForm';
+import PedidoEditorFabrica from './PedidoEditorFabrica';
 
 const estados = {
   enviado: 'Enviado a fábrica',
@@ -405,7 +405,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
         })}
       </div>
       {/* Edición del pedido abierto */}
-      {pedidoAbierto && (
+      {pedidoAbierto && !modalCrearPedido && (
         <div className="modal-editor-fabrica-bg" style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: '#fff', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -427,10 +427,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Handle visual para móvil */}
-            <div className="modal-editor-fabrica-handle" style={{
-              width: 48, height: 6, background: '#e0e0e0', borderRadius: 4, margin: '0 auto 18px auto', display: 'none'
-            }} />
             <h3>
               {tiendas.find(t => t.id === pedidoAbierto.tiendaId)?.nombre || pedidoAbierto.tiendaId} - Nº Pedido: {pedidoAbierto.numeroPedido}
             </h3>
@@ -438,317 +434,24 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
             <div style={{ marginTop: 12 }}>
               Estado: <b>{estados[pedidoAbierto.estado] || pedidoAbierto.estado}</b>
             </div>
-            <div style={{ marginTop: 12, display:'flex', gap:12, flexWrap:'wrap' }}>
-              <button onClick={cerrarPedido} style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Cancelar</button>
-            </div>
-            <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-            <table className="tabla-edicion-fabrica" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Cant. pedida</th>
-                  <th>Peso (kg)</th>
-                  <th>Cant. enviada</th>
-                  <th>Lote</th>
-                  <th>Formato pedido</th>
-                  <th>Comentario</th>
-                  <th>Eliminar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pedidoAbierto.lineas.map((linea, idx) => {
-                  // Renderizado de línea de comentario
-                  if (linea.esComentario === true || linea.esComentario === 'true' || (typeof linea.esComentario !== 'undefined' && linea.esComentario)) {
-                    return (
-                      <tr key={`comment-${idx}`} style={{ backgroundColor: '#fffbe6', border: '2px solid #ffe58f' }}>
-                        <td colSpan="8" style={{ padding: '12px', textAlign: 'left' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <span style={{ fontSize: 20, color: '#b8860b' }}>📝</span>
-                            <span style={{ fontWeight: 'bold', color: '#b8860b', fontSize: 16 }}>COMENTARIO:</span>
-                            <input
-                              type="text"
-                              value={linea.comentario || ''}
-                              onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                              placeholder="Escribe aquí tu comentario..."
-                              style={{ 
-                                flexGrow: 1, 
-                                border: '1px dashed #b8860b', 
-                                borderRadius: 6, 
-                                padding: '8px 12px', 
-                                background: '#fffdf7',
-                                fontStyle: 'italic',
-                                fontSize: 15,
-                                color: '#b8860b'
-                              }}
-                            />
-                            <button
-                              style={{
-                                background:'#dc3545',
-                                color:'#fff',
-                                border:'none',
-                                borderRadius:6,
-                                padding:'6px 12px',
-                                fontWeight:600,
-                                cursor:'pointer',
-                                fontSize: 14
-                              }}
-                              onClick={() => borrarLinea(idx)}
-                              title="Eliminar comentario"
-                            >
-                              🗑 Eliminar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }
-                  // Renderizado normal para líneas de producto
-                  return (
-                    <tr key={idx}>
-                      <td>
-                        <input
-                          list="productos-lista-global"
-                          value={linea.producto}
-                          onChange={e => {
-                            const valor = autocompletarProducto(e.target.value);
-                            actualizarLinea(idx, 'producto', valor);
-                          }}
-                          placeholder="Producto"
-                          style={{ width: 260, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px', fontSize: 15 }}
-                        />
-                        <datalist id="productos-lista-global">
-                          {productos.map(prod => (
-                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                            </option>
-                          ))}
-                        </datalist>
-                      </td>
-                      <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
-                        <input
-                          type="number"
-                          min="1"
-                          value={linea.cantidad}
-                          onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                          style={{ width: 60 }}
-                        />
-                        {/* Botón sumatorio solo si cantidad > 1 */}
-                        {linea.cantidad > 1 && linea.cantidad <= 10 && (
-                          <button
-                            style={{
-                              background: '#ff9800',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: 28,
-                              height: 28,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 700,
-                              fontSize: 18,
-                              cursor: 'pointer',
-                              boxShadow: '0 2px 8px #ff980044',
-                              zIndex: 2
-                            }}
-                            title="Sumar pesos parciales"
-                            onClick={() => setModalPeso({visible:true, lineaIdx:idx, valores:Array.from({length: linea.cantidad}, (_,i)=>modalPeso.visible && modalPeso.lineaIdx===idx && modalPeso.valores.length===linea.cantidad ? modalPeso.valores[i]||'' : '')})}
-                            type="button"
-                          >
-                            ➕
-                          </button>
-                        )}
-                        {/* Si hay modal de suma, mostrarlo flotante ARRIBA de la celda cantidad */}
-                        {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
-                          <div style={{
-                            position: 'absolute',
-                            left: 0,
-                            // Si la fila es una de las 5 primeras, abrir hacia abajo (top:36), si no, hacia arriba (bottom:36)
-                            ...(idx < 5 ? { top: 36 } : { bottom: 36 }),
-                            zIndex: 10,
-                            background: '#fff',
-                            border: '1px solid #007bff',
-                            borderRadius: 8,
-                            boxShadow: '0 2px 12px #007bff22',
-                            padding: 12,
-                            minWidth: 160,
-                            minHeight: 60
-                          }}>
-                            <div style={{fontWeight:700,marginBottom:6}}>Sumar pesos</div>
-                            {modalPeso.valores.map((v, i) => (
-                              <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                                <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(i, e.target.value)} style={{width:60,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc'}} />
-                                <span>kg</span>
-                              </div>
-                            ))}
-                            <div style={{margin:'8px 0',fontWeight:600}}>Total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
-                            <div style={{display:'flex',gap:8,marginTop:6}}>
-                              <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6,fontWeight:600}}>Aplicar</button>
-                              <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6}}>Cancelar</button>
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
-                          onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                          style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
-                          onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
-                          style={{ width: 70 }}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={linea.lote === null || linea.lote === undefined ? '' : linea.lote}
-                          onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                          style={{ width: 90 }}
-                        />
-                      </td>
-                      <td>
-                        <select value={linea.formato || ''} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
-                          {FORMATOS_PEDIDO.map(f => (
-                            <option key={f} value={f}>{f}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={linea.comentario === null || linea.comentario === undefined ? '' : linea.comentario}
-                          onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                          style={{ width: 110 }}
-                        />
-                      </td>
-                      <td>
-                        <button
-                          style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
-                          onClick={() => borrarLinea(idx)}
-                          title="Eliminar línea"
-                        >
-                          🗑
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {/* Botón para añadir línea */}
-                <tr>
-                  <td colSpan="8" style={{textAlign:'left', paddingTop:8}}>
-                    <button
-                      style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8, marginRight: 12}}
-                      onClick={() => setPedidoAbierto(prev => ({
-                        ...prev,
-                        lineas: [
-                          ...prev.lineas,
-                          { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false, esComentario: false }
-                        ]
-                      }))}
-                    >
-                      Añadir línea de producto
-                    </button>
-                    <button
-                      style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}}
-                      onClick={() => {
-                        setPedidoAbierto(prev => ({
-                          ...prev,
-                          lineas: [
-                            ...prev.lineas,
-                            { esComentario: true, comentario: '' }
-                          ]
-                        }));
-                      }}
-                    >
-                      Añadir comentario
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
-                    <button
-                      style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
-                      onClick={async () => {
-                        // Filtrar líneas de producto válidas y mantener todas las líneas de comentario
-                        const lineasParaGuardar = pedidoAbierto.lineas.filter(l => 
-                          l.esComentario || 
-                          (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
-                        );
-
-                        const lineasNormalizadas = lineasParaGuardar.map(l => {
-                          if (l.esComentario) {
-                            return { esComentario: true, comentario: l.comentario || '' };
-                          }
-                          return {
-                            ...l,
-                            preparada: !!l.preparada,
-                            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                            cantidad: Number(l.cantidad)
-                          };
-                        });
-                        await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-                        // Limpiar borrador local tras guardar
-                        const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
-                        try { localStorage.removeItem(borradorKey); } catch {}
-                        setPedidoAbierto(null);
-                      }}
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
-                      onClick={async () => {
-                        // Espera a que React procese los cambios pendientes en los inputs
-                        await Promise.resolve();
-                        // Guardar y enviar pedido
-                        const lineasParaEnviar = pedidoAbierto.lineas.filter(l => 
-                          l.esComentario || 
-                          (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
-                        );
-                        if (!lineasParaEnviar.some(l => !l.esComentario) && pedidoAbierto.lineas.some(l => !l.esComentario)) {
-                          await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
-                          setPedidoAbierto(null);
-                          return;
-                        }
-                        const lineasNormalizadas = lineasParaEnviar.map(l => {
-                           if (l.esComentario) {
-                            return { esComentario: true, comentario: l.comentario || '' };
-                          }
-                          return {
-                            ...l,
-                            preparada: !!l.preparada,
-                            peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                            cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                            cantidad: Number(l.cantidad)
-                          };
-                        });
-                        await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-                        await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
-                        // Limpiar borrador local tras guardar y enviar
-                        const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
-                        try { localStorage.removeItem(borradorKey); } catch {}
-                        setPedidoAbierto(null);
-                      }}
-                    >
-                      Guardar y enviar
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            </div>
+            <PedidoEditorFabrica
+              pedido={pedidoAbierto}
+              tiendas={tiendas}
+              onSave={async (lineasNormalizadas) => {
+                await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
+                try { localStorage.removeItem(borradorKey); } catch {}
+                setPedidoAbierto(null);
+              }}
+              onSend={async (lineasNormalizadas) => {
+                await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
+                await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
+                const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
+                try { localStorage.removeItem(borradorKey); } catch {}
+                setPedidoAbierto(null);
+              }}
+              onCancel={() => setPedidoAbierto(null)}
+            />
           </div>
         </div>
       )}
@@ -763,7 +466,6 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               <select id="tienda-nueva-pedido" value={tiendaNuevaPedido} onChange={e=>{
                 setTiendaNuevaPedido(e.target.value);
                 if (e.target.value) {
-                  // Inicializar pedido nuevo para edición completa
                   const tiendaObj = tiendas.find(t => t.id === e.target.value);
                   setPedidoAbierto({
                     _id: undefined,
@@ -785,290 +487,33 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
             </div>
             {/* Editor completo de pedido para creación */}
             {pedidoAbierto && tiendaNuevaPedido && (
-              <div style={{marginTop:24}}>
-                {/* Reutiliza la tabla y controles del editor de pedido abierto, pero con lógica de guardado diferente */}
-                <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-                  <table className="tabla-edicion-fabrica" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
-                    <thead>
-                      <tr>
-                        <th>Producto</th>
-                        <th>Cant. pedida</th>
-                        <th>Peso (kg)</th>
-                        <th>Cant. enviada</th>
-                        <th>Lote</th>
-                        <th>Formato pedido</th>
-                        <th>Comentario</th>
-                        <th>Eliminar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pedidoAbierto.lineas.map((linea, idx) => {
-                        if (linea.esComentario === true || linea.esComentario === 'true' || (typeof linea.esComentario !== 'undefined' && linea.esComentario)) {
-                          return (
-                            <tr key={`comment-${idx}`} style={{ backgroundColor: '#fffbe6', border: '2px solid #ffe58f' }}>
-                              <td colSpan="8" style={{ padding: '12px', textAlign: 'left' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                  <span style={{ fontSize: 20, color: '#b8860b' }}>📝</span>
-                                  <span style={{ fontWeight: 'bold', color: '#b8860b', fontSize: 16 }}>COMENTARIO:</span>
-                                  <input
-                                    type="text"
-                                    value={linea.comentario || ''}
-                                    onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                                    placeholder="Escribe aquí tu comentario..."
-                                    style={{ 
-                                      flexGrow: 1, 
-                                      border: '1px dashed #b8860b', 
-                                      borderRadius: 6, 
-                                      padding: '8px 12px', 
-                                      background: '#fffdf7',
-                                      fontStyle: 'italic',
-                                      fontSize: 15,
-                                      color: '#b8860b'
-                                    }}
-                                  />
-                                  <button
-                                    style={{
-                                      background:'#dc3545',
-                                      color:'#fff',
-                                      border:'none',
-                                      borderRadius:6,
-                                      padding:'6px 12px',
-                                      fontWeight:600,
-                                      cursor:'pointer',
-                                      fontSize: 14
-                                    }}
-                                    onClick={() => borrarLinea(idx)}
-                                    title="Eliminar comentario"
-                                  >
-                                    🗑 Eliminar
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        }
-                        return (
-                          <tr key={idx}>
-                            <td>
-                              <input
-                                list="productos-lista-global"
-                                value={linea.producto}
-                                onChange={e => {
-                                  const valor = autocompletarProducto(e.target.value);
-                                  actualizarLinea(idx, 'producto', valor);
-                                }}
-                                placeholder="Producto"
-                                style={{ width: 260, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px', fontSize: 15 }}
-                              />
-                              <datalist id="productos-lista-global">
-                                {productos.map(prod => (
-                                  <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                                    {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                                  </option>
-                                ))}
-                              </datalist>
-                            </td>
-                            <td style={{position:'relative',display:'flex',alignItems:'center',gap:6}}>
-                              <input
-                                type="number"
-                                min="1"
-                                value={linea.cantidad}
-                                onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                                style={{ width: 60 }}
-                              />
-                              {/* Botón sumatorio solo si cantidad > 1 */}
-                              {linea.cantidad > 1 && linea.cantidad <= 10 && (
-                                <button
-                                  style={{
-                                    background: '#ff9800',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: 28,
-                                    height: 28,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 700,
-                                    fontSize: 18,
-                                    cursor: 'pointer',
-                                    boxShadow: '0 2px 8px #ff980044',
-                                    zIndex: 2
-                                  }}
-                                  title="Sumar pesos parciales"
-                                  onClick={() => setModalPeso({visible:true, lineaIdx:idx, valores:Array.from({length: linea.cantidad}, (_,i)=>modalPeso.visible && modalPeso.lineaIdx===idx && modalPeso.valores.length===linea.cantidad ? modalPeso.valores[i]||'' : '')})}
-                                  type="button"
-                                >
-                                  ➕
-                                </button>
-                              )}
-                              {/* Si hay modal de suma, mostrarlo flotante ARRIBA de la celda cantidad */}
-                              {modalPeso && modalPeso.visible && modalPeso.lineaIdx === idx && (
-                                <div style={{
-                                  position: 'absolute',
-                                  left: 0,
-                                  // Si la fila es una de las 5 primeras, abrir hacia abajo (top:36), si no, hacia arriba (bottom:36)
-                                  ...(idx < 5 ? { top: 36 } : { bottom: 36 }),
-                                  zIndex: 10,
-                                  background: '#fff',
-                                  border: '1px solid #007bff',
-                                  borderRadius: 8,
-                                  boxShadow: '0 2px 12px #007bff22',
-                                  padding: 12,
-                                  minWidth: 160,
-                                  minHeight: 60
-                                }}>
-                                  <div style={{fontWeight:700,marginBottom:6}}>Sumar pesos</div>
-                                  {modalPeso.valores.map((v, i) => (
-                                    <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                                      <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(i, e.target.value)} style={{width:60,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc'}} />
-                                      <span>kg</span>
-                                    </div>
-                                  ))}
-                                  <div style={{margin:'8px 0',fontWeight:600}}>Total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
-                                  <div style={{display:'flex',gap:8,marginTop:6}}>
-                                    <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6,fontWeight:600}}>Aplicar</button>
-                                    <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'4px 12px',border:'none',borderRadius:6}}>Cancelar</button>
-                                  </div>
-                                </div>
-                              )}
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                step="any"
-                                value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
-                                onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                                style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                step="any"
-                                value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
-                                onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
-                                style={{ width: 70 }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                value={linea.lote === null || linea.lote === undefined ? '' : linea.lote}
-                                onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                                style={{ width: 90 }}
-                              />
-                            </td>
-                            <td>
-                              <select value={linea.formato || ''} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
-                                {FORMATOS_PEDIDO.map(f => (
-                                  <option key={f} value={f}>{f}</option>
-                                ))}
-                              </select>
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                value={linea.comentario === null || linea.comentario === undefined ? '' : linea.comentario}
-                                onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                                style={{ width: 110 }}
-                              />
-                            </td>
-                            <td>
-                              <button
-                                style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}
-                                onClick={() => borrarLinea(idx)}
-                                title="Eliminar línea"
-                              >
-                                🗑
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {/* Botón para añadir línea */}
-                      <tr>
-                        <td colSpan="8" style={{textAlign:'left', paddingTop:8}}>
-                          <button
-                            style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8, marginRight: 12}}
-                            onClick={() => setPedidoAbierto(prev => ({
-                              ...prev,
-                              lineas: [
-                                ...prev.lineas,
-                                { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false, esComentario: false }
-                              ]
-                            }))}
-                          >
-                            Añadir línea de producto
-                          </button>
-                          <button
-                            style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}}
-                            onClick={() => {
-                              setPedidoAbierto(prev => ({
-                                ...prev,
-                                lineas: [
-                                  ...prev.lineas,
-                                  { esComentario: true, comentario: '' }
-                                ]
-                              }));
-                            }}
-                          >
-                            Añadir comentario
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
-                          <button
-                            style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}}
-                            onClick={async () => {
-                              // Guardar pedido nuevo
-                              const lineasParaGuardar = pedidoAbierto.lineas.filter(l => 
-                                l.esComentario || 
-                                (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
-                              );
-                              if (lineasParaGuardar.length === 0) return;
-                              const lineasNormalizadas = lineasParaGuardar.map(l => {
-                                if (l.esComentario) {
-                                  return { esComentario: true, comentario: l.comentario || '' };
-                                }
-                                return {
-                                  ...l,
-                                  preparada: !!l.preparada,
-                                  peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso),
-                                  cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada),
-                                  cantidad: Number(l.cantidad)
-                                };
-                              });
-                              const tiendaObj = tiendas.find(t => t.id === tiendaNuevaPedido);
-                              const nuevoPedido = {
-                                tiendaId: tiendaNuevaPedido,
-                                tiendaNombre: tiendaObj?.nombre || tiendaNuevaPedido,
-                                fechaPedido: new Date().toISOString(),
-                                estado: 'enviado',
-                                lineas: lineasNormalizadas,
-                                creadoEnFabrica: true
-                              };
-                              try {
-                                await import('../services/pedidosService').then(mod => mod.crearPedido(nuevoPedido));
-                                setModalCrearPedido(false);
-                                setTiendaNuevaPedido('');
-                                setPedidoAbierto(null);
-                              } catch (e) {
-                                alert('Error al crear pedido: ' + (e?.message || e));
-                              }
-                            }}
-                          >
-                            Guardar y enviar pedido
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <PedidoEditorFabrica
+                pedido={pedidoAbierto}
+                tiendas={tiendas}
+                onSave={null}
+                onSend={async (lineasNormalizadas) => {
+                  if (!lineasNormalizadas.length) return;
+                  const tiendaObj = tiendas.find(t => t.id === tiendaNuevaPedido);
+                  const nuevoPedido = {
+                    tiendaId: tiendaNuevaPedido,
+                    tiendaNombre: tiendaObj?.nombre || tiendaNuevaPedido,
+                    fechaPedido: new Date().toISOString(),
+                    estado: 'enviado',
+                    lineas: lineasNormalizadas,
+                    creadoEnFabrica: true
+                  };
+                  try {
+                    await import('../services/pedidosService').then(mod => mod.crearPedido(nuevoPedido));
+                    setModalCrearPedido(false);
+                    setTiendaNuevaPedido('');
+                    setPedidoAbierto(null);
+                  } catch (e) {
+                    alert('Error al crear pedido: ' + (e?.message || e));
+                  }
+                }}
+                onCancel={() => { setModalCrearPedido(false); setTiendaNuevaPedido(''); setPedidoAbierto(null); }}
+                tiendaNombre={tiendas.find(t => t.id === tiendaNuevaPedido)?.nombre}
+              />
             )}
           </div>
         </div>
