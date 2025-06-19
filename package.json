@@ -32,7 +32,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "dev": "vite --port 3000"
+    "dev": "vite --port 3000",
+    "dev:clientes": "vite --config vite.clientes-gestion.config.js --port 3100 --open"
   },
   "eslintConfig": {
     "extends": [

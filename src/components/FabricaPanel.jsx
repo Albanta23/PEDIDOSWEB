@@ -266,6 +266,28 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
             <span role="img" aria-label="histórico" style={{marginRight:8}}>📦</span>Historial de envíos
           </button>
           <button
+            onClick={()=>setMostrarHistoricoTransferencias(true)}
+            style={{
+              minWidth: 200,
+              height: 44,
+              background:'#ffc107',
+              color:'#333',
+              border:'none',
+              borderRadius:12,
+              cursor:'pointer',
+              fontWeight:700,
+              fontSize:17,
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'center',
+              boxShadow:'0 1px 4px #ffc10722',
+              padding:'0 18px',
+              letterSpacing:0.2
+            }}
+          >
+            <span role="img" aria-label="devoluciones" style={{marginRight:8}}>↩️</span>Devoluciones a fábrica
+          </button>
+          <button
             onClick={()=>setModalCrearPedido(true)}
             style={{
               minWidth: 180,

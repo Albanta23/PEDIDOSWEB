@@ -18,6 +18,7 @@ const HistorialProveedor = require('./models/HistorialProveedor'); // Usar model
 const Transferencia = require('./models/Transferencia'); // Importar modelo de transferencias
 const Producto = require('./models/Producto'); // Importar modelo de productos
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimientos de almacén
+const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -656,6 +657,16 @@ app.post('/api/transferencias/registrar', async (req, res) => {
     res.json({ ok: true, transferencia });
   } catch (e) {
     res.status(400).json({ error: e.message });
+  }
+});
+
+// --- ENDPOINT: Obtener todos los clientes ---
+app.get('/api/clientes', async (req, res) => {
+  try {
+    const clientes = await Cliente.find();
+    res.json(clientes);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
