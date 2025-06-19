@@ -710,14 +710,14 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     <button
                       style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}}
                       onClick={async () => {
+                        // Espera a que React procese los cambios pendientes en los inputs
+                        await Promise.resolve();
                         // Guardar y enviar pedido
                         const lineasParaEnviar = pedidoAbierto.lineas.filter(l => 
                           l.esComentario || 
                           (!l.esComentario && l.producto && (l.cantidad !== undefined && l.cantidad !== null))
                         );
-
                         if (!lineasParaEnviar.some(l => !l.esComentario) && pedidoAbierto.lineas.some(l => !l.esComentario)) {
-                          // Si no quedan líneas de PRODUCTO válidas pero el pedido original sí tenía, se considera eliminar el pedido.
                           await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'eliminar');
                           setPedidoAbierto(null);
                           return;
