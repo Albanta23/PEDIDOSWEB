@@ -443,16 +443,10 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 try { localStorage.removeItem(borradorKey); } catch {}
                 setPedidoAbierto(null);
               }}
-              onSend={async (lineasNormalizadas) => {
-                // 1. Guardar cambios
-                await onLineaDetalleChange(pedidoAbierto._id || pedidoAbierto.id, null, lineasNormalizadas);
-                // 2. Cambiar estado a enviadoTienda
-                await onEstadoChange(pedidoAbierto._id || pedidoAbierto.id, 'enviadoTienda');
-                const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
-                try { localStorage.removeItem(borradorKey); } catch {}
-                setPedidoAbierto(null);
-              }}
+              onSend={() => setPedidoAbierto(null)}
               onCancel={() => setPedidoAbierto(null)}
+              onLineaDetalleChange={onLineaDetalleChange}
+              onEstadoChange={onEstadoChange}
             />
           </div>
         </div>

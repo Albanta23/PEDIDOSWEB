@@ -2,20 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
 
-/**
- * Editor de pedido reutilizable para creación y edición en el panel de fábrica.
- * - Si recibe un pedido con id/_id, actúa como edición.
- * - Si no, actúa como creación.
- * - onSave(lineasNormalizadas) y onSend(lineasNormalizadas) son callbacks para guardar y guardar+enviar.
- */
-export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre }) {
+export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange }) {
   const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
   useEffect(() => {
     setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
   }, [pedido]);
 
-  // Actualizar línea
   const actualizarLinea = (idx, campo, valor) => {
     setLineas(prev => prev.map((l, i) => {
       if (i !== idx) return l;
@@ -28,15 +21,23 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       return { ...l, [campo]: nuevoValor };
     }));
   };
-  // Borrar línea
   const borrarLinea = idx => setLineas(prev => prev.filter((_, i) => i !== idx));
-  // Añadir línea producto
   const addLinea = () => setLineas(prev => ([...prev, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false, esComentario: false }]));
-  // Añadir comentario
   const addComentario = () => setLineas(prev => ([...prev, { esComentario: true, comentario: '' }]));
 
-  // Normalizar y filtrar líneas
   const getLineasNormalizadas = () => lineas.filter(l => l.esComentario || (l.producto && l.cantidad !== undefined && l.cantidad !== null)).map(l => l.esComentario ? { esComentario: true, comentario: l.comentario || '' } : { ...l, preparada: !!l.preparada, peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso), cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada), cantidad: Number(l.cantidad) });
+
+  // Nuevo handler robusto para pedidos existentes (edición)
+  const handleGuardarYEnviar = async () => {
+    if (!pedido || (!pedido._id && !pedido.id) || !onLineaDetalleChange || !onEstadoChange) {
+      if (onSend) onSend(getLineasNormalizadas()); // fallback para creación
+      return;
+    }
+    const lineasNormalizadas = getLineasNormalizadas();
+    await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
+    await onEstadoChange(pedido._id || pedido.id, 'enviadoTienda');
+    if (onSend) onSend(lineasNormalizadas); // notifica al padre para cerrar
+  };
 
   return (
     <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
@@ -156,7 +157,12 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
           <tr>
             <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
               {onSave && <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}} onClick={()=>onSave(getLineasNormalizadas())}>Guardar</button>}
-              {onSend && <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())}>Guardar y enviar</button>}
+              {onSend && pedido && (pedido._id || pedido.id) && onLineaDetalleChange && onEstadoChange && (
+                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={handleGuardarYEnviar}>Guardar y enviar</button>
+              )}
+              {onSend && (!pedido || (!pedido._id && !pedido.id)) && (
+                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())}>Guardar y enviar</button>
+              )}
               {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel}>Cancelar</button>}
             </td>
           </tr>
