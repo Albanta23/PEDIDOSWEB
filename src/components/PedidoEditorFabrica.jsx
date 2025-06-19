@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
 
-export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange }) {
+export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso }) {
   const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -149,6 +149,29 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
                   style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
                 />
+                {typeof onAbrirModalPeso === 'function' && !linea.esComentario &&
+                  Number(linea.cantidad) > 2 && Number(linea.cantidad) < 10 && (
+                    <button
+                      type="button"
+                      style={{
+                        background: '#eafaf1',
+                        border: '1px solid #28a745',
+                        borderRadius: '50%',
+                        padding: '2px 7px',
+                        cursor: 'pointer',
+                        marginLeft: 4,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 28,
+                        width: 28
+                      }}
+                      title="Sumar pesos"
+                      onClick={() => onAbrirModalPeso(idx, linea.peso, linea.cantidad)}
+                    >
+                      ➕
+                    </button>
+                  )}
               </td>
               <td>
                 <input

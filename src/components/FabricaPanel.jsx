@@ -447,6 +447,16 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
               onCancel={() => setPedidoAbierto(null)}
               onLineaDetalleChange={onLineaDetalleChange}
               onEstadoChange={onEstadoChange}
+              onAbrirModalPeso={(idx, peso, cantidad) => {
+                setModalPeso({
+                  visible: true,
+                  lineaIdx: idx,
+                  valores: Array.from({ length: cantidad || 1 }, (_, i) => {
+                    if (i === 0 && peso) return peso;
+                    return '';
+                  })
+                });
+              }}
             />
           </div>
         </div>
@@ -517,8 +527,81 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           </div>
         </div>
       )}
+      {/* Modal sumatorio de pesos movible */}
+      {modalPeso.visible && (
+        <DraggableModalPeso
+          modalPeso={modalPeso}
+          setModalPeso={setModalPeso}
+          cambiarValorPeso={cambiarValorPeso}
+          aplicarPesos={aplicarPesos}
+        />
+      )}
     </div>
   );
 };
+
+function DraggableModalPeso({ modalPeso, setModalPeso, cambiarValorPeso, aplicarPesos }) {
+  const [pos, setPos] = useState({ x: window.innerWidth/2 - 200, y: window.innerHeight/2 - 150 });
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+
+  const onMouseDown = e => {
+    dragging.current = true;
+    offset.current = {
+      x: e.clientX - pos.x,
+      y: e.clientY - pos.y
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+  const onMouseMove = e => {
+    if (!dragging.current) return;
+    setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
+  };
+  const onMouseUp = () => {
+    dragging.current = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+
+  return (
+    <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.35)',zIndex:3000}} onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})}>
+      <div
+        style={{
+          position:'absolute',
+          left: pos.x,
+          top: pos.y,
+          background:'#fff',
+          padding:32,
+          borderRadius:16,
+          boxShadow:'0 4px 32px #0004',
+          minWidth:340,
+          maxWidth:900,
+          maxHeight:'90vh',
+          overflowY:'auto',
+          cursor:'default',
+          userSelect:'none'
+        }}
+        onClick={e=>e.stopPropagation()}
+      >
+        <div
+          style={{cursor:'move',fontWeight:700,marginBottom:12,background:'#eafaf1',padding:'8px 0 8px 12px',borderRadius:8,display:'flex',alignItems:'center',gap:8}}
+          onMouseDown={onMouseDown}
+        >
+          <span style={{fontSize:20}}>🟰</span> Sumar pesos para la línea
+        </div>
+        {modalPeso.valores.map((v, idx) => (
+          <div key={idx} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+            <span style={{fontWeight:600}}>Peso #{idx+1}:</span>
+            <input type="number" step="0.01" min="0" value={v} onChange={e=>cambiarValorPeso(idx, e.target.value)} style={{width:80,padding:'4px 8px',borderRadius:4,border:'1px solid #ccc'}} />
+          </div>
+        ))}
+        <div style={{margin:'12px 0',fontWeight:600}}>Suma total: {modalPeso.valores.reduce((acc,v)=>acc+(parseFloat(v)||0),0).toFixed(2)} kg</div>
+        <button onClick={aplicarPesos} style={{background:'#28a745',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6,fontWeight:600,marginRight:8}}>Aplicar</button>
+        <button onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})} style={{background:'#888',color:'#fff',padding:'8px 18px',border:'none',borderRadius:6}}>Cancelar</button>
+      </div>
+    </div>
+  );
+}
 
 export default FabricaPanel;
