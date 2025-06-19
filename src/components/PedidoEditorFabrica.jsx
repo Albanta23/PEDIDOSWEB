@@ -7,9 +7,17 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
   const [lineas, setLineas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [guardado, setGuardado] = useState(false);
+  const [mensajeGuardado, setMensajeGuardado] = useState('');
+
   useEffect(() => {
     setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
   }, [pedido]);
+
+  // Marcar como no guardado si hay cambios
+  useEffect(() => {
+    setGuardado(false);
+  }, [lineas]);
 
   const actualizarLinea = (idx, campo, valor) => {
     setLineas(prev => prev.map((l, i) => {
@@ -46,6 +54,27 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     } catch (e) {
       setError('Error al guardar y enviar el pedido. Intenta de nuevo.');
       return;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Guardar solo guarda y muestra feedback
+  const handleGuardar = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      if (!pedido || (!pedido._id && !pedido.id) || !onLineaDetalleChange) {
+        setLoading(false);
+        return;
+      }
+      const lineasNormalizadas = getLineasNormalizadas();
+      await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
+      setGuardado(true);
+      setMensajeGuardado('¡Guardado correctamente!');
+      setTimeout(() => setMensajeGuardado(''), 2000);
+    } catch (e) {
+      setError('Error al guardar el pedido. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -168,16 +197,17 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
           </tr>
           <tr>
             <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
-              {onSave && <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}} onClick={()=>onSave(getLineasNormalizadas())} disabled={loading}>Guardar</button>}
+              <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}} onClick={handleGuardar} disabled={loading}>Guardar</button>
               {onSend && pedido && (pedido._id || pedido.id) && onLineaDetalleChange && onEstadoChange && (
-                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={handleGuardarYEnviar} disabled={loading}>Guardar y enviar</button>
+                <button style={{background: guardado ? '#007bff' : '#bbb', color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor: guardado ? 'pointer' : 'not-allowed'}} onClick={handleGuardarYEnviar} disabled={loading || !guardado}>Guardar y enviar</button>
               )}
               {onSend && (!pedido || (!pedido._id && !pedido.id)) && (
                 <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())} disabled={loading}>Guardar y enviar</button>
               )}
-              {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cancelar</button>}
+              {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cerrar</button>}
             </td>
           </tr>
+          {mensajeGuardado && <tr><td colSpan="8" style={{color:'green',textAlign:'center',fontWeight:600}}>{mensajeGuardado}</td></tr>}
           {error && <tr><td colSpan="8" style={{color:'red',textAlign:'center',fontWeight:600}}>{error}</td></tr>}
         </tbody>
       </table>
