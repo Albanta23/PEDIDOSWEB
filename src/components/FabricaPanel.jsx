@@ -544,8 +544,21 @@ function DraggableModalPeso({ modalPeso, setModalPeso, cambiarValorPeso, aplicar
   const [pos, setPos] = useState({ x: window.innerWidth/2 - 200, y: window.innerHeight/2 - 150 });
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
+  const [isTouch, setIsTouch] = useState(false);
 
+  useEffect(() => {
+    // Detectar si es touch (móvil/tablet)
+    const checkTouch = () => {
+      setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    };
+    checkTouch();
+    window.addEventListener('resize', checkTouch);
+    return () => window.removeEventListener('resize', checkTouch);
+  }, []);
+
+  // Drag solo en desktop
   const onMouseDown = e => {
+    if (isTouch) return;
     dragging.current = true;
     offset.current = {
       x: e.clientX - pos.x,
@@ -564,31 +577,67 @@ function DraggableModalPeso({ modalPeso, setModalPeso, cambiarValorPeso, aplicar
     document.removeEventListener('mouseup', onMouseUp);
   };
 
+  // Estilos responsive y scroll para móvil
+  const modalStyle = isTouch
+    ? {
+        position: 'fixed',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: 420,
+        minWidth: 0,
+        maxHeight: '90vh',
+        background: '#fff',
+        padding: '18px 8px 18px 8px',
+        borderRadius: 14,
+        boxShadow: '0 4px 32px #0004',
+        overflowY: 'auto',
+        cursor: 'default',
+        userSelect: 'none',
+        touchAction: 'auto',
+        zIndex: 4001
+      }
+    : {
+        position: 'absolute',
+        left: pos.x,
+        top: pos.y,
+        background: '#fff',
+        padding: 32,
+        borderRadius: 16,
+        boxShadow: '0 4px 32px #0004',
+        minWidth: 340,
+        maxWidth: 900,
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        cursor: 'default',
+        userSelect: 'none',
+        zIndex: 4001
+      };
+
   return (
     <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.35)',zIndex:3000}} onClick={()=>setModalPeso({visible:false,lineaIdx:null,valores:[]})}>
       <div
-        style={{
-          position:'absolute',
-          left: pos.x,
-          top: pos.y,
-          background:'#fff',
-          padding:32,
-          borderRadius:16,
-          boxShadow:'0 4px 32px #0004',
-          minWidth:340,
-          maxWidth:900,
-          maxHeight:'90vh',
-          overflowY:'auto',
-          cursor:'default',
-          userSelect:'none'
-        }}
+        style={modalStyle}
         onClick={e=>e.stopPropagation()}
       >
         <div
-          style={{cursor:'move',fontWeight:700,marginBottom:12,background:'#eafaf1',padding:'8px 0 8px 12px',borderRadius:8,display:'flex',alignItems:'center',gap:8}}
+          style={{
+            cursor: isTouch ? 'default' : 'move',
+            fontWeight:700,
+            marginBottom:12,
+            background:'#eafaf1',
+            padding:'8px 0 8px 12px',
+            borderRadius:8,
+            display:'flex',
+            alignItems:'center',
+            gap:8,
+            fontSize: isTouch ? 17 : 20
+          }}
           onMouseDown={onMouseDown}
         >
           <span style={{fontSize:20}}>🟰</span> Sumar pesos para la línea
+          {isTouch && <span style={{marginLeft:8,color:'#888',fontSize:13}}>(Desplaza para ver todo)</span>}
         </div>
         {modalPeso.valores.map((v, idx) => (
           <div key={idx} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
