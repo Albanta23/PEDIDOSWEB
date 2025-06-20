@@ -45,35 +45,27 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     return tienda;
   }, [tienda]);
 
+  // Función reutilizable para refrescar movimientos de stock
+  const refrescarMovimientos = async () => {
+    if (!tiendaForzada) return;
+    setCargando(true);
+    const movs = await getMovimientosStock({ tiendaId: tiendaForzada.id });
+    setMovimientos(movs);
+    setCargando(false);
+  };
+
   // DEBUG: Mostrar tienda y movimientos
   console.log('[DEBUG] tiendaForzada:', tiendaForzada);
   useEffect(() => {
-    if (!tiendaForzada) return;
-    setCargando(true);
-    let tiendaIdStock = tiendaForzada.id;
-    getMovimientosStock({ tiendaId: tiendaIdStock })
-      .then(movs => {
-        console.log('[DEBUG] Movimientos recibidos:', movs);
-        setMovimientos(movs);
-        setCargando(false);
-      })
-      .catch((e) => { console.log('[DEBUG] Error al cargar movimientos:', e); setCargando(false); });
+    refrescarMovimientos();
   }, [tiendaForzada]);
 
   // Refrescar stock automáticamente tras confirmar transferencia
   useEffect(() => {
-    if (!tiendaForzada) return;
-    setCargando(true);
-    let tiendaIdStock = tiendaForzada.id;
-    getMovimientosStock({ tiendaId: tiendaIdStock })
-      .then(movs => {
-        setMovimientos(movs);
-        setCargando(false);
-      })
-      .catch(() => setCargando(false));
+    refrescarMovimientos();
     // Suscribirse a eventos de transferencias confirmadas si hay WebSocket/socket.io
     if (window.socket) {
-      const handler = () => getMovimientosStock({ tiendaId: tiendaIdStock }).then(setMovimientos);
+      const handler = refrescarMovimientos;
       window.socket.on('transferencia_confirmada', handler);
       return () => window.socket.off('transferencia_confirmada', handler);
     }
@@ -81,20 +73,20 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
 
   // Función para consultar el stock actual de un producto/lote en la tienda
   function getStockActual(producto, lote) {
-    const entradaTotal = movimientos.filter(m => m.tipo === 'entrada' && m.producto === producto && m.lote === lote)
+    // Sumar entradas y transferencias recibidas
+    const entradas = movimientos.filter(m => ["entrada","transferencia_entrada","devolucion_entrada"].includes(m.tipo) && m.producto === producto && m.lote === lote)
       .reduce((sum, m) => sum + (Number(m.cantidad) || 0), 0);
-    const bajasTotal = movimientos.filter(m => m.tipo === 'baja' && m.producto === producto && m.lote === lote)
+    // Restar bajas y transferencias enviadas
+    const salidas = movimientos.filter(m => ["baja","transferencia_salida","devolucion_salida"].includes(m.tipo) && m.producto === producto && m.lote === lote)
       .reduce((sum, m) => sum + (Number(m.cantidad) || 0), 0);
-    return entradaTotal - bajasTotal;
+    return entradas - salidas;
   }
 
   // Baja de producto
   const registrarBaja = async (producto, cantidad, unidad, lote, motivo, peso) => {
     if (!tienda) return;
     await registrarBajaStock({ tiendaId: tienda.id, producto, cantidad, unidad, lote, motivo, peso });
-    // Refrescar movimientos tras registrar baja
-    const movs = await getMovimientosStock({ tiendaId: tienda.id });
-    setMovimientos(movs);
+    await refrescarMovimientos();
   };
 
   if (!tiendaForzada) return null;
@@ -458,6 +450,9 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                   const peso = Number(mov.peso) || 0;
                   const esBaja = ["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo);
                   const esTransferenciaEntrada = mov.tipo === "transferencia_entrada";
+                  const esTransferenciaSalida = mov.tipo === "transferencia_salida";
+                  const esDevolucionEntrada = mov.tipo === "devolucion_entrada";
+                  const esDevolucionSalida = mov.tipo === "devolucion_salida";
                   if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
                     saldoPeso += peso;
                   } else if (esBaja) {
@@ -468,6 +463,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                     style = {color:'#b71c1c',background:'#ffebee',fontWeight:600};
                   } else if (esTransferenciaEntrada) {
                     style = {color:'#4a148c',background:'#ede7f6',fontWeight:600};
+                  } else if (esTransferenciaSalida) {
+                    style = {color:'#1a237e',background:'#e3f2fd',fontWeight:600};
+                  } else if (esDevolucionEntrada) {
+                    style = {color:'#00695c',background:'#e0f2f1',fontWeight:600};
+                  } else if (esDevolucionSalida) {
+                    style = {color:'#f57c00',background:'#fff3e0',fontWeight:600};
                   }
                   return (
                     <tr key={idx} style={style}>
@@ -536,7 +537,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       )}
       {tab==='transferencias' && (
         <div>
-          <TransferenciasPanel tiendas={window.tiendas || []} tiendaActual={tienda} modoFabrica={false} onTransferenciaConfirmada={() => getMovimientosStock({ tiendaId: tienda.id }).then(setMovimientos)} />
+          <TransferenciasPanel tiendas={window.tiendas || []} tiendaActual={tienda} modoFabrica={false} onTransferenciaConfirmada={refrescarMovimientos} />
         </div>
       )}
     </div>
