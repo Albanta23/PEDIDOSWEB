@@ -10,7 +10,8 @@ const TransferenciaSchema = new mongoose.Schema({
       producto: { type: String, required: true },
       cantidad: { type: Number, required: true },
       lote: { type: String },
-      comentario: { type: String }
+      comentario: { type: String },
+      peso: { type: Number, min: 0 } // <-- Añadido campo peso
     }
   ],
   observaciones: { type: String },

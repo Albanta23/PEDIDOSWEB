@@ -59,7 +59,12 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
 
   const enviarTransferencia = async () => {
     if (!form.origen || !form.destino || form.productos.length === 0) return;
-    await crearTransferencia({ ...form, usuario: tiendaActual?.nombre || 'TIENDA FABRICA' });
+    // Normalizar el campo peso: convertir a número o undefined
+    const productosNormalizados = form.productos.map(p => ({
+      ...p,
+      peso: p.peso === '' || typeof p.peso === 'undefined' ? undefined : Number(p.peso)
+    }));
+    await crearTransferencia({ ...form, productos: productosNormalizados, usuario: tiendaActual?.nombre || 'TIENDA FABRICA' });
     setForm({ origen: '', destino: '', productos: [{ producto: '', cantidad: 1, peso: 0, lote: '', comentario: '' }], observaciones: '' });
     cargarTransferencias();
   };
@@ -149,7 +154,11 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
                 <td>{t.destino === 'TIENDA FABRICA' ? 'Devoluciones a Fábrica' : t.destino}</td>
                 <td>
                   <ul style={{margin:0,paddingLeft:16}}>
-                    {t.productos.map((p,i) => <li key={i}>{p.producto} ({p.cantidad}{typeof p.peso !== 'undefined' && p.peso !== '' ? `, ${p.peso}kg` : ''}) {p.lote && `[Lote: ${p.lote}]`}</li>)}
+                    {t.productos.map((p,i) => (
+                      <li key={i}>
+                        {p.producto} (Cantidad: {p.cantidad}{(typeof p.peso === 'number' && !isNaN(p.peso)) ? `, Peso: ${p.peso} kg` : ''}) {p.lote && `[Lote: ${p.lote}]`}
+                      </li>
+                    ))}
                   </ul>
                 </td>
                 <td>{estados[t.estado] || t.estado}

@@ -374,7 +374,7 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     for (const prod of transferencia.productos) {
       try {
         // Salida en origen
-        const movSalida = await MovimientoStock.create({
+        await registrarMovimientoStock({
           tiendaId: transferencia.origen,
           producto: prod.producto,
           cantidad: prod.cantidad,
@@ -382,13 +382,12 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
           lote: prod.lote || '',
           motivo: 'Transferencia enviada a ' + transferencia.destino,
           tipo: transferencia.destino === 'TIENDA FABRICA' ? 'devolucion_salida' : 'transferencia_salida',
-          fecha: new Date(),
           transferenciaId: transferencia._id.toString(),
+          fecha: new Date(),
           peso: typeof prod.peso !== 'undefined' ? prod.peso : undefined
         });
-        console.log('[TRANSFERENCIA][SALIDA] Movimiento creado:', movSalida);
         // Entrada en destino
-        const movEntrada = await MovimientoStock.create({
+        await registrarMovimientoStock({
           tiendaId: transferencia.destino,
           producto: prod.producto,
           cantidad: prod.cantidad,
@@ -396,11 +395,10 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
           lote: prod.lote || '',
           motivo: 'Transferencia recibida de ' + transferencia.origen,
           tipo: transferencia.destino === 'TIENDA FABRICA' ? 'devolucion_entrada' : 'transferencia_entrada',
-          fecha: new Date(),
           transferenciaId: transferencia._id.toString(),
+          fecha: new Date(),
           peso: typeof prod.peso !== 'undefined' ? prod.peso : undefined
         });
-        console.log('[TRANSFERENCIA][ENTRADA] Movimiento creado:', movEntrada);
         movimientosCreados += 2;
       } catch (movErr) {
         console.error('[TRANSFERENCIA][ERROR MOVIMIENTO]', movErr);
@@ -551,13 +549,21 @@ app.get('/api/movimientos-stock', async (req, res) => {
 app.post('/api/movimientos-stock/baja', async (req, res) => {
   try {
     const { tiendaId, producto, cantidad, unidad, lote, motivo, peso } = req.body;
-    if (!tiendaId || !producto || !cantidad || !motivo) {
+    if (!tiendaId || !producto || (!cantidad && !peso) || !motivo) {
       return res.status(400).json({ error: 'Faltan datos obligatorios para la baja' });
     }
-    const mov = await MovimientoStock.create({
-      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'baja', fecha: new Date(), peso
+    const movimiento = await registrarMovimientoStock({
+      tiendaId,
+      producto,
+      cantidad,
+      unidad,
+      lote,
+      motivo,
+      tipo: 'baja',
+      fecha: new Date(),
+      peso
     });
-    res.json(mov);
+    res.json(movimiento);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -567,17 +573,47 @@ app.post('/api/movimientos-stock/baja', async (req, res) => {
 app.post('/api/movimientos-stock/entrada', async (req, res) => {
   try {
     const { tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso } = req.body;
-    if (!tiendaId || !producto || !cantidad) {
+    if (!tiendaId || !producto || (!cantidad && !peso)) {
       return res.status(400).json({ error: 'Faltan datos obligatorios para la entrada' });
     }
-    const mov = await MovimientoStock.create({
-      tiendaId, producto, cantidad, unidad, lote, motivo, tipo: 'entrada', pedidoId, fecha: new Date(), peso
+    const movimiento = await registrarMovimientoStock({
+      tiendaId,
+      producto,
+      cantidad,
+      unidad,
+      lote,
+      motivo,
+      tipo: 'entrada',
+      pedidoId,
+      fecha: new Date(),
+      peso
     });
-    res.json(mov);
+    res.json(movimiento);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 });
+
+// Función centralizada para registrar movimientos de stock
+async function registrarMovimientoStock({ tiendaId, producto, cantidad, unidad, lote, motivo, tipo, pedidoId, transferenciaId, fecha, peso }) {
+  if (!tiendaId || !producto || (!cantidad && !peso) || !tipo) {
+    throw new Error('Faltan datos obligatorios para el movimiento de stock');
+  }
+  const mov = await MovimientoStock.create({
+    tiendaId,
+    producto,
+    cantidad,
+    unidad: unidad || 'kg',
+    lote: lote || '',
+    motivo,
+    tipo,
+    pedidoId,
+    transferenciaId,
+    fecha: fecha || new Date(),
+    peso: typeof peso !== 'undefined' ? peso : undefined
+  });
+  return mov;
+}
 
 // --- REGISTRO AUTOMÁTICO DE ENTRADAS DE STOCK AL ENVIAR PEDIDO A TIENDA ---
 const registrarEntradasStockPorPedido = async (pedido) => {
