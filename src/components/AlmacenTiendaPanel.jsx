@@ -322,14 +322,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
             <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #007bff11'}}>
               <thead>
                 <tr style={{background:'#f8fafd'}}>
-                  <th>Fecha</th>
-                  <th>Hora</th>
+                  {/* Eliminadas columnas Fecha y Hora, y Formato. Unidad entre Cantidad y Peso */}
                   <th>Producto</th>
                   <th>Lote</th>
                   <th>Cantidad (ud)</th>
-                  <th>Peso (kg)</th>
                   <th>Unidad</th>
-                  <th>Formato</th>
+                  <th>Peso (kg)</th>
                   <th>Familia</th>
                 </tr>
               </thead>
@@ -338,11 +336,11 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                   // Agrupar movimientos por producto, lote y formato
                   const agrupado = {};
                   movimientos.forEach(mov => {
-                    // Calcular cantidad y peso por separado
                     let cantidad = mov.cantidadEnviada ?? mov.cantidad ?? 0;
                     let peso = mov.peso ?? 0;
-                    const key = mov.producto + '||' + (mov.lote || '') + '||' + (mov.formato || mov.unidad || '');
-                    if (!agrupado[key]) agrupado[key] = { producto: mov.producto, lote: mov.lote, formato: mov.formato || mov.unidad, entradas: 0, bajas: 0, fecha: mov.fecha, cantidadTotal: 0, pesoTotal: 0 };
+                    // Usar unidad en la clave en vez de formato
+                    const key = mov.producto + '||' + (mov.lote || '') + '||' + (mov.unidad || mov.formato || '');
+                    if (!agrupado[key]) agrupado[key] = { producto: mov.producto, lote: mov.lote, unidad: mov.unidad || mov.formato, entradas: 0, bajas: 0, fecha: mov.fecha, cantidadTotal: 0, pesoTotal: 0 };
                     if (mov.tipo === 'entrada' || mov.tipo === 'transferencia_entrada' || mov.tipo === 'devolucion_entrada') {
                       agrupado[key].cantidadTotal += Number(cantidad) || 0;
                       agrupado[key].pesoTotal += Number(peso) || 0;
@@ -351,15 +349,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                       agrupado[key].cantidadTotal -= Number(cantidad) || 0;
                       agrupado[key].pesoTotal -= Number(peso) || 0;
                     }
-                    // Guardar la fecha más reciente
                     if (!agrupado[key].fecha || new Date(mov.fecha) > new Date(agrupado[key].fecha)) {
                       agrupado[key].fecha = mov.fecha;
                     }
                   });
-                  // Filtrar y mostrar solo los que tengan stock o movimientos
                   return Object.values(agrupado)
                     .filter(s => {
-                      // Mostrar si cantidad o peso es distinto de 0
                       return (
                         (s.cantidadTotal !== 0 || s.pesoTotal !== 0) &&
                         (!filtroProducto || s.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
@@ -367,14 +362,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                     })
                     .map((s, idx) => (
                       <tr key={idx}>
-                        <td>{s.fecha ? new Date(s.fecha).toLocaleDateString() : '-'}</td>
-                        <td>{s.fecha ? new Date(s.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                        {/* Sin fecha ni hora */}
                         <td>{s.producto}</td>
                         <td>{s.lote}</td>
                         <td>{s.cantidadTotal !== undefined ? s.cantidadTotal.toFixed(2) : '-'}</td>
+                        <td>{s.unidad || '-'}</td>
                         <td>{s.pesoTotal !== undefined ? s.pesoTotal.toFixed(2) : '-'}</td>
-                        <td>{s.formato || '-'}</td>
-                        <td>{s.formato || '-'}</td>
                         <td>{(() => {
                           const prod = productos.find(p => p.nombre.trim().toLowerCase() === (s.producto || '').trim().toLowerCase());
                           if (!prod) return '-';
@@ -428,7 +421,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
               Exportar Excel
             </button>
           </div>
-          <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #673ab711'}}>
+          <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #007bff11'}}>
             <thead>
               <tr style={{background:'#ede7f6'}}>
                 <th>Fecha</th>
@@ -444,31 +437,40 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
             </thead>
             <tbody>
               {(() => {
-                // Filtrar y ordenar movimientos por fecha ascendente (antiguos primero)
+                // Mostrar absolutamente todos los movimientos recibidos, sin filtrar por producto conocido ni por tipo
                 const movsFiltrados = movimientos.filter(mov => {
-                  // Filtros combinados
-                  const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
-                  const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
+                  // Solo aplicar los filtros activos del usuario
                   return (
-                    (!filtroProducto || mov.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
+                    (!filtroProducto || (mov.producto && mov.producto.toLowerCase().includes(filtroProducto.toLowerCase()))) &&
                     (!filtroLote || (mov.lote && mov.lote.toLowerCase().includes(filtroLote.toLowerCase()))) &&
-                    (!filtroFamilia || familia === filtroFamilia) &&
+                    (!filtroFamilia || (() => {
+                      const prod = productos.find(p => p.nombre && mov.producto && p.nombre.trim().toLowerCase() === mov.producto.trim().toLowerCase());
+                      const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
+                      return familia === filtroFamilia;
+                    })()) &&
                     (!filtroTipoMovimiento || mov.tipo === filtroTipoMovimiento) &&
                     (!filtroFechaDesde || (mov.fecha && mov.fecha >= filtroFechaDesde)) &&
                     (!filtroFechaHasta || (mov.fecha && mov.fecha <= filtroFechaHasta))
                   );
                 }).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-                // Calcular saldo progresivo
                 let saldoPeso = 0;
                 return movsFiltrados.map((mov, idx) => {
                   const peso = Number(mov.peso) || 0;
+                  const esBaja = ["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo);
+                  const esTransferenciaEntrada = mov.tipo === "transferencia_entrada";
                   if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
                     saldoPeso += peso;
-                  } else if (["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo)) {
+                  } else if (esBaja) {
                     saldoPeso -= peso;
                   }
+                  let style = {};
+                  if (esBaja) {
+                    style = {color:'#b71c1c',background:'#ffebee',fontWeight:600};
+                  } else if (esTransferenciaEntrada) {
+                    style = {color:'#4a148c',background:'#ede7f6',fontWeight:600};
+                  }
                   return (
-                    <tr key={idx}>
+                    <tr key={idx} style={style}>
                       <td>{mov.fecha ? new Date(mov.fecha).toLocaleString() : '-'}</td>
                       <td>{mov.tipo}</td>
                       <td>{mov.producto}</td>
