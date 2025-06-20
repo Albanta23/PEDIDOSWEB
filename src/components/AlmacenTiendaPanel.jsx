@@ -491,18 +491,23 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       {tab==='bajas' && (
         <div>
           <h3>Registrar baja de producto</h3>
-          {/* Formulario individual clásico (opcional, se puede dejar) */}
+          {/* Formulario individual clásico (ahora permite productos antiguos/no registrados) */}
           <div style={{display:'flex',gap:16,marginBottom:18,alignItems:'center',flexWrap:'wrap'}}>
-            <select value={productoBaja} onChange={e=>{
-              setProductoBaja(e.target.value);
-              const prod = movimientos.find(s=>s.producto===e.target.value);
-              if(prod){ setUnidadBaja(prod.unidad); setLoteBaja(prod.lote); }
-            }} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:120}}>
-              <option value="">Selecciona producto</option>
-              {[...new Set(movimientos.map(s=>s.producto))].map((prod,idx)=>(
+            <input
+              list="productos-baja-stock"
+              placeholder="Producto (puedes escribir uno antiguo)"
+              value={productoBaja}
+              onChange={e=>setProductoBaja(e.target.value)}
+              style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}
+            />
+            <datalist id="productos-baja-stock">
+              {[...new Set(movimientos.map(s=>s.producto).filter(Boolean))].map((prod,idx)=>(
                 <option key={idx} value={prod}>{prod}</option>
               ))}
-            </select>
+              {productos.map((p,i) => (
+                <option key={i+1000} value={p.nombre}>{p.referencia ? `${p.referencia} - ${p.nombre}` : p.nombre}</option>
+              ))}
+            </datalist>
             <input type="number" min="0" step="any" placeholder="Cantidad" value={cantidadBaja} onChange={e=>setCantidadBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
             <select value={unidadBaja} onChange={e=>setUnidadBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}}>
               <option value="kg">kg</option>

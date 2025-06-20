@@ -9,13 +9,13 @@ const estados = {
   cancelada: 'Cancelada'
 };
 
-export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica, filtroTienda, filtroFechaDesde, filtroFechaHasta, filtrarTransferencias }) {
+export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica, filtroTienda, filtroFechaDesde, filtroFechaHasta, filtrarTransferencias, onTransferenciaConfirmada }) {
   const { productos } = useProductos();
   const [transferencias, setTransferencias] = useState([]);
   const [form, setForm] = useState({
     origen: '',
     destino: '',
-    productos: [{ producto: '', cantidad: 1, lote: '', comentario: '' }],
+    productos: [{ producto: '', cantidad: 1, peso: 0, lote: '', comentario: '' }],
     observaciones: ''
   });
   const [cargando, setCargando] = useState(false);
@@ -50,7 +50,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
   };
 
   const agregarProducto = () => {
-    setForm(f => ({ ...f, productos: [...f.productos, { producto: '', cantidad: 1, lote: '', comentario: '' }] }));
+    setForm(f => ({ ...f, productos: [...f.productos, { producto: '', cantidad: 1, peso: 0, lote: '', comentario: '' }] }));
   };
 
   const quitarProducto = (idx) => {
@@ -60,7 +60,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
   const enviarTransferencia = async () => {
     if (!form.origen || !form.destino || form.productos.length === 0) return;
     await crearTransferencia({ ...form, usuario: tiendaActual?.nombre || 'TIENDA FABRICA' });
-    setForm({ origen: '', destino: '', productos: [{ producto: '', cantidad: 1, lote: '', comentario: '' }], observaciones: '' });
+    setForm({ origen: '', destino: '', productos: [{ producto: '', cantidad: 1, peso: 0, lote: '', comentario: '' }], observaciones: '' });
     cargarTransferencias();
   };
 
@@ -118,6 +118,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
                 ))}
               </datalist>
               <input type='number' min={1} placeholder='Cantidad' value={p.cantidad} onChange={e => handleProductoChange(idx, 'cantidad', e.target.value)} style={{width:70}} />
+              <input type='number' min={0} step={0.01} placeholder='Peso (kg)' value={p.peso || ''} onChange={e => handleProductoChange(idx, 'peso', e.target.value)} style={{width:90}} />
               <input type='text' placeholder='Lote' value={p.lote} onChange={e => handleProductoChange(idx, 'lote', e.target.value)} style={{width:80}} />
               <input type='text' placeholder='Comentario' value={p.comentario} onChange={e => handleProductoChange(idx, 'comentario', e.target.value)} style={{width:120}} />
               <button onClick={() => quitarProducto(idx)} disabled={form.productos.length === 1}>-</button>
@@ -148,7 +149,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
                 <td>{t.destino === 'TIENDA FABRICA' ? 'Devoluciones a Fábrica' : t.destino}</td>
                 <td>
                   <ul style={{margin:0,paddingLeft:16}}>
-                    {t.productos.map((p,i) => <li key={i}>{p.producto} ({p.cantidad}) {p.lote && `[Lote: ${p.lote}]`}</li>)}
+                    {t.productos.map((p,i) => <li key={i}>{p.producto} ({p.cantidad}{typeof p.peso !== 'undefined' && p.peso !== '' ? `, ${p.peso}kg` : ''}) {p.lote && `[Lote: ${p.lote}]`}</li>)}
                   </ul>
                 </td>
                 <td>{estados[t.estado] || t.estado}
@@ -158,6 +159,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
                       onClick={async () => {
                         await confirmarTransferencia(t._id, {});
                         cargarTransferencias();
+                        if (typeof onTransferenciaConfirmada === 'function') onTransferenciaConfirmada();
                       }}
                     >
                       Confirmar recibido
@@ -169,6 +171,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
                       onClick={async () => {
                         await confirmarTransferencia(t._id, {});
                         cargarTransferencias();
+                        if (typeof onTransferenciaConfirmada === 'function') onTransferenciaConfirmada();
                       }}
                     >
                       Marcar como recibida

@@ -370,22 +370,46 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
     const transferencia = await Transferencia.findByIdAndUpdate(id, { estado: 'recibida' }, { new: true });
     if (!transferencia) return res.status(404).json({ error: 'Transferencia no encontrada' });
     // Solo al confirmar, registrar movimientos de stock reales
+    let movimientosCreados = 0;
     for (const prod of transferencia.productos) {
-      // Entrada en destino (si no existe ya)
-      await MovimientoStock.create({
-        tiendaId: transferencia.destino,
-        producto: prod.producto,
-        cantidad: prod.cantidad,
-        unidad: prod.unidad || 'kg',
-        lote: prod.lote || '',
-        motivo: 'Transferencia recibida de ' + transferencia.origen,
-        tipo: transferencia.destino === 'TIENDA FABRICA' ? 'devolucion_entrada' : 'transferencia_entrada',
-        fecha: new Date(),
-        transferenciaId: transferencia._id.toString()
-      });
+      try {
+        // Salida en origen
+        const movSalida = await MovimientoStock.create({
+          tiendaId: transferencia.origen,
+          producto: prod.producto,
+          cantidad: prod.cantidad,
+          unidad: prod.unidad || 'kg',
+          lote: prod.lote || '',
+          motivo: 'Transferencia enviada a ' + transferencia.destino,
+          tipo: transferencia.destino === 'TIENDA FABRICA' ? 'devolucion_salida' : 'transferencia_salida',
+          fecha: new Date(),
+          transferenciaId: transferencia._id.toString(),
+          peso: typeof prod.peso !== 'undefined' ? prod.peso : undefined
+        });
+        console.log('[TRANSFERENCIA][SALIDA] Movimiento creado:', movSalida);
+        // Entrada en destino
+        const movEntrada = await MovimientoStock.create({
+          tiendaId: transferencia.destino,
+          producto: prod.producto,
+          cantidad: prod.cantidad,
+          unidad: prod.unidad || 'kg',
+          lote: prod.lote || '',
+          motivo: 'Transferencia recibida de ' + transferencia.origen,
+          tipo: transferencia.destino === 'TIENDA FABRICA' ? 'devolucion_entrada' : 'transferencia_entrada',
+          fecha: new Date(),
+          transferenciaId: transferencia._id.toString(),
+          peso: typeof prod.peso !== 'undefined' ? prod.peso : undefined
+        });
+        console.log('[TRANSFERENCIA][ENTRADA] Movimiento creado:', movEntrada);
+        movimientosCreados += 2;
+      } catch (movErr) {
+        console.error('[TRANSFERENCIA][ERROR MOVIMIENTO]', movErr);
+      }
     }
+    console.log(`[TRANSFERENCIA] Total movimientos creados: ${movimientosCreados} para transferencia ${transferencia._id}`);
     res.json(transferencia);
   } catch (err) {
+    console.error('[TRANSFERENCIA][ERROR PATCH /confirmar]', err);
     res.status(400).json({ error: err.message });
   }
 });
@@ -610,7 +634,7 @@ io.on('connection', async (socket) => { // Hacerla async para cargar pedidos ini
 const mailjetProveedorEmailV2 = require('./mailjetProveedorEmailV2');
 mailjetProveedorEmailV2(app);
 
-// --- ENDPOINT: Registrar transferencia entre tiendas y reflejar en movimientos de stock ---
+// --- ENDPOINT: Registrar transferencia entre tiendas (NO crea movimientos de stock, solo la transferencia) ---
 app.post('/api/transferencias/registrar', async (req, res) => {
   try {
     const { origenId, destinoId, productos, observaciones, usuario } = req.body;
@@ -627,33 +651,8 @@ app.post('/api/transferencias/registrar', async (req, res) => {
       fecha: new Date(),
       estado: 'realizada'
     });
-    // Registrar movimientos de stock: salida en origen, entrada en destino
-    for (const prod of productos) {
-      // Salida en origen
-      await MovimientoStock.create({
-        tiendaId: origenId,
-        producto: prod.producto,
-        cantidad: prod.cantidad,
-        unidad: prod.unidad || 'kg',
-        lote: prod.lote || '',
-        motivo: 'Transferencia a ' + destinoId,
-        tipo: 'transferencia_salida',
-        fecha: new Date(),
-        transferenciaId: transferencia._id.toString()
-      });
-      // Entrada en destino
-      await MovimientoStock.create({
-        tiendaId: destinoId,
-        producto: prod.producto,
-        cantidad: prod.cantidad,
-        unidad: prod.unidad || 'kg',
-        lote: prod.lote || '',
-        motivo: 'Transferencia desde ' + origenId,
-        tipo: 'transferencia_entrada',
-        fecha: new Date(),
-        transferenciaId: transferencia._id.toString()
-      });
-    }
+    // NO crear movimientos de stock aquí. Solo al confirmar.
+    console.log(`[TRANSFERENCIA][NUEVA] Transferencia registrada (sin movimientos): ${transferencia._id}`);
     res.json({ ok: true, transferencia });
   } catch (e) {
     res.status(400).json({ error: e.message });
