@@ -144,10 +144,15 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   // --- Lógica de filtrado y orden para la tabla de movimientos ---
   const movimientosFiltradosOrdenados = useMemo(() => {
     return movimientos.filter(mov => {
-      const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
+      // Buscar por nombre o referencia
+      const prod = productos.find(p => {
+        const nombreMatch = p.nombre && p.nombre.trim().toLowerCase() === (filtroProducto || '').trim().toLowerCase();
+        const refMatch = p.referencia && p.referencia.trim().toLowerCase() === (filtroProducto || '').trim().toLowerCase();
+        return nombreMatch || refMatch;
+      });
       const familia = prod?.familia ? String(prod.familia).trim() : (prod?.nombreFamilia ? String(prod.nombreFamilia).trim() : '');
       return (
-        (!filtroProducto || mov.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
+        (!filtroProducto || (mov.producto && (mov.producto.toLowerCase().includes(filtroProducto.toLowerCase()) || (prod && (prod.nombre.toLowerCase() === filtroProducto.toLowerCase() || (prod.referencia && prod.referencia.toLowerCase() === filtroProducto.toLowerCase())))))) &&
         (!filtroLote || (mov.lote && mov.lote.toLowerCase().includes(filtroLote.toLowerCase()))) &&
         (!filtroFamilia || familia === filtroFamilia) &&
         (!filtroTipoMovimiento || mov.tipo === filtroTipoMovimiento) &&
@@ -261,46 +266,18 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       </div>
       {tab==='stock' && (
         <div>
-          {/* Formulario para añadir stock manualmente */}
-          <div style={{background:'#f8fafd',padding:16,borderRadius:8,marginBottom:18,boxShadow:'0 2px 8px #007bff11',display:'flex',gap:14,alignItems:'center',flexWrap:'wrap'}}>
-            <b style={{color:'#007bff'}}>Añadir stock manualmente</b>
-            <input
-              list="productos-alta-stock"
-              placeholder="Producto"
-              value={productoBaja}
-              onChange={e => setProductoBaja(autocompletarProducto(e.target.value))}
-              style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}
-            />
-            <datalist id="productos-alta-stock">
-              {productos.map((p,i) => (
-                <option key={i} value={p.nombre}>{p.referencia ? `${p.referencia} - ${p.nombre}` : p.nombre}</option>
-              ))}
-            </datalist>
-            <input type="number" min="0" step="any" placeholder="Cantidad" value={cantidadBaja} onChange={e=>setCantidadBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
-            <select value={unidadBaja} onChange={e=>setUnidadBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}}>
-              <option value="kg">kg</option>
-              <option value="ud">ud</option>
-            </select>
-            <input placeholder="Lote" value={loteBaja} onChange={e=>setLoteBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
-            <input placeholder="Motivo" value={motivoBaja} onChange={e=>setMotivoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:120}} />
-            <input type="number" min="0" step="any" placeholder="Peso (kg)" value={pesoBaja} onChange={e=>setPesoBaja(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',width:90}} />
-            <button
-              onClick={async ()=>{
-                if(!productoBaja || !cantidadBaja || !motivoBaja){ alert('Rellena todos los campos'); return; }
-                const { registrarEntradaStock } = await import('../services/movimientosStockService');
-                await registrarEntradaStock({ tiendaId: tienda.id, producto: productoBaja, cantidad: cantidadBaja, unidad: unidadBaja, lote: loteBaja, motivo: motivoBaja, peso: pesoBaja });
-                setProductoBaja(''); setCantidadBaja(''); setUnidadBaja('kg'); setLoteBaja(''); setMotivoBaja(''); setPesoBaja('');
-                // Refrescar movimientos tras registrar entrada
-                const movs = await getMovimientosStock({ tiendaId: tienda.id });
-                setMovimientos(movs);
-              }}
-              style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>
-              Añadir stock
-            </button>
-          </div>
-          <div style={{display:'flex',gap:16,marginBottom:16}}>
+          {/* Filtros de stock, ahora con checkbox para activar visualización por lotes */}
+          <div style={{display:'flex',gap:16,marginBottom:16,alignItems:'center'}}>
             <input placeholder="Filtrar producto" value={filtroProducto} onChange={e=>setFiltroProducto(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
-            <input placeholder="Filtrar lote" value={filtroLote} onChange={e=>setFiltroLote(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
+            <label style={{display:'flex',alignItems:'center',gap:4}}>
+              <input
+                type="checkbox"
+                checked={!!filtroLote}
+                onChange={e => setFiltroLote(e.target.checked ? '__ALL__' : '')}
+                style={{marginRight:4}}
+              />
+              Visualizar stock por lotes
+            </label>
             <select value={filtroFamilia} onChange={e=>setFiltroFamilia(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}>
               <option value="">Todas las familias</option>
               {familias.map(([num, nombre], idx) => (
@@ -320,9 +297,9 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
             <table style={{width:'100%',marginBottom:24,borderCollapse:'collapse',background:'#fff',borderRadius:8,boxShadow:'0 2px 12px #007bff11'}}>
               <thead>
                 <tr style={{background:'#f8fafd'}}>
-                  {/* Eliminadas columnas Fecha y Hora, y Formato. Unidad entre Cantidad y Peso */}
                   <th>Producto</th>
-                  <th>Lote</th>
+                  {filtroLote && <th>Lote</th>}
+                  <th>Referencia</th>
                   <th>Cantidad (ud)</th>
                   <th>Unidad</th>
                   <th>Peso (kg)</th>
@@ -331,48 +308,44 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
               </thead>
               <tbody>
                 {(() => {
-                  // Agrupar movimientos por producto, lote y formato
+                  // Agrupar por referencia (código de producto), y si hay visualización por lotes, por lote también
                   const agrupado = {};
                   movimientos.forEach(mov => {
+                    const prod = productos.find(p => p.nombre.trim().toLowerCase() === (mov.producto || '').trim().toLowerCase());
+                    const referencia = prod?.referencia || mov.producto;
+                    let key = referencia;
+                    if (filtroLote) key += '||' + (mov.lote || '');
                     let cantidad = mov.cantidadEnviada ?? mov.cantidad ?? 0;
                     let peso = mov.peso ?? 0;
-                    // Usar unidad en la clave en vez de formato
-                    const key = mov.producto + '||' + (mov.lote || '') + '||' + (mov.unidad || mov.formato || '');
-                    if (!agrupado[key]) agrupado[key] = { producto: mov.producto, lote: mov.lote, unidad: mov.unidad || mov.formato, entradas: 0, bajas: 0, fecha: mov.fecha, cantidadTotal: 0, pesoTotal: 0 };
-                    if (mov.tipo === 'entrada' || mov.tipo === 'transferencia_entrada' || mov.tipo === 'devolucion_entrada') {
+                    if (!agrupado[key]) agrupado[key] = {
+                      producto: mov.producto,
+                      referencia,
+                      lote: mov.lote,
+                      unidad: mov.unidad || mov.formato,
+                      cantidadTotal: 0,
+                      pesoTotal: 0,
+                      familia: prod?.familia || prod?.nombreFamilia || '-',
+                    };
+                    if (["entrada","transferencia_entrada","devolucion_entrada"].includes(mov.tipo)) {
                       agrupado[key].cantidadTotal += Number(cantidad) || 0;
                       agrupado[key].pesoTotal += Number(peso) || 0;
                     }
-                    if (mov.tipo === 'baja' || mov.tipo === 'transferencia_salida' || mov.tipo === 'devolucion_salida') {
+                    if (["baja","transferencia_salida","devolucion_salida"].includes(mov.tipo)) {
                       agrupado[key].cantidadTotal -= Number(cantidad) || 0;
                       agrupado[key].pesoTotal -= Number(peso) || 0;
                     }
-                    if (!agrupado[key].fecha || new Date(mov.fecha) > new Date(agrupado[key].fecha)) {
-                      agrupado[key].fecha = mov.fecha;
-                    }
                   });
                   return Object.values(agrupado)
-                    .filter(s => {
-                      return (
-                        (s.cantidadTotal !== 0 || s.pesoTotal !== 0) &&
-                        (!filtroProducto || s.producto.toLowerCase().includes(filtroProducto.toLowerCase())) &&
-                        (!filtroLote || (s.lote && s.lote.toLowerCase().includes(filtroLote.toLowerCase()))));
-                    })
+                    .filter(s => (s.cantidadTotal !== 0 || s.pesoTotal !== 0) && (!filtroProducto || s.producto.toLowerCase().includes(filtroProducto.toLowerCase())))
                     .map((s, idx) => (
                       <tr key={idx}>
-                        {/* Sin fecha ni hora */}
                         <td>{s.producto}</td>
-                        <td>{s.lote}</td>
+                        {filtroLote && <td>{s.lote}</td>}
+                        <td>{s.referencia}</td>
                         <td>{s.cantidadTotal !== undefined ? s.cantidadTotal.toFixed(2) : '-'}</td>
                         <td>{s.unidad || '-'}</td>
                         <td>{s.pesoTotal !== undefined ? s.pesoTotal.toFixed(2) : '-'}</td>
-                        <td>{(() => {
-                          const prod = productos.find(p => p.nombre.trim().toLowerCase() === (s.producto || '').trim().toLowerCase());
-                          if (!prod) return '-';
-                          if (prod.familia && prod.nombreFamilia) return prod.familia + ' - ' + prod.nombreFamilia;
-                          if (prod.familia) return prod.familia;
-                          return '-';
-                        })()}</td>
+                        <td>{s.familia}</td>
                       </tr>
                     ));
                 })()}
@@ -385,7 +358,21 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
         <div>
           <h3 style={{color:'#673ab7'}}>Diario de movimientos de almacén</h3>
           <div style={{display:'flex',gap:16,marginBottom:16,flexWrap:'wrap'}}>
-            <input placeholder="Filtrar producto" value={filtroProducto} onChange={e=>setFiltroProducto(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
+            <input
+              list="productos-filtro-movimientos"
+              placeholder="Filtrar producto (nombre o número)"
+              value={filtroProducto}
+              onChange={e=>setFiltroProducto(e.target.value)}
+              style={{padding:6,borderRadius:4,border:'1px solid #ccc'}}
+            />
+            <datalist id="productos-filtro-movimientos">
+              {productos.map((p,i) => (
+                <option key={i} value={p.nombre}>{p.referencia ? `${p.referencia} - ${p.nombre}` : p.nombre}</option>
+              ))}
+              {productos.map((p,i) => (
+                p.referencia ? <option key={i+1000} value={p.referencia}>{p.nombre}</option> : null
+              ))}
+            </datalist>
             <input placeholder="Filtrar lote" value={filtroLote} onChange={e=>setFiltroLote(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc'}} />
             <select value={filtroFamilia} onChange={e=>setFiltroFamilia(e.target.value)} style={{padding:6,borderRadius:4,border:'1px solid #ccc',minWidth:180}}>
               <option value="">Todas las familias</option>
