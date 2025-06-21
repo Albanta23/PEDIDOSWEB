@@ -462,9 +462,11 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                   if (esBaja) {
                     style = {color:'#b71c1c',background:'#ffebee',fontWeight:600};
                   } else if (esTransferenciaEntrada) {
-                    style = {color:'#4a148c',background:'#ede7f6',fontWeight:600};
+                    // transferencia_entrada: azul
+                    style = {color:'#1565c0',background:'#e3f2fd',fontWeight:600};
                   } else if (esTransferenciaSalida) {
-                    style = {color:'#1a237e',background:'#e3f2fd',fontWeight:600};
+                    // transferencia_salida: morado
+                    style = {color:'#8e24aa',background:'#ede7f6',fontWeight:600};
                   } else if (esDevolucionEntrada) {
                     style = {color:'#00695c',background:'#e0f2f1',fontWeight:600};
                   } else if (esDevolucionSalida) {
