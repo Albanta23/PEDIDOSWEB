@@ -242,12 +242,6 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     doc.save('diario_movimientos.pdf');
   };
 
-  // Determinar si mostrar la columna de PESO TOTAL (kg)
-  const mostrarPesoTotal = useMemo(() => {
-    if (!filtroProducto) return false;
-    return productos.some(p => p.nombre && p.nombre.toLowerCase() === filtroProducto.toLowerCase());
-  }, [filtroProducto, productos]);
-
   return (
     <div style={{padding:32, maxWidth:900, margin:'0 auto'}}>
       <h2>Gestión de almacén de {tienda?.nombre || 'Tienda'}</h2>
@@ -428,7 +422,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                 <th>Cantidad</th>
                 <th>Unidad</th>
                 <th>Peso (kg)</th>
-                {mostrarPesoTotal && <th>PESO TOTAL (kg)</th>}
+                <th>PESO TOTAL (kg)</th>
                 <th>Lote</th>
                 <th>Motivo</th>
               </tr>
@@ -471,9 +465,9 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                   } else if (esDevolucionSalida) {
                     // devolucion_salida: naranja
                     style = {color:'#f57c00',background:'#fff3e0',fontWeight:600};
-                  } else if (mov.tipo === 'baja') {
+                  } else if (esBaja) {
                     // baja: rojo
-                    style = {color:'#dc3545',background:'#ffebee',fontWeight:600};
+                    style = {color:'#b71c1c',background:'#ffebee',fontWeight:600};
                   } else if (esTransferenciaEntrada) {
                     // transferencia_entrada: azul
                     style = {color:'#1565c0',background:'#e3f2fd',fontWeight:600};
@@ -488,7 +482,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                       <td>{mov.cantidad}</td>
                       <td>{mov.unidad}</td>
                       <td>{peso.toFixed(2)}</td>
-                      {mostrarPesoTotal && <td>{saldoPeso.toFixed(2)}</td>}
+                      <td>{saldoPeso.toFixed(2)}</td>
                       <td>{mov.lote}</td>
                       <td>{mov.motivo}</td>
                     </tr>
