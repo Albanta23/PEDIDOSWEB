@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
 const TransferenciaSchema = new mongoose.Schema({
-  origen: { type: String, required: true }, // tienda origen (id o nombre)
-  destino: { type: String, required: true }, // tienda destino (id o nombre)
+  origen: { type: String, required: true }, // tienda origen (nombre)
+  origenId: { type: String }, // id real de la tienda origen
+  destino: { type: String, required: true }, // tienda destino (nombre)
+  destinoId: { type: String }, // id real de la tienda destino
   fecha: { type: Date, default: Date.now },
   estado: { type: String, enum: ['pendiente', 'enviada', 'recibida', 'cancelada'], default: 'pendiente' },
   productos: [

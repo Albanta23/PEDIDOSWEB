@@ -375,7 +375,7 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
       try {
         // Salida en origen
         await registrarMovimientoStock({
-          tiendaId: transferencia.origen,
+          tiendaId: transferencia.origenId || transferencia.origen,
           producto: prod.producto,
           cantidad: prod.cantidad,
           unidad: prod.unidad || 'kg',
@@ -388,7 +388,7 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
         });
         // Entrada en destino
         await registrarMovimientoStock({
-          tiendaId: transferencia.destino,
+          tiendaId: transferencia.destinoId || transferencia.destino,
           producto: prod.producto,
           cantidad: prod.cantidad,
           unidad: prod.unidad || 'kg',

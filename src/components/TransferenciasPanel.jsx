@@ -59,12 +59,21 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
 
   const enviarTransferencia = async () => {
     if (!form.origen || !form.destino || form.productos.length === 0) return;
+    // Buscar los IDs reales de las tiendas
+    const origenObj = tiendas.find(t => t.nombre === form.origen);
+    const destinoObj = tiendas.find(t => t.nombre === form.destino);
     // Normalizar el campo peso: convertir a número o undefined
     const productosNormalizados = form.productos.map(p => ({
       ...p,
       peso: p.peso === '' || typeof p.peso === 'undefined' ? undefined : Number(p.peso)
     }));
-    await crearTransferencia({ ...form, productos: productosNormalizados, usuario: tiendaActual?.nombre || 'TIENDA FABRICA' });
+    await crearTransferencia({
+      ...form,
+      productos: productosNormalizados,
+      usuario: tiendaActual?.nombre || 'TIENDA FABRICA',
+      origenId: origenObj ? origenObj.id : undefined,
+      destinoId: destinoObj ? destinoObj.id : undefined
+    });
     setForm({ origen: '', destino: '', productos: [{ producto: '', cantidad: 1, peso: 0, lote: '', comentario: '' }], observaciones: '' });
     cargarTransferencias();
   };
