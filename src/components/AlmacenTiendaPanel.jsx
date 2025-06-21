@@ -459,14 +459,14 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                     saldoPeso -= peso;
                   }
                   let style = {};
-                  if (esBaja) {
+                  if (esTransferenciaSalida) {
+                    // transferencia_salida: morado
+                    style = {color:'#8e24aa',background:'#ede7f6',fontWeight:600};
+                  } else if (esBaja) {
                     style = {color:'#b71c1c',background:'#ffebee',fontWeight:600};
                   } else if (esTransferenciaEntrada) {
                     // transferencia_entrada: azul
                     style = {color:'#1565c0',background:'#e3f2fd',fontWeight:600};
-                  } else if (esTransferenciaSalida) {
-                    // transferencia_salida: morado
-                    style = {color:'#8e24aa',background:'#ede7f6',fontWeight:600};
                   } else if (esDevolucionEntrada) {
                     style = {color:'#00695c',background:'#e0f2f1',fontWeight:600};
                   } else if (esDevolucionSalida) {
