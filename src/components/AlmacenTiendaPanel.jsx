@@ -242,6 +242,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
     doc.save('diario_movimientos.pdf');
   };
 
+  // Determinar si mostrar la columna de PESO TOTAL (kg)
+  const mostrarPesoTotal = useMemo(() => {
+    if (!filtroProducto) return false;
+    return productos.some(p => p.nombre && p.nombre.toLowerCase() === filtroProducto.toLowerCase());
+  }, [filtroProducto, productos]);
+
   return (
     <div style={{padding:32, maxWidth:900, margin:'0 auto'}}>
       <h2>Gestión de almacén de {tienda?.nombre || 'Tienda'}</h2>
@@ -422,7 +428,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                 <th>Cantidad</th>
                 <th>Unidad</th>
                 <th>Peso (kg)</th>
-                <th>PESO TOTAL (kg)</th>
+                {mostrarPesoTotal && <th>PESO TOTAL (kg)</th>}
                 <th>Lote</th>
                 <th>Motivo</th>
               </tr>
@@ -482,7 +488,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
                       <td>{mov.cantidad}</td>
                       <td>{mov.unidad}</td>
                       <td>{peso.toFixed(2)}</td>
-                      <td>{saldoPeso.toFixed(2)}</td>
+                      {mostrarPesoTotal && <td>{saldoPeso.toFixed(2)}</td>}
                       <td>{mov.lote}</td>
                       <td>{mov.motivo}</td>
                     </tr>
