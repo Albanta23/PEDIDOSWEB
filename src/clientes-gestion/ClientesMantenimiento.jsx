@@ -53,12 +53,55 @@ export default function ClientesMantenimiento() {
     } catch {}
   };
 
+  // Importar clientes desde CSV
+  const handleImportCSV = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter(l=>l.trim());
+    if (lines.length < 2) return setMensaje('CSV vacío o sin datos');
+    const headers = lines[0].split(/\t/).map(h=>h.trim());
+    const clientes = lines.slice(1).map(line => {
+      const cols = line.split(/\t/);
+      const obj = {};
+      headers.forEach((h,i)=>{ obj[h]=cols[i]!==undefined?cols[i].trim():''; });
+      return {
+        nombre: obj.RazonSocial || obj.NomComercial || obj.Nombre || '',
+        email: obj.Email || '',
+        telefono: obj.Telefono || '',
+        direccion: [obj.Direccion, obj.CodPostal, obj.Poblacion, obj.Provincia].filter(Boolean).join(', '),
+        cif: obj.CIF || '',
+        activo: obj.Activo === 'true' || obj.Activo === '1',
+        tipoCliente: obj.TipoCliente || '',
+        exentoIVA: obj.ExentoIVA === 'true' || obj.ExentoIVA === '1',
+        formaPago: obj.FormaPago || '',
+        recargoEquiv: obj.RecargoEquiv === 'true' || obj.RecargoEquiv === '1',
+        descuento1: parseFloat(obj.Descuento1)||0,
+        descuento2: parseFloat(obj.Descuento2)||0,
+        descuento3: parseFloat(obj.Descuento3)||0
+      };
+    });
+    // DEBUG: Mostrar los clientes parseados en consola
+    console.log('CLIENTES IMPORTADOS', clientes);
+    if (clientes.length === 0) return setMensaje('No se han detectado clientes en el archivo. Revisa el formato.');
+    try {
+      for (const cli of clientes) {
+        await axios.post('/api/clientes', cli);
+      }
+      setMensaje('Clientes importados correctamente');
+      cargarClientes();
+    } catch {
+      setMensaje('Error al importar clientes');
+    }
+  };
+
   return (
     <div style={{maxWidth:700,margin:'0 auto',background:'#fff',borderRadius:16,boxShadow:'0 2px 16px #0001',padding:32}}>
       <h2 style={{marginBottom:24}}>Mantenimiento de clientes</h2>
       {modo==='lista' && (
         <>
           <button onClick={()=>{setModo('crear');setForm({nombre:'',email:'',telefono:'',direccion:''});}} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:18}}>+ Nuevo cliente</button>
+          <input type="file" accept=".csv,.txt" onChange={handleImportCSV} style={{marginLeft:16,marginBottom:18}} />
           <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16}}>
             <thead>
               <tr style={{background:'#f0f4fa'}}>

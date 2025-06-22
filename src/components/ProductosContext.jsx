@@ -3,15 +3,17 @@ import axios from 'axios';
 
 const ProductosContext = createContext();
 
+// Cambiar la URL para que funcione correctamente en cualquier entorno
+const API_URL = '/api';
+
 export function ProductosProvider({ children }) {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
 
   const cargarProductos = async () => {
     setCargando(true);
     try {
-      const res = await axios.get(`${API_URL}/api/productos`);
+      const res = await axios.get(`${API_URL}/productos`);
       setProductos(res.data);
     } catch (e) {
       setProductos([]);
@@ -24,8 +26,13 @@ export function ProductosProvider({ children }) {
     cargarProductos();
   }, []);
 
+  const value = {
+    productos,
+    cargando,
+  };
+
   return (
-    <ProductosContext.Provider value={{ productos, cargarProductos, cargando }}>
+    <ProductosContext.Provider value={value}>
       {children}
     </ProductosContext.Provider>
   );
