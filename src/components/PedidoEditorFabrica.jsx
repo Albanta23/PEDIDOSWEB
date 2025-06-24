@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
 
-export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso }) {
+export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso, onChange }) {
   const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,21 +19,44 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     setGuardado(false);
   }, [lineas]);
 
-  const actualizarLinea = (idx, campo, valor) => {
-    setLineas(prev => prev.map((l, i) => {
-      if (i !== idx) return l;
-      if (l.esComentario && campo !== 'comentario') return l;
-      let nuevoValor = valor;
-      if (campo === 'peso' || campo === 'cantidadEnviada') {
-        nuevoValor = valor === '' ? null : parseFloat(valor);
-        if (isNaN(nuevoValor)) nuevoValor = null;
-      }
-      return { ...l, [campo]: nuevoValor };
-    }));
+  // Handlers de usuario que notifican cambios al padre
+  const notificarCambio = (nuevasLineas) => {
+    if (typeof onChange === 'function' && pedido && (pedido._id || pedido.id)) {
+      onChange({ ...pedido, lineas: nuevasLineas });
+    }
   };
-  const borrarLinea = idx => setLineas(prev => prev.filter((_, i) => i !== idx));
-  const addLinea = () => setLineas(prev => ([...prev, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false, esComentario: false }]));
-  const addComentario = () => setLineas(prev => ([...prev, { esComentario: true, comentario: '' }]));
+
+  const actualizarLinea = (idx, campo, valor) => {
+    setLineas(prev => {
+      const nuevas = prev.map((l, i) => {
+        if (i !== idx) return l;
+        if (l.esComentario && campo !== 'comentario') return l;
+        let nuevoValor = valor;
+        if (campo === 'peso' || campo === 'cantidadEnviada') {
+          nuevoValor = valor === '' ? null : parseFloat(valor);
+          if (isNaN(nuevoValor)) nuevoValor = null;
+        }
+        return { ...l, [campo]: nuevoValor };
+      });
+      notificarCambio(nuevas);
+      return nuevas;
+    });
+  };
+  const borrarLinea = idx => setLineas(prev => {
+    const nuevas = prev.filter((_, i) => i !== idx);
+    notificarCambio(nuevas);
+    return nuevas;
+  });
+  const addLinea = () => setLineas(prev => {
+    const nuevas = [...prev, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', peso: null, cantidadEnviada: null, lote: '', preparada: false, esComentario: false }];
+    notificarCambio(nuevas);
+    return nuevas;
+  });
+  const addComentario = () => setLineas(prev => {
+    const nuevas = [...prev, { esComentario: true, comentario: '' }];
+    notificarCambio(nuevas);
+    return nuevas;
+  });
 
   const getLineasNormalizadas = () => lineas.filter(l => l.esComentario || (l.producto && l.cantidad !== undefined && l.cantidad !== null)).map(l => l.esComentario ? { esComentario: true, comentario: l.comentario || '' } : { ...l, preparada: !!l.preparada, peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso), cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada), cantidad: Number(l.cantidad) });
 
