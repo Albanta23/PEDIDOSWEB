@@ -173,7 +173,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
                 />
                 {typeof onAbrirModalPeso === 'function' && !linea.esComentario &&
-                  Number(linea.cantidad) > 2 && Number(linea.cantidad) < 10 && (
+                  Number(linea.cantidad) >= 2 && Number(linea.cantidad) < 10 && (
                     <button
                       type="button"
                       style={{
