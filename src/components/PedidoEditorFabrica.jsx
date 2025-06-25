@@ -14,6 +14,43 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
   }, [pedido]);
 
+  // --- BORRADOR LOCAL ---
+  // Al montar, cargar borrador local si existe
+  useEffect(() => {
+    if (!pedido || (!pedido._id && !pedido.id)) {
+      setLineas([]);
+      return;
+    }
+    const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
+    let borrador = null;
+    try {
+      const borradorStr = localStorage.getItem(borradorKey);
+      if (borradorStr) borrador = JSON.parse(borradorStr);
+    } catch {}
+    if (borrador && Array.isArray(borrador.lineas)) {
+      setLineas(borrador.lineas.map(l => ({ ...l })));
+    } else {
+      setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
+    }
+  }, [pedido]);
+
+  // Guardar automáticamente en localStorage cada vez que cambian las líneas
+  useEffect(() => {
+    if (!pedido || (!pedido._id && !pedido.id)) return;
+    const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
+    try {
+      localStorage.setItem(borradorKey, JSON.stringify({ ...pedido, lineas }));
+    } catch {}
+    setGuardado(false);
+  }, [lineas, pedido]);
+
+  // Limpiar borrador local tras guardar definitivo
+  const limpiarBorradorLocal = () => {
+    if (!pedido || (!pedido._id && !pedido.id)) return;
+    const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
+    try { localStorage.removeItem(borradorKey); } catch {}
+  };
+
   // Marcar como no guardado si hay cambios
   useEffect(() => {
     setGuardado(false);
@@ -73,6 +110,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       const lineasNormalizadas = getLineasNormalizadas();
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
       await onEstadoChange(pedido._id || pedido.id, 'enviadoTienda');
+      limpiarBorradorLocal();
       if (onSend) await onSend(lineasNormalizadas);
     } catch (e) {
       setError('Error al guardar y enviar el pedido. Intenta de nuevo.');
@@ -95,6 +133,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
       setGuardado(true);
       setMensajeGuardado('¡Guardado correctamente!');
+      limpiarBorradorLocal();
       setTimeout(() => setMensajeGuardado(''), 2000);
     } catch (e) {
       setError('Error al guardar el pedido. Intenta de nuevo.');
