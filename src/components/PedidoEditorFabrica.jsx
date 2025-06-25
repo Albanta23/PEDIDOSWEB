@@ -143,8 +143,19 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
   };
 
   return (
-    <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff'}}>
-      <table className="tabla-edicion-fabrica" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden'}}>
+    <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', position:'relative'}}>
+      {/* Botones de acción arriba a la izquierda */}
+      <div style={{position:'absolute',top:18,left:18,zIndex:2,display:'flex',gap:12}}>
+        <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer'}} onClick={handleGuardar} disabled={loading}>Guardar</button>
+        {onSend && pedido && (pedido._id || pedido.id) && onLineaDetalleChange && onEstadoChange && (
+          <button style={{background: guardado ? '#007bff' : '#bbb', color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor: guardado ? 'pointer' : 'not-allowed'}} onClick={handleGuardarYEnviar} disabled={loading || !guardado}>Guardar y enviar</button>
+        )}
+        {onSend && (!pedido || (!pedido._id && !pedido.id)) && (
+          <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())} disabled={loading}>Guardar y enviar</button>
+        )}
+        {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cerrar</button>}
+      </div>
+      <table className="tabla-edicion-fabrica" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden', marginTop:70}}>
         <thead>
           <tr>
             <th>Producto</th>
@@ -280,22 +291,13 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
               <button style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}} onClick={addComentario}>Añadir comentario</button>
             </td>
           </tr>
-          <tr>
-            <td colSpan="8" style={{textAlign:'right', paddingTop:16}}>
-              <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer',marginRight:12}} onClick={handleGuardar} disabled={loading}>Guardar</button>
-              {onSend && pedido && (pedido._id || pedido.id) && onLineaDetalleChange && onEstadoChange && (
-                <button style={{background: guardado ? '#007bff' : '#bbb', color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor: guardado ? 'pointer' : 'not-allowed'}} onClick={handleGuardarYEnviar} disabled={loading || !guardado}>Guardar y enviar</button>
-              )}
-              {onSend && (!pedido || (!pedido._id && !pedido.id)) && (
-                <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())} disabled={loading}>Guardar y enviar</button>
-              )}
-              {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cerrar</button>}
-            </td>
-          </tr>
-          {mensajeGuardado && <tr><td colSpan="8" style={{color:'green',textAlign:'center',fontWeight:600}}>{mensajeGuardado}</td></tr>}
-          {error && <tr><td colSpan="8" style={{color:'red',textAlign:'center',fontWeight:600}}>{error}</td></tr>}
+          {/* Eliminar los botones de acción de la parte inferior */}
+          {/* {mensajeGuardado && <tr><td colSpan="8" style={{color:'green',textAlign:'center',fontWeight:600}}>{mensajeGuardado}</td></tr>} */}
+          {/* {error && <tr><td colSpan="8" style={{color:'red',textAlign:'center',fontWeight:600}}>{error}</td></tr>} */}
         </tbody>
       </table>
+      {mensajeGuardado && <div style={{position:'absolute',top:70,left:18,color:'green',fontWeight:600,fontSize:16}}>{mensajeGuardado}</div>}
+      {error && <div style={{position:'absolute',top:100,left:18,color:'red',fontWeight:600,fontSize:16}}>{error}</div>}
     </div>
   );
 }
