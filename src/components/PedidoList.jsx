@@ -554,15 +554,17 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setBusquedaMulti('');
   };
 
+  // Forzar editor avanzado siempre visible
+  const editorActivo = true;
+
   return (
     <>
       {/* Toast de confirmación de guardado */}
       {showToast && (
         <div style={{position:'fixed',top:24,right:24,zIndex:3000,background:'#28a745',color:'#fff',padding:'16px 32px',borderRadius:10,boxShadow:'0 2px 12px #0003',fontWeight:700,fontSize:17,transition:'opacity 0.3s'}}>✔ Líneas guardadas como borrador</div>
       )}
-      
-      {/* Editor visual unificado para crear pedido */}
-      {creandoNuevo && (
+      {/* Editor visual unificado SIEMPRE visible */}
+      {editorActivo && (
         <div style={{ border: "2px solid #007bff", margin: 12, padding: 20, background: '#fafdff', borderRadius: 14, boxShadow:'0 2px 12px #007bff11', maxWidth: 720, marginLeft: 'auto', marginRight: 'auto', position:'relative' }}>
           {/* NUEVO: Selección múltiple de productos */}
           <div style={{marginBottom:18,background:'#f8fafd',padding:12,borderRadius:8}}>

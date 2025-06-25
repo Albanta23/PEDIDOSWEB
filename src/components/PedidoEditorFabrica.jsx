@@ -9,28 +9,54 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
   const [error, setError] = useState('');
   const [guardado, setGuardado] = useState(false);
   const [mensajeGuardado, setMensajeGuardado] = useState('');
+  // Nuevo estado para advertencia de borrador corrupto
+  const [borradorCorruptoEliminado, setBorradorCorruptoEliminado] = useState(false);
 
-  useEffect(() => {
-    setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
-  }, [pedido]);
-
-  // --- BORRADOR LOCAL ---
-  // Al montar, cargar borrador local si existe
+  // Refactor: Efecto único para inicializar líneas y gestionar borrador local
   useEffect(() => {
     if (!pedido || (!pedido._id && !pedido.id)) {
       setLineas([]);
+      setBorradorCorruptoEliminado(false);
       return;
     }
+    // Log para depuración
+    console.log('[PedidoEditorFabrica] pedido.lineas:', pedido.lineas);
     const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
     let borrador = null;
+    let borradorCorrupto = false;
     try {
       const borradorStr = localStorage.getItem(borradorKey);
       if (borradorStr) borrador = JSON.parse(borradorStr);
-    } catch {}
-    if (borrador && Array.isArray(borrador.lineas)) {
+    } catch {
+      borradorCorrupto = true;
+    }
+    if (borrador && Array.isArray(borrador.lineas) && borrador.lineas.length > 0) {
       setLineas(borrador.lineas.map(l => ({ ...l })));
+      setBorradorCorruptoEliminado(false);
+    } else if (borrador && (!Array.isArray(borrador.lineas) || borrador.lineas.length === 0)) {
+      // Borrador corrupto o vacío: eliminarlo y mostrar líneas del pedido real
+      try { localStorage.removeItem(borradorKey); } catch {}
+      if (pedido?.lineas?.length > 0) {
+        setLineas(pedido.lineas.map(l => ({ ...l })));
+      } else {
+        setLineas([]);
+      }
+      setBorradorCorruptoEliminado(true);
+    } else if (borradorCorrupto) {
+      // Si el JSON estaba corrupto
+      try { localStorage.removeItem(borradorKey); } catch {}
+      if (pedido?.lineas?.length > 0) {
+        setLineas(pedido.lineas.map(l => ({ ...l })));
+      } else {
+        setLineas([]);
+      }
+      setBorradorCorruptoEliminado(true);
+    } else if (pedido?.lineas?.length > 0) {
+      setLineas(pedido.lineas.map(l => ({ ...l })));
+      setBorradorCorruptoEliminado(false);
     } else {
-      setLineas(pedido?.lineas?.length ? pedido.lineas.map(l => ({ ...l })) : []);
+      setLineas([]);
+      setBorradorCorruptoEliminado(false);
     }
   }, [pedido]);
 
@@ -144,6 +170,19 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
 
   return (
     <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', position:'relative'}}>
+      {borradorCorruptoEliminado && (
+        <div style={{position:'absolute',top:10,right:18,zIndex:10,background:'#fff3cd',color:'#856404',border:'1px solid #ffeeba',borderRadius:8,padding:'10px 18px',fontWeight:600,fontSize:15,boxShadow:'0 2px 8px #0001'}}>
+          Se detectó y eliminó un borrador local corrupto o vacío. Se restauraron las líneas originales del pedido.
+        </div>
+      )}
+      {/* Mensaje si no hay líneas en el pedido */}
+      {(!lineas || lineas.length === 0) && (
+        <div style={{margin:'80px auto',color:'#b94a48',background:'#f2dede',border:'1px solid #ebccd1',borderRadius:8,padding:'18px 24px',fontWeight:600,fontSize:17,maxWidth:600,textAlign:'center'}}>
+          Este pedido no contiene ninguna línea.<br />
+          {pedido && pedido.lineas && pedido.lineas.length === 0 && 'El pedido recibido no tiene líneas.'}
+          {pedido && (!pedido.lineas || pedido.lineas === undefined) && 'No se han recibido datos de líneas para este pedido.'}
+        </div>
+      )}
       {/* Botones de acción arriba a la izquierda */}
       <div style={{position:'absolute',top:18,left:18,zIndex:2,display:'flex',gap:12}}>
         <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer'}} onClick={handleGuardar} disabled={loading}>Guardar</button>

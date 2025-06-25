@@ -58,15 +58,28 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   }
 
   // --- BORRADOR LOCAL ---
-  // Al abrir un pedido, si hay borrador local, cargarlo automáticamente
+  // Al abrir un pedido, si hay borrador local, cargarlo automáticamente SOLO si es válido y tiene al menos tantas líneas como el pedido real
   const abrirPedido = (pedido) => {
     const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
     let pedidoBorrador = null;
+    let usarBorrador = false;
     try {
       const borradorStr = localStorage.getItem(borradorKey);
       if (borradorStr) pedidoBorrador = JSON.parse(borradorStr);
     } catch {}
-    const base = pedidoBorrador || pedido;
+    // Validar borrador: debe tener líneas y al menos tantas como el pedido real
+    if (
+      pedidoBorrador &&
+      Array.isArray(pedidoBorrador.lineas) &&
+      pedidoBorrador.lineas.length > 0 &&
+      pedidoBorrador.lineas.length >= (pedido.lineas?.length || 0)
+    ) {
+      usarBorrador = true;
+    } else if (pedidoBorrador) {
+      // Borrador corrupto o incompleto: eliminarlo
+      try { localStorage.removeItem(borradorKey); } catch {}
+    }
+    const base = usarBorrador ? pedidoBorrador : pedido;
     const lineasNormalizadas = base.lineas.map(l => {
       if (l.esComentario === true || l.esComentario === 'true' || (typeof l.esComentario !== 'undefined' && l.esComentario)) {
         return { esComentario: true, comentario: l.comentario || '' };
