@@ -9,7 +9,9 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
   const [error, setError] = useState('');
   const [guardado, setGuardado] = useState(false);
   const [mensajeGuardado, setMensajeGuardado] = useState('');
-  // Nuevo estado para advertencia de borrador corrupto
+  // Nuevo estado para mostrar confirmación de guardado/enviado
+  const [confirmacion, setConfirmacion] = useState("");
+  // Estado para detectar y mostrar si se eliminó un borrador corrupto
   const [borradorCorruptoEliminado, setBorradorCorruptoEliminado] = useState(false);
 
   // Refactor: Efecto único para inicializar líneas y gestionar borrador local
@@ -137,6 +139,10 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
       await onEstadoChange(pedido._id || pedido.id, 'enviadoTienda');
       limpiarBorradorLocal();
+      if (typeof window.setFabricaConfirmacion === 'function') {
+        window.setFabricaConfirmacion('¡Guardado y enviado correctamente!');
+        setTimeout(() => window.setFabricaConfirmacion(''), 2000);
+      }
       if (onSend) await onSend(lineasNormalizadas);
     } catch (e) {
       setError('Error al guardar y enviar el pedido. Intenta de nuevo.');
@@ -158,9 +164,14 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       const lineasNormalizadas = getLineasNormalizadas();
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
       setGuardado(true);
-      setMensajeGuardado('¡Guardado correctamente!');
+      // Elimina el mensaje local
+      setMensajeGuardado("");
       limpiarBorradorLocal();
-      setTimeout(() => setMensajeGuardado(''), 2000);
+      // Notifica al padre (FabricaPanel) para mostrar confirmación
+      if (typeof window.setFabricaConfirmacion === 'function') {
+        window.setFabricaConfirmacion('¡Guardado correctamente!');
+        setTimeout(() => window.setFabricaConfirmacion(''), 2000);
+      }
     } catch (e) {
       setError('Error al guardar el pedido. Intenta de nuevo.');
     } finally {
@@ -335,7 +346,10 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
           {/* {error && <tr><td colSpan="8" style={{color:'red',textAlign:'center',fontWeight:600}}>{error}</td></tr>} */}
         </tbody>
       </table>
-      {mensajeGuardado && <div style={{position:'absolute',top:70,left:18,color:'green',fontWeight:600,fontSize:16}}>{mensajeGuardado}</div>}
+      {/* Mensaje de guardado local solo si NO está en panel de fábrica */}
+      {mensajeGuardado && !window.setFabricaConfirmacion && (
+        <div style={{position:'absolute',top:70,left:18,color:'green',fontWeight:600,fontSize:16}}>{mensajeGuardado}</div>
+      )}
       {error && <div style={{position:'absolute',top:100,left:18,color:'red',fontWeight:600,fontSize:16}}>{error}</div>}
     </div>
   );
