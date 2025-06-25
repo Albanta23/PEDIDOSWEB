@@ -72,6 +72,16 @@ function App() {
     const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'https://pedidos-backend-0e1s.onrender.com'); 
     setSocket(newSocket);
 
+    // Hacer función global para recargar pedidos
+    window.recargarPedidosGlobal = async () => {
+      try {
+        const data = await obtenerPedidos();
+        setPedidos(data);
+      } catch (error) {
+        setMensaje({ texto: 'Error al recargar pedidos', tipo: 'warning' });
+      }
+    };
+
     const fetchPedidos = async () => {
       try {
         const data = await obtenerPedidos();

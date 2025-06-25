@@ -18,6 +18,7 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
   const [modalPeso, setModalPeso] = useState({visible: false, lineaIdx: null, valores: []});
   const [modalCrearPedido, setModalCrearPedido] = useState(false);
   const [tiendaNuevaPedido, setTiendaNuevaPedido] = useState('');
+  const [confirmacion, setConfirmacion] = useState('');
   const { productos } = useProductos();
 
   // Paleta de colores para los botones de tienda
@@ -227,6 +228,11 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
       alert('Error al crear pedido: ' + (e?.message || e));
     }
   };
+
+  useEffect(() => {
+    window.setFabricaConfirmacion = setConfirmacion;
+    return () => { window.setFabricaConfirmacion = undefined; };
+  }, []);
 
   return (
     <div style={{
@@ -455,8 +461,12 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 const borradorKey = `pedido_borrador_${pedidoAbierto._id || pedidoAbierto.id}`;
                 try { localStorage.removeItem(borradorKey); } catch {}
                 setPedidoAbierto(null);
+                if (typeof onRecargarPedidos === 'function') await onRecargarPedidos();
               }}
-              onSend={() => setPedidoAbierto(null)}
+              onSend={async () => {
+                setPedidoAbierto(null);
+                if (typeof onRecargarPedidos === 'function') await onRecargarPedidos();
+              }}
               onCancel={() => setPedidoAbierto(null)}
               onLineaDetalleChange={onLineaDetalleChange}
               onEstadoChange={onEstadoChange}
@@ -469,6 +479,11 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                     return '';
                   })
                 });
+              }}
+              onRecargarPedidos={async () => {
+                if (typeof window.recargarPedidosGlobal === 'function') {
+                  await window.recargarPedidosGlobal();
+                }
               }}
             />
           </div>
@@ -548,6 +563,10 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
           cambiarValorPeso={cambiarValorPeso}
           aplicarPesos={aplicarPesos}
         />
+      )}
+      {/* Mensaje de confirmación solo en el panel de fábrica */}
+      {confirmacion && (
+        <div style={{position:'fixed',top:24,left:'50%',transform:'translateX(-50%)',color:'green',background:'#eafaf1',border:'1px solid #28a745',borderRadius:8,padding:'12px 32px',fontWeight:700,fontSize:18,zIndex:3000,boxShadow:'0 2px 12px #0002'}}>{confirmacion}</div>
       )}
     </div>
   );

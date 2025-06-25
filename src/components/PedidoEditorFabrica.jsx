@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
 
-export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso, onChange }) {
+export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso, onChange, onRecargarPedidos }) {
   const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -144,6 +144,9 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         setTimeout(() => window.setFabricaConfirmacion(''), 2000);
       }
       if (onSend) await onSend(lineasNormalizadas);
+      if (typeof onRecargarPedidos === 'function') {
+        await onRecargarPedidos();
+      }
     } catch (e) {
       setError('Error al guardar y enviar el pedido. Intenta de nuevo.');
       return;
@@ -171,6 +174,9 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       if (typeof window.setFabricaConfirmacion === 'function') {
         window.setFabricaConfirmacion('¡Guardado correctamente!');
         setTimeout(() => window.setFabricaConfirmacion(''), 2000);
+      }
+      if (typeof onRecargarPedidos === 'function') {
+        await onRecargarPedidos();
       }
     } catch (e) {
       setError('Error al guardar el pedido. Intenta de nuevo.');
