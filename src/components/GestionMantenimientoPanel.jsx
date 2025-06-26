@@ -25,6 +25,10 @@ export default function GestionMantenimientoPanel({ onClose }) {
   const [editMode, setEditMode] = useState(false);
   const [productosEditados, setProductosEditados] = useState({});
   const [filtroFamilia, setFiltroFamilia] = useState('');
+  const [clientes, setClientes] = useState([]);
+  const [importandoClientes, setImportandoClientes] = useState(false);
+  const [importErrorClientes, setImportErrorClientes] = useState('');
+  const [importSuccessClientes, setImportSuccessClientes] = useState('');
 
   const handlePin = (e) => {
     e.preventDefault();
@@ -55,6 +59,44 @@ export default function GestionMantenimientoPanel({ onClose }) {
       setImportError('Error al procesar el archivo Excel.');
     } finally {
       setImportando(false);
+    }
+  };
+
+  // Handler para importar clientes desde Excel
+  const handleImportExcelClientes = async (e) => {
+    setImportErrorClientes('');
+    setImportSuccessClientes('');
+    const file = e.target.files[0];
+    if (!file) return;
+    setImportandoClientes(true);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      // Mapeo de campos según tabla proporcionada
+      const clientesMapeados = rows.map(raw => ({
+        codigo: raw['Código'] || raw['Codigo'] || '',
+        nombre: raw['Nombre'] || '',
+        razonSocial: raw['Razón comercial'] || raw['Razon comercial'] || '',
+        nif: raw['Nif'] || '',
+        email: raw['Email'] || '',
+        telefono: raw['Teléfono'] || raw['Telefono'] || '',
+        direccion: raw['Dirección'] || raw['Direccion'] || '',
+        codigoPostal: raw['C.postal'] || raw['C.Postal'] || '',
+        poblacion: raw['Población'] || raw['Poblacion'] || '',
+        provincia: raw['Provincia'] || '',
+        contacto: raw['Contacto'] || '',
+        mensajeVentas: raw['Mensaje ventas'] || '',
+        bloqueadoVentas: (raw['Bloqueado ventas'] || '').toString().toLowerCase() === 'true',
+        observaciones: raw['Observaciones'] || ''
+      }));
+      setClientes(clientesMapeados);
+      setImportSuccessClientes(`Se han leído ${clientesMapeados.length} clientes del archivo.`);
+    } catch (err) {
+      setImportErrorClientes('Error al procesar el archivo Excel.');
+    } finally {
+      setImportandoClientes(false);
     }
   };
 
@@ -418,7 +460,88 @@ export default function GestionMantenimientoPanel({ onClose }) {
             {tab === 'clientes' && (
               <div>
                 <h2 style={{ color: '#1976d2', fontWeight: 800 }}>Gestión de clientes</h2>
-                <div style={{ marginTop: 32, color: '#888' }}><i>Próximamente...</i></div>
+                <p>Importa clientes desde Excel y gestiona el listado de clientes.</p>
+                <div style={{marginTop:24,marginBottom:24}}>
+                  <input type="file" accept=".xlsx,.xls" onChange={handleImportExcelClientes} disabled={importandoClientes} />
+                  {importandoClientes && <span style={{marginLeft:12, color:'#1976d2'}}>Importando...</span>}
+                  {importErrorClientes && <div style={{color:'#d32f2f',marginTop:8}}>{importErrorClientes}</div>}
+                  {importSuccessClientes && <div style={{color:'#388e3c',marginTop:8}}>{importSuccessClientes}</div>}
+                </div>
+                {clientes.length > 0 && (
+                  <div>
+                    <div style={{margin:'16px 0'}}>
+                      <button
+                        onClick={async () => {
+                          setImportErrorClientes('');
+                          setImportSuccessClientes('');
+                          setImportandoClientes(true);
+                          try {
+                            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+                            const res = await axios.post(`${API_URL}/api/clientes/importar`, { clientes });
+                            if (res.data.ok) {
+                              setImportSuccessClientes(`Guardado: ${res.data.insertados} nuevos, ${res.data.actualizados} actualizados.`);
+                              // Recargar clientes desde la base de datos tras guardar
+                              const lista = await axios.get(`${API_URL}/api/clientes`);
+                              setClientes(lista.data);
+                            } else {
+                              setImportErrorClientes(res.data.error || 'Error al guardar clientes.');
+                            }
+                          } catch (err) {
+                            setImportErrorClientes('Error al guardar clientes: ' + (err.response?.data?.error || err.message));
+                          } finally {
+                            setImportandoClientes(false);
+                          }
+                        }}
+                        disabled={importandoClientes}
+                        style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'10px 28px',fontWeight:700,fontSize:16,cursor:'pointer'}}
+                      >
+                        Guardar en base de datos
+                      </button>
+                    </div>
+                    <div style={{maxHeight:320,overflow:'auto',border:'1px solid #eee',borderRadius:8,marginTop:16}}>
+                      <table style={{width:'100%',fontSize:13}}>
+                        <thead>
+                          <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Razón social</th>
+                            <th>NIF</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>C.Postal</th>
+                            <th>Población</th>
+                            <th>Provincia</th>
+                            <th>Contacto</th>
+                            <th>Mensaje ventas</th>
+                            <th>Bloqueado ventas</th>
+                            <th>Observaciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {clientes.map((cli,i) => (
+                            <tr key={i} style={{background:i%2?'#fafdff':'#fff'}}>
+                              <td>{cli.codigo}</td>
+                              <td>{cli.nombre}</td>
+                              <td>{cli.razonSocial}</td>
+                              <td>{cli.nif}</td>
+                              <td>{cli.email}</td>
+                              <td>{cli.telefono}</td>
+                              <td>{cli.direccion}</td>
+                              <td>{cli.codigoPostal}</td>
+                              <td>{cli.poblacion}</td>
+                              <td>{cli.provincia}</td>
+                              <td>{cli.contacto}</td>
+                              <td>{cli.mensajeVentas}</td>
+                              <td>{cli.bloqueadoVentas ? 'Sí' : 'No'}</td>
+                              <td>{cli.observaciones}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {tab === 'proveedores' && (
