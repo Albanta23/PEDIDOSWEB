@@ -183,7 +183,18 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
   };
 
   return (
-    <div style={{overflowX:'auto', borderRadius:12, boxShadow:'0 2px 12px #0001', background:'#fff', position:'relative'}}>
+    <div
+      style={{
+        overflowX: 'auto',
+        borderRadius: 12,
+        boxShadow: '0 2px 12px #0001',
+        background: '#fff',
+        position: 'relative',
+        padding: '0',
+        maxWidth: '100vw',
+        minWidth: 0
+      }}
+    >
       {borradorCorruptoEliminado && (
         <div style={{position:'absolute',top:10,right:18,zIndex:10,background:'#fff3cd',color:'#856404',border:'1px solid #ffeeba',borderRadius:8,padding:'10px 18px',fontWeight:600,fontSize:15,boxShadow:'0 2px 8px #0001'}}>
           Se detectó y eliminó un borrador local corrupto o vacío. Se restauraron las líneas originales del pedido.
@@ -197,7 +208,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
           {pedido && (!pedido.lineas || pedido.lineas === undefined) && 'No se han recibido datos de líneas para este pedido.'}
         </div>
       )}
-      {/* Botones de acción arriba a la izquierda */}
+      {/* Botones de acción arriba a la izquierda y añadir línea/comentario arriba a la derecha */}
       <div style={{position:'absolute',top:18,left:18,zIndex:2,display:'flex',gap:12}}>
         <button style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'10px 24px',fontWeight:700,fontSize:16,cursor:'pointer'}} onClick={handleGuardar} disabled={loading}>Guardar</button>
         {onSend && pedido && (pedido._id || pedido.id) && onLineaDetalleChange && onEstadoChange && (
@@ -208,34 +219,51 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         )}
         {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cerrar</button>}
       </div>
-      <table className="tabla-edicion-fabrica" style={{width:'100%', borderCollapse:'separate', borderSpacing:0, fontFamily:'inherit', borderRadius:12, overflow:'hidden', marginTop:70}}>
+      <div style={{position:'absolute',top:18,right:18,zIndex:2,display:'flex',gap:12}}>
+        <button style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:0}} onClick={addLinea}>Añadir línea de producto</button>
+        <button style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:0}} onClick={addComentario}>Añadir comentario</button>
+      </div>
+      <table
+        className="tabla-edicion-fabrica"
+        style={{
+          width: '100%',
+          borderCollapse: 'separate',
+          borderSpacing: 0,
+          fontFamily: 'inherit',
+          borderRadius: 12,
+          overflow: 'hidden',
+          marginTop: 70,
+          minWidth: 600,
+          tableLayout: 'fixed',
+          wordBreak: 'break-word'
+        }}
+      >
         <thead>
           <tr>
-            <th>Producto</th>
-            <th>Cant. pedida</th>
-            <th>Peso (kg)</th>
-            <th>Cant. enviada</th>
-            <th>Lote</th>
-            <th>Formato pedido</th>
-            <th>Comentario</th>
-            <th>Eliminar</th>
+            <th style={{ minWidth: 120, maxWidth: 180, fontSize: 14, padding: 6, wordBreak: 'break-word' }}>Producto</th>
+            <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Cant. pedida</th>
+            <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Peso (kg)</th>
+            <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Cant. enviada</th>
+            <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Lote</th>
+            <th style={{ minWidth: 90, maxWidth: 120, fontSize: 14, padding: 6 }}>Formato pedido</th>
+            <th style={{ minWidth: 120, maxWidth: 180, fontSize: 14, padding: 6 }}>Comentario</th>
+            <th style={{ minWidth: 60, maxWidth: 80, fontSize: 14, padding: 6 }}>Eliminar</th>
           </tr>
         </thead>
         <tbody>
           {lineas.map((linea, idx) => linea.esComentario ? (
             <tr key={`comment-${idx}`} style={{ backgroundColor: '#fffbe6', border: '2px solid #ffe58f' }}>
               <td colSpan="8" style={{ padding: '12px', textAlign: 'left' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 20, color: '#b8860b' }}>📝</span>
-                  <span style={{ fontWeight: 'bold', color: '#b8860b', fontSize: 16 }}>COMENTARIO:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontWeight: 'bold', color: '#b8860b', fontSize: 16 }}>📝 COMENTARIO:</span>
                   <input
                     type="text"
                     value={linea.comentario || ''}
                     onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
                     placeholder="Escribe aquí tu comentario..."
-                    style={{ flexGrow: 1, border: '1px dashed #b8860b', borderRadius: 6, padding: '8px 12px', background: '#fffdf7', fontStyle: 'italic', fontSize: 15, color: '#b8860b' }}
+                    style={{ width: '100%', border: '1px dashed #b8860b', borderRadius: 6, padding: '8px 12px', background: '#fffdf7', fontStyle: 'italic', fontSize: 15, color: '#b8860b', minWidth: 0, boxSizing: 'border-box' }}
                   />
-                  <button style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',fontSize: 14}} onClick={() => borrarLinea(idx)} title="Eliminar comentario">🗑 Eliminar</button>
+                  <button style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 12px',fontWeight:600,cursor:'pointer',fontSize: 14, alignSelf: 'flex-end'}} onClick={() => borrarLinea(idx)} title="Eliminar comentario">🗑 Eliminar</button>
                 </div>
               </td>
             </tr>
@@ -247,7 +275,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   value={linea.producto}
                   onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
                   placeholder="Producto"
-                  style={{ width: 260, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px', fontSize: 15 }}
+                  style={{ width: '100%', minWidth: 0, border: '1px solid #bbb', borderRadius: 6, padding: '6px 8px', fontSize: 15, boxSizing: 'border-box' }}
                 />
                 <datalist id="productos-lista-global">
                   {productos.map(prod => (
@@ -263,7 +291,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   min="1"
                   value={linea.cantidad}
                   onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                  style={{ width: 60 }}
+                  style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
                 />
               </td>
               <td>
@@ -273,7 +301,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   step="any"
                   value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
                   onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                  style={{ width: 70, zIndex: 1, position: 'relative', background: '#fff' }}
+                  style={{ width: '100%', minWidth: 0, zIndex: 1, position: 'relative', background: '#fff', boxSizing: 'border-box' }}
                 />
                 {typeof onAbrirModalPeso === 'function' && !linea.esComentario &&
                   Number(linea.cantidad) >= 2 && Number(linea.cantidad) < 10 && (
@@ -306,7 +334,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   step="any"
                   value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
                   onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
-                  style={{ width: 70 }}
+                  style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
                 />
               </td>
               <td>
@@ -314,11 +342,11 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   type="text"
                   value={linea.lote === null || linea.lote === undefined ? '' : linea.lote}
                   onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                  style={{ width: 90 }}
+                  style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
                 />
               </td>
               <td>
-                <select value={linea.formato || ''} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: 90 }}>
+                <select value={linea.formato || ''} onChange={e => actualizarLinea(idx, 'formato', e.target.value)} style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                   {FORMATOS_PEDIDO.map(f => (
                     <option key={f} value={f}>{f}</option>
                   ))}
@@ -329,7 +357,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   type="text"
                   value={linea.comentario === null || linea.comentario === undefined ? '' : linea.comentario}
                   onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                  style={{ width: 110 }}
+                  style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
                 />
               </td>
               <td>
@@ -337,20 +365,13 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
               </td>
             </tr>
           ))}
-          {/* Botón para añadir línea */}
-          <tr>
-            <td colSpan="8" style={{textAlign:'left', paddingTop:8}}>
-              <button style={{background:'#00c6ff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8, marginRight: 12}} onClick={addLinea}>Añadir línea de producto</button>
-              <button style={{background:'#6c757d',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:8}} onClick={addComentario}>Añadir comentario</button>
-            </td>
-          </tr>
           {/* Eliminar los botones de acción de la parte inferior */}
           {/* {mensajeGuardado && <tr><td colSpan="8" style={{color:'green',textAlign:'center',fontWeight:600}}>{mensajeGuardado}</td></tr>} */}
           {/* {error && <tr><td colSpan="8" style={{color:'red',textAlign:'center',fontWeight:600}}>{error}</td></tr>} */}
         </tbody>
       </table>
-      {/* Mensaje de guardado local solo si NO está en panel de fábrica */}
-      {mensajeGuardado && !onRecargarPedidos && (
+      {/* Mensaje de guardado local solo si está en panel de fábrica */}
+      {mensajeGuardado && onRecargarPedidos && (
         <div style={{position:'absolute',top:70,left:18,color:'green',fontWeight:600,fontSize:16}}>{mensajeGuardado}</div>
       )}
       {error && <div style={{position:'absolute',top:100,left:18,color:'red',fontWeight:600,fontSize:16}}>{error}</div>}
