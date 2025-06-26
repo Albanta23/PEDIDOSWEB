@@ -125,6 +125,31 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
 
   const getLineasNormalizadas = () => lineas.filter(l => l.esComentario || (l.producto && l.cantidad !== undefined && l.cantidad !== null)).map(l => l.esComentario ? { esComentario: true, comentario: l.comentario || '' } : { ...l, preparada: !!l.preparada, peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso), cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada), cantidad: Number(l.cantidad) });
 
+  // Guardar solo guarda y muestra feedback
+  const handleGuardar = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      if (!pedido || (!pedido._id && !pedido.id) || !onLineaDetalleChange) {
+        setLoading(false);
+        return;
+      }
+      const lineasNormalizadas = getLineasNormalizadas();
+      await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
+      setGuardado(true);
+      setMensajeGuardado('¡Guardado correctamente!');
+      limpiarBorradorLocal();
+      // Solo notifica al padre si se pasa onRecargarPedidos (solo en fábrica)
+      if (typeof onRecargarPedidos === 'function') {
+        await onRecargarPedidos();
+      }
+    } catch (e) {
+      setError('Error al guardar el pedido. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Nuevo handler robusto para pedidos existentes (edición)
   const handleGuardarYEnviar = async () => {
     setError('');
@@ -139,47 +164,14 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
       await onEstadoChange(pedido._id || pedido.id, 'enviadoTienda');
       limpiarBorradorLocal();
-      if (typeof window.setFabricaConfirmacion === 'function') {
-        window.setFabricaConfirmacion('¡Guardado y enviado correctamente!');
-        setTimeout(() => window.setFabricaConfirmacion(''), 2000);
-      }
       if (onSend) await onSend(lineasNormalizadas);
+      // Solo notifica al padre si se pasa onRecargarPedidos (solo en fábrica)
       if (typeof onRecargarPedidos === 'function') {
         await onRecargarPedidos();
       }
     } catch (e) {
       setError('Error al guardar y enviar el pedido. Intenta de nuevo.');
       return;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Guardar solo guarda y muestra feedback
-  const handleGuardar = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      if (!pedido || (!pedido._id && !pedido.id) || !onLineaDetalleChange) {
-        setLoading(false);
-        return;
-      }
-      const lineasNormalizadas = getLineasNormalizadas();
-      await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
-      setGuardado(true);
-      // Elimina el mensaje local
-      setMensajeGuardado("");
-      limpiarBorradorLocal();
-      // Notifica al padre (FabricaPanel) para mostrar confirmación
-      if (typeof window.setFabricaConfirmacion === 'function') {
-        window.setFabricaConfirmacion('¡Guardado correctamente!');
-        setTimeout(() => window.setFabricaConfirmacion(''), 2000);
-      }
-      if (typeof onRecargarPedidos === 'function') {
-        await onRecargarPedidos();
-      }
-    } catch (e) {
-      setError('Error al guardar el pedido. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -353,7 +345,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         </tbody>
       </table>
       {/* Mensaje de guardado local solo si NO está en panel de fábrica */}
-      {mensajeGuardado && !window.setFabricaConfirmacion && (
+      {mensajeGuardado && !onRecargarPedidos && (
         <div style={{position:'absolute',top:70,left:18,color:'green',fontWeight:600,fontSize:16}}>{mensajeGuardado}</div>
       )}
       {error && <div style={{position:'absolute',top:100,left:18,color:'red',fontWeight:600,fontSize:16}}>{error}</div>}
