@@ -137,7 +137,12 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       const lineasNormalizadas = getLineasNormalizadas();
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
       setGuardado(true);
-      setMensajeGuardado('¡Guardado correctamente!');
+      if (!onRecargarPedidos) {
+        setMensajeGuardado('¡Guardado correctamente!');
+        setTimeout(() => setMensajeGuardado(''), 2000);
+      } else {
+        setMensajeGuardado('');
+      }
       limpiarBorradorLocal();
       // Solo notifica al padre si se pasa onRecargarPedidos (solo en fábrica)
       if (typeof onRecargarPedidos === 'function') {
