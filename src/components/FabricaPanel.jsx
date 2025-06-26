@@ -481,9 +481,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
                 });
               }}
               onRecargarPedidos={async () => {
-                if (typeof window.recargarPedidosGlobal === 'function') {
-                  await window.recargarPedidosGlobal();
-                }
+                // Refresco local: solo fuerza un refresco visual en el panel de fábrica
+                setRefresco(r => r + 1);
               }}
             />
           </div>
