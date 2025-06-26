@@ -21,6 +21,12 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       setBorradorCorruptoEliminado(false);
       return;
     }
+    // Sincronizar también si cambian las líneas del pedido (por ejemplo, tras suma de pesos)
+    if (pedido.lineas && Array.isArray(pedido.lineas)) {
+      setLineas(pedido.lineas.map(l => ({ ...l })));
+      setBorradorCorruptoEliminado(false);
+      return;
+    }
     // Log para depuración
     console.log('[PedidoEditorFabrica] pedido.lineas:', pedido.lineas);
     const borradorKey = `pedido_borrador_${pedido._id || pedido.id}`;
@@ -60,7 +66,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       setLineas([]);
       setBorradorCorruptoEliminado(false);
     }
-  }, [pedido]);
+  }, [pedido, pedido?.lineas]);
 
   // Guardar automáticamente en localStorage cada vez que cambian las líneas
   useEffect(() => {
