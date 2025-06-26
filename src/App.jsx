@@ -63,8 +63,11 @@ function App() {
 
   // --- FEEDBACK TEMPORAL ---
   function mostrarMensaje(texto, tipo = 'info', duracion = 2500) {
-    setMensaje({ texto, tipo });
-    setTimeout(() => setMensaje(null), duracion);
+    // Solo mostrar mensajes en el modo correspondiente
+    if ((modo === 'fabrica' && tipo !== 'tienda') || (modo === 'tienda' && tipo !== 'fabrica')) {
+      setMensaje({ texto, tipo });
+      setTimeout(() => setMensaje(null), duracion);
+    }
   }
 
   useEffect(() => {
@@ -72,13 +75,14 @@ function App() {
     const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'https://pedidos-backend-0e1s.onrender.com'); 
     setSocket(newSocket);
 
-    // Hacer función global para recargar pedidos
+    // Hacer función global para recargar pedidos SOLO en modo fábrica
     window.recargarPedidosGlobal = async () => {
+      if (modo !== 'fabrica') return; // Solo refresca si está en modo fábrica
       try {
         const data = await obtenerPedidos();
         setPedidos(data);
       } catch (error) {
-        setMensaje({ texto: 'Error al recargar pedidos', tipo: 'warning' });
+        if (modo === 'fabrica') setMensaje({ texto: 'Error al recargar pedidos', tipo: 'warning' });
       }
     };
 
@@ -87,34 +91,60 @@ function App() {
         const data = await obtenerPedidos();
         setPedidos(data);
       } catch (error) {
-        setMensaje({ texto: 'Error al cargar pedidos', tipo: 'warning' });
+        if (modo === 'fabrica') setMensaje({ texto: 'Error al cargar pedidos', tipo: 'warning' });
       }
     };
     fetchPedidos();
 
     // Listeners de Socket.io
     newSocket.on('pedido_nuevo', (pedidoNuevo) => {
-      setPedidos(prevPedidos => [...prevPedidos, pedidoNuevo]);
-      mostrarMensaje('Nuevo pedido recibido', 'info');
+      if (modo === 'fabrica') {
+        setPedidos(prevPedidos => [...prevPedidos, pedidoNuevo]);
+        mostrarMensaje('Nuevo pedido recibido', 'info');
+      }
+      // En modo tienda, solo refrescar si el pedido es de la tienda seleccionada
+      if (modo === 'tienda' && pedidoNuevo.tiendaId === tiendaSeleccionada) {
+        setPedidos(prevPedidos => [...prevPedidos, pedidoNuevo]);
+      }
     });
 
     newSocket.on('pedido_actualizado', (pedidoActualizado) => {
-      console.log('[FRONTEND] Evento pedido_actualizado recibido:', pedidoActualizado);
-      setPedidos(prevPedidos => 
-        prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
-      );
-      mostrarMensaje('Pedido actualizado en tiempo real', 'info');
+      if (modo === 'fabrica') {
+        setPedidos(prevPedidos => 
+          prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
+        );
+        mostrarMensaje('Pedido actualizado en tiempo real', 'info');
+      }
+      // En modo tienda, solo refrescar si el pedido es de la tienda seleccionada
+      if (modo === 'tienda' && pedidoActualizado.tiendaId === tiendaSeleccionada) {
+        setPedidos(prevPedidos => 
+          prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
+        );
+      }
     });
 
     newSocket.on('pedido_eliminado', (pedidoEliminado) => {
-      setPedidos(prevPedidos => 
-        prevPedidos.filter(p => (p._id !== pedidoEliminado._id && p.id !== pedidoEliminado.id))
-      );
-      mostrarMensaje('Pedido eliminado en tiempo real', 'info');
+      if (modo === 'fabrica') {
+        setPedidos(prevPedidos => 
+          prevPedidos.filter(p => (p._id !== pedidoEliminado._id && p.id !== pedidoEliminado.id))
+        );
+        mostrarMensaje('Pedido eliminado en tiempo real', 'info');
+      }
+      // En modo tienda, solo refrescar si el pedido es de la tienda seleccionada
+      if (modo === 'tienda' && pedidoEliminado.tiendaId === tiendaSeleccionada) {
+        setPedidos(prevPedidos => 
+          prevPedidos.filter(p => (p._id !== pedidoEliminado._id && p.id !== pedidoEliminado.id))
+        );
+      }
     });
     
     newSocket.on('pedidos_inicial', (pedidosIniciales) => {
-      setPedidos(pedidosIniciales);
+      // Solo refrescar pedidos globales en fábrica, o solo los de la tienda seleccionada en tienda
+      if (modo === 'fabrica') {
+        setPedidos(pedidosIniciales);
+      } else if (modo === 'tienda') {
+        setPedidos(pedidosIniciales.filter(p => p.tiendaId === tiendaSeleccionada));
+      }
     });
 
     // Limpieza al desmontar el componente
@@ -125,7 +155,7 @@ function App() {
       newSocket.off('pedidos_inicial');
       newSocket.disconnect();
     };
-  }, []);
+  }, [modo]);
 
   // Detectar nuevos pedidos recibidos o traspasos para la tienda seleccionada
   useEffect(() => {
@@ -351,7 +381,7 @@ function App() {
           <Route path="/*" element={
             <div className="App">
               <Watermark />
-              {mensaje && (
+              {mensaje && ((modo === 'fabrica' && mensaje.tipo !== 'tienda') || (modo === 'tienda' && mensaje.tipo !== 'fabrica')) && (
                 <div style={{
                   position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
                   background: mensaje.tipo === 'success' ? '#28a745' : mensaje.tipo === 'warning' ? '#ffc107' : '#007bff',
