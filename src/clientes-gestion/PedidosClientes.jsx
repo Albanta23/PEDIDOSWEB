@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useProductos } from '../components/ProductosContext';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+
 export default function PedidosClientes({ onPedidoCreado }) {
   const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState('');
@@ -16,7 +18,7 @@ export default function PedidosClientes({ onPedidoCreado }) {
   const [testBackendMsg, setTestBackendMsg] = useState('');
 
   useEffect(() => {
-    axios.get('/api/clientes')
+    axios.get(`${API_URL}/api/clientes`)
       .then(res => setClientes(res.data))
       .catch(()=>setClientes([]));
   }, []);
@@ -44,7 +46,7 @@ export default function PedidosClientes({ onPedidoCreado }) {
       return;
     }
     try {
-      await axios.post('/api/pedidos', {
+      await axios.post(`${API_URL}/api/pedidos`, {
         cliente: clienteSeleccionado,
         lineas,
         tipo: 'cliente',
