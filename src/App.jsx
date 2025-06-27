@@ -16,6 +16,8 @@ import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosSer
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
 import { ProductosProvider } from './components/ProductosContext';
 import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
+import SidebarClientes from './clientes-gestion/SidebarClientes';
+import ClientesMantenimiento from './clientes-gestion/ClientesMantenimiento';
 import {
   BrowserRouter as Router,
   Routes,
@@ -54,6 +56,8 @@ function App() {
   const [pedidoEditando, setPedidoEditando] = useState(null);
   const [mostrarGestion, setMostrarGestion] = useState(false);
   const [mostrarAlmacenTienda, setMostrarAlmacenTienda] = useState(false);
+  // Estado para la vista de clientes
+  const [vistaClientes, setVistaClientes] = useState('mantenimiento');
 
   // --- ESTADO PARA FEEDBACK UX ---
   const [mensaje, setMensaje] = useState(null);
@@ -352,6 +356,7 @@ function App() {
     );
   }
 
+  // --- RENDER PRINCIPAL ---
   if (!modo && !mostrarGestion) {
     return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} />;
   }
@@ -369,6 +374,22 @@ function App() {
           tiendas={modo === 'tienda' ? tiendas : undefined}
         />
         <ErrorLogger />
+      </div>
+    );
+  }
+
+  // --- NUEVO: Layout especial para "PEDIDOS CLIENTES" ---
+  if (modo === 'tienda' && tiendaSeleccionada === 'clientes') {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa' }}>
+        <SidebarClientes onSelect={setVistaClientes} selected={vistaClientes} />
+        <div style={{ flex: 1, padding: '32px 0', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+          {vistaClientes === 'mantenimiento' && (
+            <div style={{ width: '100%', maxWidth: 1100, background: '#fff', borderRadius: 16, boxShadow: '0 6px 24px rgba(33,150,243,0.08), 0 1.5px 6px rgba(0,0,0,0.04)', padding: 32 }}>
+              <ClientesMantenimiento />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
