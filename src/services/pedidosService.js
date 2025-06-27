@@ -31,9 +31,23 @@ export const actualizarPedido = async (id, pedidoActualizado) => {
   try {
     // Solo enviar campos permitidos por el backend
     const camposPermitidos = ['lineas', 'estado', 'comentario', 'tipoPedido', 'fechaPedido', 'cliente', 'clienteId', 'tiendaId', 'numeroPedido'];
+    const camposLineaPermitidos = ['producto', 'cantidad', 'peso', 'formato', 'comentario', 'cantidadEnviada', 'lote', 'preparada', 'esComentario'];
     const datosFiltrados = {};
     for (const key of camposPermitidos) {
-      if (pedidoActualizado[key] !== undefined) datosFiltrados[key] = pedidoActualizado[key];
+      if (pedidoActualizado[key] !== undefined) {
+        if (key === 'lineas' && Array.isArray(pedidoActualizado.lineas)) {
+          // Filtrar campos permitidos en cada línea
+          datosFiltrados.lineas = pedidoActualizado.lineas.map(linea => {
+            const nuevaLinea = {};
+            for (const campo of camposLineaPermitidos) {
+              if (linea[campo] !== undefined) nuevaLinea[campo] = linea[campo];
+            }
+            return nuevaLinea;
+          });
+        } else {
+          datosFiltrados[key] = pedidoActualizado[key];
+        }
+      }
     }
     const response = await axios.put(`${PEDIDOS_API_ENDPOINT}/${id}`, datosFiltrados);
     return response.data;
