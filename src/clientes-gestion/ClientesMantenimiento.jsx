@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+
 export default function ClientesMantenimiento() {
   const [clientes, setClientes] = useState([]);
   const [modo, setModo] = useState('lista'); // 'lista', 'crear', 'editar'
@@ -9,7 +11,7 @@ export default function ClientesMantenimiento() {
   const [mensaje, setMensaje] = useState('');
 
   const cargarClientes = () => {
-    axios.get('/api/clientes')
+    axios.get(`${API_URL}/api/clientes`)
       .then(res => setClientes(res.data))
       .catch(() => setClientes([]));
   };
@@ -20,10 +22,10 @@ export default function ClientesMantenimiento() {
     if (!form.nombre) { setMensaje('El nombre es obligatorio'); return; }
     try {
       if (modo === 'crear') {
-        await axios.post('/api/clientes', form);
+        await axios.post(`${API_URL}/api/clientes`, form);
         setMensaje('Cliente creado');
       } else if (modo === 'editar' && clienteEdit) {
-        await axios.put(`/api/clientes/${clienteEdit._id||clienteEdit.id}`, form);
+        await axios.put(`${API_URL}/api/clientes/${clienteEdit._id||clienteEdit.id}`, form);
         setMensaje('Cliente actualizado');
       }
       setForm({ nombre: '', email: '', telefono: '', direccion: '' });
@@ -48,7 +50,7 @@ export default function ClientesMantenimiento() {
   const handleEliminar = async (cliente) => {
     if (!window.confirm('¿Eliminar cliente?')) return;
     try {
-      await axios.delete(`/api/clientes/${cliente._id||cliente.id}`);
+      await axios.delete(`${API_URL}/api/clientes/${cliente._id||cliente.id}`);
       cargarClientes();
     } catch {}
   };
@@ -86,7 +88,7 @@ export default function ClientesMantenimiento() {
     if (clientes.length === 0) return setMensaje('No se han detectado clientes en el archivo. Revisa el formato.');
     try {
       for (const cli of clientes) {
-        await axios.post('/api/clientes', cli);
+        await axios.post(`${API_URL}/api/clientes`, cli);
       }
       setMensaje('Clientes importados correctamente');
       cargarClientes();
@@ -95,6 +97,42 @@ export default function ClientesMantenimiento() {
     }
   };
 
+  // --- Scroll horizontal con click derecho ---
+  const tablaRef = React.useRef();
+  React.useEffect(() => {
+    const tabla = tablaRef.current;
+    if (!tabla) return;
+    let isDragging = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    const onMouseDown = (e) => {
+      if (e.button !== 2) return; // solo click derecho
+      isDragging = true;
+      startX = e.pageX - tabla.offsetLeft;
+      scrollLeft = tabla.scrollLeft;
+      tabla.style.cursor = 'grab';
+      e.preventDefault();
+    };
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      const x = e.pageX - tabla.offsetLeft;
+      const walk = (x - startX);
+      tabla.scrollLeft = scrollLeft - walk;
+    };
+    const onMouseUp = () => {
+      isDragging = false;
+      tabla.style.cursor = '';
+    };
+    tabla.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      tabla.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
   return (
     <div style={{maxWidth:700,margin:'0 auto',background:'#fff',borderRadius:16,boxShadow:'0 2px 16px #0001',padding:32}}>
       <h2 style={{marginBottom:24}}>Mantenimiento de clientes</h2>
@@ -102,31 +140,51 @@ export default function ClientesMantenimiento() {
         <>
           <button onClick={()=>{setModo('crear');setForm({nombre:'',email:'',telefono:'',direccion:''});}} style={{background:'#1976d2',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginBottom:18}}>+ Nuevo cliente</button>
           <input type="file" accept=".csv,.txt" onChange={handleImportCSV} style={{marginLeft:16,marginBottom:18}} />
-          <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16}}>
-            <thead>
-              <tr style={{background:'#f0f4fa'}}>
-                <th style={{textAlign:'left',padding:8}}>Nombre</th>
-                <th style={{textAlign:'left',padding:8}}>Email</th>
-                <th style={{textAlign:'left',padding:8}}>Teléfono</th>
-                <th style={{textAlign:'left',padding:8}}>Dirección</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map(c=>(
-                <tr key={c._id||c.id} style={{borderBottom:'1px solid #eee'}}>
-                  <td style={{padding:8}}>{c.nombre}</td>
-                  <td style={{padding:8}}>{c.email}</td>
-                  <td style={{padding:8}}>{c.telefono}</td>
-                  <td style={{padding:8}}>{c.direccion}</td>
-                  <td style={{padding:8}}>
-                    <button onClick={()=>handleEditar(c)} style={{marginRight:8,background:'#ffc107',color:'#333',border:'none',borderRadius:4,padding:'4px 10px'}}>Editar</button>
-                    <button onClick={()=>handleEliminar(c)} style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px'}}>Eliminar</button>
-                  </td>
+          <div ref={tablaRef} style={{overflowX:'auto',width:'100%',cursor:'pointer'}} title="Click derecho y arrastra para desplazar horizontalmente">
+            <table style={{minWidth:900,width:'100%',borderCollapse:'collapse',marginBottom:16}}>
+              <thead>
+                <tr style={{background:'#f0f4fa'}}>
+                  <th style={{textAlign:'left',padding:8}}>Nombre</th>
+                  <th style={{textAlign:'left',padding:8}}>Email</th>
+                  <th style={{textAlign:'left',padding:8}}>Teléfono</th>
+                  <th style={{textAlign:'left',padding:8,maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Dirección</th>
+                  <th style={{textAlign:'left',padding:8}}>CIF</th>
+                  <th style={{textAlign:'left',padding:8}}>Tipo</th>
+                  <th style={{textAlign:'left',padding:8}}>Activo</th>
+                  <th style={{textAlign:'left',padding:8}}>Exento IVA</th>
+                  <th style={{textAlign:'left',padding:8}}>Forma Pago</th>
+                  <th style={{textAlign:'left',padding:8}}>Recargo Eq.</th>
+                  <th style={{textAlign:'left',padding:8}}>Dto1</th>
+                  <th style={{textAlign:'left',padding:8}}>Dto2</th>
+                  <th style={{textAlign:'left',padding:8}}>Dto3</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {clientes.map(c=>(
+                  <tr key={c._id||c.id} style={{borderBottom:'1px solid #eee'}}>
+                    <td style={{padding:8}}>{c.nombre}</td>
+                    <td style={{padding:8}}>{c.email}</td>
+                    <td style={{padding:8}}>{c.telefono}</td>
+                    <td style={{padding:8,maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={c.direccion}>{c.direccion}</td>
+                    <td style={{padding:8}}>{c.cif}</td>
+                    <td style={{padding:8}}>{c.tipoCliente}</td>
+                    <td style={{padding:8}}>{c.activo ? 'Sí' : 'No'}</td>
+                    <td style={{padding:8}}>{c.exentoIVA ? 'Sí' : 'No'}</td>
+                    <td style={{padding:8}}>{c.formaPago}</td>
+                    <td style={{padding:8}}>{c.recargoEquiv ? 'Sí' : 'No'}</td>
+                    <td style={{padding:8}}>{c.descuento1}</td>
+                    <td style={{padding:8}}>{c.descuento2}</td>
+                    <td style={{padding:8}}>{c.descuento3}</td>
+                    <td style={{padding:8}}>
+                      <button onClick={()=>handleEditar(c)} style={{marginRight:8,background:'#ffc107',color:'#333',border:'none',borderRadius:4,padding:'4px 10px'}}>Editar</button>
+                      <button onClick={()=>handleEliminar(c)} style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:4,padding:'4px 10px'}}>Eliminar</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
       {(modo==='crear'||modo==='editar') && (
