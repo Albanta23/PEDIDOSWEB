@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://localhost:3100', // <-- añadido para permitir CORS desde localhost:3100
   'https://pedidosweb-phi.vercel.app', // Desarrollo
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev', // Codespace actual
   'https://pedidos-backend-0e1s.onrender.com',
@@ -524,174 +525,33 @@ app.post('/api/productos', async (req, res) => {
   }
 });
 
-// --- ENDPOINTS DE MOVIMIENTOS DE STOCK ---
-// Consultar movimientos de stock de una tienda (con filtros)
-app.get('/api/movimientos-stock', async (req, res) => {
+// --- ENDPOINT: Importar clientes desde Excel (bulk upsert) ---
+app.post('/api/clientes/importar', async (req, res) => {
   try {
-    const { tiendaId, producto, lote, desde, hasta } = req.query;
-    const filtro = {};
-    if (tiendaId) filtro.tiendaId = tiendaId;
-    if (producto) filtro.producto = producto;
-    if (lote) filtro.lote = lote;
-    if (desde || hasta) {
-      filtro.fecha = {};
-      if (desde) filtro.fecha.$gte = new Date(desde);
-      if (hasta) filtro.fecha.$lte = new Date(hasta);
+    const clientes = req.body.clientes;
+    if (!Array.isArray(clientes) || clientes.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No se recibieron clientes para importar' });
     }
-    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
-    res.json(movimientos);
+    let insertados = 0, actualizados = 0, errores = [];
+    for (const cli of clientes) {
+      // Filtro por NIF o código si existe, si no por nombre
+      const filtro = cli.nif ? { nif: cli.nif } : cli.codigo ? { codigo: cli.codigo } : { nombre: cli.nombre };
+      try {
+        const existente = await Cliente.findOne(filtro);
+        if (existente) {
+          await Cliente.updateOne(filtro, { $set: cli });
+          actualizados++;
+        } else {
+          await Cliente.create(cli);
+          insertados++;
+        }
+      } catch (e) {
+        errores.push({ nombre: cli.nombre, error: e.message });
+      }
+    }
+    res.json({ ok: true, insertados, actualizados, errores });
   } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Registrar baja de stock
-app.post('/api/movimientos-stock/baja', async (req, res) => {
-  try {
-    const { tiendaId, producto, cantidad, unidad, lote, motivo, peso } = req.body;
-    if (!tiendaId || !producto || (!cantidad && !peso) || !motivo) {
-      return res.status(400).json({ error: 'Faltan datos obligatorios para la baja' });
-    }
-    const movimiento = await registrarMovimientoStock({
-      tiendaId,
-      producto,
-      cantidad,
-      unidad,
-      lote,
-      motivo,
-      tipo: 'baja',
-      fecha: new Date(),
-      peso
-    });
-    res.json(movimiento);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
-// Registrar entrada de stock (por pedido recibido de fábrica)
-app.post('/api/movimientos-stock/entrada', async (req, res) => {
-  try {
-    const { tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso } = req.body;
-    if (!tiendaId || !producto || (!cantidad && !peso)) {
-      return res.status(400).json({ error: 'Faltan datos obligatorios para la entrada' });
-    }
-    const movimiento = await registrarMovimientoStock({
-      tiendaId,
-      producto,
-      cantidad,
-      unidad,
-      lote,
-      motivo,
-      tipo: 'entrada',
-      pedidoId,
-      fecha: new Date(),
-      peso
-    });
-    res.json(movimiento);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
-});
-
-// Función centralizada para registrar movimientos de stock
-async function registrarMovimientoStock({ tiendaId, producto, cantidad, unidad, lote, motivo, tipo, pedidoId, transferenciaId, fecha, peso }) {
-  if (!tiendaId || !producto || (!cantidad && !peso) || !tipo) {
-    throw new Error('Faltan datos obligatorios para el movimiento de stock');
-  }
-  const mov = await MovimientoStock.create({
-    tiendaId,
-    producto,
-    cantidad,
-    unidad: unidad || 'kg',
-    lote: lote || '',
-    motivo,
-    tipo,
-    pedidoId,
-    transferenciaId,
-    fecha: fecha || new Date(),
-    peso: typeof peso !== 'undefined' ? peso : undefined
-  });
-  return mov;
-}
-
-// --- REGISTRO AUTOMÁTICO DE ENTRADAS DE STOCK AL ENVIAR PEDIDO A TIENDA ---
-const registrarEntradasStockPorPedido = async (pedido) => {
-  if (!pedido || !pedido.tiendaId || !Array.isArray(pedido.lineas)) {
-    console.log('[DEBUG] Pedido inválido para registrar movimientos de stock');
-    return;
-  }
-  let movimientosCreados = 0;
-  for (const [idx, linea] of pedido.lineas.entries()) {
-    if (!linea.producto || !linea.cantidadEnviada) {
-      console.log(`[DEBUG] Línea ${idx} omitida: producto=${linea.producto}, cantidadEnviada=${linea.cantidadEnviada}`);
-      continue;
-    }
-    // Log de depuración para ver el peso que se va a guardar
-    console.log(`[DEBUG] MovimientoStock: producto=${linea.producto}, cantidadEnviada=${linea.cantidadEnviada}, peso=${linea.peso}, linea=`, JSON.stringify(linea));
-    await MovimientoStock.create({
-      tiendaId: pedido.tiendaId,
-      producto: linea.producto,
-      cantidad: linea.cantidadEnviada,
-      unidad: linea.formato || 'kg',
-      lote: linea.lote || '',
-      motivo: 'Pedido fábrica',
-      tipo: 'entrada',
-      pedidoId: pedido._id?.toString() || pedido.id?.toString() || '',
-      fecha: new Date(),
-      peso: linea.peso ?? null // Copiar el peso si existe
-    });
-    movimientosCreados++;
-    console.log(`[DEBUG] Movimiento de stock creado para producto=${linea.producto}, cantidad=${linea.cantidadEnviada}`);
-  }
-  console.log(`[DEBUG] Total movimientos de stock creados: ${movimientosCreados}`);
-};
-
-// WebSocket para tiempo real
-io.on('connection', async (socket) => { // Hacerla async para cargar pedidos iniciales desde DB
-  console.log('Cliente conectado:', socket.id);
-  try {
-    const pedidosActuales = await Pedido.find();
-    socket.emit('pedidos_inicial', pedidosActuales);
-  } catch (err) {
-    console.error('Error al enviar pedidos iniciales:', err);
-    // Opcionalmente emitir un error al cliente
-    socket.emit('error_pedidos_inicial', { message: 'No se pudieron cargar los pedidos.' });
-  }
-  socket.on('disconnect', () => {
-    console.log('Cliente desconectado:', socket.id);
-  });
-});
-
-// DESACTIVADO: Endpoint antiguo de proveedor (solo historial global)
-// const mailjetProveedorEmail = require('./mailjetProveedorEmail');
-// mailjetProveedorEmail(app);
-
-const mailjetProveedorEmailV2 = require('./mailjetProveedorEmailV2');
-mailjetProveedorEmailV2(app);
-
-// --- ENDPOINT: Registrar transferencia entre tiendas (NO crea movimientos de stock, solo la transferencia) ---
-app.post('/api/transferencias/registrar', async (req, res) => {
-  try {
-    const { origenId, destinoId, productos, observaciones, usuario } = req.body;
-    if (!origenId || !destinoId || !Array.isArray(productos) || productos.length === 0) {
-      return res.status(400).json({ error: 'Faltan datos para la transferencia' });
-    }
-    // Registrar transferencia en colección Transferencia
-    const transferencia = await Transferencia.create({
-      origen: origenId,
-      destino: destinoId,
-      productos,
-      observaciones,
-      usuario,
-      fecha: new Date(),
-      estado: 'realizada'
-    });
-    // NO crear movimientos de stock aquí. Solo al confirmar.
-    console.log(`[TRANSFERENCIA][NUEVA] Transferencia registrada (sin movimientos): ${transferencia._id}`);
-    res.json({ ok: true, transferencia });
-  } catch (e) {
-    res.status(400).json({ error: e.message });
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
