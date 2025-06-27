@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 export default function PedidosClientes({ onPedidoCreado }) {
   const [clientes, setClientes] = useState([]);
-  const [clienteSeleccionado, setClienteSeleccionado] = useState('');
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [lineas, setLineas] = useState([
     { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }
   ]);
@@ -47,7 +47,9 @@ export default function PedidosClientes({ onPedidoCreado }) {
     }
     try {
       await axios.post(`${API_URL}/api/pedidos`, {
-        cliente: clienteSeleccionado,
+        clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
+        cliente: clienteSeleccionado.nombre,
+        tiendaId: 'clientes',
         lineas,
         tipo: 'cliente',
         fechaPedido: new Date().toISOString(),
@@ -55,7 +57,7 @@ export default function PedidosClientes({ onPedidoCreado }) {
       });
       setMensaje('Pedido creado correctamente.');
       setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
-      setClienteSeleccionado('');
+      setClienteSeleccionado(null);
       setTimeout(()=> {
         setMensaje('');
         if (onPedidoCreado) onPedidoCreado();
@@ -74,14 +76,20 @@ export default function PedidosClientes({ onPedidoCreado }) {
     }
   };
 
+  const handleClienteChange = (e) => {
+    const nombre = e.target.value;
+    const cliente = clientes.find(c => c.nombre === nombre);
+    setClienteSeleccionado(cliente || null);
+  };
+
   return (
     <div>
       <h2>Crear nuevo pedido de cliente</h2>
       <div style={{background:'#f8fafd',padding:16,borderRadius:8,marginBottom:24}}>
         <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12}}>
-          <select value={clienteSeleccionado} onChange={e=>setClienteSeleccionado(e.target.value)} style={{padding:8,borderRadius:6,border:'1px solid #bbb',minWidth:180}}>
+          <select value={clienteSeleccionado?.nombre || ''} onChange={handleClienteChange} style={{padding:8,borderRadius:6,border:'1px solid #bbb',minWidth:180}}>
             <option value="">Selecciona cliente</option>
-            {clientes.map(c=>(<option key={c._id||c.id} value={c.nombre}>{c.nombre}</option>))}
+            {clientes.map(c=>(<option key={c._id||c.id||c.codigo} value={c.nombre}>{c.nombre}</option>))}
           </select>
         </div>
         {lineas.map((linea, idx) => (

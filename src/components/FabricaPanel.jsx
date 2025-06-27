@@ -26,8 +26,8 @@ const FabricaPanel = ({ pedidos, tiendas, onEstadoChange, onLineaChange, onLinea
     '#1976d2', '#388e3c', '#fbc02d', '#d32f2f', '#7b1fa2', '#00838f', '#c2185b', '#ffa000', '#455a64', '#5d4037'
   ];
 
-  // Pedidos pendientes: solo los que están en 'enviado' o 'preparado' (no mostrar cerrados)
-  const pedidosPendientes = pedidos.filter(p => p.estado === 'enviado' || p.estado === 'preparado');
+  // Pedidos pendientes: solo los que están en 'enviado' o 'preparado' (no mostrar cerrados ni los de clientes)
+  const pedidosPendientes = pedidos.filter(p => (p.estado === 'enviado' || p.estado === 'preparado') && p.tiendaId !== 'clientes');
 
   // Estado para forzar refresco visual tras guardar/enviar
   const [refresco, setRefresco] = useState(0);
