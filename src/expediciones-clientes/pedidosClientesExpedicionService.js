@@ -4,8 +4,8 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 export async function obtenerPedidosClientesExpedicion() {
-  // Se asume que los pedidos de clientes tienen un campo especial o tiendaId === 'clientes'
-  const res = await axios.get(`${API_URL}/api/pedidos?clientesExpedicion=1`);
+  // Ahora solo pedidos con tipoPedido === 'clientedirecto'
+  const res = await axios.get(`${API_URL}/api/pedidos?tipoPedido=clientedirecto`);
   return res.data;
 }
 
@@ -24,5 +24,10 @@ export async function obtenerHistorialPedidoCliente(id) {
 export async function actualizarPedidoCliente(id, datos) {
   // Permite actualizar líneas, estado y otros campos del pedido de cliente
   const res = await axios.put(`${API_URL}/api/pedidos/${id}`, datos);
+  return res.data;
+}
+
+export async function borrarPedidoCliente(id) {
+  const res = await axios.delete(`${API_URL}/api/pedidos/${id}`);
   return res.data;
 }

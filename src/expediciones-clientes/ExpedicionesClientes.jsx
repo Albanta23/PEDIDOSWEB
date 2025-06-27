@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ExpedicionesClientesLogin from './ExpedicionesClientesLogin';
-import { obtenerPedidosClientesExpedicion } from './pedidosClientesExpedicionService';
+import { obtenerPedidosClientesExpedicion, borrarPedidoCliente } from './pedidosClientesExpedicionService';
 import ExpedicionClienteEditor from './ExpedicionClienteEditor';
 import HistorialPedidoCliente from './HistorialPedidoCliente';
 
@@ -29,6 +29,13 @@ export default function ExpedicionesClientes() {
       setPedidos(data.filter(p => p.tiendaId === 'clientes'));
       setCargando(false);
     }).catch(() => setCargando(false));
+  }
+
+  async function handleBorrarPedido(id) {
+    if (window.confirm('¿Seguro que quieres borrar este pedido?')) {
+      await borrarPedidoCliente(id);
+      recargarPedidos();
+    }
   }
 
   if (!logueado) {
@@ -64,9 +71,13 @@ export default function ExpedicionesClientes() {
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.direccion || p.direccionEnvio || '-'}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.estado || '-'}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>
-                  <button style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}
+                  <button style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer', marginRight: 8 }}
                     onClick={() => setPedidoEditando(p)}>
                     Editar
+                  </button>
+                  <button style={{ background: '#dc3545', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}
+                    onClick={() => handleBorrarPedido(p._id || p.id)}>
+                    Borrar
                   </button>
                 </td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>
