@@ -22,8 +22,13 @@ export async function obtenerHistorialPedidoCliente(id) {
 }
 
 export async function actualizarPedidoCliente(id, datos) {
-  // Permite actualizar líneas, estado y otros campos del pedido de cliente
-  const res = await axios.put(`${API_URL}/api/pedidos/${id}`, datos);
+  // Solo enviar campos permitidos por el backend
+  const camposPermitidos = ['lineas', 'estado', 'comentario', 'tipoPedido', 'fechaPedido', 'cliente', 'clienteId'];
+  const datosFiltrados = {};
+  for (const key of camposPermitidos) {
+    if (datos[key] !== undefined) datosFiltrados[key] = datos[key];
+  }
+  const res = await axios.put(`${API_URL}/api/pedidos/${id}`, datosFiltrados);
   return res.data;
 }
 
