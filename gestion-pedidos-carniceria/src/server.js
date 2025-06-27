@@ -123,6 +123,11 @@ app.get('/', (req, res) => {
 // Endpoints REST
 app.get('/api/pedidos', async (req, res) => {
   try {
+    // Si la petición es para expedición de clientes, filtrar solo los pedidos de clientes
+    if (req.query.clientesExpedicion === '1') {
+      const pedidosClientes = await Pedido.find({ tiendaId: 'clientes' });
+      return res.json(pedidosClientes);
+    }
     const pedidos = await Pedido.find();
     res.json(pedidos);
   } catch (err) {

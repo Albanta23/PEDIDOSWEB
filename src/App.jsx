@@ -18,6 +18,7 @@ import { ProductosProvider } from './components/ProductosContext';
 import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
 import SidebarClientes from './clientes-gestion/SidebarClientes';
 import ClientesMantenimiento from './clientes-gestion/ClientesMantenimiento';
+import ExpedicionesClientes from './expediciones-clientes/ExpedicionesClientes';
 import {
   BrowserRouter as Router,
   Routes,
@@ -358,10 +359,15 @@ function App() {
 
   // --- RENDER PRINCIPAL ---
   if (!modo && !mostrarGestion) {
-    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} />;
+    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} expedicionesClientes={() => setModo('expedicionesClientes')} />;
   }
   if (mostrarGestion) {
     return <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />;
+  }
+
+  // NUEVO: acceso directo a ExpedicionesClientes
+  if (modo === 'expedicionesClientes') {
+    return <ExpedicionesClientes />;
   }
 
   if (!logueado) {

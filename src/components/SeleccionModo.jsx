@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { FaIndustry, FaCashRegister, FaTools } from "react-icons/fa";
+import { FaIndustry, FaCashRegister, FaTools, FaTruck } from "react-icons/fa";
 import logo from "../assets/logo1.png";
 import Watermark from './Watermark';
 import SupervisionPanel from './SupervisionPanel';
 import { useAppUpdates } from '../hooks/useAppUpdates';
 
-export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion }) {
+export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion, expedicionesClientes }) {
   const [showSupervision, setShowSupervision] = useState(false);
   const { updateAvailable, forceUpdate } = useAppUpdates();
   const [showUpdateMsg, setShowUpdateMsg] = useState(false);
@@ -135,6 +135,27 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
         >
           <FaTools size={48} style={{ marginBottom: 10 }} />
           Gestión
+        </button>
+        <button
+          onClick={expedicionesClientes}
+          style={{
+            width: 120,
+            height: 120,
+            background: "#00b894",
+            color: "#fff",
+            border: "none",
+            borderRadius: 16,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 18,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #bbb",
+          }}
+        >
+          <FaTruck size={48} style={{ marginBottom: 10 }} />
+          Expediciones Clientes
         </button>
       </div>
       {showSupervision && (
