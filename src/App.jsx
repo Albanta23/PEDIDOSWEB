@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
+// import { io } from 'socket.io-client'; // No más io directamente aquí
 import './App.css';
 import FabricaPanel from './components/FabricaPanel';
 import Login from './components/Login';
 import PedidoList from './components/PedidoList';
-import HistoricoTienda from './components/HistoricoTienda';
+// import HistoricoTienda from './components/HistoricoTienda'; // No se usa directamente
 import ErrorLogger from './components/ErrorLogger';
 import HistoricoFabrica from './components/HistoricoFabrica';
 import HistoricoTiendaPanel from './components/HistoricoTiendaPanel';
 import SeleccionModo from './components/SeleccionModo';
 import Watermark from './components/Watermark';
-import { abrirHistoricoEnVentana } from './utils/historicoVentana';
-import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
-import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
+// import { abrirHistoricoEnVentana } from './utils/historicoVentana'; // No se usa
+// Ya no se importan servicios directamente aquí, se manejan en los hooks
+// import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
+// import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
 import { ProductosProvider } from './components/ProductosContext';
 import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
@@ -25,6 +26,14 @@ import {
   Route,
   useNavigate
 } from 'react-router-dom';
+
+// Hooks personalizados
+import { useAuthentication } from './hooks/useAuthentication';
+import { useFeedbackMessages } from './hooks/useFeedbackMessages';
+import { useAvisosManager } from './hooks/useAvisosManager';
+import { usePedidoManager } from './hooks/usePedidoManager';
+import { useSocketManager } from './hooks/useSocketManager';
+
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },
@@ -40,300 +49,89 @@ const tiendas = [
   { id: 'clientes', nombre: 'PEDIDOS CLIENTES' },
   { id: 'tiendaPruebas', nombre: 'TIENDA PRUEBAS' }
 ];
-window.tiendas = tiendas;
+window.tiendas = tiendas; // Mantener global si otros scripts fuera de React dependen de esto
 
-function generarIdUnico() {
-  return 'pedido_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
+// function generarIdUnico() { // Ya no es necesario aquí, si se usa, debería estar en un servicio o helper
+//   return 'pedido_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+// }
 
 function App() {
-  const [pedidos, setPedidos] = useState([]);
-  const [socket, setSocket] = useState(null);
-  const [modo, setModo] = useState(null); // null, 'fabrica', 'tienda'
-  const [logueado, setLogueado] = useState(false);
-  const [tiendaSeleccionada, setTiendaSeleccionada] = useState(null);
+  // Estados locales que persisten en App.jsx (principalmente para UI y navegación)
   const [mostrarHistoricoFabrica, setMostrarHistoricoFabrica] = useState(false);
   const [mostrarHistoricoTienda, setMostrarHistoricoTienda] = useState(false);
-  const [pedidoEditando, setPedidoEditando] = useState(null);
+  const [pedidoEditando, setPedidoEditando] = useState(null); // Para el modal de edición, si aún se usa así
   const [mostrarGestion, setMostrarGestion] = useState(false);
-  const [mostrarAlmacenTienda, setMostrarAlmacenTienda] = useState(false);
-  // Estado para la vista de clientes
+  const [mostrarAlmacenTienda, setMostrarAlmacenTienda] = useState(false); // Este estado podría moverse si AlmacenTiendaPanel tiene su propia ruta/lógica de visibilidad
   const [vistaClientes, setVistaClientes] = useState('mantenimiento');
 
-  // --- ESTADO PARA FEEDBACK UX ---
-  const [mensaje, setMensaje] = useState(null);
 
-  // --- NUEVO: Estado para avisos de nuevos pedidos/traspasos recibidos ---
-  const [avisos, setAvisos] = useState([]);
+  // Inicialización de Hooks
+  const { modo, setModo, logueado, tiendaSeleccionada, handleLogin, handleLogout } = useAuthentication();
+  const { mensaje, mostrarMensaje } = useFeedbackMessages(modo);
 
-  // --- FEEDBACK TEMPORAL ---
-  function mostrarMensaje(texto, tipo = 'info', duracion = 2500) {
-    // Solo mostrar mensajes en el modo correspondiente
-    if ((modo === 'fabrica' && tipo !== 'tienda') || (modo === 'tienda' && tipo !== 'fabrica')) {
-      setMensaje({ texto, tipo });
-      setTimeout(() => setMensaje(null), duracion);
-    }
-  }
+  const {
+    pedidos,
+    setPedidos, // Para useSocketManager
+    // loadingPedidos,
+    // fetchPedidos, // Podría no ser necesario exponerlo si la carga es automática
+    cambiarEstadoPedido,
+    cambiarEstadoLinea,
+    cambiarEstadoLineaDetalle,
+    agregarPedido,
+    modificarPedido,
+    borrarPedido,
+    updatePedidosDesdeSocket // Para useSocketManager
+  } = usePedidoManager([], modo, tiendaSeleccionada, mostrarMensaje);
 
-  useEffect(() => {
-    // Conexión de Socket.io
-    const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'https://pedidos-backend-0e1s.onrender.com'); 
-    setSocket(newSocket);
+  const { avisos, handleMarcarAvisoVisto, setAvisos: setAvisosDesdeHook } = useAvisosManager(modo, logueado, tiendaSeleccionada, pedidos); // `pedidos` como trigger
 
-    // Hacer función global para recargar pedidos SOLO en modo fábrica
-    window.recargarPedidosGlobal = async () => {
-      if (modo !== 'fabrica') return; // Solo refresca si está en modo fábrica
-      try {
-        const data = await obtenerPedidos();
-        setPedidos(data);
-      } catch (error) {
-        if (modo === 'fabrica') setMensaje({ texto: 'Error al recargar pedidos', tipo: 'warning' });
-      }
-    };
+  // useSocketManager necesita `setPedidos` (o `updatePedidosDesdeSocket`) y `mostrarMensaje`.
+  // Y también necesita `setInitialPedidos` que ahora es `setPedidos` de `usePedidoManager`.
+  const { socket, isConnected } = useSocketManager(
+    modo,
+    tiendaSeleccionada,
+    mostrarMensaje,
+    updatePedidosDesdeSocket, // Pasa la función de actualización de usePedidoManager
+    setPedidos // Pasa setPedidos directamente para la carga inicial
+  );
 
-    const fetchPedidos = async () => {
-      try {
-        const data = await obtenerPedidos();
-        setPedidos(data);
-      } catch (error) {
-        if (modo === 'fabrica') setMensaje({ texto: 'Error al cargar pedidos', tipo: 'warning' });
-      }
-    };
-    fetchPedidos();
+  // Lógica que antes estaba en useEffects sueltos, ahora manejada por hooks.
+  // Ejemplo: la carga inicial de pedidos y la conexión del socket están en useSocketManager y usePedidoManager.
+  // La carga de avisos está en useAvisosManager.
 
-    // Listeners de Socket.io
-    newSocket.on('pedido_nuevo', (pedidoNuevo) => {
-      if (modo === 'fabrica') {
-        setPedidos(prevPedidos => [...prevPedidos, pedidoNuevo]);
-        mostrarMensaje('Nuevo pedido recibido', 'info');
-      }
-      // En modo tienda, solo refrescar si el pedido es de la tienda seleccionada
-      if (modo === 'tienda' && pedidoNuevo.tiendaId === tiendaSeleccionada) {
-        setPedidos(prevPedidos => [...prevPedidos, pedidoNuevo]);
-      }
-    });
+  // Función para marcar un aviso como visto y eliminarlo (adaptada para usar el hook)
+  // Esta función podría moverse completamente a useAvisosManager si `setMostrarHistoricoTienda` no fuera una dependencia de UI de App.jsx
+  const handleAvisoVistoLocal = async (avisoObjeto) => { // avisoObjeto es el objeto aviso del estado de useAvisosManager
+    if (!avisoObjeto || !avisoObjeto._id) return;
+    await handleMarcarAvisoVisto(avisoObjeto); // Llama a la función del hook
+    // La actualización optimista ya está en el hook.
+  };
 
-    newSocket.on('pedido_actualizado', (pedidoActualizado) => {
-      if (modo === 'fabrica') {
-        setPedidos(prevPedidos => 
-          prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
-        );
-        mostrarMensaje('Pedido actualizado en tiempo real', 'info');
-      }
-      // En modo tienda, solo refrescar si el pedido es de la tienda seleccionada
-      if (modo === 'tienda' && pedidoActualizado.tiendaId === tiendaSeleccionada) {
-        setPedidos(prevPedidos => 
-          prevPedidos.map(p => (p._id === pedidoActualizado._id || p.id === pedidoActualizado.id) ? pedidoActualizado : p)
-        );
-      }
-    });
-
-    newSocket.on('pedido_eliminado', (pedidoEliminado) => {
-      if (modo === 'fabrica') {
-        setPedidos(prevPedidos => 
-          prevPedidos.filter(p => (p._id !== pedidoEliminado._id && p.id !== pedidoEliminado.id))
-        );
-        mostrarMensaje('Pedido eliminado en tiempo real', 'info');
-      }
-      // En modo tienda, solo refrescar si el pedido es de la tienda seleccionada
-      if (modo === 'tienda' && pedidoEliminado.tiendaId === tiendaSeleccionada) {
-        setPedidos(prevPedidos => 
-          prevPedidos.filter(p => (p._id !== pedidoEliminado._id && p.id !== pedidoEliminado.id))
-        );
-      }
-    });
-    
-    newSocket.on('pedidos_inicial', (pedidosIniciales) => {
-      // Solo refrescar pedidos globales en fábrica, o solo los de la tienda seleccionada en tienda
-      if (modo === 'fabrica') {
-        setPedidos(pedidosIniciales);
-      } else if (modo === 'tienda') {
-        setPedidos(pedidosIniciales.filter(p => p.tiendaId === tiendaSeleccionada));
-      }
-    });
-
-    // Limpieza al desmontar el componente
-    return () => {
-      newSocket.off('pedido_nuevo');
-      newSocket.off('pedido_actualizado');
-      newSocket.off('pedido_eliminado');
-      newSocket.off('pedidos_inicial');
-      newSocket.disconnect();
-    };
-  }, [modo]);
-
-  // Detectar nuevos pedidos recibidos o traspasos para la tienda seleccionada
-  useEffect(() => {
-    if (modo !== 'tienda' || !logueado || !tiendaSeleccionada) return;
-    async function fetchAvisos() {
-      const avisosBD = await listarAvisos(tiendaSeleccionada);
-      setAvisos(avisosBD.filter(a => !a.vistoPor.includes(tiendaSeleccionada)).map(a => ({
-        id: a.referenciaId,
-        tipo: a.tipo,
-        texto: a.texto
-      })));
-    }
-    fetchAvisos();
-  }, [pedidos, modo, logueado, tiendaSeleccionada]);
-
-  // Función para gestionar click en un aviso (ahora solo lo navega, no lo marca como visto)
+  // Función para gestionar click en un aviso (puede quedarse aquí si es solo para UI)
   const handleAvisoClick = (aviso) => {
     setMostrarHistoricoTienda(true);
-  };
-
-  // Función para marcar un aviso como visto y eliminarlo
-  const handleAvisoVisto = async (aviso) => {
-    const avisosBD = await listarAvisos(tiendaSeleccionada);
-    const avisoBD = avisosBD.find(a => a.referenciaId === aviso.id);
-    if (avisoBD) {
-      await marcarAvisoVisto(avisoBD._id, tiendaSeleccionada);
-      setAvisos(prev => prev.filter(a => a.id !== aviso.id));
-    }
-  };
-
-  // Cambia el estado de un pedido y lo persiste en MongoDB
-  const cambiarEstadoPedido = async (pedidoId, nuevoEstado) => {
-    try {
-      const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
-      if (!pedido) return;
-      let actualizado = { ...pedido, estado: nuevoEstado };
-      // --- ACTUALIZAR DETALLES DE LÍNEA AL CAMBIAR DE ESTADO ---
-      if (nuevoEstado === 'preparado' || nuevoEstado === 'enviadoTienda') {
-        const fechaEnvio = pedido.fechaEnvio || new Date().toISOString();
-        actualizado = {
-          ...actualizado,
-          fechaEnvio,
-          lineas: pedido.lineas.map(linea => ({
-            ...linea,
-            cantidadEnviada: linea.cantidadEnviada !== undefined ? Number(linea.cantidadEnviada) : Number(linea.cantidad),
-            lote: linea.lote || '',
-            fechaEnvioLinea: linea.fechaEnvioLinea || fechaEnvio
-          }))
-        };
-      }
-      if (nuevoEstado === 'enviadoTienda') {
-        actualizado = {
-          ...actualizado,
-          fechaRecepcion: new Date().toISOString()
-        };
-      }
-      await actualizarPedido(pedido._id || pedido.id, actualizado);
-      const data = await obtenerPedidos();
-      setPedidos(data);
-      if (nuevoEstado === 'preparado') mostrarMensaje('Pedido preparado', 'success');
-      if (nuevoEstado === 'enviadoTienda') mostrarMensaje('Pedido enviado a tienda', 'success');
-    } catch (error) {
-      mostrarMensaje('Error al cambiar estado', 'warning');
-    }
-  };
-
-  // Cambia el estado de una línea de pedido y lo persiste en MongoDB
-  const cambiarEstadoLinea = async (pedidoId, idxLinea, preparada) => {
-    try {
-      const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
-      if (!pedido) return;
-      const nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, preparada } : l);
-      const actualizado = { ...pedido, lineas: nuevasLineas };
-      await actualizarPedido(pedido._id || pedido.id, actualizado);
-      const data = await obtenerPedidos();
-      setPedidos(data);
-    } catch (error) {
-      mostrarMensaje('Error al cambiar estado de línea', 'warning');
-    }
-  };
-
-  // Cambia detalles de una línea de pedido y lo persiste en MongoDB
-  const cambiarEstadoLineaDetalle = async (pedidoId, idxLinea, cambios) => {
-    try {
-      const pedido = pedidos.find(p => p.id === pedidoId || p._id === pedidoId);
-      if (!pedido) return;
-      let nuevasLineas;
-      if (idxLinea === null && Array.isArray(cambios)) { 
-        nuevasLineas = cambios; 
-      } else {
-        nuevasLineas = pedido.lineas.map((l, idx) => idx === idxLinea ? { ...l, ...cambios } : l);
-      }
-      const actualizado = { ...pedido, lineas: nuevasLineas };
-      
-      console.log('[App.jsx] Actualizando pedido en backend con lineas:', actualizado.lineas);
-      await actualizarPedido(pedido._id || pedido.id, actualizado); 
-      
-      const data = await obtenerPedidos(); 
-      setPedidos(data);
-      const pedidoRefrescado = data.find(p => p.id === pedidoId || p._id === pedidoId);
-      console.log('[App.jsx] Pedido refrescado desde backend, lineas:', pedidoRefrescado?.lineas);
-
-    } catch (error) {
-      mostrarMensaje('Error al actualizar línea', 'warning');
-      console.error('Error en cambiarEstadoLineaDetalle:', error);
-    }
-  };
-
-  const handleLogin = (usuario, tiendaId) => {
-    setLogueado(true);
-    if (modo === 'tienda' ) setTiendaSeleccionada(tiendaId);
-  };
-
-  const agregarPedido = async (pedido) => {
-    try {
-      const maxNumero = pedidos.reduce((max, p) => p.numeroPedido && p.numeroPedido > max ? p.numeroPedido : max, 0);
-      const nuevoNumero = maxNumero + 1;
-      await crearPedido({
-        ...pedido,
-        tiendaId: tiendaSeleccionada,
-        estado: 'enviado',
-        fechaCreacion: new Date().toISOString()
-        // El número de pedido lo asigna el backend
-      });
-      const data = await obtenerPedidos();
-      setPedidos(data);
-      mostrarMensaje('Pedido añadido correctamente', 'success');
-    } catch (error) {
-      mostrarMensaje('Error al crear pedido', 'warning');
-    }
-  };
-
-  const modificarPedido = async (idx, nuevoPedido) => {
-    try {
-      const pedido = pedidos[idx];
-      await actualizarPedido(pedido._id, nuevoPedido);
-      const data = await obtenerPedidos();
-      setPedidos(data);
-      mostrarMensaje('Pedido actualizado', 'success');
-    } catch (error) {
-      mostrarMensaje('Error al actualizar pedido', 'warning');
-    }
-  };
-
-  const borrarPedido = async (idx) => {
-    try {
-      const pedido = pedidos[idx];
-      await eliminarPedido(pedido._id);
-      const data = await obtenerPedidos();
-      setPedidos(data);
-      mostrarMensaje('Pedido borrado', 'info');
-    } catch (error) {
-      mostrarMensaje('Error al borrar pedido', 'warning');
-    }
+    // Opcionalmente, marcarlo como visto al hacer click para verlo
+    // handleAvisoVistoLocal(aviso);
   };
 
   function handleEditarPedido(pedido) {
-    setPedidoEditando(pedido);
+    setPedidoEditando(pedido); // Esto es para un posible modal de edición, si se mantiene.
   }
 
+  // Debug logs (pueden eliminarse o mantenerse si son útiles)
   useEffect(() => {
     if (logueado && modo === 'tienda') {
-      console.log('[DEBUG] tiendaSeleccionada:', tiendaSeleccionada);
+      console.log('[DEBUG App.jsx Hooked] tiendaSeleccionada:', tiendaSeleccionada);
     }
   }, [tiendaSeleccionada, logueado, modo]);
 
   useEffect(() => {
-    console.log('[DEBUG App.jsx] VITE_API_URL:', import.meta.env.VITE_API_URL);
-    console.log('[DEBUG App.jsx] tiendaSeleccionada:', tiendaSeleccionada);
-  }, [tiendaSeleccionada]);
+    console.log('[DEBUG App.jsx Hooked] VITE_API_URL:', import.meta.env.VITE_API_URL);
+  }, []);
 
-  // NUEVO: componente para navegación en panel de tienda
-  function TiendaPanelNavegacion({ tiendaSeleccionada, pedidos, onModificar, onBorrar, onEditar, onVerHistorico }) {
+
+  // Componente interno para navegación en panel de tienda (puede permanecer o extraerse)
+  function TiendaPanelNavegacion({ tiendaId, pedidosFiltrados, onEditarPedido, onVerHistoricoClick }) {
     const navigate = useNavigate();
     return (
       <div>
@@ -395,6 +193,7 @@ function App() {
               <ClientesMantenimiento />
             </div>
           )}
+          {/* Aquí podrían ir otras vistas de clientes como PedidosWoo, PedidosClientes, etc. */}
         </div>
       </div>
     );
@@ -404,11 +203,17 @@ function App() {
     <ProductosProvider>
       <Router>
         <Routes>
-          <Route path="/almacen/:idTienda" element={<AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />} />
+          <Route path="/almacen/:idTienda" element={
+            <AlmacenTiendaPanel
+              tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
+              // Pasar otras props necesarias si AlmacenTiendaPanel las consume desde App
+            />}
+          />
           <Route path="/*" element={
             <div className="App">
               <Watermark />
-              {mensaje && ((modo === 'fabrica' && mensaje.tipo !== 'tienda') || (modo === 'tienda' && mensaje.tipo !== 'fabrica')) && (
+              {/* Mensaje de feedback global */}
+              {mensaje && (
                 <div style={{
                   position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
                   background: mensaje.tipo === 'success' ? '#28a745' : mensaje.tipo === 'warning' ? '#ffc107' : '#007bff',
