@@ -565,6 +565,18 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Obtener movimientos de stock por tienda ---
+app.get('/api/movimientos-stock', async (req, res) => {
+  try {
+    const { tiendaId } = req.query;
+    const filtro = tiendaId ? { tiendaId } : {};
+    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
+    res.json(movimientos);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);
