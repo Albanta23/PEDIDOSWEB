@@ -19,6 +19,10 @@ const Transferencia = require('./models/Transferencia'); // Importar modelo de t
 const Producto = require('./models/Producto'); // Importar modelo de productos
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimientos de almacén
 const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
+const { registrarEntradasStockPorPedido, registrarBajaStock } = require('./utils/stock');
+
+const pedidosTiendaController = require('./pedidosTiendaController');
+const pedidosClientesController = require('./pedidosClientesController');
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -120,7 +124,20 @@ app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
 });
 
-// Endpoints REST
+// --- ENDPOINTS SEPARADOS ---
+// Pedidos de tienda/fábrica
+app.get('/api/pedidos-tienda', pedidosTiendaController.listar);
+app.post('/api/pedidos-tienda', pedidosTiendaController.crear);
+app.put('/api/pedidos-tienda/:id', pedidosTiendaController.actualizar);
+app.delete('/api/pedidos-tienda/:id', pedidosTiendaController.eliminar);
+
+// Pedidos de clientes/expediciones
+app.get('/api/pedidos-clientes', pedidosClientesController.listar);
+app.post('/api/pedidos-clientes', pedidosClientesController.crear);
+app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
+app.delete('/api/pedidos-clientes/:id', pedidosClientesController.eliminar);
+
+// --- ENDPOINTS REST ORIGINALES (DEPRECATED, SOLO PARA COMPATIBILIDAD TEMPORAL) ---
 app.get('/api/pedidos', async (req, res) => {
   try {
     // Si la petición es para expedición de clientes, filtrar solo los pedidos de clientes
@@ -579,6 +596,20 @@ app.get('/api/movimientos-stock', async (req, res) => {
     res.json(movimientos);
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Registrar endpoint de envío a proveedor (Mailjet V2)
+require('./mailjetProveedorEmailV2')(app);
+
+// --- ENDPOINT: Registrar baja de stock manual ---
+app.post('/api/movimientos-stock/baja', async (req, res) => {
+  try {
+    const { tiendaId, producto, cantidad, unidad, lote, motivo, peso } = req.body;
+    await registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ ok: false, error: e.message });
   }
 });
 

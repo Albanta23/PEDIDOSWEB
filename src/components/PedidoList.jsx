@@ -30,7 +30,7 @@ async function cargarLogoBase64(url) {
   });
 }
 
-export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onVerHistoricoPedidos }) {
+export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onRefrescarPedidos }) {
   const { productos, cargando } = useProductos();
   const [creandoNuevo, setCreandoNuevo] = useState(false);
   const [lineasEdit, setLineasEdit] = useState([]);
@@ -241,18 +241,14 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       };
 
       await crearPedido(nuevoPedido);
-      
       // Limpiar editor y storage
       setLineasEdit([]);
       setCreandoNuevo(false);
       limpiarStorage();
-      
       alert('Pedido enviado correctamente.');
-      
-      // Refrescar la lista de pedidos si hay una función para ello
-      if (typeof onVerHistoricoPedidos === 'function') {
-        // Trigger refresh
-        window.location.reload();
+      // Refrescar la lista de pedidos de forma reactiva
+      if (typeof onRefrescarPedidos === 'function') {
+        await onRefrescarPedidos();
       }
     } catch (error) {
       console.error('Error al enviar el pedido:', error);
@@ -360,6 +356,13 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
 
   // --- Enviar lista de proveedor por email usando Mailjet (unificado) ---
   async function enviarProveedorMailjet() {
+    // Filtro: impedir envío solo para clientes directos exactos
+    if (tiendaActual?.id === TIENDA_CLIENTES_ID) {
+      setMensajeProveedor('No se puede enviar lista a proveedor para clientes directos.');
+      alert('No se puede enviar lista a proveedor para clientes directos.');
+      setEnviandoProveedor(false);
+      return;
+    }
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {

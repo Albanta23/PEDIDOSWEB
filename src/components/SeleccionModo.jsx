@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { FaIndustry, FaCashRegister, FaTools, FaTruck } from "react-icons/fa";
+import { FaIndustry, FaCashRegister, FaTools, FaTruck, FaBoxOpen } from "react-icons/fa";
 import logo from "../assets/logo1.png";
 import Watermark from './Watermark';
 import SupervisionPanel from './SupervisionPanel';
+import AlmacenCentralPanel from './AlmacenCentralPanel';
 import { useAppUpdates } from '../hooks/useAppUpdates';
+import { ProductosProvider } from './ProductosContext';
 
 export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion, expedicionesClientes }) {
   const [showSupervision, setShowSupervision] = useState(false);
   const { updateAvailable, forceUpdate } = useAppUpdates();
   const [showUpdateMsg, setShowUpdateMsg] = useState(false);
+  const [showAlmacenCentral, setShowAlmacenCentral] = useState(false);
 
   React.useEffect(() => {
     if (updateAvailable) {
@@ -72,7 +75,7 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
         title="Panel de supervisión"
         onClick={() => setShowSupervision(true)}
       />
-      <div style={{ display: "flex", gap: 40 }}>
+      <div style={{ display: "flex", gap: 40, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 32 }}>
         <button
           onClick={() => onSeleccion("fabrica")}
           style={{
@@ -157,9 +160,41 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
           <FaTruck size={48} style={{ marginBottom: 10 }} />
           Expediciones Clientes
         </button>
+        <button
+          onClick={() => setShowAlmacenCentral(true)}
+          style={{
+            width: 120,
+            height: 120,
+            background: "#ff9800",
+            color: "#fff",
+            border: "none",
+            borderRadius: 16,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 18,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #bbb",
+            fontWeight: 600
+          }}
+        >
+          <FaBoxOpen size={48} style={{ marginBottom: 10 }} />
+          Almacén Central
+        </button>
       </div>
       {showSupervision && (
         <SupervisionPanel pedidos={pedidos} tiendas={tiendas} onClose={()=>setShowSupervision(false)} />
+      )}
+      {showAlmacenCentral && (
+        <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'#0008',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',overflow:'auto'}}>
+          <div style={{position:'relative',zIndex:10000, maxHeight:'95vh', overflowY:'auto', width:'min(1100px,95vw)'}}>
+            <ProductosProvider>
+              <AlmacenCentralPanel />
+            </ProductosProvider>
+            <button onClick={()=>setShowAlmacenCentral(false)} style={{position:'absolute',top:10,right:10,background:'#b71c1c',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,fontSize:16,cursor:'pointer',zIndex:10001}}>Cerrar</button>
+          </div>
+        </div>
       )}
     </div>
   );

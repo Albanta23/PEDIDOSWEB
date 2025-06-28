@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
-import { borrarPedidoCliente } from '../expediciones-clientes/pedidosClientesExpedicionService';
 
 export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso, onChange, onRecargarPedidos }) {
   const { productos } = useProductos();
@@ -189,15 +188,6 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     }
   };
 
-  async function handleBorrarPedido() {
-    if (!pedido || (!pedido._id && !pedido.id)) return;
-    if (window.confirm('¿Seguro que quieres borrar este pedido?')) {
-      await borrarPedidoCliente(pedido._id || pedido.id);
-      if (typeof onCancel === 'function') onCancel();
-      if (typeof onRecargarPedidos === 'function') onRecargarPedidos();
-    }
-  }
-
   return (
     <div
       style={{
@@ -233,7 +223,6 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         {onSend && (!pedido || (!pedido._id && !pedido.id)) && (
           <button style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'10px 32px',fontWeight:700,fontSize:18,cursor:'pointer'}} onClick={()=>onSend(getLineasNormalizadas())} disabled={loading}>Guardar y enviar</button>
         )}
-        <button style={{background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={handleBorrarPedido} disabled={loading}>Borrar</button>
         {onCancel && <button style={{background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:700,marginLeft:12}} onClick={onCancel} disabled={loading}>Cerrar</button>}
       </div>
       <div style={{position:'absolute',top:18,right:18,zIndex:2,display:'flex',gap:12}}>

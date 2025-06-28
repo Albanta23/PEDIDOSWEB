@@ -335,6 +335,11 @@ function App() {
   // NUEVO: componente para navegación en panel de tienda
   function TiendaPanelNavegacion({ tiendaSeleccionada, pedidos, onModificar, onBorrar, onEditar, onVerHistorico }) {
     const navigate = useNavigate();
+    // Función para refrescar pedidos desde backend
+    const refrescarPedidos = async () => {
+      const data = await obtenerPedidos();
+      setPedidos(data);
+    };
     return (
       <div>
         <PedidoList
@@ -344,6 +349,7 @@ function App() {
           onEditar={onEditar}
           modo={"tienda"}
           tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)}
+          onRefrescarPedidos={refrescarPedidos}
         />
         <div style={{display:'flex',gap:12,marginTop:18}}>
           <button onClick={onVerHistorico} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:500}}>
