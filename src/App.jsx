@@ -365,17 +365,17 @@ function App() {
   const apiBaseUrlForDisplay = rawViteApiUrl ? rawViteApiUrl.replace(/\/$/, '') : 'VITE_API_URL is not set';
   const pedidosApiEndpointForDisplay = rawViteApiUrl ? `${apiBaseUrlForDisplay}/api/pedidos` : 'Cannot construct PEDIDOS_API_ENDPOINT';
 
-  const debugDisplay = (
-    <div style={{position: 'fixed', top: 0, left: 0, background: 'yellow', padding: '10px', zIndex: 99999, border: '1px solid red', width: '100%', boxSizing: 'border-box'}}>
-      <p style={{margin:0, padding:0}}><strong>DEBUG VITE_API_URL:</strong> {rawViteApiUrl || 'Not Set'}</p>
-      <p style={{margin:0, padding:0}}><strong>DEBUG PEDIDOS_API_ENDPOINT (constructed in App.jsx):</strong> {pedidosApiEndpointForDisplay}</p>
-    </div>
-  );
+  // const debugDisplay = (
+  //   <div style={{position: 'fixed', top: 0, left: 0, background: 'yellow', padding: '10px', zIndex: 99999, border: '1px solid red', width: '100%', boxSizing: 'border-box'}}>
+  //     <p style={{margin:0, padding:0}}><strong>DEBUG VITE_API_URL:</strong> {rawViteApiUrl || 'Not Set'}</p>
+  //     <p style={{margin:0, padding:0}}><strong>DEBUG PEDIDOS_API_ENDPOINT (constructed in App.jsx):</strong> {pedidosApiEndpointForDisplay}</p>
+  //   </div>
+  // );
 
   if (!modo && !mostrarGestion) {
     return (
       <>
-        {debugDisplay}
+        {/* {debugDisplay} */}
         <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} expedicionesClientes={() => setModo('expedicionesClientes')} />
       </>
     );
@@ -383,7 +383,7 @@ function App() {
   if (mostrarGestion) {
     return (
       <>
-        {debugDisplay}
+        {/* {debugDisplay} */}
         <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />
       </>
     );
@@ -393,7 +393,7 @@ function App() {
   if (modo === 'expedicionesClientes') {
     return (
       <>
-        {debugDisplay}
+        {/* {debugDisplay} */}
         <ExpedicionesClientes />
       </>
     );
@@ -402,7 +402,7 @@ function App() {
   if (!logueado) {
     return (
       <div className="App">
-        {debugDisplay}
+        {/* {debugDisplay} */}
         <Watermark />
         <Login
           tipo={modo}
@@ -418,8 +418,8 @@ function App() {
   if (modo === 'tienda' && tiendaSeleccionada === 'clientes') {
     return (
       <>
-        {debugDisplay}
-        <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa', paddingTop: '50px' /* Account for debug banner */ }}>
+        {/* {debugDisplay} */}
+        <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa' /* paddingTop: '50px' Account for debug banner */ }}>
           <SidebarClientes onSelect={setVistaClientes} selected={vistaClientes} />
           <div style={{ flex: 1, padding: '32px 0', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
             {vistaClientes === 'mantenimiento' && (
@@ -435,8 +435,8 @@ function App() {
 
   return (
     <ProductosProvider>
-      {debugDisplay}
-      <div style={{ paddingTop: '50px' /* Account for debug banner */ }}>
+      {/* {debugDisplay} */}
+      <div style={{ /* paddingTop: '50px' Account for debug banner */ }}>
         <Router>
           <Routes>
             <Route path="/almacen/:idTienda" element={<AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />} />
