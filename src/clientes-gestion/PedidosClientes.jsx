@@ -49,6 +49,8 @@ export default function PedidosClientes({ onPedidoCreado }) {
       await axios.post(`${API_URL}/api/pedidos`, {
         clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
         cliente: clienteSeleccionado.nombre,
+        clienteNombre: clienteSeleccionado.nombre, // Añadido para expediciones
+        direccion: clienteSeleccionado.direccion, // Añadido para expediciones
         tiendaId: 'clientes',
         lineas,
         tipo: 'cliente',
