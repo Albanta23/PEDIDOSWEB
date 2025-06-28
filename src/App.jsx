@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import './App.css';
+// Removed unused import: import { obtenerPedidos as getPedidosServiceEndpoint } from './services/pedidosService';
 import FabricaPanel from './components/FabricaPanel';
 import Login from './components/Login';
 import PedidoList from './components/PedidoList';
@@ -358,21 +359,50 @@ function App() {
   }
 
   // --- RENDER PRINCIPAL ---
+
+  // Reconstruct PEDIDOS_API_ENDPOINT for display
+  const rawViteApiUrl = import.meta.env.VITE_API_URL;
+  const apiBaseUrlForDisplay = rawViteApiUrl ? rawViteApiUrl.replace(/\/$/, '') : 'VITE_API_URL is not set';
+  const pedidosApiEndpointForDisplay = rawViteApiUrl ? `${apiBaseUrlForDisplay}/api/pedidos` : 'Cannot construct PEDIDOS_API_ENDPOINT';
+
+  const debugDisplay = (
+    <div style={{position: 'fixed', top: 0, left: 0, background: 'yellow', padding: '10px', zIndex: 99999, border: '1px solid red', width: '100%', boxSizing: 'border-box'}}>
+      <p style={{margin:0, padding:0}}><strong>DEBUG VITE_API_URL:</strong> {rawViteApiUrl || 'Not Set'}</p>
+      <p style={{margin:0, padding:0}}><strong>DEBUG PEDIDOS_API_ENDPOINT (constructed in App.jsx):</strong> {pedidosApiEndpointForDisplay}</p>
+    </div>
+  );
+
   if (!modo && !mostrarGestion) {
-    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} expedicionesClientes={() => setModo('expedicionesClientes')} />;
+    return (
+      <>
+        {debugDisplay}
+        <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} expedicionesClientes={() => setModo('expedicionesClientes')} />
+      </>
+    );
   }
   if (mostrarGestion) {
-    return <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />;
+    return (
+      <>
+        {debugDisplay}
+        <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />
+      </>
+    );
   }
 
   // NUEVO: acceso directo a ExpedicionesClientes
   if (modo === 'expedicionesClientes') {
-    return <ExpedicionesClientes />;
+    return (
+      <>
+        {debugDisplay}
+        <ExpedicionesClientes />
+      </>
+    );
   }
 
   if (!logueado) {
     return (
       <div className="App">
+        {debugDisplay}
         <Watermark />
         <Login
           tipo={modo}
@@ -387,29 +417,34 @@ function App() {
   // --- NUEVO: Layout especial para "PEDIDOS CLIENTES" ---
   if (modo === 'tienda' && tiendaSeleccionada === 'clientes') {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa' }}>
-        <SidebarClientes onSelect={setVistaClientes} selected={vistaClientes} />
-        <div style={{ flex: 1, padding: '32px 0', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-          {vistaClientes === 'mantenimiento' && (
-            <div style={{ width: '100%', maxWidth: 1100, background: '#fff', borderRadius: 16, boxShadow: '0 6px 24px rgba(33,150,243,0.08), 0 1.5px 6px rgba(0,0,0,0.04)', padding: 32 }}>
-              <ClientesMantenimiento />
-            </div>
-          )}
+      <>
+        {debugDisplay}
+        <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa', paddingTop: '50px' /* Account for debug banner */ }}>
+          <SidebarClientes onSelect={setVistaClientes} selected={vistaClientes} />
+          <div style={{ flex: 1, padding: '32px 0', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+            {vistaClientes === 'mantenimiento' && (
+              <div style={{ width: '100%', maxWidth: 1100, background: '#fff', borderRadius: 16, boxShadow: '0 6px 24px rgba(33,150,243,0.08), 0 1.5px 6px rgba(0,0,0,0.04)', padding: 32 }}>
+                <ClientesMantenimiento />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <ProductosProvider>
-      <Router>
-        <Routes>
-          <Route path="/almacen/:idTienda" element={<AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />} />
-          <Route path="/*" element={
-            <div className="App">
-              <Watermark />
-              {mensaje && ((modo === 'fabrica' && mensaje.tipo !== 'tienda') || (modo === 'tienda' && mensaje.tipo !== 'fabrica')) && (
-                <div style={{
+      {debugDisplay}
+      <div style={{ paddingTop: '50px' /* Account for debug banner */ }}>
+        <Router>
+          <Routes>
+            <Route path="/almacen/:idTienda" element={<AlmacenTiendaPanel tiendaActual={tiendas.find(t => t.id === tiendaSeleccionada)} />} />
+            <Route path="/*" element={
+              <div className="App">
+                <Watermark />
+                {mensaje && ((modo === 'fabrica' && mensaje.tipo !== 'tienda') || (modo === 'tienda' && mensaje.tipo !== 'fabrica')) && (
+                  <div style={{
                   position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
                   background: mensaje.tipo === 'success' ? '#28a745' : mensaje.tipo === 'warning' ? '#ffc107' : '#007bff',
                   color: mensaje.tipo === 'success' ? '#fff' : mensaje.tipo === 'warning' ? '#212529' : '#fff',
