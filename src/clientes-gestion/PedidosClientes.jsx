@@ -40,9 +40,13 @@ export default function PedidosClientes({ onPedidoCreado }) {
   const handleEliminarLinea = (idx) => {
     setLineas(lineas.filter((_, i) => i !== idx));
   };
+  // Validar líneas: al menos una línea de producto válida (ignorar comentarios)
+  const lineasValidas = lineas.filter(l => !l.esComentario && l.producto && l.cantidad > 0);
+  const puedeCrear = clienteSeleccionado && lineasValidas.length > 0;
+
   const handleCrearPedido = async () => {
-    if (!clienteSeleccionado || lineas.length === 0 || lineas.some((l,i)=>!productoValido[i]||!l.producto||!l.cantidad)) {
-      setMensaje('Selecciona un cliente y añade al menos una línea válida.');
+    if (!puedeCrear) {
+      setMensaje('Selecciona un cliente y añade al menos una línea de producto válida.');
       return;
     }
     try {
@@ -168,8 +172,8 @@ export default function PedidosClientes({ onPedidoCreado }) {
             Añadir comentario
           </button>
           <button onClick={handleCrearPedido} style={{ padding: '8px 16px', background: '#28a745', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}
-            disabled={lineas.some((l,i)=>!l.esComentario && (!productoValido[i]||!l.producto||!l.cantidad))}
-            aria-disabled={lineas.some((l,i)=>!l.esComentario && (!productoValido[i]||!l.producto||!l.cantidad))}
+            disabled={!puedeCrear}
+            aria-disabled={!puedeCrear}
           >
             Confirmar y enviar pedido
           </button>
