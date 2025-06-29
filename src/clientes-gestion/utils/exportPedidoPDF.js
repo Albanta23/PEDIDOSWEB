@@ -1,12 +1,40 @@
 import jsPDF from 'jspdf';
+import { DATOS_EMPRESA } from '../../configDatosEmpresa';
+import { cabeceraPDF, piePDF } from '../../utils/exportPDFBase';
 
-export function exportPedidoClientePDF(pedido) {
+async function cargarLogoBase64() {
+  // Solo buscar el logo en la raíz pública
+  const url = window.location.origin + '/logo1.png';
+  try {
+    return await new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function exportPedidoClientePDF(pedido) {
   const doc = new jsPDF();
-  let y = 18;
-  doc.setFontSize(16);
+  await cabeceraPDF(doc);
+  let y = 48;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
   doc.text('Detalle del Pedido', 14, y);
   y += 10;
   doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
   doc.text(`Nº Pedido: ${pedido.numeroPedido || pedido._id || ''}`, 14, y); y += 8;
   doc.text(`Cliente: ${pedido.clienteNombre || ''}`, 14, y); y += 8;
   doc.text(`Estado: ${(pedido.estado||'').replace('_',' ').toUpperCase()}`, 14, y); y += 8;
@@ -15,6 +43,7 @@ export function exportPedidoClientePDF(pedido) {
 
   // Cabecera de líneas
   doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
   doc.text('Producto', 14, y);
   doc.text('Cantidad', 74, y);
   doc.text('Formato', 104, y);
@@ -24,6 +53,7 @@ export function exportPedidoClientePDF(pedido) {
   doc.line(14, y, 196, y);
   y += 5;
   doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
   (pedido.lineas||[]).forEach(l => {
     if (l.esComentario) {
       doc.text('Comentario:', 14, y);
@@ -35,13 +65,15 @@ export function exportPedidoClientePDF(pedido) {
       doc.text(String(l.comentario||''), 134, y);
     }
     y += 7;
-    if (y > 270) { doc.addPage(); y = 18; }
+    if (y > 270) { doc.addPage(); y = 48; }
   });
   y += 8;
   doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
   doc.text('Historial de estados:', 14, y);
   y += 6;
   doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
   doc.text('Estado', 14, y);
   doc.text('Usuario', 64, y);
   doc.text('Fecha', 104, y);
@@ -54,7 +86,10 @@ export function exportPedidoClientePDF(pedido) {
     doc.text(h.usuario||'', 64, y);
     doc.text(h.fecha ? new Date(h.fecha).toLocaleString() : '-', 104, y);
     y += 7;
-    if (y > 270) { doc.addPage(); y = 18; }
+    if (y > 270) { doc.addPage(); y = 48; }
   });
+
+  // Pie de página profesional
+  piePDF(doc);
   doc.save(`pedido_${pedido.numeroPedido || pedido._id || 'detalle'}.pdf`);
 }

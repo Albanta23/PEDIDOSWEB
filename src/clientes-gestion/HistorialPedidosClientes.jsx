@@ -14,7 +14,7 @@ function formatDateInput(date) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function HistorialPedidosClientes() {
+export default function HistorialPedidosClientes({ soloPreparados }) {
   const [clientes, setClientes] = useState([]);
   const [clienteId, setClienteId] = useState('');
   const [fechaInicio, setFechaInicio] = useState(formatDateInput(getMonday(new Date())));
@@ -66,12 +66,17 @@ export default function HistorialPedidosClientes() {
     axios.get(`${API_URL}/api/pedidos-clientes${query}`)
       .then(res => {
         const pedidos = res.data || [];
-        setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
-        setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
+        if (soloPreparados) {
+          setPedidosAbiertos([]);
+          setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
+        } else {
+          setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
+          setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
+        }
         setCargando(false);
       })
       .catch(() => setCargando(false));
-  }, [clienteId, fechaInicio, fechaFin]);
+  }, [clienteId, fechaInicio, fechaFin, soloPreparados]);
 
   const colorEstado = estado => {
     if (estado === 'en_espera') return '#d32f2f';
