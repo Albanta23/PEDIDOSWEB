@@ -2,47 +2,54 @@ import jsPDF from 'jspdf';
 import { DATOS_EMPRESA } from '../../configDatosEmpresa';
 import { formatearDireccionCompletaPedido } from './formatDireccion';
 
-// Función para cargar logo de forma fiable con múltiples intentos
+// Función simple y directa para cargar logo (enfoque minimalista)
+async function cargarLogoSimple() {
+  try {
+    console.log('🖼️ Cargando logo con método directo...');
+    
+    // Método más directo usando fetch
+    const response = await fetch('/logo1.png');
+    if (!response.ok) {
+      console.warn(`❌ No se pudo cargar logo: HTTP ${response.status}`);
+      return null;
+    }
+
+    const blob = await response.blob();
+    const logoBase64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    console.log(`✅ Logo cargado exitosamente: ${logoBase64.length} caracteres`);
+    return logoBase64;
+  } catch (error) {
+    console.error('❌ Error cargando logo:', error);
+    return null;
+  }
+}
+
+// Función de respaldo completa (mantener por si acaso)
 async function cargarLogo() {
-  // Para aplicaciones Vite/React, los archivos en public/ se sirven desde la raíz
+  // Primero intentar el método simple
+  let logo = await cargarLogoSimple();
+  if (logo) return logo;
+
+  // Si falla, usar el método completo como respaldo
   const rutasLogo = [
     '/logo1.png', // Ruta directa desde public (más probable que funcione)
     `${window.location.origin}/logo1.png`,
-    `${import.meta.env.BASE_URL}logo1.png`, // Usando BASE_URL de Vite
-    './logo1.png',
-    '/public/logo1.png'
+    `${import.meta.env.BASE_URL || '/'}logo1.png`, // Usando BASE_URL de Vite
+    './logo1.png'
   ];
 
-  console.log('🖼️ Intentando cargar logo desde las siguientes rutas:', rutasLogo);
+  console.log('🖼️ Método simple falló, probando rutas múltiples:', rutasLogo);
 
-  // Primer intento: usando fetch (más confiable para archivos estáticos)
+  // Intentar con Image() para las rutas restantes
   for (const logoUrl of rutasLogo) {
     try {
-      console.log(`🔍 Probando con fetch: ${logoUrl}`);
-      const response = await fetch(logoUrl);
-      if (response.ok) {
-        const blob = await response.blob();
-        const logoBase64 = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            console.log(`✅ Logo cargado exitosamente con fetch desde: ${logoUrl}`);
-            resolve(reader.result);
-          };
-          reader.readAsDataURL(blob);
-        });
-        return logoBase64;
-      } else {
-        console.warn(`❌ Fetch falló para ${logoUrl}: ${response.status}`);
-      }
-    } catch (fetchError) {
-      console.warn(`❌ Error fetch para ${logoUrl}:`, fetchError.message);
-    }
-  }
-
-  // Segundo intento: usando Image() como fallback
-  for (const logoUrl of rutasLogo) {
-    try {
-      console.log(`🔍 Probando con Image: ${logoUrl}`);
+      console.log(`🔍 Probando: ${logoUrl}`);
       const logoBase64 = await new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -51,37 +58,30 @@ async function cargarLogo() {
           try {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = this.naturalWidth;
-            canvas.height = this.naturalHeight;
+            canvas.width = this.naturalWidth || this.width;
+            canvas.height = this.naturalHeight || this.height;
             ctx.drawImage(this, 0, 0);
             const dataUrl = canvas.toDataURL('image/png');
-            console.log(`✅ Logo cargado exitosamente con Image desde: ${logoUrl}`);
-            console.log(`📏 Dimensiones: ${this.naturalWidth}x${this.naturalHeight}`);
+            console.log(`✅ Logo cargado con Image desde: ${logoUrl}`);
             resolve(dataUrl);
           } catch (canvasError) {
-            console.warn(`❌ Error procesando canvas para ${logoUrl}:`, canvasError);
+            console.warn(`❌ Error canvas:`, canvasError);
             reject(canvasError);
           }
         };
         
-        img.onerror = (error) => {
-          console.warn(`❌ Error Image para ${logoUrl}:`, error);
-          reject(new Error(`No se pudo cargar desde ${logoUrl}`));
-        };
-        
-        // Importante: configurar src después de los event listeners
+        img.onerror = () => reject(new Error(`Falló ${logoUrl}`));
         img.src = logoUrl;
       });
       
       return logoBase64;
     } catch (error) {
-      console.warn(`❌ Falló Image para ${logoUrl}:`, error.message);
+      console.warn(`❌ Falló ${logoUrl}:`, error.message);
       continue;
     }
   }
 
-  console.error('❌ CRÍTICO: No se pudo cargar el logo desde ninguna ruta');
-  console.log('💡 Sugerencia: Verificar que logo1.png existe en public/ y es accesible');
+  console.error('❌ CRÍTICO: Todos los métodos de carga fallaron');
   return null;
 }
 
