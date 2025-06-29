@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useProductos } from '../components/ProductosContext';
 import { FORMATOS_PEDIDO } from '../configFormatos';
+import { formatearDireccionCompleta } from './utils/formatDireccion';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
@@ -56,6 +57,9 @@ export default function PedidosClientes({ onPedidoCreado }) {
         clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
         clienteNombre: clienteSeleccionado.nombre,
         direccion: clienteSeleccionado.direccion,
+        codigoPostal: clienteSeleccionado.codigoPostal,
+        poblacion: clienteSeleccionado.poblacion,
+        provincia: clienteSeleccionado.provincia,
         lineas,
         tipo: 'cliente',
         fechaPedido: new Date().toISOString(),
@@ -351,13 +355,66 @@ export default function PedidosClientes({ onPedidoCreado }) {
           </div>
           {clienteSeleccionado && (
             <div style={{
-              background: 'rgba(255,255,255,0.2)',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              fontSize: '14px',
-              fontWeight: '600'
+              background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 100%)',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              border: '2px solid #10b981',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)'
             }}>
-              ✅ Cliente seleccionado
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '8px'
+              }}>
+                <div style={{
+                  background: '#10b981',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>✓</div>
+                <div>
+                  <div style={{ 
+                    fontWeight: '700', 
+                    fontSize: '16px', 
+                    color: '#1e293b' 
+                  }}>
+                    {clienteSeleccionado.nombre}
+                  </div>
+                  <div style={{ 
+                    fontSize: '13px', 
+                    color: '#10b981', 
+                    fontWeight: '600' 
+                  }}>
+                    Cliente seleccionado
+                  </div>
+                </div>
+              </div>
+              {formatearDireccionCompleta(clienteSeleccionado) !== '-' && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(16, 185, 129, 0.2)'
+                }}>
+                  <span style={{ fontSize: '14px', marginTop: '1px' }}>📍</span>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#374151',
+                    lineHeight: '1.4'
+                  }}>
+                    {formatearDireccionCompleta(clienteSeleccionado)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>

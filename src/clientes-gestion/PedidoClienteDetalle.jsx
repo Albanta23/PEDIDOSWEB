@@ -1,5 +1,6 @@
 import React from 'react';
 import { exportPedidoClientePDF } from './utils/exportPedidoPDF';
+import { formatearDireccionCompletaPedido } from './utils/formatDireccion';
 
 export default function PedidoClienteDetalle({ pedido, onClose }) {
   if (!pedido) return null;
@@ -208,14 +209,21 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   padding: '12px 16px',
                   background: '#fff',
                   borderRadius: '8px',
                   border: '1px solid #e2e8f0'
                 }}>
-                  <b style={{color: '#374151'}}>Dirección:</b> 
-                  <span style={{ textAlign: 'right', maxWidth: '200px' }}>{pedido.direccion || '-'}</span>
+                  <b style={{color: '#374151'}}>Dirección completa:</b> 
+                  <span style={{ 
+                    textAlign: 'right', 
+                    maxWidth: '200px',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word'
+                  }}>
+                    {formatearDireccionCompletaPedido(pedido)}
+                  </span>
                 </div>
                 <div style={{
                   display: 'flex',

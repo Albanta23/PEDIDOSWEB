@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { DATOS_EMPRESA } from '../../configDatosEmpresa';
 import { cabeceraPDF, piePDF } from '../../utils/exportPDFBase';
+import { formatearDireccionCompletaPedido } from './formatDireccion';
 
 async function cargarLogoBase64() {
   // Solo buscar el logo en la raíz pública
@@ -39,7 +40,15 @@ export async function exportPedidoClientePDF(pedido) {
   doc.text(`Cliente: ${pedido.clienteNombre || ''}`, 14, y); y += 8;
   doc.text(`Estado: ${(pedido.estado||'').replace('_',' ').toUpperCase()}`, 14, y); y += 8;
   doc.text(`Fecha pedido: ${pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-'}`, 14, y); y += 8;
-  doc.text(`Dirección: ${pedido.direccion || '-'}`, 14, y); y += 12;
+  
+  // Dirección completa con manejo de múltiples líneas
+  const direccionCompleta = formatearDireccionCompletaPedido(pedido);
+  const lineasDireccion = doc.splitTextToSize(`Dirección: ${direccionCompleta}`, 180);
+  lineasDireccion.forEach(linea => {
+    doc.text(linea, 14, y);
+    y += 6;
+  });
+  y += 6;
 
   // Cabecera de líneas
   doc.setFontSize(12);

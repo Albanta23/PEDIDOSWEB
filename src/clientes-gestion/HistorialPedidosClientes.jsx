@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PedidoClienteDetalle from './PedidoClienteDetalle';
+import { formatearDireccionCompletaPedido } from './utils/formatDireccion';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
@@ -323,7 +324,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                   <thead>
                     <tr style={{ background: '#f8fafc' }}>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Nº Pedido</th>
-                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Cliente</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0', width: '300px' }}>Cliente y Dirección</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Estado</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Fecha</th>
                       <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
@@ -359,9 +360,15 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                           #{p.numeroPedido || p.id}
                         </td>
                         <td style={{ padding: '16px', color: '#475569' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '16px' }}>👤</span>
-                            {p.clienteNombre || '-'}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '16px' }}>👤</span>
+                              <span style={{ fontWeight: '600', color: '#1e293b' }}>{p.clienteNombre || '-'}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '14px' }}>📍</span>
+                              <span style={{ fontSize: '13px', color: '#64748b' }}>{formatearDireccionCompletaPedido(p)}</span>
+                            </div>
                           </div>
                         </td>
                         <td style={{ padding: '16px' }}>
@@ -500,7 +507,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Nº Pedido</th>
-                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Cliente</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0', width: '300px' }}>Cliente y Dirección</th>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Estado</th>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Fecha</th>
                     <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
@@ -535,9 +542,15 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                         #{p.numeroPedido || p.id}
                       </td>
                       <td style={{ padding: '16px', color: '#475569' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '16px' }}>👤</span>
-                          {p.clienteNombre || '-'}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '16px' }}>👤</span>
+                            <span style={{ fontWeight: '600', color: '#1e293b' }}>{p.clienteNombre || '-'}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '14px' }}>📍</span>
+                            <span style={{ fontSize: '13px', color: '#64748b' }}>{formatearDireccionCompletaPedido(p)}</span>
+                          </div>
                         </div>
                       </td>
                       <td style={{ padding: '16px' }}>
