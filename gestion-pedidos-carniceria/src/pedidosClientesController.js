@@ -1,11 +1,11 @@
 // Controlador para pedidos de clientes/expediciones
-const Pedido = require('./models/Pedido');
+const PedidoCliente = require('./models/PedidoCliente');
 
 module.exports = {
   async listar(req, res) {
     try {
-      // Solo pedidos de clientes
-      const pedidos = await Pedido.find({ tiendaId: 'clientes' });
+      // Listar todos los pedidos de clientes
+      const pedidos = await PedidoCliente.find();
       res.json(pedidos);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -13,16 +13,15 @@ module.exports = {
   },
   async crear(req, res) {
     try {
-      const ultimoPedido = await Pedido.findOne({ tiendaId: 'clientes' }, {}, { sort: { numeroPedido: -1 } });
+      const ultimoPedido = await PedidoCliente.findOne({}, {}, { sort: { numeroPedido: -1 } });
       const siguienteNumero = (ultimoPedido?.numeroPedido || 0) + 1;
-      const nuevoPedido = new Pedido({
+      const nuevoPedido = new PedidoCliente({
         ...req.body,
         numeroPedido: siguienteNumero,
         fechaCreacion: req.body.fechaCreacion || new Date(),
         fechaPedido: req.body.fechaPedido,
         fechaEnvio: req.body.fechaEnvio,
-        fechaRecepcion: req.body.fechaRecepcion,
-        tiendaId: 'clientes'
+        fechaRecepcion: req.body.fechaRecepcion
       });
       const pedidoGuardado = await nuevoPedido.save();
       res.status(201).json(pedidoGuardado);
@@ -33,9 +32,9 @@ module.exports = {
   async actualizar(req, res) {
     try {
       const { id } = req.params;
-      const pedidoPrevio = await Pedido.findById(id);
-      if (!pedidoPrevio || pedidoPrevio.tiendaId !== 'clientes') return res.status(404).json({ error: 'Pedido no encontrado' });
-      const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
+      const pedidoPrevio = await PedidoCliente.findById(id);
+      if (!pedidoPrevio) return res.status(404).json({ error: 'Pedido no encontrado' });
+      const pedidoActualizado = await PedidoCliente.findByIdAndUpdate(id, req.body, { new: true });
       res.json(pedidoActualizado);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -44,7 +43,7 @@ module.exports = {
   async eliminar(req, res) {
     try {
       const { id } = req.params;
-      const pedidoEliminado = await Pedido.findOneAndDelete({ _id: id, tiendaId: 'clientes' });
+      const pedidoEliminado = await PedidoCliente.findOneAndDelete({ _id: id });
       if (!pedidoEliminado) return res.status(404).json({ error: 'Pedido no encontrado' });
       res.status(204).end();
     } catch (err) {

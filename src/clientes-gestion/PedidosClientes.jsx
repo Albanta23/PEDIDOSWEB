@@ -46,12 +46,10 @@ export default function PedidosClientes({ onPedidoCreado }) {
       return;
     }
     try {
-      await axios.post(`${API_URL}/api/pedidos`, {
+      await axios.post(`${API_URL}/api/pedidos-clientes`, {
         clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
-        cliente: clienteSeleccionado.nombre,
-        clienteNombre: clienteSeleccionado.nombre, // Añadido para expediciones
-        direccion: clienteSeleccionado.direccion, // Añadido para expediciones
-        tiendaId: 'clientes',
+        clienteNombre: clienteSeleccionado.nombre,
+        direccion: clienteSeleccionado.direccion,
         lineas,
         tipo: 'cliente',
         fechaPedido: new Date().toISOString(),
