@@ -4,84 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Logo Directo</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .section h3 { margin-top: 0; color: #333; }
+        .log { background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; border: none; border-radius: 4px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .test-logo { max-width: 200px; border: 1px solid #ccc; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+    </style>
 </head>
 <body>
-    <h1>Test Logo Directo</h1>
+    <h1>🔍 Test Logo PDF - Diagnóstico</h1>
     
-    <div>
+    <div class="section">
+        <h3>📋 Instrucciones</h3>
+        <p><strong>IMPORTANTE:</strong> Este test debe ejecutarse desde un servidor web, no directamente desde el archivo.</p>
+        <p>Opciones:</p>
+        <ul>
+            <li><strong>Recomendado:</strong> Ejecutar desde la aplicación React/Vite</li>
+            <li><strong>Alternativa:</strong> Usar servidor local como Live Server de VS Code</li>
+            <li><strong>Comando:</strong> <code>npx serve .</code> en la carpeta del proyecto</li>
+        </ul>
+    </div>
+
+    <div class="section">
         <h3>1. Verificar logo visible</h3>
-        <img src="/logo1.png" style="max-width: 200px; border: 1px solid #ccc;" id="logoTest" />
-        <p id="logoStatus">Cargando...</p>
+        <div>
+            <img src="./logo1.png" style="max-width: 200px; border: 1px solid #ccc;" id="logoTest" />
+            <p id="logoStatus">Cargando...</p>
+            <div style="margin-top: 10px;">
+                <small>Probando también desde public/:</small><br>
+                <img src="./public/logo1.png" style="max-width: 100px; border: 1px solid #ccc; margin-right: 10px;" id="logoTestPublic" />
+                <span id="publicStatus">Cargando...</span>
+            </div>
+        </div>
+        <button onclick="testMultipleLogoSources()" class="btn-primary">Probar múltiples rutas</button>
     </div>
 
-    <div>
+    <div class="section">
         <h3>2. Test de carga para PDF</h3>
-        <button onclick="testLogoPDF()">Probar carga del logo</button>
-        <pre id="logOutput" style="background: #f5f5f5; padding: 10px; margin-top: 10px;"></pre>
+        <button onclick="testLogoPDF()" class="btn-primary">Probar carga del logo</button>
+        <div class="log" id="logOutput"></div>
     </div>
 
-    <div>
-        <h3>3. Generar PDF simple</h3>
-        <button onclick="generarPDFSimple()">Generar PDF con logo</button>
+    <div class="section">
+        <h3>3. Generar PDF con jsPDF local</h3>
+        <button onclick="generarPDFLocal()" class="btn-success">Generar PDF (método local)</button>
+        <p><small>Usa jsPDF desde CDN con mejor compatibilidad</small></p>
     </div>
 
-    <script type="module">
+    <div class="section">
+        <h3>4. Estado del entorno</h3>
+        <div id="environmentInfo"></div>
+    </div>
+
+    <script>
+        // Información del entorno
+        document.addEventListener('DOMContentLoaded', function() {
+            const envInfo = document.getElementById('environmentInfo');
+            envInfo.innerHTML = `
+                <p><strong>Protocolo:</strong> ${window.location.protocol}</p>
+                <p><strong>Host:</strong> ${window.location.host}</p>
+                <p><strong>Pathname:</strong> ${window.location.pathname}</p>
+                <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+            `;
+            
+            if (window.location.protocol === 'file:') {
+                envInfo.innerHTML += '<p class="error"><strong>⚠️ ADVERTENCIA:</strong> Ejecutándose desde file://, puede que no funcione correctamente</p>';
+            }
+        });
+
         const logoImg = document.getElementById('logoTest');
         const logoStatus = document.getElementById('logoStatus');
+        const logoPublic = document.getElementById('logoTestPublic');
+        const publicStatus = document.getElementById('publicStatus');
         
         logoImg.onload = function() {
             logoStatus.textContent = `✅ Logo carga correctamente (${this.naturalWidth}x${this.naturalHeight})`;
-            logoStatus.style.color = 'green';
+            logoStatus.className = 'success';
         };
         
         logoImg.onerror = function() {
-            logoStatus.textContent = '❌ No se puede cargar el logo desde /logo1.png';
-            logoStatus.style.color = 'red';
+            logoStatus.textContent = '❌ No se puede cargar el logo desde ./logo1.png';
+            logoStatus.className = 'error';
+        };
+
+        logoPublic.onload = function() {
+            publicStatus.textContent = `✅ Public: ${this.naturalWidth}x${this.naturalHeight}`;
+            publicStatus.className = 'success';
+        };
+        
+        logoPublic.onerror = function() {
+            publicStatus.textContent = '❌ No se puede cargar desde public/';
+            publicStatus.className = 'error';
+        };
+
+        window.testMultipleLogoSources = function() {
+            const paths = ['./logo1.png', './public/logo1.png', '/logo1.png', '/public/logo1.png'];
+            let found = false;
+            
+            logoStatus.textContent = 'Probando múltiples rutas...';
+            logoStatus.className = 'warning';
+            
+            paths.forEach((path, index) => {
+                const testImg = new Image();
+                testImg.onload = function() {
+                    if (!found) {
+                        found = true;
+                        logoImg.src = path;
+                        logoStatus.textContent = `✅ Logo encontrado en: ${path} (${this.naturalWidth}x${this.naturalHeight})`;
+                        logoStatus.className = 'success';
+                        console.log(`✅ Ruta exitosa: ${path}`);
+                    }
+                };
+                testImg.onerror = function() {
+                    console.log(`❌ No encontrado en: ${path}`);
+                };
+                testImg.src = path;
+            });
+            
+            setTimeout(() => {
+                if (!found) {
+                    logoStatus.textContent = '❌ Logo no encontrado en ninguna ruta probada';
+                    logoStatus.className = 'error';
+                }
+            }, 3000);
         };
 
         window.testLogoPDF = async function() {
             const output = document.getElementById('logOutput');
             output.textContent = 'Iniciando test...\n';
 
-            try {
-                // Test con fetch
-                output.textContent += 'Probando con fetch...\n';
-                const response = await fetch('/logo1.png');
-                if (response.ok) {
-                    output.textContent += `✅ Fetch OK: ${response.status} ${response.statusText}\n`;
-                    output.textContent += `   Content-Type: ${response.headers.get('content-type')}\n`;
-                    output.textContent += `   Content-Length: ${response.headers.get('content-length')} bytes\n`;
+            const paths = ['./logo1.png', './public/logo1.png', '/logo1.png'];
+            
+            for (const path of paths) {
+                try {
+                    output.textContent += `\nProbando: ${path}\n`;
                     
-                    const blob = await response.blob();
-                    const logoBase64 = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result);
-                        reader.readAsDataURL(blob);
-                    });
-                    
-                    output.textContent += `✅ Convertido a base64: ${logoBase64.length} caracteres\n`;
-                    output.textContent += `   Comienza con: ${logoBase64.substring(0, 50)}...\n`;
-                    
-                    return logoBase64;
-                } else {
-                    output.textContent += `❌ Fetch falló: ${response.status}\n`;
+                    if (window.location.protocol === 'file:') {
+                        output.textContent += '⚠️ Protocolo file:// detectado, usando método Image...\n';
+                        
+                        const logoBase64 = await new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.onload = function() {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                canvas.width = this.naturalWidth;
+                                canvas.height = this.naturalHeight;
+                                ctx.drawImage(this, 0, 0);
+                                resolve(canvas.toDataURL('image/png'));
+                            };
+                            img.onerror = () => reject(new Error('No se pudo cargar'));
+                            img.src = path;
+                        });
+                        
+                        output.textContent += `✅ Logo cargado con Image: ${logoBase64.length} caracteres\n`;
+                        return logoBase64;
+                    } else {
+                        // Usar fetch para protocolos HTTP
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            output.textContent += `✅ Fetch OK: ${response.status}\n`;
+                            const blob = await response.blob();
+                            const logoBase64 = await new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(reader.result);
+                                reader.readAsDataURL(blob);
+                            });
+                            output.textContent += `✅ Convertido a base64: ${logoBase64.length} caracteres\n`;
+                            return logoBase64;
+                        } else {
+                            output.textContent += `❌ Fetch falló: ${response.status}\n`;
+                        }
+                    }
+                } catch (error) {
+                    output.textContent += `❌ Error: ${error.message}\n`;
                 }
-            } catch (error) {
-                output.textContent += `❌ Error: ${error.message}\n`;
             }
             
+            output.textContent += '\n❌ No se pudo cargar desde ninguna ruta\n';
             return null;
         };
 
-        window.generarPDFSimple = async function() {
+        window.generarPDFLocal = async function() {
             try {
-                // Importar jsPDF desde CDN
-                const { jsPDF } = await import('https://unpkg.com/jspdf@latest/dist/jspdf.es.min.js');
+                // Cargar jsPDF desde CDN
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                document.head.appendChild(script);
                 
-                console.log('📄 Creando PDF...');
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                });
+                
+                console.log('📄 jsPDF cargado, creando PDF...');
+                const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Cargar logo usando la función simple
+                // Cargar logo
                 console.log('🖼️ Cargando logo...');
                 const logoBase64 = await testLogoPDF();
                 
@@ -95,17 +221,19 @@
                     doc.text('[Logo no disponible]', 10, 25);
                 }
                 
-                // Añadir contenido de prueba
+                // Añadir contenido
                 doc.setFontSize(16);
                 doc.text('PDF de Prueba con Logo', 10, 60);
                 doc.setFontSize(12);
-                doc.text('Si ves el logo arriba, la integración está funcionando.', 10, 75);
+                doc.text('Si ves el logo arriba, la integración funciona.', 10, 75);
                 doc.text(`Generado: ${new Date().toLocaleString()}`, 10, 90);
+                doc.text(`Protocolo: ${window.location.protocol}`, 10, 105);
+                doc.text(`Host: ${window.location.host}`, 10, 120);
                 
                 // Guardar
-                doc.save('test-logo-simple.pdf');
+                doc.save('test-logo-local.pdf');
                 console.log('✅ PDF guardado');
-                alert('PDF generado y descargado como test-logo-simple.pdf');
+                alert('PDF generado y descargado como test-logo-local.pdf');
                 
             } catch (error) {
                 console.error('❌ Error:', error);

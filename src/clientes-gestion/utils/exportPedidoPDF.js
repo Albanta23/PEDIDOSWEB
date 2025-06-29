@@ -7,25 +7,36 @@ async function cargarLogoSimple() {
   try {
     console.log('🖼️ Cargando logo con método directo...');
     
-    // Método más directo usando fetch
-    const response = await fetch('/logo1.png');
-    if (!response.ok) {
-      console.warn(`❌ No se pudo cargar logo: HTTP ${response.status}`);
-      return null;
+    // Método más directo usando fetch - probando rutas más comunes
+    const rutas = ['/logo1.png', '/public/logo1.png', './logo1.png'];
+    
+    for (const ruta of rutas) {
+      try {
+        console.log(`🔍 Probando ruta: ${ruta}`);
+        const response = await fetch(ruta);
+        if (response.ok) {
+          const blob = await response.blob();
+          const logoBase64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+
+          console.log(`✅ Logo cargado exitosamente desde ${ruta}: ${logoBase64.length} caracteres`);
+          return logoBase64;
+        } else {
+          console.warn(`❌ HTTP ${response.status} para ${ruta}`);
+        }
+      } catch (error) {
+        console.warn(`❌ Error con ${ruta}:`, error.message);
+      }
     }
-
-    const blob = await response.blob();
-    const logoBase64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-
-    console.log(`✅ Logo cargado exitosamente: ${logoBase64.length} caracteres`);
-    return logoBase64;
+    
+    console.warn('❌ No se pudo cargar logo con método simple');
+    return null;
   } catch (error) {
-    console.error('❌ Error cargando logo:', error);
+    console.error('❌ Error general cargando logo:', error);
     return null;
   }
 }
