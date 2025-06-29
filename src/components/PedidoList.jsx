@@ -349,7 +349,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
-      // 1. Generar PDF como base64 usando la función centralizada
+      // 1. Generar PDF usando la función centralizada existente
       const doc = new jsPDF();
       await cabeceraPDF(doc);
       let y = 48;
@@ -363,6 +363,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       }
       doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
       y += 11;
+      // Cabecera tabla
       doc.setFontSize(14);
       doc.text('Referencia', 14, y);
       doc.text('Cantidad', 70, y);
@@ -372,7 +373,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       doc.line(14, y, 150, y);
       y += 5;
       doc.setFontSize(13);
-      lineasProveedor.forEach(l => {
+      for (const l of lineasProveedor) {
         if (l.referencia && l.cantidad) {
           doc.text(String(l.referencia).toUpperCase(), 14, y);
           doc.text(String(l.cantidad), 70, y);
@@ -380,13 +381,15 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           y += 9;
           if (y > 280) {
             doc.addPage();
-            y = 28;
+            await cabeceraPDF(doc);
+            y = 48;
           }
         }
-      });
+      }
       // Aplicar pie de página profesional
-      piePDF(doc);
+      await piePDF(doc);
       
+      // Convertir a base64 correctamente
       let pdfBase64 = doc.output('datauristring');
       if (pdfBase64.startsWith('data:')) {
         pdfBase64 = pdfBase64.substring(pdfBase64.indexOf(',') + 1);
