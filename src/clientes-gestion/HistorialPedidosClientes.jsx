@@ -87,79 +87,516 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
   };
 
   return (
-    <div style={{ marginTop: 32 }}>
-      <h3>Historial de Pedidos de Clientes</h3>
-      <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:24}}>
-        <label>Cliente:
-          <select value={clienteId} onChange={e=>setClienteId(e.target.value)} style={{marginLeft:8,padding:6,borderRadius:6}}>
-            <option value="">Todos</option>
-            {clientes.map(c=>(<option key={c._id||c.id||c.codigo} value={c._id||c.id||c.codigo}>{c.nombre}</option>))}
-          </select>
-        </label>
-        <label>Fecha inicio:
-          <input type="date" value={fechaInicio} onChange={e=>setFechaInicio(e.target.value)} style={{marginLeft:8,padding:6,borderRadius:6}} />
-        </label>
-        <label>Fecha fin:
-          <input type="date" value={fechaFin} onChange={e=>setFechaFin(e.target.value)} style={{marginLeft:8,padding:6,borderRadius:6}} />
-        </label>
+    <div style={{ 
+      marginTop: 32, 
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      minHeight: '100vh',
+      padding: '24px',
+      borderRadius: '16px',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+    }}>
+      {/* Header profesional con iconos */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: '#fff',
+        padding: '24px 32px',
+        borderRadius: '16px',
+        marginBottom: '32px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px'
+      }}>
+        <div style={{
+          fontSize: '48px',
+          background: 'rgba(255,255,255,0.2)',
+          borderRadius: '50%',
+          width: '80px',
+          height: '80px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>📊</div>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700' }}>
+            Historial de Pedidos de Clientes
+          </h1>
+          <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '16px' }}>
+            Gestión completa del historial de pedidos y estados
+          </p>
+        </div>
       </div>
-      {cargando ? <div>Cargando...</div> : (
+
+      {/* Panel de filtros mejorado */}
+      <div style={{
+        background: '#fff',
+        padding: '24px',
+        borderRadius: '16px',
+        marginBottom: '24px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+        border: '1px solid #e1e8ed'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '16px'
+        }}>
+          <div style={{
+            fontSize: '20px',
+            color: '#667eea',
+            fontWeight: '600'
+          }}>🔍</div>
+          <h3 style={{ margin: 0, color: '#2c3e50', fontSize: '18px', fontWeight: '600' }}>
+            Filtros de búsqueda
+          </h3>
+        </div>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+          alignItems: 'end'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{
+              fontWeight: '600',
+              color: '#34495e',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ fontSize: '16px' }}>👤</span> Cliente
+            </label>
+            <select 
+              value={clienteId} 
+              onChange={e=>setClienteId(e.target.value)} 
+              style={{
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: '2px solid #e1e8ed',
+                fontSize: '14px',
+                background: '#fff',
+                transition: 'border-color 0.3s ease',
+                outline: 'none'
+              }}
+              onFocus={e => e.target.style.borderColor = '#667eea'}
+              onBlur={e => e.target.style.borderColor = '#e1e8ed'}
+            >
+              <option value="">Todos los clientes</option>
+              {clientes.map(c=>(<option key={c._id||c.id||c.codigo} value={c._id||c.id||c.codigo}>{c.nombre}</option>))}
+            </select>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{
+              fontWeight: '600',
+              color: '#34495e',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ fontSize: '16px' }}>📅</span> Fecha inicio
+            </label>
+            <input 
+              type="date" 
+              value={fechaInicio} 
+              onChange={e=>setFechaInicio(e.target.value)} 
+              style={{
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: '2px solid #e1e8ed',
+                fontSize: '14px',
+                background: '#fff',
+                transition: 'border-color 0.3s ease',
+                outline: 'none'
+              }}
+              onFocus={e => e.target.style.borderColor = '#667eea'}
+              onBlur={e => e.target.style.borderColor = '#e1e8ed'}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{
+              fontWeight: '600',
+              color: '#34495e',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ fontSize: '16px' }}>📅</span> Fecha fin
+            </label>
+            <input 
+              type="date" 
+              value={fechaFin} 
+              onChange={e=>setFechaFin(e.target.value)} 
+              style={{
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: '2px solid #e1e8ed',
+                fontSize: '14px',
+                background: '#fff',
+                transition: 'border-color 0.3s ease',
+                outline: 'none'
+              }}
+              onFocus={e => e.target.style.borderColor = '#667eea'}
+              onBlur={e => e.target.style.borderColor = '#e1e8ed'}
+            />
+          </div>
+        </div>
+      </div>
+      {cargando ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '64px',
+          background: '#fff',
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #667eea',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '16px'
+          }}></div>
+          <p style={{ color: '#667eea', fontSize: '16px', fontWeight: '600' }}>
+            Cargando historial de pedidos...
+          </p>
+          <style>
+            {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+          </style>
+        </div>
+      ) : (
         <>
-          <h4>Pedidos abiertos</h4>
-          <table style={{ width: '100%', marginBottom: 24 }}>
-            <thead>
-              <tr>
-                <th>Nº Pedido</th>
-                <th>Cliente</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pedidosAbiertos.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#888' }}>Sin pedidos abiertos</td></tr>}
-              {pedidosAbiertos.map(p => (
-                <tr key={p._id || p.id}>
-                  <td>{p.numeroPedido || p.id}</td>
-                  <td>{p.clienteNombre || '-'}</td>
-                  <td style={{ color: colorEstado(p.estado), fontWeight: 700 }}>{p.estado?.replace('_', ' ').toUpperCase()}</td>
-                  <td>{p.fechaPedido ? new Date(p.fechaPedido).toLocaleString() : '-'}</td>
-                  <td>
-                    <button onClick={()=>setPedidoDetalle(p)} style={{padding:'4px 12px',background:'#1976d2',color:'#fff',border:'none',borderRadius:6,fontWeight:600,marginRight:8}}>Ver detalle</button>
-                    <button onClick={()=>cancelarPedido(p)} disabled={cancelandoId===p._id} style={{padding:'4px 12px',background:'#dc3545',color:'#fff',border:'none',borderRadius:6,fontWeight:600}}>
-                      {cancelandoId===p._id ? 'Cancelando...' : 'Cancelar'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <h4>Pedidos cerrados</h4>
-          <table style={{ width: '100%' }}>
-            <thead>
-              <tr>
-                <th>Nº Pedido</th>
-                <th>Cliente</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pedidosCerrados.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#888' }}>Sin pedidos cerrados</td></tr>}
-              {pedidosCerrados.map(p => (
-                <tr key={p._id || p.id}>
-                  <td>{p.numeroPedido || p.id}</td>
-                  <td>{p.clienteNombre || '-'}</td>
-                  <td style={{ color: colorEstado(p.estado), fontWeight: 700 }}>{p.estado?.replace('_', ' ').toUpperCase()}</td>
-                  <td>{p.fechaPedido ? new Date(p.fechaPedido).toLocaleString() : '-'}</td>
-                  <td>
-                    <button onClick={()=>setPedidoDetalle(p)} style={{padding:'4px 12px',background:'#1976d2',color:'#fff',border:'none',borderRadius:6,fontWeight:600}}>Ver detalle</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* Sección de pedidos abiertos */}
+          {!soloPreparados && (
+            <div style={{
+              background: '#fff',
+              borderRadius: '16px',
+              marginBottom: '24px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              border: '1px solid #e1e8ed',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                padding: '20px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  fontSize: '24px',
+                  background: 'rgba(255,255,255,0.3)',
+                  borderRadius: '50%',
+                  width: '48px',
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>⏳</div>
+                <div>
+                  <h4 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '700' }}>
+                    Pedidos Abiertos
+                  </h4>
+                  <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
+                    {pedidosAbiertos.length} pedido{pedidosAbiertos.length !== 1 ? 's' : ''} pendiente{pedidosAbiertos.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{ padding: '0', overflowX: 'auto' }}>
+                <table style={{ 
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '14px'
+                }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc' }}>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Nº Pedido</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Cliente</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Estado</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Fecha</th>
+                      <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pedidosAbiertos.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ 
+                          textAlign: 'center', 
+                          color: '#94a3b8', 
+                          padding: '48px',
+                          fontSize: '16px',
+                          fontStyle: 'italic'
+                        }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '48px', opacity: 0.5 }}>📝</span>
+                            Sin pedidos abiertos en este período
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {pedidosAbiertos.map((p, index) => (
+                      <tr key={p._id || p.id} style={{
+                        background: index % 2 === 0 ? '#fff' : '#f8fafc',
+                        transition: 'background-color 0.2s ease',
+                        ':hover': { background: '#f1f5f9' }
+                      }}
+                      onMouseEnter={e => e.target.parentElement.style.background = '#f1f5f9'}
+                      onMouseLeave={e => e.target.parentElement.style.background = index % 2 === 0 ? '#fff' : '#f8fafc'}
+                      >
+                        <td style={{ padding: '16px', fontWeight: '600', color: '#1e293b' }}>
+                          #{p.numeroPedido || p.id}
+                        </td>
+                        <td style={{ padding: '16px', color: '#475569' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '16px' }}>👤</span>
+                            {p.clienteNombre || '-'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <span style={{
+                            background: colorEstado(p.estado) + '20',
+                            color: colorEstado(p.estado),
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            border: `2px solid ${colorEstado(p.estado)}30`
+                          }}>
+                            {p.estado?.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px', color: '#64748b' }}>
+                          {p.fechaPedido ? new Date(p.fechaPedido).toLocaleString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : '-'}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button 
+                              onClick={()=>setPedidoDetalle(p)} 
+                              style={{
+                                padding: '8px 16px',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                              }}
+                              onMouseEnter={e => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
+                              }}
+                              onMouseLeave={e => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+                              }}
+                            >
+                              👁️ Ver detalle
+                            </button>
+                            <button 
+                              onClick={()=>cancelarPedido(p)} 
+                              disabled={cancelandoId===p._id}
+                              style={{
+                                padding: '8px 16px',
+                                background: cancelandoId===p._id ? '#94a3b8' : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                fontSize: '12px',
+                                cursor: cancelandoId===p._id ? 'not-allowed' : 'pointer',
+                                opacity: cancelandoId===p._id ? 0.7 : 1,
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)'
+                              }}
+                              onMouseEnter={e => {
+                                if (cancelandoId!==p._id) {
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 16px rgba(255, 107, 107, 0.4)';
+                                }
+                              }}
+                              onMouseLeave={e => {
+                                if (cancelandoId!==p._id) {
+                                  e.target.style.transform = 'translateY(0)';
+                                  e.target.style.boxShadow = '0 2px 8px rgba(255, 107, 107, 0.3)';
+                                }
+                              }}
+                            >
+                              {cancelandoId===p._id ? '⏳ Cancelando...' : '❌ Cancelar'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Sección de pedidos cerrados */}
+          <div style={{
+            background: '#fff',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+            border: '1px solid #e1e8ed',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+              padding: '20px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                fontSize: '24px',
+                background: 'rgba(255,255,255,0.3)',
+                borderRadius: '50%',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>✅</div>
+              <div>
+                <h4 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '700' }}>
+                  Pedidos Completados
+                </h4>
+                <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
+                  {pedidosCerrados.length} pedido{pedidosCerrados.length !== 1 ? 's' : ''} preparado{pedidosCerrados.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            
+            <div style={{ padding: '0', overflowX: 'auto' }}>
+              <table style={{ 
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '14px'
+              }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc' }}>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Nº Pedido</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Cliente</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Estado</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Fecha</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedidosCerrados.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ 
+                        textAlign: 'center', 
+                        color: '#94a3b8', 
+                        padding: '48px',
+                        fontSize: '16px',
+                        fontStyle: 'italic'
+                      }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                          <span style={{ fontSize: '48px', opacity: 0.5 }}>📦</span>
+                          Sin pedidos completados en este período
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {pedidosCerrados.map((p, index) => (
+                    <tr key={p._id || p.id} style={{
+                      background: index % 2 === 0 ? '#fff' : '#f8fafc',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onMouseEnter={e => e.target.parentElement.style.background = '#f1f5f9'}
+                    onMouseLeave={e => e.target.parentElement.style.background = index % 2 === 0 ? '#fff' : '#f8fafc'}
+                    >
+                      <td style={{ padding: '16px', fontWeight: '600', color: '#1e293b' }}>
+                        #{p.numeroPedido || p.id}
+                      </td>
+                      <td style={{ padding: '16px', color: '#475569' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '16px' }}>👤</span>
+                          {p.clienteNombre || '-'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <span style={{
+                          background: colorEstado(p.estado) + '20',
+                          color: colorEstado(p.estado),
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          border: `2px solid ${colorEstado(p.estado)}30`
+                        }}>
+                          {p.estado?.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px', color: '#64748b' }}>
+                        {p.fechaPedido ? new Date(p.fechaPedido).toLocaleString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <button 
+                          onClick={()=>setPedidoDetalle(p)}
+                          style={{
+                            padding: '8px 16px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                            boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                          }}
+                          onMouseEnter={e => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
+                          }}
+                          onMouseLeave={e => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+                          }}
+                        >
+                          👁️ Ver detalle
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
           {pedidoDetalle && <PedidoClienteDetalle pedido={pedidoDetalle} onClose={()=>setPedidoDetalle(null)} />}
         </>
       )}
