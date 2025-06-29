@@ -25,6 +25,7 @@ import {
   Route,
   useNavigate
 } from 'react-router-dom';
+import 'jspdf-autotable';
 
 const tiendas = [
   { id: 'tienda1', nombre: 'TIENDA BUS' },

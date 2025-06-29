@@ -2,73 +2,53 @@ import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
+import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 
 async function generarPDFAlbaran(pedido) {
-  // Cargar logo como imagen base64
-  const logoImg = new window.Image();
-  logoImg.src = window.location.origin + '/logo1.png';
-  logoImg.onload = () => {
-    const doc = new jsPDF();
-    // Logo
-    doc.addImage(logoImg, 'PNG', 15, 10, 30, 18);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('EMBUTIDOS BALLESTEROS SL', 50, 20);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Albarán de Expedición', 50, 28);
-    doc.setLineWidth(0.5);
-    doc.line(15, 32, 195, 32);
+  const doc = new jsPDF();
+  await cabeceraPDF(doc);
+  let y = 40;
+  doc.setFontSize(11);
+  doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido), 45, y);
+  y += 7;
+  doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-', 45, y);
+  y += 7;
+  doc.text(`Estado:`, 15, y); doc.text(
+    pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
+    pedido.estado === 'preparado' ? 'Preparado en fábrica' :
+    pedido.estado === 'enviado' ? 'Pendiente de preparación' : pedido.estado, 45, y);
+  y += 10;
 
-    doc.setFontSize(11);
-    let y = 40;
-    doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido), 45, y);
-    y += 7;
-    doc.text(`Fecha:`, 15, y); doc.text(pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-', 45, y);
-    y += 7;
-    doc.text(`Estado:`, 15, y); doc.text(
-      pedido.estado === 'enviadoTienda' ? 'Enviado desde fábrica' :
-      pedido.estado === 'preparado' ? 'Preparado en fábrica' :
-      pedido.estado === 'enviado' ? 'Pendiente de preparación' : pedido.estado, 45, y);
-    y += 10;
-
-    // Tabla de líneas
-    doc.setFont('helvetica', 'bold');
-    doc.setFillColor(230, 230, 230);
-    doc.rect(15, y, 180, 8, 'F');
-    doc.text('Nº', 18, y + 6);
-    doc.text('Producto', 28, y + 6);
-    doc.text('Pedida', 80, y + 6);
-    doc.text('Enviada', 100, y + 6);
-    doc.text('Formato', 120, y + 6);
-    doc.text('Lote', 150, y + 6);
-    doc.text('Comentario', 170, y + 6);
-    y += 10;
-    doc.setFont('helvetica', 'normal');
-    pedido.lineas.forEach((l, i) => {
-      doc.text(String(i + 1), 18, y);
-      doc.text(l.producto || '-', 28, y);
-      doc.text(String(l.cantidad || '-'), 80, y, { align: 'right' });
-      doc.text(String(l.cantidadEnviada || '-'), 100, y, { align: 'right' });
-      doc.text(l.formato || '-', 120, y);
-      doc.text(l.lote || '-', 150, y);
-      doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
-      y += 8;
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-    });
-    // Pie de página con datos corporativos
-    doc.setFontSize(9);
-    let yFooter = 278;
-    doc.text(`${DATOS_EMPRESA.nombre} - CIF: ${DATOS_EMPRESA.cif}`, 15, yFooter);
-    yFooter += 4;
-    doc.text(`${DATOS_EMPRESA.direccion} | Tel: ${DATOS_EMPRESA.telefono} | ${DATOS_EMPRESA.email} | ${DATOS_EMPRESA.web}`, 15, yFooter);
-    yFooter += 4;
-    doc.text(`Generado: ${new Date().toLocaleString()}`, 15, yFooter);
-    doc.save(`albaran_pedido_${pedido.numeroPedido}_${Date.now()}.pdf`);
-  };
+  // Tabla de líneas
+  doc.setFont('helvetica', 'bold');
+  doc.setFillColor(230, 230, 230);
+  doc.rect(15, y, 180, 8, 'F');
+  doc.text('Nº', 18, y + 6);
+  doc.text('Producto', 28, y + 6);
+  doc.text('Pedida', 80, y + 6);
+  doc.text('Enviada', 100, y + 6);
+  doc.text('Formato', 120, y + 6);
+  doc.text('Lote', 150, y + 6);
+  doc.text('Comentario', 170, y + 6);
+  y += 10;
+  doc.setFont('helvetica', 'normal');
+  pedido.lineas.forEach((l, i) => {
+    doc.text(String(i + 1), 18, y);
+    doc.text(l.producto || '-', 28, y);
+    doc.text(String(l.cantidad || '-'), 80, y, { align: 'right' });
+    doc.text(String(l.cantidadEnviada || '-'), 100, y, { align: 'right' });
+    doc.text(l.formato || '-', 120, y);
+    doc.text(l.lote || '-', 150, y);
+    doc.text(l.comentario ? l.comentario.substring(0, 18) : '-', 170, y);
+    y += 8;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+  // Pie de página profesional
+  piePDF(doc);
+  doc.save(`albaran_pedido_${pedido.numeroPedido}_${Date.now()}.pdf`);
 }
 
 const HistoricoTienda = ({ pedidos, tiendaId }) => {

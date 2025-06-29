@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
+import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 
 const PIN = '1973';
 
@@ -131,13 +132,16 @@ export default function GestionMantenimientoPanel({ onClose }) {
   // Exportar productos filtrados a PDF
   const exportarProductosPDF = async () => {
     const doc = new jsPDF();
-    doc.setFontSize(13); // Tamaño pequeño
-    doc.text('Listado de productos', 10, 16);
+    await cabeceraPDF(doc);
+    let y = 48;
+    doc.setFontSize(13);
+    doc.text('Listado de productos', 10, y);
     if (filtroFamilia) {
       doc.setFontSize(10);
-      doc.text(`Familia: ${filtroFamilia}`, 10, 22);
+      doc.text(`Familia: ${filtroFamilia}`, 10, y + 6);
+      y += 6;
     }
-    let y = filtroFamilia ? 28 : 22;
+    y += 6;
     doc.setFontSize(8);
     // Cabecera
     doc.text('Nombre', 8, y);
@@ -166,6 +170,8 @@ export default function GestionMantenimientoPanel({ onClose }) {
       doc.text(p.fabricable !== undefined ? (p.fabricable ? 'Sí' : 'No') : '-', 175, y);
       y += 6;
     });
+    // Pie de página profesional
+    piePDF(doc);
     doc.save(`productos_${filtroFamilia || 'todas'}_${Date.now()}.pdf`);
   };
 

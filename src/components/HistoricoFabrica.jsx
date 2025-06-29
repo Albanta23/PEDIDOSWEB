@@ -3,41 +3,14 @@ import { jsPDF } from "jspdf";
 import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
 import { useProductos } from './ProductosContext';
+import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 
-// Utilidad para cargar imagen como base64 y devolver una promesa
-function cargarLogoBase64(url) {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.onload = function () {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = (e) => {
-      let msg = 'No se pudo cargar el logo para el PDF.';
-      if (e && e.message) msg += ' ' + e.message;
-      reject(new Error(msg));
-    };
-    img.src = url;
-  });
-}
+// Eliminar función cargarLogoBase64 local
 
 async function generarPDFEnvio(pedido, tiendas) {
   try {
-    const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
     const doc = new jsPDF();
-    doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('EMBUTIDOS BALLESTEROS SL', 50, 20);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Albarán de Expedición', 50, 28);
-    doc.setLineWidth(0.5);
-    doc.line(15, 32, 195, 32);
+    await cabeceraPDF(doc);
     doc.setFontSize(10); // Reducido para datos generales
     let y = 40;
     doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido || '-'), 45, y);
@@ -51,8 +24,7 @@ async function generarPDFEnvio(pedido, tiendas) {
       pedido.estado === 'preparado' ? 'Preparado en fábrica' : (pedido.estado || '-'), 45, y);
     y += 6;
     doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined && pedido.peso !== null ? String(pedido.peso) + ' kg' : '-', 45, y);
-    
-    y += 10; // Increased space before table
+    y += 10;
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
@@ -138,6 +110,8 @@ async function generarPDFEnvio(pedido, tiendas) {
     doc.text(`${DATOS_EMPRESA.direccion} | Tel: ${DATOS_EMPRESA.telefono} | ${DATOS_EMPRESA.email} | ${DATOS_EMPRESA.web}`, 15, yFooter);
     yFooter += 4;
     doc.text(`Generado: ${new Date().toLocaleString()}`, 15, yFooter);
+    // Al final, pie de página profesional
+    piePDF(doc);
     // --- FIX COMPATIBILIDAD PDF ---
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {

@@ -16,7 +16,7 @@ const PedidoClienteSchema = new mongoose.Schema({
   clienteId: String,
   clienteNombre: String,
   direccion: String,
-  estado: { type: String, default: 'enviado' },
+  estado: { type: String, default: 'en_espera' },
   numeroPedido: Number,
   lineas: [LineaClienteSchema],
   fechaCreacion: { type: Date, default: Date.now },
@@ -24,7 +24,15 @@ const PedidoClienteSchema = new mongoose.Schema({
   fechaEnvio: Date,
   fechaRecepcion: Date,
   peso: { type: Number, min: 0 },
-  tipo: { type: String, default: 'cliente' }
+  tipo: { type: String, default: 'cliente' },
+  usuarioTramitando: String,
+  historialEstados: [
+    {
+      estado: String,
+      usuario: String,
+      fecha: { type: Date, default: Date.now }
+    }
+  ]
 }, { timestamps: true });
 
 PedidoClienteSchema.index({ numeroPedido: 1 }, { unique: true });

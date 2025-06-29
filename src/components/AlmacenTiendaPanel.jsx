@@ -4,9 +4,9 @@ import { getMovimientosStock, registrarBajaStock } from '../services/movimientos
 import TransferenciasPanel from './TransferenciasPanel';
 import { useProductos } from './ProductosContext';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 
 export default function AlmacenTiendaPanel({ tiendaActual }) {
   const navigate = typeof useNavigate === 'function' ? useNavigate() : null;
@@ -196,11 +196,17 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   };
 
   // Mejorar exportación PDF: asegurar que los datos se exportan correctamente
-  const exportarMovimientosPDF = () => {
+  const exportarMovimientosPDF = async () => {
     if (!movimientosFiltradosOrdenados || movimientosFiltradosOrdenados.length === 0) {
       alert('No hay movimientos para exportar.');
       return;
     }
+    const doc = new jsPDF();
+    await cabeceraPDF(doc);
+    let y = 48;
+    doc.setFontSize(15);
+    doc.text('Diario de movimientos de stock', 105, y, { align: 'center' });
+    y += 10;
     let pesoAcumulado = 0;
     const rows = movimientosFiltradosOrdenados.map(mov => {
       const peso = Number(mov.peso) || 0;
@@ -221,21 +227,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
         mov.motivo || ''
       ];
     });
-    // Construir descripción de filtros activos
-    let filtros = [];
-    if (filtroProducto) filtros.push(`producto: ${filtroProducto}`);
-    if (filtroLote) filtros.push(`lote: ${filtroLote}`);
-    if (filtroFamilia) filtros.push(`familia: ${filtroFamilia}`);
-    if (filtroTipoMovimiento) filtros.push(`tipo: ${filtroTipoMovimiento}`);
-    if (filtroFechaDesde) filtros.push(`desde: ${filtroFechaDesde}`);
-    if (filtroFechaHasta) filtros.push(`hasta: ${filtroFechaHasta}`);
-    const filtrosTexto = filtros.length > 0 ? `por ${filtros.join(', ')}` : 'global';
-    const nombreTienda = tiendaForzada?.nombre || tiendaForzada?.id || 'Tienda';
-    const cabecera = `Movimientos de productos ${filtrosTexto} de la tienda ${nombreTienda}`;
-
-    const doc = new jsPDF();
-    doc.text(cabecera, 14, 14);
-    autoTable(doc, {
+    doc.autoTable({
       head: [[
         'Fecha', 'Hora', 'Producto', 'Lote', 'Cantidad', 'Peso (kg)', 'PESO TOTAL (kg)', 'Tipo', 'Motivo'
       ]],
@@ -244,6 +236,8 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       headStyles: { fillColor: [103, 58, 183] },
       margin: { top: 20 }
     });
+    // Pie de página profesional
+    piePDF(doc);
     doc.save('diario_movimientos.pdf');
   };
 

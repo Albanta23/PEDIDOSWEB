@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ExpedicionesClientesLogin from './ExpedicionesClientesLogin';
 import { obtenerPedidosClientesExpedicion, borrarPedidoCliente } from './pedidosClientesExpedicionService';
 import ExpedicionClienteEditor from './ExpedicionClienteEditor';
-import HistorialPedidoCliente from './HistorialPedidoCliente';
+import HistorialPedidosClientes from '../clientes-gestion/HistorialPedidosClientes';
 
 export default function ExpedicionesClientes() {
   const [logueado, setLogueado] = useState(false);
@@ -10,7 +10,7 @@ export default function ExpedicionesClientes() {
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [pedidoEditando, setPedidoEditando] = useState(null);
-  const [pedidoHistorial, setPedidoHistorial] = useState(null);
+  const [mostrarHistorialGlobal, setMostrarHistorialGlobal] = useState(false);
 
   useEffect(() => {
     if (logueado) {
@@ -44,9 +44,14 @@ export default function ExpedicionesClientes() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '40px auto', background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px #bbb', padding: 32 }}>
-      <h2 style={{ marginBottom: 24 }}>Expediciones de Pedidos de Clientes</h2>
+      <div style={{display:'flex',alignItems:'center',gap:18,marginBottom:24}}>
+        <h2 style={{ margin: 0, flex:1 }}>Expediciones de Pedidos de Clientes</h2>
+        <button onClick={()=>setMostrarHistorialGlobal(m=>!m)} style={{padding:'10px 22px',border:'none',borderRadius:8,background:mostrarHistorialGlobal?'#1976d2':'#fff',color:mostrarHistorialGlobal?'#fff':'#1976d2',fontWeight:700,fontSize:16,boxShadow:'0 1px 4px #1976d222'}}>Historial pedidos clientes</button>
+      </div>
       <div style={{ marginBottom: 18, color: '#1976d2', fontWeight: 600 }}>Usuario: {usuario}</div>
-      {cargando ? (
+      {mostrarHistorialGlobal ? (
+        <HistorialPedidosClientes soloPreparados />
+      ) : cargando ? (
         <div style={{ color: '#888' }}>Cargando pedidos...</div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 24 }}>
@@ -57,12 +62,11 @@ export default function ExpedicionesClientes() {
               <th style={{ padding: 8, border: '1px solid #eee' }}>Dirección</th>
               <th style={{ padding: 8, border: '1px solid #eee' }}>Estado</th>
               <th style={{ padding: 8, border: '1px solid #eee' }}>Acciones</th>
-              <th style={{ padding: 8, border: '1px solid #eee' }}>Historial</th>
             </tr>
           </thead>
           <tbody>
             {pedidos.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
+              <tr><td colSpan={5} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
             )}
             {pedidos.map(p => (
               <tr key={p._id || p.id}>
@@ -80,12 +84,6 @@ export default function ExpedicionesClientes() {
                     Borrar
                   </button>
                 </td>
-                <td style={{ padding: 8, border: '1px solid #eee' }}>
-                  <button style={{ background: '#888', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}
-                    onClick={() => setPedidoHistorial(p)}>
-                    Ver historial
-                  </button>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -94,7 +92,6 @@ export default function ExpedicionesClientes() {
       {pedidoEditando && (
         <ExpedicionClienteEditor pedido={pedidoEditando} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
       )}
-      <HistorialPedidoCliente pedidoId={pedidoHistorial?._id || pedidoHistorial?.id} visible={!!pedidoHistorial} onClose={() => setPedidoHistorial(null)} />
       <div style={{ color: '#888', fontStyle: 'italic' }}>
         (En desarrollo) Aquí aparecerán los pedidos de clientes para tramitar, editar y su historial.
       </div>

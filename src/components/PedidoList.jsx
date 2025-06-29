@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import TransferenciasPanel from './TransferenciasPanel';
 import { crearPedido, actualizarPedido, obtenerPedidos } from '../services/pedidosService';
 import { FORMATOS_PEDIDO } from '../configFormatos';
-import { jsPDF } from 'jspdf';
+import jsPDF from 'jspdf';
 import axios from 'axios';
 import { useProductos } from './ProductosContext';
+import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 
 // Definir API_URL global seguro para todas las llamadas
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001'; // Usa la variable de entorno de Vite, o localhost por defecto
@@ -12,22 +13,46 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001'; // Usa
 // Constante global para el ID de la tienda de clientes
 const TIENDA_CLIENTES_ID = 'PEDIDOS_CLIENTES';
 
-// Utilidad para cargar imagen como base64
-async function cargarLogoBase64(url) {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = function () {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = reject;
-    img.src = url;
+// --- Generar PDF de la lista de proveedor ---
+async function exportarProveedorPDF(lineasProveedor, tiendaActual) {
+  const doc = new jsPDF();
+  await cabeceraPDF(doc);
+  let y = 48;
+  doc.setFontSize(20);
+  doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
+  y += 12;
+  doc.setFontSize(14);
+  if (tiendaActual?.nombre) {
+    doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
+    y += 9;
+  }
+  doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
+  y += 11;
+  // Cabecera tabla
+  doc.setFontSize(14);
+  doc.text('Referencia', 14, y);
+  doc.text('Cantidad', 70, y); // Más junto
+  doc.text('Unidad', 110, y);  // Más junto
+  y += 8;
+  doc.setLineWidth(0.3);
+  doc.line(14, y, 150, y); // Línea más corta
+  y += 5;
+  doc.setFontSize(13);
+  lineasProveedor.forEach(l => {
+    if (l.referencia && l.cantidad) {
+      doc.text(String(l.referencia).toUpperCase(), 14, y);
+      doc.text(String(l.cantidad), 70, y);
+      doc.text(String(l.unidad || 'kg'), 110, y);
+      y += 9;
+      if (y > 280) {
+        doc.addPage();
+        y = 28;
+      }
+    }
   });
+  // Pie de página profesional
+  piePDF(doc);
+  doc.save(`pedidos_proveedor_${tiendaActual?.nombre || ''}_${Date.now()}.pdf`);
 }
 
 export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, modo, tiendaActual, onRefrescarPedidos }) {
@@ -311,48 +336,6 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setLineasProveedor([]);
     localStorage.removeItem(getProveedorKey());
   };
-
-  // --- Generar PDF de la lista de proveedor ---
-  async function exportarProveedorPDF(lineasProveedor, tiendaActual) {
-    const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
-    const doc = new jsPDF();
-    // Logo en la cabecera
-    doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-    let y = 28;
-    doc.setFontSize(20); // Más grande
-    doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
-    y += 12;
-    doc.setFontSize(14);
-    if (tiendaActual?.nombre) {
-      doc.text(`Tienda: ${tiendaActual.nombre}`, 14, y);
-      y += 9;
-    }
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, y);
-    y += 11;
-    // Cabecera tabla
-    doc.setFontSize(14);
-    doc.text('Referencia', 14, y);
-    doc.text('Cantidad', 70, y); // Más junto
-    doc.text('Unidad', 110, y);  // Más junto
-    y += 8;
-    doc.setLineWidth(0.3);
-    doc.line(14, y, 150, y); // Línea más corta
-    y += 5;
-    doc.setFontSize(13);
-    lineasProveedor.forEach(l => {
-      if (l.referencia && l.cantidad) {
-        doc.text(String(l.referencia).toUpperCase(), 14, y);
-        doc.text(String(l.cantidad), 70, y);
-        doc.text(String(l.unidad || 'kg'), 110, y);
-        y += 9;
-        if (y > 280) {
-          doc.addPage();
-          y = 28;
-        }
-      }
-    });
-    doc.save(`pedidos_proveedor_${tiendaActual?.nombre || ''}_${Date.now()}.pdf`);
-  }
 
   // --- Enviar lista de proveedor por email usando Mailjet (unificado) ---
   async function enviarProveedorMailjet() {

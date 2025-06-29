@@ -2,43 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import Watermark from './Watermark';
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
-import logo from '../assets/logo1.png';
+import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 import { listarAvisos, marcarAvisoVisto } from '../services/avisosService';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
 
-function cargarLogoBase64(url) {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = function () {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
 async function generarPDFTienda(pedido, tiendaNombre) {
-  const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
   const doc = new jsPDF();
-  doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('EMBUTIDOS BALLESTEROS SL', 50, 20);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Albarán de Expedición', 50, 28);
-  doc.setLineWidth(0.5);
-  doc.line(15, 32, 195, 32);
-
-  doc.setFontSize(10);
+  await cabeceraPDF(doc);
   let y = 40;
+  doc.setFontSize(10);
   doc.text(`Nº Pedido:`, 15, y); doc.text(String(pedido.numeroPedido || '-'), 45, y);
   y += 6;
   doc.text(`Tienda:`, 15, y); doc.text(tiendaNombre, 45, y);
@@ -52,7 +25,6 @@ async function generarPDFTienda(pedido, tiendaNombre) {
     pedido.estado === 'borrador' ? 'Borrador (no enviado)' : pedido.estado, 45, y);
   y += 6;
   doc.text(`Peso total:`, 15, y); doc.text(pedido.peso !== undefined && pedido.peso !== null ? String(pedido.peso) + ' kg' : '-', 45, y);
-
   y += 10; // Increased space before the table
 
   doc.setFont('helvetica', 'bold');
@@ -143,6 +115,8 @@ async function generarPDFTienda(pedido, tiendaNombre) {
   doc.text(`${DATOS_EMPRESA.direccion} | Tel: ${DATOS_EMPRESA.telefono} | ${DATOS_EMPRESA.email} | ${DATOS_EMPRESA.web}`, 15, yFooter);
   yFooter += 4;
   doc.text(`Generado: ${new Date().toLocaleString()}`, 15, yFooter);
+  // Pie de página profesional
+  piePDF(doc);
   // --- FIX COMPATIBILIDAD PDF ---
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
