@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF Mejorado</title>
+    <script type="module">
+        import { exportPedidoClientePDF } from './src/clientes-gestion/utils/exportPedidoPDF.js';
+        
+        // Datos de prueba
+        const pedidoPrueba = {
+            _id: '12345',
+            numeroPedido: 'PED-2024-001',
+            estado: 'pendiente',
+            fechaPedido: new Date(),
+            bultos: 3,
+            clienteNombre: 'Restaurante El Buen Comer S.L.',
+            clienteCalle: 'Calle Mayor, 25',
+            clienteCodigoPostal: '49001',
+            clienteCiudad: 'Zamora',
+            clienteProvincia: 'Zamora',
+            lineas: [
+                {
+                    producto: 'Chorizo Ibérico Extra',
+                    cantidad: 5,
+                    formato: 'Pieza',
+                    peso: 2.5,
+                    lote: 'LT-2024-A1',
+                    comentario: 'Sin ajo, curación media'
+                },
+                {
+                    esComentario: true,
+                    comentario: 'Este es un comentario de línea que debe aparecer destacado y legible en el PDF, con formato especial para que se vea claramente.'
+                },
+                {
+                    producto: 'Jamón Curado',
+                    cantidad: 2,
+                    formato: 'Kg',
+                    peso: 4.0,
+                    lote: 'LT-2024-B2',
+                    comentario: 'Corte fino'
+                }
+            ],
+            historialEstados: [
+                {
+                    estado: 'pendiente',
+                    usuario: 'admin',
+                    fecha: new Date()
+                }
+            ]
+        };
+        
+        window.testPDF = async function() {
+            try {
+                console.log('Generando PDF mejorado...');
+                await exportPedidoClientePDF(pedidoPrueba);
+                console.log('PDF generado exitosamente');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>Test PDF Mejorado</h1>
+    <p>Este test verifica las mejoras en el PDF:</p>
+    <ul>
+        <li>✅ Logo de empresa (logo1.png) en la cabecera</li>
+        <li>✅ Comentarios de línea destacados y legibles</li>
+        <li>✅ Formato profesional mejorado</li>
+        <li>✅ Información completa del cliente</li>
+        <li>✅ Campo lote visible</li>
+        <li>✅ Bultos mostrados correctamente</li>
+    </ul>
+    
+    <button onclick="testPDF()" style="padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Generar PDF de Prueba
+    </button>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        <h3>Mejoras Implementadas:</h3>
+        <ol>
+            <li><strong>Logo fiable:</strong> Nueva función de carga que maneja correctamente el logo desde public/logo1.png</li>
+            <li><strong>Comentarios legibles:</strong> Formato especial con fondo amarillo, texto más grande y colores contrastantes</li>
+            <li><strong>Cabecera profesional:</strong> Logo, información de empresa y línea decorativa</li>
+            <li><strong>Pie de página completo:</strong> Información legal y numeración de páginas</li>
+            <li><strong>Tabla mejorada:</strong> Incluye campo lote y comentarios bien formateados</li>
+        </ol>
+    </div>
+</body>
+</html>
