@@ -37,12 +37,11 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://localhost:3100', // <-- añadido para permitir CORS desde localhost:3100
-  'https://pedidosweb-phi.vercel.app', // Desarrollo
-  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev', // Codespace actual
+  'https://localhost:3100',
+  'https://pedidosweb-phi.vercel.app',
+  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev',
   'https://pedidos-backend-0e1s.onrender.com',
-  'https://pedidosweb-phi.vercel.app', // Producción (añadido explícitamente)
-  // No incluyas aquí URLs efímeras de Codespaces, se permite por regex
+  'https://pedidosweb-phi.vercel.app',
 ];
 
 // Permitir cualquier subdominio de app.github.dev y dominios válidos
@@ -60,7 +59,7 @@ function corsOrigin(origin, callback) {
     matchVercel ||
     matchRender ||
     matchLocalhost ||
-    matchGithubDev
+    matchGithubDev // <-- Permitir cualquier subdominio de app.github.dev
   ) {
     return callback(null, origin); // Refleja el origin válido
   }
