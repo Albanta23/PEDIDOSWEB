@@ -8,6 +8,8 @@ const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 export default function PedidosClientes({ onPedidoCreado }) {
   const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const [lineas, setLineas] = useState([
     { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }
   ]);
@@ -62,6 +64,8 @@ export default function PedidosClientes({ onPedidoCreado }) {
       setMensaje('Pedido creado correctamente.');
       setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
       setClienteSeleccionado(null);
+      setBusquedaCliente('');
+      setMostrarSugerencias(false);
       setTimeout(()=> {
         setMensaje('');
         if (onPedidoCreado) onPedidoCreado();
@@ -86,45 +90,108 @@ export default function PedidosClientes({ onPedidoCreado }) {
     setClienteSeleccionado(cliente || null);
   };
 
+  // Nuevas funciones para manejo de sugerencias
+  const handleBusquedaClienteChange = (e) => {
+    const valor = e.target.value;
+    setBusquedaCliente(valor);
+    setMostrarSugerencias(valor.length > 0);
+    
+    // Si el texto coincide exactamente con un cliente, seleccionarlo
+    const clienteExacto = clientes.find(c => c.nombre.toLowerCase() === valor.toLowerCase());
+    if (clienteExacto) {
+      setClienteSeleccionado(clienteExacto);
+    } else {
+      setClienteSeleccionado(null);
+    }
+  };
+
+  const handleSeleccionarCliente = (cliente) => {
+    setClienteSeleccionado(cliente);
+    setBusquedaCliente(cliente.nombre);
+    setMostrarSugerencias(false);
+  };
+
+  const clientesFiltrados = clientes.filter(cliente => 
+    cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase())
+  ).slice(0, 8); // Máximo 8 sugerencias
+
   return (
     <div style={{ 
-      marginTop: 32, 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh',
-      padding: '24px',
-      borderRadius: '16px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+      padding: '20px',
+      overflowY: 'auto',
+      zIndex: 999
     }}>
       {/* Header profesional con iconos */}
       <div style={{
         background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
         color: '#fff',
-        padding: '24px 32px',
+        padding: '20px 32px',
         borderRadius: '16px',
-        marginBottom: '32px',
+        marginBottom: '24px',
         boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px'
+        gap: '16px',
+        position: 'sticky',
+        top: '20px',
+        zIndex: 10
       }}>
         <div style={{
           fontSize: '48px',
           background: 'rgba(255,255,255,0.2)',
           borderRadius: '50%',
-          width: '80px',
-          height: '80px',
+          width: '70px',
+          height: '70px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}>🛒</div>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700' }}>
-            Crear Nuevo Pedido de Cliente
+        <div style={{ flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '700' }}>
+            Editor de Pedidos - Pantalla Completa
           </h1>
-          <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '16px' }}>
-            Editor profesional para gestión de pedidos de clientes
+          <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '18px' }}>
+            Gestión profesional de pedidos con vista expandida
           </p>
         </div>
+        <div style={{
+          background: 'rgba(255,255,255,0.2)',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '14px',
+          fontWeight: '600'
+        }}>
+          🖥️ Vista Completa
+        </div>
+        {onPedidoCreado && (
+          <button 
+            onClick={() => onPedidoCreado && onPedidoCreado()} 
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '12px 20px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              fontSize: '16px',
+              transition: 'background 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.3)'}
+            onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.2)'}
+          >
+            ✕ Cerrar Editor
+          </button>
+        )}
       </div>
 
       {/* Panel principal del editor */}
@@ -133,7 +200,10 @@ export default function PedidosClientes({ onPedidoCreado }) {
         padding: '32px',
         borderRadius: '16px',
         boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-        border: '1px solid #e1e8ed'
+        border: '1px solid #e1e8ed',
+        minHeight: 'calc(100vh - 200px)',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         {/* Selección de cliente mejorada */}
         <div style={{
@@ -156,37 +226,128 @@ export default function PedidosClientes({ onPedidoCreado }) {
             alignItems: 'center',
             justifyContent: 'center'
           }}>👤</div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, position: 'relative' }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '700' }}>
               Seleccionar Cliente
             </h3>
-            <select 
-              value={clienteSeleccionado?.nombre || ''} 
-              onChange={handleClienteChange} 
+            <input
+              type="text"
+              value={busquedaCliente}
+              onChange={handleBusquedaClienteChange}
+              onFocus={() => setMostrarSugerencias(busquedaCliente.length > 0)}
+              onBlur={() => setTimeout(() => setMostrarSugerencias(false), 200)}
+              placeholder="🔍 Escribe el nombre del cliente..."
               style={{
-                padding: '12px 16px',
+                padding: '10px 14px',
                 borderRadius: '8px',
                 border: '2px solid rgba(255,255,255,0.3)',
-                fontSize: '16px',
+                fontSize: '15px',
                 background: 'rgba(255,255,255,0.95)',
                 color: '#2c3e50',
                 fontWeight: '600',
-                minWidth: '300px',
+                width: '100%',
+                maxWidth: '400px',
                 transition: 'all 0.3s ease',
                 outline: 'none'
               }}
-              onFocus={e => {
+              onFocusCapture={e => {
                 e.target.style.background = '#fff';
                 e.target.style.borderColor = 'rgba(255,255,255,0.8)';
               }}
-              onBlur={e => {
+              onBlurCapture={e => {
                 e.target.style.background = 'rgba(255,255,255,0.95)';
                 e.target.style.borderColor = 'rgba(255,255,255,0.3)';
               }}
-            >
-              <option value="">🔍 Selecciona un cliente...</option>
-              {clientes.map(c=>(<option key={c._id||c.id||c.codigo} value={c.nombre}>{c.nombre}</option>))}
-            </select>
+            />
+            
+            {/* Panel de sugerencias */}
+            {mostrarSugerencias && clientesFiltrados.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: '0',
+                right: '0',
+                maxWidth: '400px',
+                background: '#fff',
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                border: '2px solid #e1e8ed',
+                maxHeight: '250px',
+                overflowY: 'auto',
+                zIndex: 1000,
+                marginTop: '4px'
+              }}>
+                {clientesFiltrados.map((cliente, index) => (
+                  <div
+                    key={cliente._id || cliente.id || cliente.codigo}
+                    onClick={() => handleSeleccionarCliente(cliente)}
+                    style={{
+                      padding: '10px 14px',
+                      cursor: 'pointer',
+                      borderBottom: index < clientesFiltrados.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      transition: 'background-color 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      color: '#2c3e50'
+                    }}
+                    onMouseEnter={e => e.target.style.background = '#f8fafc'}
+                    onMouseLeave={e => e.target.style.background = 'transparent'}
+                  >
+                    <div style={{
+                      fontSize: '14px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: '#fff',
+                      borderRadius: '50%',
+                      width: '28px',
+                      height: '28px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '600'
+                    }}>
+                      👤
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', fontSize: '14px' }}>
+                        {cliente.nombre}
+                      </div>
+                      {cliente.direccion && (
+                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>
+                          📍 {cliente.direccion}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Mensaje cuando no hay sugerencias */}
+            {mostrarSugerencias && busquedaCliente && clientesFiltrados.length === 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: '0',
+                right: '0',
+                maxWidth: '400px',
+                background: '#fff',
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                border: '2px solid #e1e8ed',
+                zIndex: 1000,
+                marginTop: '4px',
+                padding: '16px',
+                textAlign: 'center',
+                color: '#64748b'
+              }}>
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>🔍</div>
+                <div style={{ fontWeight: '600', fontSize: '14px' }}>No se encontraron clientes</div>
+                <div style={{ fontSize: '12px', marginTop: '3px' }}>
+                  Intenta con otro término de búsqueda
+                </div>
+              </div>
+            )}
           </div>
           {clienteSeleccionado && (
             <div style={{
@@ -207,7 +368,10 @@ export default function PedidosClientes({ onPedidoCreado }) {
           padding: '24px',
           borderRadius: '12px',
           marginBottom: '24px',
-          border: '2px solid #e2e8f0'
+          border: '2px solid #e2e8f0',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           <div style={{
             display: 'flex',
@@ -238,25 +402,34 @@ export default function PedidosClientes({ onPedidoCreado }) {
           {/* Headers de la tabla */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 80px 120px 150px 50px',
-            gap: '12px',
-            padding: '12px 16px',
-            background: '#e2e8f0',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#475569'
+            gridTemplateColumns: '2fr 100px 150px 200px 60px',
+            gap: '16px',
+            padding: '16px 20px',
+            background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            fontSize: '16px',
+            fontWeight: '700',
+            color: '#334155',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
           }}>
-            <div>Producto</div>
-            <div>Cantidad</div>
-            <div>Formato</div>
-            <div>Comentario</div>
-            <div></div>
+            <div>📦 Producto</div>
+            <div>🔢 Cantidad</div>
+            <div>📏 Formato</div>
+            <div>💬 Comentario</div>
+            <div>🗑️</div>
           </div>
 
           {/* Líneas del pedido */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '12px',
+            flex: 1,
+            overflowY: 'auto',
+            maxHeight: '60vh',
+            paddingRight: '8px'
+          }}>
             {lineas.map((linea, idx) => (
               linea.esComentario ? (
                 <div key={idx} style={{ 
@@ -331,14 +504,14 @@ export default function PedidosClientes({ onPedidoCreado }) {
               ) : (
                 <div key={idx} style={{ 
                   display: 'grid',
-                  gridTemplateColumns: '1fr 80px 120px 150px 50px',
-                  gap: '12px',
+                  gridTemplateColumns: '2fr 100px 150px 200px 60px',
+                  gap: '16px',
                   alignItems: 'center',
                   background: '#fff',
                   borderRadius: '12px',
-                  padding: '16px',
+                  padding: '20px',
                   border: '2px solid #e2e8f0',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
                   transition: 'all 0.3s ease'
                 }}>
                   <div style={{ position: 'relative' }}>
@@ -353,18 +526,22 @@ export default function PedidosClientes({ onPedidoCreado }) {
                       }}
                       placeholder="🔍 Buscar producto..."
                       style={{ 
-                        padding: '12px 16px', 
+                        padding: '14px 18px', 
                         width: '100%', 
                         border: '2px solid #e2e8f0', 
-                        borderRadius: '8px', 
+                        borderRadius: '10px', 
                         background: '#fff',
-                        fontSize: '14px',
+                        fontSize: '16px',
                         outline: 'none',
-                        transition: 'border-color 0.3s ease'
+                        transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
                       }}
-                      onFocus={e => e.target.style.borderColor = '#4facfe'}
+                      onFocus={e => {
+                        e.target.style.borderColor = '#4facfe';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                      }}
                       onBlur={e => {
                         e.target.style.borderColor = '#e2e8f0';
+                        e.target.style.boxShadow = 'none';
                         handleProductoBlur(idx, e.target.value);
                       }}
                     />
@@ -384,35 +561,47 @@ export default function PedidosClientes({ onPedidoCreado }) {
                     value={linea.cantidad}
                     onChange={e => handleLineaChange(idx, 'cantidad', Number(e.target.value))}
                     style={{ 
-                      padding: '12px 16px', 
+                      padding: '14px 18px', 
                       width: '100%',
                       border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '14px',
+                      borderRadius: '10px',
+                      fontSize: '16px',
                       textAlign: 'center',
                       fontWeight: '600',
                       outline: 'none',
-                      transition: 'border-color 0.3s ease'
+                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
                     }}
-                    onFocus={e => e.target.style.borderColor = '#4facfe'}
-                    onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#4facfe';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                   
                   <select
                     value={linea.formato}
                     onChange={e => handleLineaChange(idx, 'formato', e.target.value)}
                     style={{ 
-                      padding: '12px 16px',
+                      padding: '14px 18px',
                       width: '100%',
                       border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '14px',
+                      borderRadius: '10px',
+                      fontSize: '16px',
                       fontWeight: '600',
                       outline: 'none',
-                      transition: 'border-color 0.3s ease'
+                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
                     }}
-                    onFocus={e => e.target.style.borderColor = '#4facfe'}
-                    onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#4facfe';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   >
                     {FORMATOS_PEDIDO.map(f => (
                       <option key={f} value={f}>{f}</option>
@@ -425,47 +614,60 @@ export default function PedidosClientes({ onPedidoCreado }) {
                     value={linea.comentario}
                     onChange={e => handleLineaChange(idx, 'comentario', e.target.value)}
                     style={{ 
-                      padding: '12px 16px', 
+                      padding: '14px 18px', 
                       width: '100%',
                       border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '14px',
+                      borderRadius: '10px',
+                      fontSize: '16px',
                       outline: 'none',
-                      transition: 'border-color 0.3s ease'
+                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
                     }}
-                    onFocus={e => e.target.style.borderColor = '#4facfe'}
-                    onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#4facfe';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                   
-                  {lineas.length > 1 && (
-                    <button 
-                      type="button" 
-                      onClick={() => handleEliminarLinea(idx)} 
-                      style={{ 
-                        color: '#dc3545', 
-                        background: 'rgba(220, 53, 69, 0.1)', 
-                        border: '2px solid rgba(220, 53, 69, 0.2)',
-                        borderRadius: '8px',
-                        width: '40px',
-                        height: '40px',
-                        fontWeight: 'bold', 
-                        fontSize: '18px', 
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                      onMouseEnter={e => {
+                  <button 
+                    type="button" 
+                    onClick={() => handleEliminarLinea(idx)} 
+                    disabled={lineas.filter(l => !l.esComentario).length <= 1}
+                    style={{ 
+                      color: lineas.filter(l => !l.esComentario).length <= 1 ? '#94a3b8' : '#dc3545', 
+                      background: lineas.filter(l => !l.esComentario).length <= 1 ? 'rgba(148, 163, 184, 0.1)' : 'rgba(220, 53, 69, 0.1)', 
+                      border: lineas.filter(l => !l.esComentario).length <= 1 ? '2px solid rgba(148, 163, 184, 0.2)' : '2px solid rgba(220, 53, 69, 0.2)',
+                      borderRadius: '10px',
+                      width: '50px',
+                      height: '50px',
+                      fontWeight: 'bold', 
+                      fontSize: '20px', 
+                      cursor: lineas.filter(l => !l.esComentario).length <= 1 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: lineas.filter(l => !l.esComentario).length <= 1 ? 0.5 : 1
+                    }}
+                    onMouseEnter={e => {
+                      if (lineas.filter(l => !l.esComentario).length > 1) {
                         e.target.style.background = 'rgba(220, 53, 69, 0.2)';
                         e.target.style.borderColor = '#dc3545';
-                      }}
-                      onMouseLeave={e => {
+                        e.target.style.transform = 'scale(1.05)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (lineas.filter(l => !l.esComentario).length > 1) {
                         e.target.style.background = 'rgba(220, 53, 69, 0.1)';
                         e.target.style.borderColor = 'rgba(220, 53, 69, 0.2)';
-                      }}
-                    >×</button>
-                  )}
+                        e.target.style.transform = 'scale(1)';
+                      }
+                    }}
+                    title={lineas.filter(l => !l.esComentario).length <= 1 ? 'Debe haber al menos una línea de producto' : 'Eliminar línea'}
+                  >×</button>
                   
                   {mensajeError[idx] && (
                     <div style={{
@@ -489,38 +691,40 @@ export default function PedidosClientes({ onPedidoCreado }) {
           {/* Botones de acción */}
           <div style={{ 
             display: 'flex', 
-            gap: '12px',
+            gap: '16px',
             justifyContent: 'center',
-            marginTop: '24px',
-            padding: '20px',
+            marginTop: '32px',
+            padding: '24px',
             background: 'rgba(79, 172, 254, 0.05)',
-            borderRadius: '12px'
+            borderRadius: '16px',
+            position: 'sticky',
+            bottom: '20px'
           }}>
             <button 
               type="button" 
               onClick={handleAgregarLinea} 
               style={{ 
-                padding: '12px 24px', 
+                padding: '16px 32px', 
                 background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 
                 color: '#fff', 
                 border: 'none', 
-                borderRadius: '8px', 
+                borderRadius: '12px', 
                 fontWeight: '700',
-                fontSize: '14px',
+                fontSize: '16px',
                 cursor: 'pointer',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                boxShadow: '0 4px 12px rgba(79, 172, 254, 0.3)',
+                boxShadow: '0 6px 16px rgba(79, 172, 254, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '12px'
               }}
               onMouseEnter={e => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 20px rgba(79, 172, 254, 0.4)';
+                e.target.style.transform = 'translateY(-3px)';
+                e.target.style.boxShadow = '0 8px 24px rgba(79, 172, 254, 0.5)';
               }}
               onMouseLeave={e => {
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 12px rgba(79, 172, 254, 0.3)';
+                e.target.style.boxShadow = '0 6px 16px rgba(79, 172, 254, 0.4)';
               }}
             >
               ➕ Añadir línea
@@ -530,27 +734,27 @@ export default function PedidosClientes({ onPedidoCreado }) {
               type="button" 
               onClick={handleAgregarComentario} 
               style={{ 
-                padding: '12px 24px', 
+                padding: '16px 32px', 
                 background: 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)', 
                 color: '#fff', 
                 border: 'none', 
-                borderRadius: '8px', 
+                borderRadius: '12px', 
                 fontWeight: '700',
-                fontSize: '14px',
+                fontSize: '16px',
                 cursor: 'pointer',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                boxShadow: '0 6px 16px rgba(255, 193, 7, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '12px'
               }}
               onMouseEnter={e => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 20px rgba(255, 193, 7, 0.4)';
+                e.target.style.transform = 'translateY(-3px)';
+                e.target.style.boxShadow = '0 8px 24px rgba(255, 193, 7, 0.5)';
               }}
               onMouseLeave={e => {
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.3)';
+                e.target.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.4)';
               }}
             >
               📝 Añadir comentario
@@ -561,41 +765,44 @@ export default function PedidosClientes({ onPedidoCreado }) {
         {/* Botón principal de confirmación */}
         <div style={{
           background: puedeCrear ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : '#e9ecef',
-          padding: '24px',
-          borderRadius: '12px',
+          padding: '32px',
+          borderRadius: '16px',
           textAlign: 'center',
-          border: puedeCrear ? '2px solid rgba(40, 167, 69, 0.3)' : '2px solid #dee2e6'
+          border: puedeCrear ? '2px solid rgba(40, 167, 69, 0.3)' : '2px solid #dee2e6',
+          position: 'sticky',
+          bottom: '20px',
+          marginTop: '24px'
         }}>
           <button 
             onClick={handleCrearPedido} 
             disabled={!puedeCrear}
             style={{ 
-              padding: '16px 48px', 
+              padding: '20px 60px', 
               background: puedeCrear ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : '#6c757d',
               color: '#fff', 
               border: 'none', 
-              borderRadius: '12px', 
+              borderRadius: '16px', 
               fontWeight: '700',
-              fontSize: '18px',
+              fontSize: '20px',
               cursor: puedeCrear ? 'pointer' : 'not-allowed',
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              boxShadow: puedeCrear ? '0 6px 20px rgba(40, 167, 69, 0.4)' : 'none',
+              boxShadow: puedeCrear ? '0 8px 24px rgba(40, 167, 69, 0.5)' : 'none',
               opacity: puedeCrear ? 1 : 0.7,
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '16px',
               margin: '0 auto'
             }}
             onMouseEnter={e => {
               if (puedeCrear) {
-                e.target.style.transform = 'translateY(-3px)';
-                e.target.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.5)';
+                e.target.style.transform = 'translateY(-4px)';
+                e.target.style.boxShadow = '0 12px 32px rgba(40, 167, 69, 0.6)';
               }
             }}
             onMouseLeave={e => {
               if (puedeCrear) {
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+                e.target.style.boxShadow = '0 8px 24px rgba(40, 167, 69, 0.5)';
               }
             }}
           >
