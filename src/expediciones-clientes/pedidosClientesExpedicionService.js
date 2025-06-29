@@ -19,7 +19,7 @@ export async function obtenerHistorialPedidoCliente(id) {
 }
 
 export async function actualizarPedidoCliente(id, datos) {
-  const camposPermitidos = ['lineas', 'estado', 'comentario', 'tipoPedido', 'fechaPedido', 'cliente', 'clienteId', 'tiendaId', 'numeroPedido'];
+  const camposPermitidos = ['lineas', 'estado', 'comentario', 'tipoPedido', 'fechaPedido', 'cliente', 'clienteId', 'tiendaId', 'numeroPedido', 'usuarioTramitando', 'bultos'];
   const camposLineaPermitidos = ['producto', 'cantidad', 'formato', 'comentario', 'peso', 'cantidadEnviada', 'lote', 'preparada', 'esComentario'];
   const datosFiltrados = {};
   for (const key of camposPermitidos) {

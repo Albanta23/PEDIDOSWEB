@@ -349,12 +349,11 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     setEnviandoProveedor(true);
     setMensajeProveedor("");
     try {
-      // 1. Generar PDF como base64
-      const logoBase64 = await cargarLogoBase64(window.location.origin + '/logo1.png');
+      // 1. Generar PDF como base64 usando la función centralizada
       const doc = new jsPDF();
-      doc.addImage(logoBase64, 'PNG', 15, 10, 30, 18);
-      let y = 28;
-      doc.setFontSize(20); // Más grande
+      await cabeceraPDF(doc);
+      let y = 48;
+      doc.setFontSize(20);
       doc.text('Pedidos a Proveedores', 105, y, { align: 'center' });
       y += 12;
       doc.setFontSize(14);
@@ -385,6 +384,9 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           }
         }
       });
+      // Aplicar pie de página profesional
+      piePDF(doc);
+      
       let pdfBase64 = doc.output('datauristring');
       if (pdfBase64.startsWith('data:')) {
         pdfBase64 = pdfBase64.substring(pdfBase64.indexOf(',') + 1);

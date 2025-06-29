@@ -194,6 +194,15 @@ const PedidoForm = ({ onAdd }) => {
               onChange={e => handleLineaChange(idx, 'comentario', e.target.value)}
               style={{ padding: 8, width: 110 }}
             />
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Peso (kg)"
+              value={linea.peso || ''}
+              onChange={e => handleLineaChange(idx, 'peso', e.target.value)}
+              style={{ padding: 8, width: 80 }}
+            />
             {lineas.length > 1 && (
               <button type="button" onClick={() => handleEliminarLinea(idx)} style={{ color: '#dc3545', background: 'none', border: 'none', fontWeight: 'bold', fontSize: 18, cursor: 'pointer' }}>×</button>
             )}

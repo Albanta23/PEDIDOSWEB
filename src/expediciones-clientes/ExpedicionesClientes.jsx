@@ -3,6 +3,7 @@ import ExpedicionesClientesLogin from './ExpedicionesClientesLogin';
 import { obtenerPedidosClientesExpedicion, borrarPedidoCliente } from './pedidosClientesExpedicionService';
 import ExpedicionClienteEditor from './ExpedicionClienteEditor';
 import HistorialPedidosClientes from '../clientes-gestion/HistorialPedidosClientes';
+import { exportExpedicionClientePDF } from './exportExpedicionPDF';
 
 export default function ExpedicionesClientes() {
   const [logueado, setLogueado] = useState(false);
@@ -39,7 +40,7 @@ export default function ExpedicionesClientes() {
   }
 
   if (!logueado) {
-    return <ExpedicionesClientesLogin onLogin={nombre => { setUsuario(nombre); setLogueado(true); }} />;
+    return <ExpedicionesClientesLogin onLogin={nombre => { setUsuario(nombre); setLogueado(true); window.usuarioExpediciones = nombre; }} />;
   }
 
   return (
@@ -65,10 +66,10 @@ export default function ExpedicionesClientes() {
             </tr>
           </thead>
           <tbody>
-            {pedidos.length === 0 && (
+            {pedidos.filter(p => (p.estado || '').toLowerCase() !== 'preparado').length === 0 && (
               <tr><td colSpan={5} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
             )}
-            {pedidos.map(p => (
+            {pedidos.filter(p => (p.estado || '').toLowerCase() !== 'preparado').map(p => (
               <tr key={p._id || p.id}>
                 <td style={{ padding: 8, border: '1px solid #eee', fontWeight: 600 }}>{p.numeroPedido || p.id}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.clienteNombre || p.nombreCliente || p.cliente || '-'}</td>
@@ -79,9 +80,13 @@ export default function ExpedicionesClientes() {
                     onClick={() => setPedidoEditando(p)}>
                     Editar
                   </button>
-                  <button style={{ background: '#dc3545', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}
+                  <button style={{ background: '#dc3545', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer', marginRight: 8 }}
                     onClick={() => handleBorrarPedido(p._id || p.id)}>
                     Borrar
+                  </button>
+                  <button style={{ background: '#ffc107', color: '#333', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}
+                    onClick={() => exportExpedicionClientePDF(p, usuario)}>
+                    Exportar PDF
                   </button>
                 </td>
               </tr>
@@ -90,7 +95,7 @@ export default function ExpedicionesClientes() {
         </table>
       )}
       {pedidoEditando && (
-        <ExpedicionClienteEditor pedido={pedidoEditando} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
+        <ExpedicionClienteEditor pedido={pedidoEditando} usuario={usuario} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
       )}
       <div style={{ color: '#888', fontStyle: 'italic' }}>
         (En desarrollo) Aquí aparecerán los pedidos de clientes para tramitar, editar y su historial.

@@ -45,8 +45,9 @@ export async function exportPedidoClientePDF(pedido) {
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.text('Producto', 14, y);
-  doc.text('Cantidad', 74, y);
-  doc.text('Formato', 104, y);
+  doc.text('Cant.', 64, y);
+  doc.text('Formato', 84, y);
+  doc.text('Peso', 114, y);
   doc.text('Comentario', 134, y);
   y += 6;
   doc.setLineWidth(0.2);
@@ -60,8 +61,9 @@ export async function exportPedidoClientePDF(pedido) {
       doc.text(l.comentario || '', 34, y);
     } else {
       doc.text(String(l.producto||''), 14, y);
-      doc.text(String(l.cantidad||''), 74, y);
-      doc.text(String(l.formato||''), 104, y);
+      doc.text(String(l.cantidad||''), 64, y);
+      doc.text(String(l.formato||''), 84, y);
+      doc.text(String(l.peso ? l.peso + ' kg' : ''), 114, y);
       doc.text(String(l.comentario||''), 134, y);
     }
     y += 7;

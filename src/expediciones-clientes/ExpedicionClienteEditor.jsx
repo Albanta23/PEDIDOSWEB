@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { actualizarPedidoCliente } from './pedidosClientesExpedicionService';
 
-export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado }) {
+export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onActualizado }) {
   const [lineas, setLineas] = useState([]);
   const [estado, setEstado] = useState(pedido.estado || 'pendiente');
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [editado, setEditado] = useState(false);
+  const [bultos, setBultos] = useState(pedido.bultos || lineas.filter(l => !l.esComentario).length || 0);
   const lineasRef = useRef();
 
   useEffect(() => {
@@ -16,10 +17,12 @@ export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado
       setLineas(pedido.lineas.map(l => ({ ...l })));
       setEditado(false);
       setEstado(pedido.estado || 'pendiente');
+      setBultos(pedido.bultos || pedido.lineas.filter(l => !l.esComentario).length || 0);
     } else {
       setLineas([]);
       setEditado(false);
       setEstado('pendiente');
+      setBultos(0);
     }
   }, [pedido]);
 
@@ -52,7 +55,7 @@ export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado
     setMensaje('');
     setGuardando(true);
     try {
-      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'en_preparacion', usuarioTramitando: window?.usuarioExpediciones || 'expediciones' });
+      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'en_preparacion', usuarioTramitando: usuario || 'expediciones', bultos });
       setMensaje('Guardado correctamente');
       setEstado('en_preparacion');
       setEditado(false);
@@ -71,7 +74,7 @@ export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado
     setMensaje('');
     setGuardando(true);
     try {
-      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'preparado', usuarioTramitando: window?.usuarioExpediciones || 'expediciones' });
+      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'preparado', usuarioTramitando: usuario || 'expediciones' });
       setMensaje('Pedido cerrado y preparado');
       setEstado('preparado');
       setEditado(false);
@@ -104,6 +107,18 @@ export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado
       <div style={{ marginBottom: 12, textAlign: 'center', fontWeight: 600, color: estado === 'en_espera' ? '#d32f2f' : estado === 'en_preparacion' ? '#388e3c' : estado === 'preparado' ? '#1976d2' : '#1976d2' }}>
         Estado actual: {estado === 'en_espera' ? 'EN ESPERA' : estado === 'en_preparacion' ? 'EN PREPARACIÓN' : estado === 'preparado' ? 'PREPARADO' : estado}
       </div>
+      {/* Visualización de bultos y usuario + input editable */}
+      <div style={{ margin: '12px 0', textAlign: 'center', fontWeight: 600, color: '#1976d2', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+        Nº de bultos:
+        <input
+          type="number"
+          min={0}
+          value={bultos}
+          onChange={e => { setBultos(Number(e.target.value)); setEditado(true); }}
+          style={{ width: 60, fontWeight: 700, fontSize: 16, textAlign: 'center', border: '1px solid #1976d2', borderRadius: 6, marginLeft: 6, marginRight: 6 }}
+        />
+        · Editado por: {usuario || 'expediciones'}
+      </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 18 }}>
         <thead>
           <tr style={{ background: '#f4f6fa' }}>
@@ -111,17 +126,18 @@ export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado
             <th style={{ padding: 6, border: '1px solid #eee' }}>Cantidad</th>
             <th style={{ padding: 6, border: '1px solid #eee' }}>Formato</th>
             <th style={{ padding: 6, border: '1px solid #eee' }}>Peso (kg)</th>
+            <th style={{ padding: 6, border: '1px solid #eee' }}>Lote</th>
             <th style={{ padding: 6, border: '1px solid #eee' }}>Comentario</th>
             <th style={{ padding: 6, border: '1px solid #eee' }}>Eliminar</th>
           </tr>
         </thead>
         <tbody>
           {lineas.length === 0 && (
-            <tr><td colSpan={6} style={{ textAlign: 'center', color: '#888', padding: 18 }}>Sin líneas</td></tr>
+            <tr><td colSpan={7} style={{ textAlign: 'center', color: '#888', padding: 18 }}>Sin líneas</td></tr>
           )}
           {lineas.map((l, idx) => l.esComentario ? (
             <tr key={`comment-${idx}`} style={{ backgroundColor: '#fffbe6', border: '2px solid #ffe58f' }}>
-              <td colSpan={6} style={{ padding: '12px', textAlign: 'left' }}>
+              <td colSpan={7} style={{ padding: '12px', textAlign: 'left' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <span style={{ fontWeight: 'bold', color: '#b8860b', fontSize: 16 }}>📝 COMENTARIO:</span>
                   <input
@@ -169,6 +185,15 @@ export default function ExpedicionClienteEditor({ pedido, onClose, onActualizado
                   value={l.peso || ''}
                   onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
                   placeholder="Peso (kg)"
+                  style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={l.lote === null || l.lote === undefined ? '' : l.lote}
+                  onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
+                  placeholder="Lote"
                   style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}
                 />
               </td>

@@ -14,6 +14,9 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
         <div><b>Estado:</b> {pedido.estado?.replace('_',' ').toUpperCase()}</div>
         <div><b>Fecha pedido:</b> {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleString() : '-'}</div>
         <div><b>Dirección:</b> {pedido.direccion || '-'}</div>
+        <div><b>Usuario que tramitó:</b> {pedido.usuarioTramitando || '-'}</div>
+        <div><b>Nº de bultos:</b> {pedido.lineas?.filter(l=>!l.esComentario).length || 0}</div>
+        <div><b>Bultos registrados:</b> {pedido.bultos !== undefined ? pedido.bultos : '-'}</div>
         <div style={{margin:'16px 0'}}>
           <b>Líneas del pedido:</b>
           <ul style={{paddingLeft:18}}>
@@ -21,7 +24,10 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
               <li key={i} style={{marginBottom:4}}>
                 {l.esComentario ? <i style={{color:'#b8860b'}}>Comentario: {l.comentario}</i> : (
                   <>
-                    <b>{l.producto}</b> - {l.cantidad} {l.formato} {l.comentario && <span style={{color:'#888'}}>({l.comentario})</span>}
+                    <b>{l.producto}</b> - {l.cantidad} {l.formato}
+                    {l.peso && <span style={{color:'#1976d2'}}> - {l.peso} kg</span>}
+                    {l.lote && <span style={{color:'#ff9800'}}> - Lote: {l.lote}</span>}
+                    {l.comentario && <span style={{color:'#888'}}>({l.comentario})</span>}
                   </>
                 )}
               </li>
