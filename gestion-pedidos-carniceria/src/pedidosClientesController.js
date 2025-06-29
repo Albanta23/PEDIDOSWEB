@@ -1,5 +1,6 @@
 // Controlador para pedidos de clientes/expediciones
 const PedidoCliente = require('./models/PedidoCliente');
+const { registrarBajaStock } = require('./utils/stock');
 
 module.exports = {
   async listar(req, res) {
@@ -24,6 +25,20 @@ module.exports = {
         fechaRecepcion: req.body.fechaRecepcion
       });
       const pedidoGuardado = await nuevoPedido.save();
+      // Registrar movimiento de stock por expedición de cliente
+      for (const linea of pedidoGuardado.lineas) {
+        if (linea.esComentario) continue;
+        if (!linea.producto || !linea.cantidad) continue;
+        await registrarBajaStock({
+          tiendaId: 'almacen_central',
+          producto: linea.producto,
+          cantidad: linea.cantidad,
+          unidad: linea.formato || 'kg',
+          lote: linea.lote || '',
+          motivo: `Expedición cliente (${pedidoGuardado.clienteNombre})`,
+          peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+        });
+      }
       res.status(201).json(pedidoGuardado);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -48,6 +63,33 @@ module.exports = {
       res.status(204).end();
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  },
+  /**
+   * Registrar devolución de cliente (entrada de stock)
+   * Espera body: { pedidoId, devoluciones: [{ producto, cantidad, unidad, lote, peso, comentario }] }
+   */
+  async registrarDevolucion(req, res) {
+    try {
+      const { pedidoId, devoluciones } = req.body;
+      if (!pedidoId || !Array.isArray(devoluciones) || devoluciones.length === 0) {
+        return res.status(400).json({ error: 'Faltan datos para registrar devolución' });
+      }
+      for (const dev of devoluciones) {
+        if (!dev.producto || !dev.cantidad) continue;
+        await registrarBajaStock({
+          tiendaId: 'almacen_central',
+          producto: dev.producto,
+          cantidad: dev.cantidad,
+          unidad: dev.unidad || 'kg',
+          lote: dev.lote || '',
+          motivo: `Devolución cliente (pedido ${pedidoId})${dev.comentario ? ': ' + dev.comentario : ''}`,
+          peso: typeof dev.peso !== 'undefined' ? dev.peso : undefined
+        });
+      }
+      res.status(200).json({ ok: true });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
   }
 };
