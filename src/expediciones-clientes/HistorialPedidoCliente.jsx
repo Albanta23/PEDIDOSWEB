@@ -33,8 +33,7 @@ export default function HistorialPedidoCliente({ pedidoId, visible, onClose }) {
                 <div><b>Acción:</b> {h.accion || h.estado || '-'}</div>
                 <div><b>Usuario:</b> {h.usuario || '-'}</div>
                 {h.comentario && <div><b>Comentario:</b> {h.comentario}</div>}
-                {h.lineas && <div><b>Nº de bultos:</b> {h.lineas.filter(l=>!l.esComentario).length}</div>}
-                {h.bultos !== undefined && <div><b>Bultos registrados:</b> {h.bultos}</div>}
+                {h.bultos !== undefined && h.bultos !== null && <div><b>Bultos:</b> {h.bultos}</div>}
               </li>
             ))}
           </ul>

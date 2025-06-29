@@ -325,6 +325,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                     <tr style={{ background: '#f8fafc' }}>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Nº Pedido</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0', width: '300px' }}>Cliente y Dirección</th>
+                      <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0', width: '80px' }}>Bultos</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Estado</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Fecha</th>
                       <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
@@ -333,7 +334,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                   <tbody>
                     {pedidosAbiertos.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ 
+                        <td colSpan={6} style={{ 
                           textAlign: 'center', 
                           color: '#94a3b8', 
                           padding: '48px',
@@ -370,6 +371,19 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                               <span style={{ fontSize: '13px', color: '#64748b' }}>{formatearDireccionCompletaPedido(p)}</span>
                             </div>
                           </div>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <span style={{
+                            background: '#f0f9ff',
+                            color: '#0369a1',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            border: '1px solid #7dd3fc'
+                          }}>
+                            {p.bultos !== undefined && p.bultos !== null ? p.bultos : '-'}
+                          </span>
                         </td>
                         <td style={{ padding: '16px' }}>
                           <span style={{
@@ -508,6 +522,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                   <tr style={{ background: '#f8fafc' }}>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Nº Pedido</th>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0', width: '300px' }}>Cliente y Dirección</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0', width: '80px' }}>Bultos</th>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Estado</th>
                     <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Fecha</th>
                     <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#475569', borderBottom: '2px solid #e2e8f0' }}>Acciones</th>
@@ -516,7 +531,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                 <tbody>
                   {pedidosCerrados.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ 
+                      <td colSpan={6} style={{ 
                         textAlign: 'center', 
                         color: '#94a3b8', 
                         padding: '48px',
@@ -552,6 +567,19 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                             <span style={{ fontSize: '13px', color: '#64748b' }}>{formatearDireccionCompletaPedido(p)}</span>
                           </div>
                         </div>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <span style={{
+                          background: '#f0f9ff',
+                          color: '#0369a1',
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          border: '1px solid #7dd3fc'
+                        }}>
+                          {p.bultos !== undefined && p.bultos !== null ? p.bultos : '-'}
+                        </span>
                       </td>
                       <td style={{ padding: '16px' }}>
                         <span style={{

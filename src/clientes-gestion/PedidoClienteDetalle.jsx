@@ -246,20 +246,8 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
                   borderRadius: '8px',
                   border: '1px solid #e2e8f0'
                 }}>
-                  <b style={{color: '#374151'}}>Nº de bultos:</b> 
-                  <span style={{color: '#ff9800', fontWeight: '700'}}>{pedido.lineas?.filter(l=>!l.esComentario).length || 0}</span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  background: '#fff',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <b style={{color: '#374151'}}>Bultos registrados:</b> 
-                  <span style={{color: '#28a745', fontWeight: '700'}}>{pedido.bultos !== undefined ? pedido.bultos : '-'}</span>
+                  <b style={{color: '#374151'}}>Bultos:</b> 
+                  <span style={{color: '#28a745', fontWeight: '700'}}>{pedido.bultos !== undefined && pedido.bultos !== null ? pedido.bultos : 'Sin especificar'}</span>
                 </div>
               </div>
             </div>

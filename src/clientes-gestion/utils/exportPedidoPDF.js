@@ -48,7 +48,11 @@ export async function exportPedidoClientePDF(pedido) {
     doc.text(linea, 14, y);
     y += 6;
   });
-  y += 6;
+  y += 2;
+  
+  // Bultos
+  const bultos = pedido.bultos !== undefined && pedido.bultos !== null ? pedido.bultos : 'Sin especificar';
+  doc.text(`Bultos: ${bultos}`, 14, y); y += 12;
 
   // Cabecera de líneas
   doc.setFontSize(12);

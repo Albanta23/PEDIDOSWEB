@@ -109,7 +109,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       </div>
       {/* Visualización de bultos y usuario + input editable */}
       <div style={{ margin: '12px 0', textAlign: 'center', fontWeight: 600, color: '#1976d2', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
-        Nº de bultos:
+        Bultos:
         <input
           type="number"
           min={0}
