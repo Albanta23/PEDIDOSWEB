@@ -16,7 +16,7 @@ export default function ExpedicionesClientes() {
     if (logueado) {
       setCargando(true);
       obtenerPedidosClientesExpedicion().then(data => {
-        setPedidos(data.filter(p => p.tiendaId === 'clientes'));
+        setPedidos(data); // Mostrar todos los pedidos de clientes
         setCargando(false);
       }).catch(() => setCargando(false));
     }
@@ -26,7 +26,7 @@ export default function ExpedicionesClientes() {
   function recargarPedidos() {
     setCargando(true);
     obtenerPedidosClientesExpedicion().then(data => {
-      setPedidos(data.filter(p => p.tiendaId === 'clientes'));
+      setPedidos(data); // Mostrar todos los pedidos de clientes
       setCargando(false);
     }).catch(() => setCargando(false));
   }
