@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Logo Directo</title>
+</head>
+<body>
+    <h1>Test Logo Directo</h1>
+    
+    <div>
+        <h3>1. Verificar logo visible</h3>
+        <img src="/logo1.png" style="max-width: 200px; border: 1px solid #ccc;" id="logoTest" />
+        <p id="logoStatus">Cargando...</p>
+    </div>
+
+    <div>
+        <h3>2. Test de carga para PDF</h3>
+        <button onclick="testLogoPDF()">Probar carga del logo</button>
+        <pre id="logOutput" style="background: #f5f5f5; padding: 10px; margin-top: 10px;"></pre>
+    </div>
+
+    <div>
+        <h3>3. Generar PDF simple</h3>
+        <button onclick="generarPDFSimple()">Generar PDF con logo</button>
+    </div>
+
+    <script type="module">
+        const logoImg = document.getElementById('logoTest');
+        const logoStatus = document.getElementById('logoStatus');
+        
+        logoImg.onload = function() {
+            logoStatus.textContent = `✅ Logo carga correctamente (${this.naturalWidth}x${this.naturalHeight})`;
+            logoStatus.style.color = 'green';
+        };
+        
+        logoImg.onerror = function() {
+            logoStatus.textContent = '❌ No se puede cargar el logo desde /logo1.png';
+            logoStatus.style.color = 'red';
+        };
+
+        window.testLogoPDF = async function() {
+            const output = document.getElementById('logOutput');
+            output.textContent = 'Iniciando test...\n';
+
+            try {
+                // Test con fetch
+                output.textContent += 'Probando con fetch...\n';
+                const response = await fetch('/logo1.png');
+                if (response.ok) {
+                    output.textContent += `✅ Fetch OK: ${response.status} ${response.statusText}\n`;
+                    output.textContent += `   Content-Type: ${response.headers.get('content-type')}\n`;
+                    output.textContent += `   Content-Length: ${response.headers.get('content-length')} bytes\n`;
+                    
+                    const blob = await response.blob();
+                    const logoBase64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                    
+                    output.textContent += `✅ Convertido a base64: ${logoBase64.length} caracteres\n`;
+                    output.textContent += `   Comienza con: ${logoBase64.substring(0, 50)}...\n`;
+                    
+                    return logoBase64;
+                } else {
+                    output.textContent += `❌ Fetch falló: ${response.status}\n`;
+                }
+            } catch (error) {
+                output.textContent += `❌ Error: ${error.message}\n`;
+            }
+            
+            return null;
+        };
+
+        window.generarPDFSimple = async function() {
+            try {
+                // Importar jsPDF desde CDN
+                const { jsPDF } = await import('https://unpkg.com/jspdf@latest/dist/jspdf.es.min.js');
+                
+                console.log('📄 Creando PDF...');
+                const doc = new jsPDF();
+                
+                // Cargar logo usando la función simple
+                console.log('🖼️ Cargando logo...');
+                const logoBase64 = await testLogoPDF();
+                
+                if (logoBase64) {
+                    console.log('✅ Añadiendo logo al PDF...');
+                    doc.addImage(logoBase64, 'PNG', 10, 10, 40, 30);
+                    console.log('✅ Logo añadido');
+                } else {
+                    console.warn('⚠️ Sin logo, añadiendo placeholder');
+                    doc.setFontSize(12);
+                    doc.text('[Logo no disponible]', 10, 25);
+                }
+                
+                // Añadir contenido de prueba
+                doc.setFontSize(16);
+                doc.text('PDF de Prueba con Logo', 10, 60);
+                doc.setFontSize(12);
+                doc.text('Si ves el logo arriba, la integración está funcionando.', 10, 75);
+                doc.text(`Generado: ${new Date().toLocaleString()}`, 10, 90);
+                
+                // Guardar
+                doc.save('test-logo-simple.pdf');
+                console.log('✅ PDF guardado');
+                alert('PDF generado y descargado como test-logo-simple.pdf');
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error: ' + error.message);
+            }
+        };
+    </script>
+</body>
+</html>

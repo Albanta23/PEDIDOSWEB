@@ -2,60 +2,136 @@ import jsPDF from 'jspdf';
 import { DATOS_EMPRESA } from '../../configDatosEmpresa';
 import { formatearDireccionCompletaPedido } from './formatDireccion';
 
-// Función para cargar logo de forma fiable
+// Función para cargar logo de forma fiable con múltiples intentos
 async function cargarLogo() {
-  try {
-    const logoUrl = `${window.location.origin}/logo1.png`;
-    return await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = this.width;
-        canvas.height = this.height;
-        ctx.drawImage(this, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => reject(new Error('Error al cargar logo'));
-      img.src = logoUrl;
-    });
-  } catch (error) {
-    console.warn('No se pudo cargar el logo:', error);
-    return null;
+  // Para aplicaciones Vite/React, los archivos en public/ se sirven desde la raíz
+  const rutasLogo = [
+    '/logo1.png', // Ruta directa desde public (más probable que funcione)
+    `${window.location.origin}/logo1.png`,
+    `${import.meta.env.BASE_URL}logo1.png`, // Usando BASE_URL de Vite
+    './logo1.png',
+    '/public/logo1.png'
+  ];
+
+  console.log('🖼️ Intentando cargar logo desde las siguientes rutas:', rutasLogo);
+
+  // Primer intento: usando fetch (más confiable para archivos estáticos)
+  for (const logoUrl of rutasLogo) {
+    try {
+      console.log(`🔍 Probando con fetch: ${logoUrl}`);
+      const response = await fetch(logoUrl);
+      if (response.ok) {
+        const blob = await response.blob();
+        const logoBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            console.log(`✅ Logo cargado exitosamente con fetch desde: ${logoUrl}`);
+            resolve(reader.result);
+          };
+          reader.readAsDataURL(blob);
+        });
+        return logoBase64;
+      } else {
+        console.warn(`❌ Fetch falló para ${logoUrl}: ${response.status}`);
+      }
+    } catch (fetchError) {
+      console.warn(`❌ Error fetch para ${logoUrl}:`, fetchError.message);
+    }
   }
+
+  // Segundo intento: usando Image() como fallback
+  for (const logoUrl of rutasLogo) {
+    try {
+      console.log(`🔍 Probando con Image: ${logoUrl}`);
+      const logoBase64 = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+          try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = this.naturalWidth;
+            canvas.height = this.naturalHeight;
+            ctx.drawImage(this, 0, 0);
+            const dataUrl = canvas.toDataURL('image/png');
+            console.log(`✅ Logo cargado exitosamente con Image desde: ${logoUrl}`);
+            console.log(`📏 Dimensiones: ${this.naturalWidth}x${this.naturalHeight}`);
+            resolve(dataUrl);
+          } catch (canvasError) {
+            console.warn(`❌ Error procesando canvas para ${logoUrl}:`, canvasError);
+            reject(canvasError);
+          }
+        };
+        
+        img.onerror = (error) => {
+          console.warn(`❌ Error Image para ${logoUrl}:`, error);
+          reject(new Error(`No se pudo cargar desde ${logoUrl}`));
+        };
+        
+        // Importante: configurar src después de los event listeners
+        img.src = logoUrl;
+      });
+      
+      return logoBase64;
+    } catch (error) {
+      console.warn(`❌ Falló Image para ${logoUrl}:`, error.message);
+      continue;
+    }
+  }
+
+  console.error('❌ CRÍTICO: No se pudo cargar el logo desde ninguna ruta');
+  console.log('💡 Sugerencia: Verificar que logo1.png existe en public/ y es accesible');
+  return null;
 }
 
 // Función para cabecera profesional
 async function crearCabecera(doc, y = 10) {
+  console.log('🎨 Iniciando creación de cabecera...');
   const logoBase64 = await cargarLogo();
   
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, 'PNG', 15, y, 30, 20);
+      console.log('✅ Añadiendo logo al PDF...');
+      // Añadir logo con tamaño ajustado
+      doc.addImage(logoBase64, 'PNG', 15, y, 35, 25);
+      console.log('✅ Logo añadido exitosamente al PDF');
     } catch (error) {
-      console.warn('Error al añadir logo al PDF:', error);
+      console.error('❌ Error al añadir logo al PDF:', error);
+      // Continuar sin logo pero con mensaje
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text('[Logo no disponible]', 15, y + 15);
     }
+  } else {
+    console.warn('⚠️ No se pudo cargar el logo, continuando sin él');
+    // Placeholder visual cuando no hay logo
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, y, 35, 25, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('LOGO', 25, y + 15, { align: 'center' });
   }
   
   // Información de la empresa
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
-  doc.text(DATOS_EMPRESA.nombre, 50, y + 12);
+  doc.text(DATOS_EMPRESA.nombre, 55, y + 12);
   
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(60, 60, 60);
-  doc.text(DATOS_EMPRESA.direccion, 50, y + 19);
-  doc.text(`Tel: ${DATOS_EMPRESA.telefono} · ${DATOS_EMPRESA.email}`, 50, y + 25);
-  doc.text(DATOS_EMPRESA.web, 50, y + 31);
+  doc.text(DATOS_EMPRESA.direccion, 55, y + 19);
+  doc.text(`Tel: ${DATOS_EMPRESA.telefono} · ${DATOS_EMPRESA.email}`, 55, y + 25);
+  doc.text(DATOS_EMPRESA.web, 55, y + 31);
   
   // Línea separadora
   doc.setLineWidth(1);
   doc.setDrawColor(102, 126, 234);
   doc.line(15, y + 35, 195, y + 35);
   
+  console.log('✅ Cabecera creada exitosamente');
   return y + 40;
 }
 

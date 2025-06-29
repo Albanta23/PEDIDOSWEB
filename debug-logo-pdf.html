@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Logo PDF - Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .debug-section h3 { margin-top: 0; color: #333; }
+        .log { background: #f5f5f5; padding: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+        .test-logo { max-width: 100px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico del Logo en PDF</h1>
+    
+    <div class="debug-section">
+        <h3>1. Verificación de existencia del logo</h3>
+        <p>Ruta actual: <code id="currentPath"></code></p>
+        <button onclick="verificarLogo()">Verificar logo1.png</button>
+        <div id="logoStatus"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>2. Vista previa del logo</h3>
+        <img id="logoPreview" class="test-logo" style="display: none;" />
+        <p id="logoInfo"></p>
+    </div>
+
+    <div class="debug-section">
+        <h3>3. Test de carga para PDF</h3>
+        <button onclick="testCargarLogo()">Probar carga de logo</button>
+        <div class="log" id="logOutput"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>4. Generar PDF de prueba</h3>
+        <button onclick="generarPDFTest()">Generar PDF con debug</button>
+        <p><small>Revisa la consola del navegador para ver los logs detallados</small></p>
+    </div>
+
+    <script type="module">
+        // Mostrar ruta actual
+        document.getElementById('currentPath').textContent = window.location.origin;
+
+        // Función para verificar si el logo existe
+        window.verificarLogo = async function() {
+            const statusDiv = document.getElementById('logoStatus');
+            const logoPreview = document.getElementById('logoPreview');
+            const logoInfo = document.getElementById('logoInfo');
+            
+            const rutas = [
+                '/logo1.png',
+                '/public/logo1.png',
+                './logo1.png',
+                './public/logo1.png'
+            ];
+
+            statusDiv.innerHTML = 'Verificando rutas...<br>';
+            
+            for (const ruta of rutas) {
+                try {
+                    const response = await fetch(ruta);
+                    if (response.ok) {
+                        statusDiv.innerHTML += `✅ <strong>${ruta}</strong> - ENCONTRADO<br>`;
+                        logoPreview.src = ruta;
+                        logoPreview.style.display = 'block';
+                        logoInfo.innerHTML = `Tamaño: ${response.headers.get('content-length')} bytes`;
+                        return;
+                    } else {
+                        statusDiv.innerHTML += `❌ ${ruta} - ${response.status}<br>`;
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML += `❌ ${ruta} - Error: ${error.message}<br>`;
+                }
+            }
+            
+            statusDiv.innerHTML += '<strong>❌ Logo no encontrado en ninguna ruta</strong>';
+        };
+
+        // Función para probar la carga del logo como lo hace el PDF
+        window.testCargarLogo = async function() {
+            const logOutput = document.getElementById('logOutput');
+            logOutput.textContent = 'Iniciando test de carga...\n';
+
+            const rutasLogo = [
+                `${window.location.origin}/logo1.png`,
+                `${window.location.origin}/public/logo1.png`,
+                './logo1.png',
+                './public/logo1.png',
+                '/logo1.png',
+                '/public/logo1.png'
+            ];
+
+            for (const logoUrl of rutasLogo) {
+                try {
+                    logOutput.textContent += `\nProbando: ${logoUrl}\n`;
+                    
+                    const logoBase64 = await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = this.width;
+                            canvas.height = this.height;
+                            ctx.drawImage(this, 0, 0);
+                            const dataUrl = canvas.toDataURL('image/png');
+                            resolve(dataUrl);
+                        };
+                        
+                        img.onerror = (error) => {
+                            reject(new Error('Error al cargar imagen'));
+                        };
+                        
+                        img.src = logoUrl;
+                    });
+                    
+                    logOutput.textContent += `✅ ÉXITO: Logo cargado (${logoBase64.length} caracteres)\n`;
+                    logOutput.textContent += `   Dimensiones detectadas en canvas\n`;
+                    return logoBase64;
+                } catch (error) {
+                    logOutput.textContent += `❌ FALLO: ${error.message}\n`;
+                }
+            }
+            
+            logOutput.textContent += '\n❌ Ninguna ruta funcionó\n';
+            return null;
+        };
+
+        // Función para generar PDF con debug
+        window.generarPDFTest = async function() {
+            console.log('🚀 Iniciando generación de PDF de prueba...');
+            
+            try {
+                // Importar jsPDF
+                const jsPDF = (await import('https://unpkg.com/jspdf@latest/dist/jspdf.es.min.js')).default;
+                
+                const doc = new jsPDF();
+                
+                console.log('📄 PDF creado, intentando cargar logo...');
+                
+                // Usar la función de carga del logo
+                const logoBase64 = await testCargarLogo();
+                
+                if (logoBase64) {
+                    console.log('✅ Logo cargado, añadiendo al PDF...');
+                    try {
+                        doc.addImage(logoBase64, 'PNG', 15, 10, 35, 25);
+                        console.log('✅ Logo añadido exitosamente');
+                    } catch (error) {
+                        console.error('❌ Error al añadir logo:', error);
+                    }
+                } else {
+                    console.warn('⚠️ No se pudo cargar el logo');
+                    doc.setFontSize(12);
+                    doc.text('Logo no disponible', 15, 20);
+                }
+                
+                // Añadir texto de prueba
+                doc.setFontSize(16);
+                doc.text('Test de PDF con Logo', 15, 50);
+                doc.setFontSize(12);
+                doc.text(`Generado: ${new Date().toLocaleString()}`, 15, 65);
+                doc.text('Si ves el logo arriba, la integración funciona correctamente.', 15, 80);
+                
+                // Guardar
+                doc.save('test-logo-debug.pdf');
+                console.log('✅ PDF guardado como test-logo-debug.pdf');
+                
+            } catch (error) {
+                console.error('❌ Error general:', error);
+                alert('Error al generar PDF: ' + error.message);
+            }
+        };
+    </script>
+</body>
+</html>
