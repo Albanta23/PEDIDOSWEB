@@ -1,99 +1,20 @@
 import jsPDF from 'jspdf';
 import { DATOS_EMPRESA } from '../../configDatosEmpresa';
 import { formatearDireccionCompletaPedido } from './formatDireccion';
-
-// Función simple y directa para cargar logo (enfoque minimalista)
-async function cargarLogoSimple() {
-  try {
-    console.log('🖼️ Cargando logo con método directo...');
-    
-    // Método más directo usando fetch - probando rutas más comunes
-    const rutas = ['/logo1.png', '/public/logo1.png', './logo1.png'];
-    
-    for (const ruta of rutas) {
-      try {
-        console.log(`🔍 Probando ruta: ${ruta}`);
-        const response = await fetch(ruta);
-        if (response.ok) {
-          const blob = await response.blob();
-          const logoBase64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-
-          console.log(`✅ Logo cargado exitosamente desde ${ruta}: ${logoBase64.length} caracteres`);
-          return logoBase64;
-        } else {
-          console.warn(`❌ HTTP ${response.status} para ${ruta}`);
-        }
-      } catch (error) {
-        console.warn(`❌ Error con ${ruta}:`, error.message);
-      }
-    }
-    
-    console.warn('❌ No se pudo cargar logo con método simple');
-    return null;
-  } catch (error) {
-    console.error('❌ Error general cargando logo:', error);
-    return null;
-  }
-}
+import { obtenerLogoPDF } from './logoBase64';
 
 // Función de respaldo completa (mantener por si acaso)
 async function cargarLogo() {
-  // Primero intentar el método simple
-  let logo = await cargarLogoSimple();
-  if (logo) return logo;
-
-  // Si falla, usar el método completo como respaldo
-  const rutasLogo = [
-    '/logo1.png', // Ruta directa desde public (más probable que funcione)
-    `${window.location.origin}/logo1.png`,
-    `${import.meta.env.BASE_URL || '/'}logo1.png`, // Usando BASE_URL de Vite
-    './logo1.png'
-  ];
-
-  console.log('🖼️ Método simple falló, probando rutas múltiples:', rutasLogo);
-
-  // Intentar con Image() para las rutas restantes
-  for (const logoUrl of rutasLogo) {
-    try {
-      console.log(`🔍 Probando: ${logoUrl}`);
-      const logoBase64 = await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = function() {
-          try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = this.naturalWidth || this.width;
-            canvas.height = this.naturalHeight || this.height;
-            ctx.drawImage(this, 0, 0);
-            const dataUrl = canvas.toDataURL('image/png');
-            console.log(`✅ Logo cargado con Image desde: ${logoUrl}`);
-            resolve(dataUrl);
-          } catch (canvasError) {
-            console.warn(`❌ Error canvas:`, canvasError);
-            reject(canvasError);
-          }
-        };
-        
-        img.onerror = () => reject(new Error(`Falló ${logoUrl}`));
-        img.src = logoUrl;
-      });
-      
-      return logoBase64;
-    } catch (error) {
-      console.warn(`❌ Falló ${logoUrl}:`, error.message);
-      continue;
-    }
+  // NUEVA ESTRATEGIA: Usar logo embebido que siempre funciona
+  try {
+    console.log('🖼️ Cargando logo embebido...');
+    const logoEmbebido = await obtenerLogoPDF();
+    console.log('✅ Logo embebido cargado exitosamente');
+    return logoEmbebido;
+  } catch (error) {
+    console.error('❌ Error crítico con logo embebido:', error);
+    return null;
   }
-
-  console.error('❌ CRÍTICO: Todos los métodos de carga fallaron');
-  return null;
 }
 
 // Función para cabecera profesional
