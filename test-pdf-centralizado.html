@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF - Implementación Centralizada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test PDF - Implementación Centralizada</h1>
+        
+        <div class="info">
+            <h3>✅ Nueva implementación usando funciones centralizadas</h3>
+            <p>Esta prueba usa la misma lógica que las expediciones de clientes donde el logo SÍ funciona correctamente.</p>
+            <ul>
+                <li>Logo cargado desde <code>exportPDFBase.js</code></li>
+                <li>Cabecera y pie usando funciones centralizadas</li>
+                <li>Misma lógica probada y funcional</li>
+            </ul>
+        </div>
+        
+        <button class="btn" onclick="testPDFCentralizado()">
+            📄 Generar PDF con Implementación Centralizada
+        </button>
+        
+        <div id="resultado" style="margin-top: 20px;"></div>
+    </div>
+
+    <script type="module">
+        import jsPDF from 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.es.min.js';
+        
+        // Simulamos las funciones centralizadas (versión simplificada para testing)
+        async function cargarLogoBase64() {
+            const base = './';
+            const url = window.location.origin + base + 'logo1.png';
+            try {
+                return await new Promise((resolve) => {
+                    const img = new window.Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = () => resolve(null);
+                    img.src = url;
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function cabeceraPDF(doc, y = 10) {
+            const logoBase64 = await cargarLogoBase64();
+            if (logoBase64) doc.addImage(logoBase64, 'PNG', 15, y, 30, 18);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Carnicería Test', 50, y + 10);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Dirección de prueba', 50, y + 17);
+            doc.text('Tel: 123-456-789  ·  test@test.com', 50, y + 23);
+            doc.text('www.test.com', 50, y + 29);
+            doc.setLineWidth(0.5);
+            doc.line(15, y + 32, 195, y + 32);
+        }
+
+        function piePDF(doc) {
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(9);
+                doc.setTextColor(120);
+                doc.text('Carnicería Test · CIF: 123456789A', 105, 286, { align: 'center' });
+                doc.text('Dirección de prueba · Tel: 123-456-789', 105, 292, { align: 'center' });
+                doc.text(`Página ${i} de ${pageCount}`, 195, 292, { align: 'right' });
+            }
+        }
+
+        // Función de test
+        window.testPDFCentralizado = async function() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>🔄 Generando PDF con implementación centralizada...</p>';
+            
+            try {
+                const doc = new jsPDF();
+                
+                // Usar las funciones centralizadas
+                await cabeceraPDF(doc);
+                
+                // Contenido del pedido
+                let y = 55;
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Pedido de Cliente', 15, y);
+                
+                y += 12;
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Nº Pedido: TEST-001', 15, y);
+                y += 8;
+                doc.text('Cliente: Cliente de Prueba', 15, y);
+                y += 8;
+                doc.text('Estado: CONFIRMADO', 15, y);
+                y += 8;
+                doc.text('Fecha: ' + new Date().toLocaleDateString(), 15, y);
+                y += 8;
+                doc.text('Dirección: Calle de Prueba 123', 15, y);
+                y += 8;
+                doc.text('Bultos: 3', 15, y);
+                y += 8;
+                doc.text('Lote: LOTE-2024-001', 15, y);
+                
+                // Tabla de productos
+                y += 15;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Producto', 15, y);
+                doc.text('Cant.', 65, y);
+                doc.text('Formato', 85, y);
+                doc.text('Peso', 115, y);
+                doc.text('Lote', 135, y);
+                doc.text('Comentario', 155, y);
+                
+                y += 6;
+                doc.setLineWidth(0.2);
+                doc.line(15, y, 195, y);
+                y += 5;
+                
+                // Productos de ejemplo
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Chuletas de cerdo', 15, y);
+                doc.text('2', 65, y);
+                doc.text('Unidad', 85, y);
+                doc.text('1.5 kg', 115, y);
+                doc.text('L001', 135, y);
+                doc.text('Corte especial', 155, y);
+                
+                y += 10;
+                doc.text('Exportado por: Usuario Test', 15, y);
+                
+                // Pie de página centralizado
+                piePDF(doc);
+                
+                doc.save('test_pedido_centralizado.pdf');
+                
+                resultado.innerHTML = '<p style="color: green;">✅ PDF generado exitosamente con implementación centralizada!</p><p>📁 Archivo: <strong>test_pedido_centralizado.pdf</strong></p>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultado.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>

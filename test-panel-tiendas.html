@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Panel Tiendas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Test de visualización del Panel de Tiendas</h1>
+        
+        <!-- Simulando el editor que está arriba -->
+        <div style="border: 2px solid #007bff; margin: 12px; padding: 20px; background: #fafdff; border-radius: 14px; box-shadow: 0 2px 12px #007bff11; max-width: 720px; margin-left: auto; margin-right: auto; position: relative;">
+            <h3>Editor de Pedidos (Simulado)</h3>
+            <p>Este es el contenido del editor que debería aparecer arriba del panel de tiendas.</p>
+        </div>
+
+        <!-- Panel de tiendas - copiado del código -->
+        <div style="
+            margin-top: 24px;
+            margin-bottom: 24px;
+            padding: 32px 24px;
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            background: #f8fafd;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px #007bff11;
+            border: 1px solid #e0e6ef;
+            min-height: 120px;
+        ">
+            <button style="
+                background: #007bff; 
+                color: #fff; 
+                border: none; 
+                border-radius: 8px; 
+                padding: 0 10px; 
+                font-weight: 700; 
+                min-width: 120px; 
+                max-width: 150px; 
+                font-size: 15px; 
+                height: 48px; 
+                white-space: normal; 
+                text-align: center; 
+                line-height: 1.2; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                box-shadow: 0 2px 8px #007bff33;
+                cursor: pointer;
+            ">
+                <span>+ Crear<br/>pedido</span>
+            </button>
+            
+            <button style="
+                background: #ffb6b6;
+                color: #b71c1c;
+                border: none;
+                border-radius: 8px;
+                padding: 7px 18px;
+                font-weight: 700;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+                flex-direction: column;
+                box-shadow: 0 2px 8px #ffb6b644;
+                cursor: pointer;
+            " title="Enviar lista a proveedor">
+                <span role="img" aria-label="cerdo" style="font-size: 28px; margin-bottom: 2px;">🐷</span>
+                <span style="line-height: 1.1; text-align: center;">Pedidos<br/>de fresco</span>
+            </button>
+            
+            <button style="
+                background: #ff9800; 
+                color: #fff; 
+                border: none; 
+                border-radius: 8px; 
+                padding: 0 10px; 
+                font-weight: 700; 
+                min-width: 120px; 
+                max-width: 150px; 
+                font-size: 15px; 
+                height: 48px; 
+                white-space: normal; 
+                text-align: center; 
+                line-height: 1.2; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                box-shadow: 0 2px 8px #ff980044;
+                cursor: pointer;
+            ">
+                <span>Confirmar y<br/>enviar pedido</span>
+            </button>
+            
+            <button style="
+                background: #1976d2;
+                color: #fff;
+                border: none;
+                border-radius: 8px;
+                padding: 7px 18px;
+                font-weight: 700;
+                margin-left: 8px;
+                cursor: pointer;
+            ">
+                <span role="img" aria-label="historial" style="margin-right: 6px;">📦</span>Historial
+            </button>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #e8f4fd; border-radius: 8px;">
+            <h3>Resultado esperado:</h3>
+            <p>El panel de tiendas debería aparecer claramente visible con 4 botones:</p>
+            <ul>
+                <li>+ Crear pedido (azul)</li>
+                <li>🐷 Pedidos de fresco (rosado)</li>
+                <li>Confirmar y enviar pedido (naranja)</li>
+                <li>📦 Historial (azul oscuro)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

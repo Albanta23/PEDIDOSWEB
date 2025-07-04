@@ -248,15 +248,344 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   }, [filtroProducto, productos]);
 
   return (
-    <div style={{padding:32, maxWidth:900, margin:'0 auto'}}>
-      <h2>Gestión de almacén de {tienda?.nombre || 'Tienda'}</h2>
-      <button onClick={() => navigate ? navigate(-1) : window.history.back()} style={{position:'absolute',top:24,right:32,background:'#888',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Volver</button>
-      <div style={{display:'flex',gap:24,marginBottom:24}}>
-        <button onClick={()=>setTab('stock')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='stock'?'#007bff':'#eee',color:tab==='stock'?'#fff':'#333',fontWeight:700}}>Stock</button>
-        <button onClick={()=>setTab('movimientos')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='movimientos'?'#673ab7':'#eee',color:tab==='movimientos'?'#fff':'#333',fontWeight:700}}>Diario de movimientos</button>
-        <button onClick={()=>setTab('bajas')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='bajas'?'#dc3545':'#eee',color:tab==='bajas'?'#fff':'#333',fontWeight:700}}>Bajas</button>
-        <button onClick={()=>setTab('transferencias')} style={{padding:'8px 24px',border:'none',borderRadius:6,background:tab==='transferencias'?'#28a745':'#eee',color:tab==='transferencias'?'#fff':'#333',fontWeight:700}}>Transferencias</button>
-        <button onClick={()=>navigate(`/compras-proveedor/${tienda?.id}`)} style={{padding:'8px 24px',border:'none',borderRadius:6,background:'#ff9800',color:'#fff',fontWeight:700}}>Compras a proveedor</button>
+    <div style={{
+      padding: '40px 32px',
+      maxWidth: 1200,
+      margin: '0 auto',
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      minHeight: '100vh',
+      borderRadius: '20px',
+      position: 'relative'
+    }}>
+      {/* Header profesional con gradiente */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: '#fff',
+        padding: '32px',
+        borderRadius: '20px',
+        marginBottom: '32px',
+        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Patrón decorativo */}
+        <div style={{
+          position: 'absolute',
+          top: '-50px',
+          right: '-50px',
+          width: '150px',
+          height: '150px',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '50%'
+        }}></div>
+        
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          <div style={{
+            fontSize: '48px',
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '50%',
+            width: '80px',
+            height: '80px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>🏪</div>
+          <div>
+            <h2 style={{
+              margin: 0,
+              fontSize: '32px',
+              fontWeight: '700',
+              textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}>
+              Gestión de Almacén
+            </h2>
+            <p style={{
+              margin: '8px 0 0 0',
+              fontSize: '18px',
+              opacity: 0.9
+            }}>
+              {tienda?.nombre || 'Tienda'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Panel de navegación profesional */}
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '32px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        border: '1px solid #e1e8ed'
+      }}>
+        <h3 style={{
+          margin: '0 0 20px 0',
+          color: '#2c3e50',
+          fontSize: '20px',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '24px' }}>🧭</span>
+          Secciones del Almacén
+        </h3>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px'
+        }}>
+          <button 
+            onClick={() => setTab('stock')} 
+            style={{
+              padding: '16px 20px',
+              border: 'none',
+              borderRadius: '12px',
+              background: tab === 'stock' 
+                ? 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)' 
+                : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              color: tab === 'stock' ? '#fff' : '#495057',
+              fontWeight: '700',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: tab === 'stock' 
+                ? '0 4px 16px rgba(0, 123, 255, 0.3)' 
+                : '0 2px 8px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => {
+              if (tab !== 'stock') {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (tab !== 'stock') {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              }
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>📦</span>
+            <span>Stock Actual</span>
+          </button>
+
+          <button 
+            onClick={() => setTab('movimientos')} 
+            style={{
+              padding: '16px 20px',
+              border: 'none',
+              borderRadius: '12px',
+              background: tab === 'movimientos' 
+                ? 'linear-gradient(135deg, #673ab7 0%, #512da8 100%)' 
+                : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              color: tab === 'movimientos' ? '#fff' : '#495057',
+              fontWeight: '700',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: tab === 'movimientos' 
+                ? '0 4px 16px rgba(103, 58, 183, 0.3)' 
+                : '0 2px 8px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => {
+              if (tab !== 'movimientos') {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (tab !== 'movimientos') {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              }
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>📊</span>
+            <span>Movimientos</span>
+          </button>
+
+          <button 
+            onClick={() => setTab('bajas')} 
+            style={{
+              padding: '16px 20px',
+              border: 'none',
+              borderRadius: '12px',
+              background: tab === 'bajas' 
+                ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)' 
+                : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              color: tab === 'bajas' ? '#fff' : '#495057',
+              fontWeight: '700',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: tab === 'bajas' 
+                ? '0 4px 16px rgba(220, 53, 69, 0.3)' 
+                : '0 2px 8px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => {
+              if (tab !== 'bajas') {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (tab !== 'bajas') {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              }
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>📉</span>
+            <span>Registrar Bajas</span>
+          </button>
+
+          <button 
+            onClick={() => setTab('transferencias')} 
+            style={{
+              padding: '16px 20px',
+              border: 'none',
+              borderRadius: '12px',
+              background: tab === 'transferencias' 
+                ? 'linear-gradient(135deg, #28a745 0%, #218838 100%)' 
+                : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              color: tab === 'transferencias' ? '#fff' : '#495057',
+              fontWeight: '700',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: tab === 'transferencias' 
+                ? '0 4px 16px rgba(40, 167, 69, 0.3)' 
+                : '0 2px 8px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => {
+              if (tab !== 'transferencias') {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (tab !== 'transferencias') {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              }
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>🔄</span>
+            <span>Transferencias</span>
+          </button>
+
+          <button 
+            onClick={() => navigate(`/compras-proveedor/${tienda?.id}`)} 
+            style={{
+              padding: '16px 20px',
+              border: 'none',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+              color: '#fff',
+              fontWeight: '700',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 16px rgba(255, 152, 0, 0.3)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(255, 152, 0, 0.4)';
+            }}
+            onMouseLeave={e => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 16px rgba(255, 152, 0, 0.3)';
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>🛒</span>
+            <span>Compras</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Botón adicional para volver al panel principal */}
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        padding: '16px 24px',
+        marginBottom: '24px',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        border: '1px solid #e1e8ed',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div>
+          <h4 style={{ margin: '0 0 4px 0', color: '#2c3e50', fontSize: '16px', fontWeight: '600' }}>
+            📋 Panel Principal de Tiendas
+          </h4>
+          <p style={{ margin: 0, color: '#6c757d', fontSize: '14px' }}>
+            Gestionar pedidos, historial y funciones principales
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            if (navigate) {
+              navigate('/', { replace: true });
+            } else {
+              window.history.back();
+            }
+          }}
+          style={{
+            background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '12px 24px',
+            fontWeight: '600',
+            fontSize: '14px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 16px rgba(0, 123, 255, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={e => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(0, 123, 255, 0.35)';
+          }}
+          onMouseLeave={e => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 16px rgba(0, 123, 255, 0.25)';
+          }}
+        >
+          <span>← Volver al Panel Principal</span>
+        </button>
       </div>
       {tab==='stock' && (
         <div>
