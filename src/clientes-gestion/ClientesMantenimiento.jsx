@@ -35,6 +35,10 @@ export default function ClientesMantenimiento() {
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
   const [mostrarEditorPedidos, setMostrarEditorPedidos] = useState(false);
   const [datosReutilizacion, setDatosReutilizacion] = useState(null);
+  // Filtros para pedidos del cliente
+  const [filtroFecha, setFiltroFecha] = useState('');
+  const [filtroProducto, setFiltroProducto] = useState('');
+  const [pedidosFiltrados, setPedidosFiltrados] = useState([]);
 
   const cargarClientes = () => {
     axios.get(`${API_URL}/api/clientes`)
@@ -103,6 +107,53 @@ export default function ClientesMantenimiento() {
     }
   };
 
+  // Función para filtrar pedidos del cliente
+  const filtrarPedidosCliente = (pedidos, filtroFecha, filtroProducto) => {
+    let pedidosFiltrados = [...pedidos];
+
+    // Filtro por fecha
+    if (filtroFecha) {
+      const fechaFiltro = new Date(filtroFecha);
+      pedidosFiltrados = pedidosFiltrados.filter(pedido => {
+        const fechaPedido = pedido.fechaPedido ? new Date(pedido.fechaPedido) : 
+                           pedido.fechaCreacion ? new Date(pedido.fechaCreacion) : null;
+        if (!fechaPedido) return false;
+        
+        // Comparar solo la fecha (sin hora)
+        const fechaPedidoSolo = new Date(fechaPedido.getFullYear(), fechaPedido.getMonth(), fechaPedido.getDate());
+        const fechaFiltroSolo = new Date(fechaFiltro.getFullYear(), fechaFiltro.getMonth(), fechaFiltro.getDate());
+        
+        return fechaPedidoSolo.getTime() === fechaFiltroSolo.getTime();
+      });
+    }
+
+    // Filtro por producto
+    if (filtroProducto && filtroProducto.trim()) {
+      const productoLower = filtroProducto.toLowerCase().trim();
+      pedidosFiltrados = pedidosFiltrados.filter(pedido => {
+        if (!pedido.lineas || pedido.lineas.length === 0) return false;
+        
+        return pedido.lineas.some(linea => 
+          linea.producto && linea.producto.toLowerCase().includes(productoLower)
+        );
+      });
+    }
+
+    return pedidosFiltrados;
+  };
+
+  // Efecto para aplicar filtros cuando cambian
+  React.useEffect(() => {
+    const pedidosFiltrados = filtrarPedidosCliente(pedidosCliente, filtroFecha, filtroProducto);
+    setPedidosFiltrados(pedidosFiltrados);
+  }, [pedidosCliente, filtroFecha, filtroProducto]);
+
+  // Función para limpiar filtros
+  const limpiarFiltros = () => {
+    setFiltroFecha('');
+    setFiltroProducto('');
+  };
+
   useEffect(() => { cargarClientes(); }, []);
 
   const handleGuardar = async () => {
@@ -132,12 +183,18 @@ export default function ClientesMantenimiento() {
       direccion: cliente.direccion || ''
     });
     setModo('editar');
+    // Limpiar filtros al cambiar de cliente
+    setFiltroFecha('');
+    setFiltroProducto('');
     cargarPedidosCliente(cliente.nombre);
   };
 
   const handleVer = (cliente) => {
     setClienteEdit(cliente);
     setModo('ver');
+    // Limpiar filtros al cambiar de cliente
+    setFiltroFecha('');
+    setFiltroProducto('');
     cargarPedidosCliente(cliente.nombre);
   };
 
@@ -286,6 +343,9 @@ export default function ClientesMantenimiento() {
                 setPedidosCliente([]);
                 setFiltroBusqueda('');
                 setClientesFiltrados(clientes);
+                // Limpiar filtros de pedidos
+                setFiltroFecha('');
+                setFiltroProducto('');
               }}
               style={{
                 background: 'linear-gradient(135deg, #3498db, #2980b9)',
@@ -881,6 +941,9 @@ export default function ClientesMantenimiento() {
                   setClienteEdit(null);
                   setFiltroBusqueda('');
                   setClientesFiltrados(clientes);
+                  // Limpiar filtros de pedidos
+                  setFiltroFecha('');
+                  setFiltroProducto('');
                 }}
                 style={{
                   background: 'linear-gradient(135deg, #95a5a6, #7f8c8d)',
@@ -935,6 +998,146 @@ export default function ClientesMantenimiento() {
                   📋 Historial de Pedidos del Cliente
                 </h4>
                 
+                {/* Filtros para pedidos */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #e8f4fd, #f8f9fa)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '20px',
+                  border: '2px solid #e1e8ed'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    marginBottom: '15px'
+                  }}>
+                    <span style={{
+                      fontSize: '16px',
+                      fontWeight: '700',
+                      color: '#2c3e50'
+                    }}>
+                      🔍 Filtrar pedidos:
+                    </span>
+                    {(filtroFecha || filtroProducto) && (
+                      <button
+                        onClick={limpiarFiltros}
+                        style={{
+                          background: 'linear-gradient(135deg, #dc3545, #c82333)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        ❌ Limpiar filtros
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '200px 1fr',
+                    gap: '15px',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '5px',
+                        fontWeight: '600',
+                        color: '#495057',
+                        fontSize: '14px'
+                      }}>
+                        📅 Por fecha:
+                      </label>
+                      <input
+                        type="date"
+                        value={filtroFecha}
+                        onChange={(e) => setFiltroFecha(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: '2px solid #e1e8ed',
+                          fontSize: '14px',
+                          transition: 'all 0.3s ease',
+                          boxSizing: 'border-box'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#667eea';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e1e8ed';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '5px',
+                        fontWeight: '600',
+                        color: '#495057',
+                        fontSize: '14px'
+                      }}>
+                        🛒 Por producto:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Buscar por nombre de producto..."
+                        value={filtroProducto}
+                        onChange={(e) => setFiltroProducto(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: '2px solid #e1e8ed',
+                          fontSize: '14px',
+                          transition: 'all 0.3s ease',
+                          boxSizing: 'border-box'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#667eea';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e1e8ed';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Información de filtros activos */}
+                  <div style={{
+                    marginTop: '15px',
+                    padding: '10px',
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    color: '#495057'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>
+                        📊 Mostrando <strong>{pedidosFiltrados.length}</strong> de <strong>{pedidosCliente.length}</strong> pedidos
+                      </span>
+                      {(filtroFecha || filtroProducto) && (
+                        <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                          {filtroFecha && <span>📅 Fecha: {new Date(filtroFecha).toLocaleDateString()} </span>}
+                          {filtroProducto && <span>🛒 Producto: "{filtroProducto}"</span>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
                 {cargandoPedidos ? (
                   <div style={{
                     textAlign: 'center',
@@ -950,9 +1153,8 @@ export default function ClientesMantenimiento() {
                     borderRadius: '10px',
                     padding: '20px',
                     maxHeight: '400px',
-                    overflowY: 'auto'
-                  }}>
-                    {pedidosCliente.map((pedido, index) => (
+                    overflowY: 'auto'                  }}>
+                    {pedidosFiltrados.map((pedido, index) => (
                       <div
                         key={pedido._id || index}
                         style={{
@@ -1042,6 +1244,24 @@ export default function ClientesMantenimiento() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Mensaje cuando no hay pedidos filtrados */}
+                    {pedidosCliente.length > 0 && pedidosFiltrados.length === 0 && (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '40px',
+                        color: '#7f8c8d',
+                        fontSize: '16px',
+                        background: 'white',
+                        borderRadius: '10px',
+                        border: '2px dashed #e1e8ed'
+                      }}>
+                        🔍 No se encontraron pedidos que coincidan con los filtros aplicados
+                        <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                          Prueba con otros criterios de búsqueda o limpia los filtros
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{
@@ -1203,6 +1423,146 @@ export default function ClientesMantenimiento() {
                 📋 Historial Completo de Pedidos
               </h4>
               
+              {/* Filtros para pedidos en vista detallada */}
+              <div style={{
+                background: 'linear-gradient(135deg, #e8f4fd, #f8f9fa)',
+                borderRadius: '12px',
+                padding: '20px',
+                marginBottom: '20px',
+                border: '2px solid #e1e8ed'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '15px'
+                }}>
+                  <span style={{
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#2c3e50'
+                  }}>
+                    🔍 Filtrar pedidos:
+                  </span>
+                  {(filtroFecha || filtroProducto) && (
+                    <button
+                      onClick={limpiarFiltros}
+                      style={{
+                        background: 'linear-gradient(135deg, #dc3545, #c82333)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      ❌ Limpiar filtros
+                    </button>
+                  )}
+                </div>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '200px 1fr',
+                  gap: '15px',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '5px',
+                      fontWeight: '600',
+                      color: '#495057',
+                      fontSize: '14px'
+                    }}>
+                      📅 Por fecha:
+                    </label>
+                    <input
+                      type="date"
+                      value={filtroFecha}
+                      onChange={(e) => setFiltroFecha(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '2px solid #e1e8ed',
+                        fontSize: '14px',
+                        transition: 'all 0.3s ease',
+                        boxSizing: 'border-box'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#667eea';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e1e8ed';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '5px',
+                      fontWeight: '600',
+                      color: '#495057',
+                      fontSize: '14px'
+                    }}>
+                      🛒 Por producto:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre de producto..."
+                      value={filtroProducto}
+                      onChange={(e) => setFiltroProducto(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '2px solid #e1e8ed',
+                        fontSize: '14px',
+                        transition: 'all 0.3s ease',
+                        boxSizing: 'border-box'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#667eea';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e1e8ed';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Información de filtros activos */}
+                <div style={{
+                  marginTop: '15px',
+                  padding: '10px',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  color: '#495057'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      📊 Mostrando <strong>{pedidosFiltrados.length}</strong> de <strong>{pedidosCliente.length}</strong> pedidos
+                    </span>
+                    {(filtroFecha || filtroProducto) && (
+                      <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                        {filtroFecha && <span>📅 Fecha: {new Date(filtroFecha).toLocaleDateString()} </span>}
+                        {filtroProducto && <span>🛒 Producto: "{filtroProducto}"</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
               {cargandoPedidos ? (
                 <div style={{
                   textAlign: 'center',
@@ -1218,9 +1578,8 @@ export default function ClientesMantenimiento() {
                   borderRadius: '10px',
                   padding: '20px',
                   maxHeight: '500px',
-                  overflowY: 'auto'
-                }}>
-                  {pedidosCliente.map((pedido, index) => (
+                  overflowY: 'auto'                }}>
+                  {pedidosFiltrados.map((pedido, index) => (
                     <div
                       key={pedido._id || index}
                       style={{
@@ -1333,6 +1692,24 @@ export default function ClientesMantenimiento() {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Mensaje cuando no hay pedidos filtrados en vista detallada */}
+                  {pedidosCliente.length > 0 && pedidosFiltrados.length === 0 && (
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '40px',
+                      color: '#7f8c8d',
+                      fontSize: '16px',
+                      background: 'white',
+                      borderRadius: '10px',
+                      border: '2px dashed #e1e8ed'
+                    }}>
+                      🔍 No se encontraron pedidos que coincidan con los filtros aplicados
+                      <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                        Prueba con otros criterios de búsqueda o limpia los filtros
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{
