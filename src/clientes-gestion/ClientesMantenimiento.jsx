@@ -5,6 +5,8 @@ const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 export default function ClientesMantenimiento() {
   const [clientes, setClientes] = useState([]);
+  const [clientesFiltrados, setClientesFiltrados] = useState([]);
+  const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [modo, setModo] = useState('lista'); // 'lista', 'crear', 'editar', 'ver'
   const [clienteEdit, setClienteEdit] = useState(null);
   const [form, setForm] = useState({ nombre: '', email: '', telefono: '', direccion: '' });
@@ -14,8 +16,30 @@ export default function ClientesMantenimiento() {
 
   const cargarClientes = () => {
     axios.get(`${API_URL}/api/clientes`)
-      .then(res => setClientes(res.data))
-      .catch(() => setClientes([]));
+      .then(res => {
+        setClientes(res.data);
+        setClientesFiltrados(res.data);
+      })
+      .catch(() => {
+        setClientes([]);
+        setClientesFiltrados([]);
+      });
+  };
+
+  // Función para filtrar clientes
+  const filtrarClientes = (busqueda) => {
+    setFiltroBusqueda(busqueda);
+    if (!busqueda.trim()) {
+      setClientesFiltrados(clientes);
+    } else {
+      const filtrados = clientes.filter(cliente =>
+        cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+        (cliente.email && cliente.email.toLowerCase().includes(busqueda.toLowerCase())) ||
+        (cliente.telefono && cliente.telefono.includes(busqueda)) ||
+        (cliente.cif && cliente.cif.toLowerCase().includes(busqueda.toLowerCase()))
+      );
+      setClientesFiltrados(filtrados);
+    }
   };
 
   const cargarPedidosCliente = async (clienteNombre) => {
@@ -125,6 +149,11 @@ export default function ClientesMantenimiento() {
     }
   };
 
+  // Efecto para actualizar filtro cuando cambian los clientes
+  React.useEffect(() => {
+    filtrarClientes(filtroBusqueda);
+  }, [clientes]);
+
   // --- Scroll horizontal con click derecho ---
   const tablaRef = React.useRef();
   React.useEffect(() => {
@@ -213,6 +242,8 @@ export default function ClientesMantenimiento() {
                 setForm({ nombre: '', email: '', telefono: '', direccion: '' });
                 setClienteEdit(null);
                 setPedidosCliente([]);
+                setFiltroBusqueda('');
+                setClientesFiltrados(clientes);
               }}
               style={{
                 background: 'linear-gradient(135deg, #3498db, #2980b9)',
@@ -319,8 +350,91 @@ export default function ClientesMantenimiento() {
               </label>
             </div>
 
-            {/* Tabla de clientes */}
-            <div ref={tablaRef} style={{
+            {/* Filtro de búsqueda */}
+            <div style={{
+              marginBottom: '25px',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <div style={{
+                position: 'relative',
+                maxWidth: '500px',
+                width: '100%'
+              }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Buscar cliente por nombre, email, teléfono o CIF..."
+                  value={filtroBusqueda}
+                  onChange={(e) => filtrarClientes(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '15px 20px 15px 50px',
+                    borderRadius: '25px',
+                    border: '2px solid #e1e8ed',
+                    fontSize: '16px',
+                    background: 'white',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                    transition: 'all 0.3s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.2)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e1e8ed';
+                    e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                  }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  left: '18px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: '18px',
+                  color: '#7f8c8d'
+                }}>
+                  🔍
+                </div>
+                {filtroBusqueda && (
+                  <button
+                    onClick={() => filtrarClientes('')}
+                    style={{
+                      position: 'absolute',
+                      right: '15px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '18px',
+                      color: '#7f8c8d',
+                      cursor: 'pointer',
+                      padding: '5px'
+                    }}
+                    title="Limpiar búsqueda"
+                  >
+                    ❌
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Información de resultados */}
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '20px',
+              color: '#7f8c8d',
+              fontSize: '14px'
+            }}>
+              {filtroBusqueda ? (
+                `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes`
+              ) : (
+                `Total: ${clientes.length} clientes`
+              )}
+            </div>
+
+            {/* Tabla de clientes simplificada */}
+            <div style={{
               overflowX: 'auto',
               background: 'white',
               borderRadius: '15px',
@@ -328,7 +442,6 @@ export default function ClientesMantenimiento() {
               border: '1px solid #e1e8ed'
             }}>
               <table style={{
-                minWidth: 900,
                 width: '100%',
                 borderCollapse: 'collapse'
               }}>
@@ -339,264 +452,197 @@ export default function ClientesMantenimiento() {
                   }}>
                     <th style={{
                       textAlign: 'left',
-                      padding: '15px',
+                      padding: '20px',
                       fontWeight: '700',
                       color: '#495057',
-                      fontSize: '14px',
+                      fontSize: '16px',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
-                    }}>Nombre</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Email</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Teléfono</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      maxWidth: 180,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>Dirección</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>CIF</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Tipo</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Activo</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Exento IVA</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Forma Pago</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Recargo Eq.</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Dto1</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Dto2</th>
-                    <th style={{
-                      textAlign: 'left',
-                      padding: '15px',
-                      fontWeight: '700',
-                      color: '#495057',
-                      fontSize: '14px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Dto3</th>
+                    }}>
+                      👤 Cliente
+                    </th>
                     <th style={{
                       textAlign: 'center',
-                      padding: '15px',
+                      padding: '20px',
                       fontWeight: '700',
                       color: '#495057',
-                      fontSize: '14px',
+                      fontSize: '16px',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>Acciones</th>
+                      letterSpacing: '0.5px',
+                      width: '200px'
+                    }}>
+                      ⚙️ Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {clientes.map((c, index) => (
-                    <tr 
-                      key={c._id || c.id} 
-                      style={{
-                        borderBottom: '1px solid #e9ecef',
-                        backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#e3f2fd';
-                        e.currentTarget.style.transform = 'scale(1.01)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? 'white' : '#f8f9fa';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <td style={{ padding: '15px', fontWeight: '600', color: '#2c3e50' }}>{c.nombre}</td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.email}</td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.telefono}</td>
-                      <td style={{
-                        padding: '15px',
+                  {clientesFiltrados.length === 0 ? (
+                    <tr>
+                      <td colSpan="2" style={{
+                        textAlign: 'center',
+                        padding: '40px',
                         color: '#7f8c8d',
-                        maxWidth: 180,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }} title={c.direccion}>{c.direccion}</td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.cif}</td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.tipoCliente}</td>
-                      <td style={{ padding: '15px' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          background: c.activo ? '#d4edda' : '#f8d7da',
-                          color: c.activo ? '#155724' : '#721c24'
-                        }}>
-                          {c.activo ? 'Sí' : 'No'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '15px' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          background: c.exentoIVA ? '#d4edda' : '#f8d7da',
-                          color: c.exentoIVA ? '#155724' : '#721c24'
-                        }}>
-                          {c.exentoIVA ? 'Sí' : 'No'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.formaPago}</td>
-                      <td style={{ padding: '15px' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          background: c.recargoEquiv ? '#d4edda' : '#f8d7da',
-                          color: c.recargoEquiv ? '#155724' : '#721c24'
-                        }}>
-                          {c.recargoEquiv ? 'Sí' : 'No'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.descuento1}%</td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.descuento2}%</td>
-                      <td style={{ padding: '15px', color: '#7f8c8d' }}>{c.descuento3}%</td>
-                      <td style={{ padding: '15px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => handleVer(c)}
-                            style={{
-                              background: 'linear-gradient(135deg, #3498db, #2980b9)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                            title="Ver detalles y historial"
-                          >
-                            👁️
-                          </button>
-                          <button
-                            onClick={() => handleEditar(c)}
-                            style={{
-                              background: 'linear-gradient(135deg, #f39c12, #e67e22)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                            title="Editar cliente"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            onClick={() => handleEliminar(c)}
-                            style={{
-                              background: 'linear-gradient(135deg, #e74c3c, #c0392b)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                            title="Eliminar cliente"
-                          >
-                            🗑️
-                          </button>
-                        </div>
+                        fontSize: '16px',
+                        fontStyle: 'italic'
+                      }}>
+                        {filtroBusqueda ? 
+                          `🔍 No se encontraron clientes que coincidan con "${filtroBusqueda}"` :
+                          '📋 No hay clientes registrados'
+                        }
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    clientesFiltrados.map((c, index) => (
+                      <tr 
+                        key={c._id || c.id} 
+                        style={{
+                          borderBottom: '1px solid #e9ecef',
+                          backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = '#e3f2fd';
+                          e.currentTarget.style.transform = 'scale(1.01)';
+                          e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = index % 2 === 0 ? 'white' : '#f8f9fa';
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      >
+                        <td style={{ 
+                          padding: '20px',
+                          fontWeight: '600',
+                          color: '#2c3e50',
+                          fontSize: '16px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{
+                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                              borderRadius: '50%',
+                              width: '40px',
+                              height: '40px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '16px',
+                              fontWeight: '700'
+                            }}>
+                              {c.nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#2c3e50' }}>
+                                {c.nombre}
+                              </div>
+                              {c.email && (
+                                <div style={{ fontSize: '12px', color: '#7f8c8d', marginTop: '2px' }}>
+                                  📧 {c.email}
+                                </div>
+                              )}
+                              {c.telefono && (
+                                <div style={{ fontSize: '12px', color: '#7f8c8d', marginTop: '2px' }}>
+                                  📞 {c.telefono}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '20px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => handleVer(c)}
+                              style={{
+                                background: 'linear-gradient(135deg, #3498db, #2980b9)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                padding: '12px 16px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 8px rgba(52, 152, 219, 0.3)'
+                              }}
+                              title="Ver detalles completos y historial de pedidos"
+                              onMouseOver={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.4)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 8px rgba(52, 152, 219, 0.3)';
+                              }}
+                            >
+                              👁️ Ver
+                            </button>
+                            <button
+                              onClick={() => handleEditar(c)}
+                              style={{
+                                background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                padding: '12px 16px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 8px rgba(243, 156, 18, 0.3)'
+                              }}
+                              title="Editar información del cliente"
+                              onMouseOver={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 15px rgba(243, 156, 18, 0.4)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 8px rgba(243, 156, 18, 0.3)';
+                              }}
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={() => handleEliminar(c)}
+                              style={{
+                                background: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                padding: '12px 16px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 8px rgba(231, 76, 60, 0.3)'
+                              }}
+                              title="Eliminar cliente permanentemente"
+                              onMouseOver={(e) => {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 15px rgba(231, 76, 60, 0.4)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 8px rgba(231, 76, 60, 0.3)';
+                              }}
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -791,6 +837,8 @@ export default function ClientesMantenimiento() {
                   setModo('lista');
                   setForm({ nombre: '', email: '', telefono: '', direccion: '' });
                   setClienteEdit(null);
+                  setFiltroBusqueda('');
+                  setClientesFiltrados(clientes);
                 }}
                 style={{
                   background: 'linear-gradient(135deg, #95a5a6, #7f8c8d)',
