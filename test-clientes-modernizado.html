@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Gestión de Clientes Modernizado</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f7fa;
+        }
+        .test-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .test-info p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .status {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .features-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .features-list h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .features-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .features-list li:before {
+            content: "✅ ";
+            margin-right: 10px;
+        }
+        .button-test {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .button-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h1>🎉 Gestión de Clientes - Modernización Completada</h1>
+        <p>Sistema de gestión de clientes profesionalizado con visualización de historial de pedidos</p>
+    </div>
+
+    <div class="status">
+        <h2 style="color: #27ae60; margin: 0;">✅ Estado: Modernización Completada</h2>
+        <p>El componente ClientesMantenimiento.jsx ha sido completamente modernizado y profesionalizado.</p>
+    </div>
+
+    <div class="features-list">
+        <h3>🚀 Nuevas Características Implementadas</h3>
+        <ul>
+            <li>Diseño profesional con gradientes y efectos visuales modernos</li>
+            <li>Header personalizado con iconos y descripción del módulo</li>
+            <li>Navegación mejorada con botones profesionales</li>
+            <li>Tabla de clientes modernizada con hover effects y badges de estado</li>
+            <li>Formulario de creación/edición rediseñado con validación visual</li>
+            <li>Nueva vista detallada del cliente con información organizada en cards</li>
+            <li>Visualización completa del historial de pedidos del cliente</li>
+            <li>Detalles de productos en cada pedido con estados visuales</li>
+            <li>Botones de acción con iconos y efectos hover</li>
+            <li>Funcionalidad de importación CSV manteneida</li>
+            <li>Scroll horizontal para tabla amplia mantenido</li>
+            <li>Responsive design para diferentes tamaños de pantalla</li>
+        </ul>
+    </div>
+
+    <div class="features-list">
+        <h3>👁️ Características de la Vista Detallada</h3>
+        <ul>
+            <li>Información de contacto organizada en card dedicado</li>
+            <li>Información fiscal con estados visuales (IVA, recargo, etc.)</li>
+            <li>Condiciones comerciales (descuentos, forma de pago)</li>
+            <li>Historial completo de pedidos con detalles expandidos</li>
+            <li>Estado visual de cada pedido (entregado, enviado, etc.)</li>
+            <li>Lista detallada de productos por pedido</li>
+            <li>Comentarios y observaciones de cada línea de pedido</li>
+            <li>Información del usuario que tramitó cada pedido</li>
+        </ul>
+    </div>
+
+    <div class="features-list">
+        <h3>🔧 Funcionalidades Mantenidas</h3>
+        <ul>
+            <li>Creación de nuevos clientes</li>
+            <li>Edición de clientes existentes</li>
+            <li>Eliminación de clientes con confirmación</li>
+            <li>Importación masiva desde archivos CSV</li>
+            <li>Gestión de todos los campos del cliente (CIF, descuentos, etc.)</li>
+            <li>Validación de campos obligatorios</li>
+            <li>Mensajes de éxito y error</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; padding: 20px;">
+        <button class="button-test" onclick="window.location.href='/'">
+            🏠 Volver al Sistema Principal
+        </button>
+        <button class="button-test" onclick="openClientesGestion()">
+            👥 Abrir Gestión de Clientes
+        </button>
+    </div>
+
+    <script>
+        function openClientesGestion() {
+            // Intentar abrir la gestión de clientes
+            const port = window.location.port || '3000';
+            const url = `http://localhost:${port}/clientes-gestion`;
+            
+            // Abrir en nueva pestaña
+            window.open(url, '_blank');
+            
+            // También mostrar información
+            alert('🎯 Abriendo gestión de clientes...\n\n' +
+                  'Si no se abre automáticamente, navega a:\n' +
+                  url + '\n\n' +
+                  '✨ Características destacadas:\n' +
+                  '• Vista profesional con gradientes\n' +
+                  '• Historial completo de pedidos\n' +
+                  '• Información organizada en cards\n' +
+                  '• Botones con efectos hover');
+        }
+
+        // Información adicional al cargar
+        console.log('🎉 MODERNIZACIÓN COMPLETADA - Gestión de Clientes');
+        console.log('📁 Archivo modificado: /src/clientes-gestion/ClientesMantenimiento.jsx');
+        console.log('🚀 Nuevas funcionalidades:');
+        console.log('   • Diseño profesional moderno');
+        console.log('   • Vista detallada del cliente');
+        console.log('   • Historial de pedidos integrado');
+        console.log('   • Navegación mejorada');
+        console.log('   • Cards organizadas por categorías');
+    </script>
+</body>
+</html>
