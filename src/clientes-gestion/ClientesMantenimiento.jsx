@@ -3,6 +3,8 @@ import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+console.log('[DEBUG ClientesMantenimiento] API_URL:', API_URL);
+console.log('[DEBUG ClientesMantenimiento] VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 // Componente que extiende PedidosClientes para manejar reutilización
 function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion }) {
@@ -41,7 +43,7 @@ export default function ClientesMantenimiento() {
   const [pedidosFiltrados, setPedidosFiltrados] = useState([]);
 
   const cargarClientes = () => {
-    axios.get(`${API_URL}/api/clientes`)
+    axios.get(`${API_URL}/clientes`)
       .then(res => {
         setClientes(res.data);
         setClientesFiltrados(res.data);
@@ -72,7 +74,7 @@ export default function ClientesMantenimiento() {
     setCargandoPedidos(true);
     try {
       // Buscar primero todos los pedidos y filtrar por clienteNombre
-      const res = await axios.get(`${API_URL}/api/pedidos-clientes`);
+      const res = await axios.get(`${API_URL}/pedidos-clientes`);
       const pedidosFiltrados = (res.data || []).filter(pedido => 
         pedido.clienteNombre === clienteNombre || 
         pedido.clienteId === clienteNombre ||
@@ -160,10 +162,10 @@ export default function ClientesMantenimiento() {
     if (!form.nombre) { setMensaje('El nombre es obligatorio'); return; }
     try {
       if (modo === 'crear') {
-        await axios.post(`${API_URL}/api/clientes`, form);
+        await axios.post(`${API_URL}/clientes`, form);
         setMensaje('Cliente creado');
       } else if (modo === 'editar' && clienteEdit) {
-        await axios.put(`${API_URL}/api/clientes/${clienteEdit._id||clienteEdit.id}`, form);
+        await axios.put(`${API_URL}/clientes/${clienteEdit._id||clienteEdit.id}`, form);
         setMensaje('Cliente actualizado');
       }
       setForm({ nombre: '', email: '', telefono: '', direccion: '' });
@@ -201,7 +203,7 @@ export default function ClientesMantenimiento() {
   const handleEliminar = async (cliente) => {
     if (!window.confirm('¿Eliminar cliente?')) return;
     try {
-      await axios.delete(`${API_URL}/api/clientes/${cliente._id||cliente.id}`);
+      await axios.delete(`${API_URL}/clientes/${cliente._id||cliente.id}`);
       cargarClientes();
     } catch {}
   };
@@ -239,7 +241,7 @@ export default function ClientesMantenimiento() {
     if (clientes.length === 0) return setMensaje('No se han detectado clientes en el archivo. Revisa el formato.');
     try {
       for (const cli of clientes) {
-        await axios.post(`${API_URL}/api/clientes`, cli);
+        await axios.post(`${API_URL}/clientes`, cli);
       }
       setMensaje('Clientes importados correctamente');
       cargarClientes();

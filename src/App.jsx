@@ -328,10 +328,11 @@ function App() {
     }
   }, [tiendaSeleccionada, logueado, modo]);
 
-  useEffect(() => {
-    console.log('[DEBUG App.jsx] VITE_API_URL:', import.meta.env.VITE_API_URL);
-    console.log('[DEBUG App.jsx] tiendaSeleccionada:', tiendaSeleccionada);
-  }, [tiendaSeleccionada]);
+  // Comentado para evitar re-renders innecesarios
+  // useEffect(() => {
+  //   console.log('[DEBUG App.jsx] VITE_API_URL:', import.meta.env.VITE_API_URL);
+  //   console.log('[DEBUG App.jsx] tiendaSeleccionada:', tiendaSeleccionada);
+  // }, [tiendaSeleccionada]);
 
   // NUEVO: componente para navegación en panel de tienda
   function TiendaPanelNavegacion({ tiendaSeleccionada, pedidos, onModificar, onBorrar, onEditar, onVerHistorico }) {

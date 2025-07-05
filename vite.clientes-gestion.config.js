@@ -10,10 +10,8 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
-    port: 3100,
-    proxy: {
-      '/api': 'http://localhost:10001' // Ajusta si tu backend está en otro puerto
-    }
+    port: 3100
+    // Proxy deshabilitado para Codespaces - usamos URLs completas desde variables de entorno
   },
   resolve: {
     alias: {

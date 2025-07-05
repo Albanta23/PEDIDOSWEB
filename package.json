@@ -29,7 +29,8 @@
     "postcss": "^8.4.31"
   },
   "scripts": {
-    "start": "BROWSER=none WDS_SOCKET_PORT=0 vite --port 3000",
+    "start": "BROWSER=none vite --port 3000",
+    "start-no-hmr": "BROWSER=none vite --port 3000 --config vite.no-hmr.config.js",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",

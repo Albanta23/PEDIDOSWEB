@@ -30,7 +30,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (!window.confirm('¿Seguro que quieres cancelar este pedido?')) return;
     setCancelandoId(pedido._id);
     try {
-      await axios.put(`${API_URL}/api/pedidos-clientes/${pedido._id}`, {
+      await axios.put(`${API_URL}/pedidos-clientes/${pedido._id}`, {
         ...pedido,
         estado: 'cancelado',
         usuarioTramitando: 'usuario',
@@ -43,7 +43,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
       if (fechaFin) params.push(`fechaFin=${fechaFin}`);
       const query = params.length ? '?' + params.join('&') : '';
-      const res = await axios.get(`${API_URL}/api/pedidos-clientes${query}`);
+      const res = await axios.get(`${API_URL}/pedidos-clientes${query}`);
       const pedidos = res.data || [];
       setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
       setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
@@ -54,7 +54,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
   };
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/clientes`).then(res => setClientes(res.data)).catch(()=>setClientes([]));
+    axios.get(`${API_URL}/clientes`).then(res => setClientes(res.data)).catch(()=>setClientes([]));
   }, []);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
     if (fechaFin) params.push(`fechaFin=${fechaFin}`);
     const query = params.length ? '?' + params.join('&') : '';
-    axios.get(`${API_URL}/api/pedidos-clientes${query}`)
+    axios.get(`${API_URL}/pedidos-clientes${query}`)
       .then(res => {
         const pedidos = res.data || [];
         if (soloPreparados) {

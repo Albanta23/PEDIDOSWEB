@@ -5,6 +5,8 @@ const ProductosContext = createContext();
 
 // Cambiar la URL para que funcione correctamente en cualquier entorno
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
+console.log('[DEBUG ProductosContext] API_URL:', API_URL);
+console.log('[DEBUG ProductosContext] VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 export function ProductosProvider({ children }) {
   const [productos, setProductos] = useState([]);
@@ -13,7 +15,7 @@ export function ProductosProvider({ children }) {
   const cargarProductos = async () => {
     setCargando(true);
     try {
-      const res = await axios.get(`${API_URL}/api/productos`);
+      const res = await axios.get(`${API_URL}/productos`);
       setProductos(res.data);
     } catch (e) {
       setProductos([]);

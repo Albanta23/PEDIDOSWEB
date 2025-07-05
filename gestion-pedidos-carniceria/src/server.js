@@ -37,6 +37,9 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:3100',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3100',
   'https://localhost:3100',
   'https://pedidosweb-phi.vercel.app',
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev',
@@ -53,7 +56,7 @@ function corsOrigin(origin, callback) {
   const matchGithubDev = githubDevRegex.test(originLc);
   const matchVercel = /\.vercel\.app$/.test(originLc);
   const matchRender = /\.onrender\.com$/.test(originLc);
-  const matchLocalhost = /^http:\/\/localhost(:\d+)?$/.test(originLc);
+  const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
   if (
     allowedOriginsLc.includes(originLc) ||
     matchVercel ||
@@ -83,7 +86,8 @@ const io = new Server(server, {
         githubDevRegex.test(originLc) ||
         originLc.endsWith('.vercel.app') ||
         originLc.endsWith('.onrender.com') ||
-        originLc.startsWith('http://localhost')
+        originLc.startsWith('http://localhost') ||
+        originLc.startsWith('http://127.0.0.1')
       ) {
         return callback(null, origin); // Refleja el origin válido
       }

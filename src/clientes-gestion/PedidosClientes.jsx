@@ -29,7 +29,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const [testBackendMsg, setTestBackendMsg] = useState('');
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/clientes`)
+    axios.get(`${API_URL}/clientes`)
       .then(res => setClientes(res.data))
       .catch(()=>setClientes([]));
   }, []);
@@ -79,7 +79,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       return;
     }
     try {
-      await axios.post(`${API_URL}/api/pedidos-clientes`, {
+      await axios.post(`${API_URL}/pedidos-clientes`, {
         clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
         clienteNombre: clienteSeleccionado.nombre,
         direccion: clienteSeleccionado.direccion,
