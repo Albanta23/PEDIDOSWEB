@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo: Funcionalidad de Reutilización de Pedidos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .feature-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid #4facfe;
+        }
+        
+        .feature-section h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+        
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .workflow-step {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+        
+        .workflow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #4facfe;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .step-description {
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .benefit-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-5px);
+            border-color: #28a745;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
+        }
+        
+        .benefit-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .benefit-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .benefit-description {
+            color: #495057;
+            line-height: 1.5;
+        }
+        
+        .code-preview {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Funcionalidad de Reutilización de Pedidos</h1>
+            <p>Nueva característica implementada en la gestión de clientes</p>
+        </div>
+        
+        <div class="content">
+            <div class="feature-section">
+                <h2>🎯 Qué se ha implementado</h2>
+                <p>Se ha añadido la capacidad de <strong>reutilizar pedidos anteriores</strong> de un cliente para crear nuevos pedidos de manera rápida y eficiente.</p>
+                
+                <ul class="feature-list">
+                    <li>
+                        <div class="feature-icon">🔄</div>
+                        <div>
+                            <strong>Botón "Reutilizar Pedido"</strong> en cada pedido del historial del cliente
+                        </div>
+                    </li>
+                    <li>
+                        <div class="feature-icon">⚡</div>
+                        <div>
+                            <strong>Carga automática</strong> del cliente y productos del pedido anterior
+                        </div>
+                    </li>
+                    <li>
+                        <div class="feature-icon">✏️</div>
+                        <div>
+                            <strong>Edición completa</strong> antes de crear el nuevo pedido
+                        </div>
+                    </li>
+                    <li>
+                        <div class="feature-icon">💾</div>
+                        <div>
+                            <strong>Integración perfecta</strong> con el sistema existente de pedidos
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="feature-section">
+                <h2>📋 Cómo funciona el flujo</h2>
+                
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Acceso al Historial</div>
+                    <div class="step-description">
+                        En la vista detallada del cliente (modo "Ver" o "Editar"), se muestra el historial completo de pedidos con todos los productos incluidos.
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Selección del Pedido</div>
+                    <div class="step-description">
+                        Cada pedido del historial incluye un botón <span class="highlight">"🔄 Reutilizar Pedido"</span> o <span class="highlight">"🔄 Crear Nuevo Pedido con estos Productos"</span> que permite reutilizar ese pedido como plantilla.
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Editor Pre-cargado</div>
+                    <div class="step-description">
+                        Al hacer clic, se abre el editor de pedidos en pantalla completa con:
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>El cliente ya seleccionado</li>
+                            <li>Todas las líneas del pedido anterior cargadas</li>
+                            <li>Cantidades, formatos y comentarios preservados</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Personalización</div>
+                    <div class="step-description">
+                        El usuario puede modificar cualquier aspecto del pedido:
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Añadir o eliminar productos</li>
+                            <li>Cambiar cantidades y formatos</li>
+                            <li>Modificar comentarios</li>
+                            <li>Añadir líneas de comentario</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Creación del Nuevo Pedido</div>
+                    <div class="step-description">
+                        Una vez personalizado, se crea el nuevo pedido que aparecerá en el historial del cliente. El proceso retorna automáticamente a la vista del cliente con el historial actualizado.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-section">
+                <h2>💡 Beneficios de esta funcionalidad</h2>
+                
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">⚡</div>
+                        <div class="benefit-title">Eficiencia</div>
+                        <div class="benefit-description">
+                            Reduce significativamente el tiempo para crear pedidos similares a anteriores.
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🎯</div>
+                        <div class="benefit-title">Precisión</div>
+                        <div class="benefit-description">
+                            Minimiza errores al reutilizar configuraciones ya probadas de pedidos anteriores.
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">👥</div>
+                        <div class="benefit-title">Experiencia de Usuario</div>
+                        <div class="benefit-description">
+                            Facilita pedidos recurrentes y mejora la satisfacción del cliente.
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">📈</div>
+                        <div class="benefit-title">Productividad</div>
+                        <div class="benefit-description">
+                            Permite procesar más pedidos en menos tiempo con mayor calidad.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-section">
+                <h2>🔧 Implementación técnica</h2>
+                
+                <p><strong>Componentes modificados:</strong></p>
+                <ul class="feature-list">
+                    <li>
+                        <div class="feature-icon">📄</div>
+                        <div>
+                            <strong>ClientesMantenimiento.jsx</strong> - Añadidos botones de reutilización y gestión de estado
+                        </div>
+                    </li>
+                    <li>
+                        <div class="feature-icon">📄</div>
+                        <div>
+                            <strong>PedidosClientes.jsx</strong> - Soporte para cliente y líneas iniciales
+                        </div>
+                    </li>
+                </ul>
+                
+                <div class="code-preview">
+<strong>Nuevas funciones añadidas:</strong>
+
+// Función para reutilizar un pedido
+const reutilizarPedido = (pedido, cliente) => {
+  const datosParaReutilizar = {
+    cliente: cliente,
+    lineasOriginales: pedido.lineas || []
+  };
+  setDatosReutilizacion(datosParaReutilizar);
+  setMostrarEditorPedidos(true);
+};
+
+// Componente especializado para reutilización
+function PedidosClientesConReutilizacion({ 
+  onPedidoCreado, 
+  datosReutilizacion 
+}) {
+  return (
+    &lt;PedidosClientes 
+      onPedidoCreado={onPedidoCreado}
+      clienteInicial={datosReutilizacion?.cliente}
+      lineasIniciales={datosReutilizacion?.lineasOriginales}
+    /&gt;
+  );
+}
+                </div>
+            </div>
+            
+            <div class="feature-section">
+                <h2>🚀 Cómo probar la funcionalidad</h2>
+                
+                <ol style="margin: 20px 0; padding-left: 40px; line-height: 2;">
+                    <li>Accede a la <strong>Gestión de Clientes</strong></li>
+                    <li>Selecciona un cliente que tenga pedidos previos</li>
+                    <li>Haz clic en <strong>"👁️ Ver"</strong> para ver los detalles</li>
+                    <li>En el historial de pedidos, busca el botón <strong>"🔄 Crear Nuevo Pedido con estos Productos"</strong></li>
+                    <li>Haz clic y observa cómo se abre el editor pre-cargado</li>
+                    <li>Modifica lo que necesites y crea el nuevo pedido</li>
+                    <li>Verás el nuevo pedido en el historial actualizado</li>
+                </ol>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="demo-button" onclick="alert('¡Funcionalidad implementada! Pruébala en el sistema real.')">
+                        🎮 ¡Prueba la funcionalidad ahora!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

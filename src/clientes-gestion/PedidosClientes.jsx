@@ -6,14 +6,22 @@ import { formatearDireccionCompleta } from './utils/formatDireccion';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
-export default function PedidosClientes({ onPedidoCreado }) {
+export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales }) {
   const [clientes, setClientes] = useState([]);
-  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
-  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(clienteInicial || null);
+  const [busquedaCliente, setBusquedaCliente] = useState(clienteInicial?.nombre || '');
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
-  const [lineas, setLineas] = useState([
-    { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }
-  ]);
+  const [lineas, setLineas] = useState(
+    lineasIniciales && lineasIniciales.length > 0 ? 
+    lineasIniciales.map(linea => ({
+      producto: linea.producto || '',
+      cantidad: linea.cantidad || 1,
+      formato: linea.formato || FORMATOS_PEDIDO[0],
+      comentario: linea.comentario || '',
+      esComentario: linea.esComentario || false
+    })) :
+    [{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]
+  );
   const [mensaje, setMensaje] = useState('');
   const { productos, cargando } = useProductos();
   const [productoValido, setProductoValido] = useState([]);
@@ -25,6 +33,24 @@ export default function PedidosClientes({ onPedidoCreado }) {
       .then(res => setClientes(res.data))
       .catch(()=>setClientes([]));
   }, []);
+
+  // Efecto para manejar props de reutilización
+  useEffect(() => {
+    if (clienteInicial) {
+      setClienteSeleccionado(clienteInicial);
+      setBusquedaCliente(clienteInicial.nombre || '');
+    }
+    if (lineasIniciales && lineasIniciales.length > 0) {
+      const lineasFormateadas = lineasIniciales.map(linea => ({
+        producto: linea.producto || '',
+        cantidad: linea.cantidad || 1,
+        formato: linea.formato || FORMATOS_PEDIDO[0],
+        comentario: linea.comentario || '',
+        esComentario: linea.esComentario || false
+      }));
+      setLineas(lineasFormateadas);
+    }
+  }, [clienteInicial, lineasIniciales]);
 
   useEffect(() => {
     setProductoValido(lineas.map(l => !!l.producto));

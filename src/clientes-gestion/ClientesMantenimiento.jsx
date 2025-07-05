@@ -1,7 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import PedidosClientes from './PedidosClientes';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+
+// Componente que extiende PedidosClientes para manejar reutilización
+function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion }) {
+  const [componenteKey, setComponenteKey] = useState(0);
+
+  useEffect(() => {
+    // Forzar re-render del componente cuando cambien los datos de reutilización
+    setComponenteKey(prev => prev + 1);
+  }, [datosReutilizacion]);
+
+  return (
+    <PedidosClientes 
+      key={componenteKey}
+      onPedidoCreado={onPedidoCreado}
+      clienteInicial={datosReutilizacion?.cliente}
+      lineasIniciales={datosReutilizacion?.lineasOriginales}
+    />
+  );
+}
 
 export default function ClientesMantenimiento() {
   const [clientes, setClientes] = useState([]);
@@ -13,6 +33,8 @@ export default function ClientesMantenimiento() {
   const [mensaje, setMensaje] = useState('');
   const [pedidosCliente, setPedidosCliente] = useState([]);
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
+  const [mostrarEditorPedidos, setMostrarEditorPedidos] = useState(false);
+  const [datosReutilizacion, setDatosReutilizacion] = useState(null);
 
   const cargarClientes = () => {
     axios.get(`${API_URL}/api/clientes`)
@@ -58,6 +80,26 @@ export default function ClientesMantenimiento() {
       setPedidosCliente([]);
     } finally {
       setCargandoPedidos(false);
+    }
+  };
+
+  const reutilizarPedido = (pedido, cliente) => {
+    // Preparar los datos para reutilizar el pedido
+    const datosParaReutilizar = {
+      cliente: cliente,
+      lineasOriginales: pedido.lineas || []
+    };
+    
+    setDatosReutilizacion(datosParaReutilizar);
+    setMostrarEditorPedidos(true);
+  };
+
+  const cerrarEditorPedidos = () => {
+    setMostrarEditorPedidos(false);
+    setDatosReutilizacion(null);
+    // Recargar pedidos para mostrar el nuevo pedido si se creó
+    if (clienteEdit) {
+      cargarPedidosCliente(clienteEdit.nombre);
     }
   };
 
@@ -965,6 +1007,39 @@ export default function ClientesMantenimiento() {
                             </ul>
                           </div>
                         )}
+                        
+                        {/* Botón para reutilizar pedido */}
+                        <div style={{ marginTop: '15px', textAlign: 'right' }}>
+                          <button
+                            onClick={() => reutilizarPedido(pedido, clienteEdit)}
+                            style={{
+                              background: 'linear-gradient(135deg, #28a745, #20c997)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '8px 16px',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 6px rgba(40, 167, 69, 0.3)',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              marginLeft: 'auto'
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = 'translateY(-1px)';
+                              e.target.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 2px 6px rgba(40, 167, 69, 0.3)';
+                            }}
+                          >
+                            🔄 Reutilizar Pedido
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1223,6 +1298,39 @@ export default function ClientesMantenimiento() {
                           👤 Tramitado por: {pedido.usuarioTramitando}
                         </div>
                       )}
+
+                      {/* Botón para reutilizar pedido en vista detallada */}
+                      <div style={{ marginTop: '15px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => reutilizarPedido(pedido, clienteEdit)}
+                          style={{
+                            background: 'linear-gradient(135deg, #28a745, #20c997)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '12px 20px',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            boxShadow: '0 3px 10px rgba(40, 167, 69, 0.3)',
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginLeft: 'auto'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 5px 15px rgba(40, 167, 69, 0.4)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 3px 10px rgba(40, 167, 69, 0.3)';
+                          }}
+                        >
+                          🔄 Crear Nuevo Pedido con estos Productos
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1279,6 +1387,14 @@ export default function ClientesMantenimiento() {
           </div>
         )}
       </div>
+
+      {/* Editor de pedidos para reutilizar */}
+      {mostrarEditorPedidos && (
+        <PedidosClientesConReutilizacion 
+          onPedidoCreado={cerrarEditorPedidos}
+          datosReutilizacion={datosReutilizacion}
+        />
+      )}
     </div>
   );
 }
