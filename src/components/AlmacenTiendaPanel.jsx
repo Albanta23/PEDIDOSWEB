@@ -3,12 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getMovimientosStock, registrarBajaStock } from '../services/movimientosStockService';
 import TransferenciasPanel from './TransferenciasPanel';
 import { useProductos } from './ProductosContext';
+import { useSocket } from './SocketContext';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 
 export default function AlmacenTiendaPanel({ tiendaActual }) {
+  const socket = useSocket();
   const navigate = typeof useNavigate === 'function' ? useNavigate() : null;
   const params = typeof useParams === 'function' ? useParams() : {};
   const tienda = tiendaActual || (window.tiendas ? window.tiendas.find(t => t.id === params.idTienda) : null);
@@ -64,12 +66,12 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   useEffect(() => {
     refrescarMovimientos();
     // Suscribirse a eventos de transferencias confirmadas si hay WebSocket/socket.io
-    if (window.socket) {
+    if (socket) {
       const handler = refrescarMovimientos;
-      window.socket.on('transferencia_confirmada', handler);
-      return () => window.socket.off('transferencia_confirmada', handler);
+      socket.on('transferencia_confirmada', handler);
+      return () => socket.off('transferencia_confirmada', handler);
     }
-  }, [tiendaForzada]);
+  }, [tiendaForzada, socket]);
 
   // Función para consultar el stock actual de un producto/lote en la tienda
   function getStockActual(producto, lote) {

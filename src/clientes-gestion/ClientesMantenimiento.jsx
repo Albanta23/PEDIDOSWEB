@@ -3,6 +3,7 @@ import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
 console.log('[DEBUG ClientesMantenimiento] API_URL:', API_URL);
 console.log('[DEBUG ClientesMantenimiento] VITE_API_URL:', import.meta.env.VITE_API_URL);
 
@@ -49,7 +50,7 @@ export default function ClientesMantenimiento() {
   const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false); // Checkbox para mostrar todos independiente del filtro
 
   const cargarClientes = () => {
-    axios.get(`${API_URL}/clientes`)
+    axios.get(`${API_URL_CORRECTO}/clientes`)
       .then(res => {
         setClientes(res.data);
         setClientesFiltrados(res.data);
@@ -64,7 +65,7 @@ export default function ClientesMantenimiento() {
   // Cargar estadísticas de cestas de navidad
   const cargarEstadisticasCestas = async () => {
     try {
-      const res = await axios.get(`${API_URL}/clientes/estadisticas-cestas`);
+      const res = await axios.get(`${API_URL_CORRECTO}/clientes/estadisticas-cestas`);
       setEstadisticasCestas(res.data);
     } catch (error) {
       console.error('Error cargando estadísticas de cestas:', error);
@@ -140,7 +141,7 @@ export default function ClientesMantenimiento() {
     setCargandoPedidos(true);
     try {
       // Buscar primero todos los pedidos y filtrar por clienteNombre
-      const res = await axios.get(`${API_URL}/pedidos-clientes`);
+      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`);
       const pedidosFiltrados = (res.data || []).filter(pedido => 
         pedido.clienteNombre === clienteNombre || 
         pedido.clienteId === clienteNombre ||
@@ -231,10 +232,10 @@ export default function ClientesMantenimiento() {
     if (!form.nombre) { setMensaje('El nombre es obligatorio'); return; }
     try {
       if (modo === 'crear') {
-        await axios.post(`${API_URL}/clientes`, form);
+        await axios.post(`${API_URL_CORRECTO}/clientes`, form);
         setMensaje('Cliente creado');
       } else if (modo === 'editar' && clienteEdit) {
-        await axios.put(`${API_URL}/clientes/${clienteEdit._id||clienteEdit.id}`, form);
+        await axios.put(`${API_URL_CORRECTO}/clientes/${clienteEdit._id||clienteEdit.id}`, form);
         setMensaje('Cliente actualizado');
       }
       setForm({ nombre: '', email: '', telefono: '', direccion: '' });
@@ -272,7 +273,7 @@ export default function ClientesMantenimiento() {
   const handleEliminar = async (cliente) => {
     if (!window.confirm('¿Eliminar cliente?')) return;
     try {
-      await axios.delete(`${API_URL}/clientes/${cliente._id||cliente.id}`);
+      await axios.delete(`${API_URL_CORRECTO}/clientes/${cliente._id||cliente.id}`);
       cargarClientes();
     } catch {}
   };
@@ -310,7 +311,7 @@ export default function ClientesMantenimiento() {
     if (clientes.length === 0) return setMensaje('No se han detectado clientes en el archivo. Revisa el formato.');
     try {
       for (const cli of clientes) {
-        await axios.post(`${API_URL}/clientes`, cli);
+        await axios.post(`${API_URL_CORRECTO}/clientes`, cli);
       }
       setMensaje('Clientes importados correctamente');
       cargarClientes();
@@ -400,7 +401,7 @@ export default function ClientesMantenimiento() {
       }
       
       // Enviar a la API para marcar
-      const response = await axios.post(`${API_URL}/clientes/marcar-cestas-navidad`, {
+      const response = await axios.post(`${API_URL_CORRECTO}/clientes/marcar-cestas-navidad`, {
         clientesCestasNavidad: clientesCestas
       });
       
@@ -436,7 +437,7 @@ export default function ClientesMantenimiento() {
   const toggleCestaNavidad = async (cliente) => {
     try {
       const nuevoEstado = !cliente.esCestaNavidad;
-      await axios.put(`${API_URL}/clientes/${cliente._id || cliente.id}`, {
+      await axios.put(`${API_URL_CORRECTO}/clientes/${cliente._id || cliente.id}`, {
         ...cliente,
         esCestaNavidad: nuevoEstado
       });
@@ -456,7 +457,7 @@ export default function ClientesMantenimiento() {
     }
     
     try {
-      const response = await axios.post(`${API_URL}/clientes/limpiar-cestas-navidad`);
+      const response = await axios.post(`${API_URL_CORRECTO}/clientes/limpiar-cestas-navidad`);
       if (response.data.ok) {
         setMensaje(`✅ ${response.data.desmarcados} clientes desmarcados como cestas de navidad`);
         cargarClientes();
@@ -1768,9 +1769,7 @@ export default function ClientesMantenimiento() {
                         padding: '40px',
                         color: '#7f8c8d',
                         fontSize: '16px',
-                        background: 'white',
-                        borderRadius: '10px',
-                        border: '2px dashed #e1e8ed'
+                        fontStyle: 'italic'
                       }}>
                         🔍 No se encontraron pedidos que coincidan con los filtros aplicados
                         <div style={{ marginTop: '10px', fontSize: '14px' }}>

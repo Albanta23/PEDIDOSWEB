@@ -4,6 +4,7 @@ import PedidoClienteDetalle from './PedidoClienteDetalle';
 import { formatearDireccionCompletaPedido } from './utils/formatDireccion';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
 
 function getMonday(d) {
   d = new Date(d);
@@ -54,7 +55,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
   };
 
   useEffect(() => {
-    axios.get(`${API_URL}/clientes`).then(res => setClientes(res.data)).catch(()=>setClientes([]));
+    axios.get(`${API_URL_CORRECTO}/clientes`).then(res => setClientes(res.data)).catch(()=>setClientes([]));
   }, []);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
     if (fechaFin) params.push(`fechaFin=${fechaFin}`);
     const query = params.length ? '?' + params.join('&') : '';
-    axios.get(`${API_URL}/pedidos-clientes${query}`)
+    axios.get(`${API_URL_CORRECTO}/pedidos-clientes${query}`)
       .then(res => {
         const pedidos = res.data || [];
         if (soloPreparados) {

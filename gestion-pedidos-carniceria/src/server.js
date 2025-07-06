@@ -40,9 +40,13 @@ const allowedOrigins = [
   'http://localhost:3100',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3100',
+  'http://127.0.0.1:5173',
   'https://localhost:3100',
+  'https://127.0.0.1:3000',
+  'https://127.0.0.1:3100',
   'https://pedidosweb-phi.vercel.app',
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev',
+  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-5173.app.github.dev',
   'https://pedidos-backend-0e1s.onrender.com',
   'https://pedidosweb-phi.vercel.app',
 ];

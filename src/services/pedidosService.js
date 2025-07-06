@@ -2,13 +2,17 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL.replace(/\/$/, ''); // Elimina la barra final si existe
 console.log('[DEBUG pedidosService] API_BASE_URL:', API_BASE_URL); // DEBUG
-const PEDIDOS_API_ENDPOINT = `${API_BASE_URL}/api/pedidos-tienda`;
-console.log('[DEBUG pedidosService] PEDIDOS_API_ENDPOINT:', PEDIDOS_API_ENDPOINT); // DEBUG
+const PEDIDOS_API_ENDPOINT = `${API_BASE_URL}/pedidos-tienda`;
+// CAMBIO: Si la URL ya incluye /api, no duplicar
+const PEDIDOS_API_ENDPOINT_CORRECTO = API_BASE_URL.endsWith('/api')
+  ? `${API_BASE_URL}/pedidos-tienda`
+  : `${API_BASE_URL}/api/pedidos-tienda`;
+console.log('[DEBUG pedidosService] PEDIDOS_API_ENDPOINT_CORRECTO:', PEDIDOS_API_ENDPOINT_CORRECTO); // DEBUG
 
 export const obtenerPedidos = async () => {
   try {
-    console.log('[DEBUG] PEDIDOS_API_ENDPOINT:', PEDIDOS_API_ENDPOINT);
-    const response = await axios.get(PEDIDOS_API_ENDPOINT);
+    console.log('[DEBUG] PEDIDOS_API_ENDPOINT:', PEDIDOS_API_ENDPOINT_CORRECTO);
+    const response = await axios.get(PEDIDOS_API_ENDPOINT_CORRECTO);
     console.log('[DEBUG] Respuesta de /api/pedidos:', response.status, response.data);
     return response.data;
   } catch (error) {
@@ -19,7 +23,7 @@ export const obtenerPedidos = async () => {
 
 export const crearPedido = async (pedido) => {
   try {
-    const response = await axios.post(PEDIDOS_API_ENDPOINT, pedido);
+    const response = await axios.post(PEDIDOS_API_ENDPOINT_CORRECTO, pedido);
     return response.data;
   } catch (error) {
     console.error("Error al crear pedido:", error);
@@ -54,7 +58,7 @@ export const actualizarPedido = async (id, pedidoActualizado) => {
     for (const campo of camposProhibidos) {
       if (datosFiltrados[campo] !== undefined) delete datosFiltrados[campo];
     }
-    const response = await axios.put(`${PEDIDOS_API_ENDPOINT}/${id}`, datosFiltrados);
+    const response = await axios.put(`${PEDIDOS_API_ENDPOINT_CORRECTO}/${id}`, datosFiltrados);
     return response.data;
   } catch (error) {
     console.error("Error al actualizar pedido:", error);
@@ -64,7 +68,7 @@ export const actualizarPedido = async (id, pedidoActualizado) => {
 
 export const eliminarPedido = async (id) => {
   try {
-    const response = await axios.delete(`${PEDIDOS_API_ENDPOINT}/${id}`);
+    const response = await axios.delete(`${PEDIDOS_API_ENDPOINT_CORRECTO}/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error al eliminar pedido:", error);
