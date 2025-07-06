@@ -45,7 +45,7 @@ export default function ClientesMantenimiento() {
   // Estados para gestión de cestas de navidad
   const [estadisticasCestas, setEstadisticasCestas] = useState(null);
   const [mostrarGestionCestas, setMostrarGestionCestas] = useState(false);
-  const [filtroTipoCliente, setFiltroTipoCliente] = useState('todos'); // 'todos', 'cestas', 'normales'
+  const [filtroTipoCliente, setFiltroTipoCliente] = useState('ninguno'); // 'ninguno', 'todos', 'cestas', 'normales'
   const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false); // Checkbox para mostrar todos independiente del filtro
 
   const cargarClientes = () => {
@@ -73,26 +73,46 @@ export default function ClientesMantenimiento() {
 
   // Función para aplicar filtros (búsqueda + tipo de cliente)
   const aplicarFiltros = (listaClientes, busqueda, tipoCliente, mostrarTodos = false) => {
-    let filtrados = [...listaClientes];
+    let filtrados = [];
     
-    // Si el checkbox "mostrar todos" está marcado, no aplicamos filtro por tipo
-    if (!mostrarTodos) {
-      // Filtro por tipo de cliente
-      if (tipoCliente === 'cestas') {
-        filtrados = filtrados.filter(cliente => cliente.esCestaNavidad === true);
-      } else if (tipoCliente === 'normales') {
-        filtrados = filtrados.filter(cliente => cliente.esCestaNavidad !== true);
-      }
-    }
-    
-    // Filtro por búsqueda (siempre se aplica)
+    // Si hay texto de búsqueda, siempre mostrar sugerencias independientemente del checkbox
     if (busqueda.trim()) {
-      filtrados = filtrados.filter(cliente =>
+      // Filtrar por búsqueda en todos los clientes
+      filtrados = listaClientes.filter(cliente =>
         cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
         (cliente.email && cliente.email.toLowerCase().includes(busqueda.toLowerCase())) ||
         (cliente.telefono && cliente.telefono.includes(busqueda)) ||
-        (cliente.cif && cliente.cif.toLowerCase().includes(busqueda.toLowerCase()))
+        (cliente.cif && cliente.cif.toLowerCase().includes(busqueda.toLowerCase())) ||
+        (cliente.numCliente && cliente.numCliente.toString().includes(busqueda))
       );
+      
+      // Si no está marcado "mostrar todos", aplicar también filtro de tipo
+      if (!mostrarTodos) {
+        if (tipoCliente === 'cestas') {
+          filtrados = filtrados.filter(cliente => cliente.esCestaNavidad === true);
+        } else if (tipoCliente === 'normales') {
+          filtrados = filtrados.filter(cliente => cliente.esCestaNavidad !== true);
+        }
+        // Si es 'todos' o 'ninguno', mantener todas las sugerencias de búsqueda
+      }
+    } else {
+      // Sin texto de búsqueda
+      if (mostrarTodos) {
+        // Si el checkbox está marcado, mostrar todos
+        filtrados = [...listaClientes];
+      } else {
+        // Solo mostrar clientes si se ha seleccionado un filtro específico
+        if (tipoCliente === 'cestas') {
+          filtrados = listaClientes.filter(cliente => cliente.esCestaNavidad === true);
+        } else if (tipoCliente === 'normales') {
+          filtrados = listaClientes.filter(cliente => cliente.esCestaNavidad !== true);
+        } else if (tipoCliente === 'todos') {
+          filtrados = [...listaClientes];
+        } else {
+          // Si está en 'ninguno' y el checkbox no está marcado, no mostrar nada
+          filtrados = [];
+        }
+      }
     }
     
     setClientesFiltrados(filtrados);
@@ -686,7 +706,7 @@ export default function ClientesMantenimiento() {
               }}>
                 <input
                   type="text"
-                  placeholder="Buscar cliente por nombre, email, teléfono o CIF..."
+                  placeholder="Buscar cliente por código, nombre, email, teléfono o CIF..."
                   value={filtroBusqueda}
                   onChange={(e) => filtrarClientes(e.target.value)}
                   style={{
@@ -768,7 +788,7 @@ export default function ClientesMantenimiento() {
                     color: mostrarTodosClientes ? '#667eea' : '#6c757d'
                   }}
                 >
-                  📋 Mostrar todos los clientes (ignorar filtros de tipo)
+                  📋 Mostrar todos los clientes
                 </label>
               </div>
             </div>
@@ -782,15 +802,20 @@ export default function ClientesMantenimiento() {
             }}>
               {mostrarTodosClientes ? (
                 filtroBusqueda ? (
-                  `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes (todos los tipos, filtrado por búsqueda)`
+                  `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes (filtrado por búsqueda)`
                 ) : (
-                  `Mostrando todos los ${clientes.length} clientes (filtros de tipo desactivados)`
+                  `Mostrando todos los ${clientes.length} clientes`
                 )
               ) : (
                 filtroBusqueda ? (
-                  `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes`
+                  `Sugerencias: ${clientesFiltrados.length} clientes encontrados` +
+                  (filtroTipoCliente !== 'ninguno' && filtroTipoCliente !== 'todos' ? ` (tipo: ${filtroTipoCliente})` : '')
                 ) : (
-                  `Total: ${clientesFiltrados.length} clientes${filtroTipoCliente !== 'todos' ? ` (filtro: ${filtroTipoCliente})` : ''}`
+                  filtroTipoCliente === 'ninguno' ? (
+                    '💡 Escribe para buscar clientes o selecciona un filtro de tipo'
+                  ) : (
+                    `Mostrando ${clientesFiltrados.length} clientes (filtro: ${filtroTipoCliente})`
+                  )
                 )
               )}
             </div>
