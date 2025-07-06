@@ -46,13 +46,14 @@ export default function ClientesMantenimiento() {
   const [estadisticasCestas, setEstadisticasCestas] = useState(null);
   const [mostrarGestionCestas, setMostrarGestionCestas] = useState(false);
   const [filtroTipoCliente, setFiltroTipoCliente] = useState('todos'); // 'todos', 'cestas', 'normales'
+  const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false); // Checkbox para mostrar todos independiente del filtro
 
   const cargarClientes = () => {
     axios.get(`${API_URL}/clientes`)
       .then(res => {
         setClientes(res.data);
         setClientesFiltrados(res.data);
-        aplicarFiltros(res.data, filtroBusqueda, filtroTipoCliente);
+        aplicarFiltros(res.data, filtroBusqueda, filtroTipoCliente, mostrarTodosClientes);
       })
       .catch(() => {
         setClientes([]);
@@ -71,17 +72,20 @@ export default function ClientesMantenimiento() {
   };
 
   // Función para aplicar filtros (búsqueda + tipo de cliente)
-  const aplicarFiltros = (listaClientes, busqueda, tipoCliente) => {
+  const aplicarFiltros = (listaClientes, busqueda, tipoCliente, mostrarTodos = false) => {
     let filtrados = [...listaClientes];
     
-    // Filtro por tipo de cliente
-    if (tipoCliente === 'cestas') {
-      filtrados = filtrados.filter(cliente => cliente.esCestaNavidad === true);
-    } else if (tipoCliente === 'normales') {
-      filtrados = filtrados.filter(cliente => cliente.esCestaNavidad !== true);
+    // Si el checkbox "mostrar todos" está marcado, no aplicamos filtro por tipo
+    if (!mostrarTodos) {
+      // Filtro por tipo de cliente
+      if (tipoCliente === 'cestas') {
+        filtrados = filtrados.filter(cliente => cliente.esCestaNavidad === true);
+      } else if (tipoCliente === 'normales') {
+        filtrados = filtrados.filter(cliente => cliente.esCestaNavidad !== true);
+      }
     }
     
-    // Filtro por búsqueda
+    // Filtro por búsqueda (siempre se aplica)
     if (busqueda.trim()) {
       filtrados = filtrados.filter(cliente =>
         cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -97,13 +101,19 @@ export default function ClientesMantenimiento() {
   // Función para filtrar clientes
   const filtrarClientes = (busqueda) => {
     setFiltroBusqueda(busqueda);
-    aplicarFiltros(clientes, busqueda, filtroTipoCliente);
+    aplicarFiltros(clientes, busqueda, filtroTipoCliente, mostrarTodosClientes);
   };
 
   // Cambiar filtro de tipo de cliente
   const cambiarFiltroTipoCliente = (tipo) => {
     setFiltroTipoCliente(tipo);
-    aplicarFiltros(clientes, filtroBusqueda, tipo);
+    aplicarFiltros(clientes, filtroBusqueda, tipo, mostrarTodosClientes);
+  };
+
+  // Función para manejar el checkbox de mostrar todos
+  const toggleMostrarTodos = (checked) => {
+    setMostrarTodosClientes(checked);
+    aplicarFiltros(clientes, filtroBusqueda, filtroTipoCliente, checked);
   };
 
   const cargarPedidosCliente = async (clienteNombre) => {
@@ -665,7 +675,9 @@ export default function ClientesMantenimiento() {
             <div style={{
               marginBottom: '25px',
               display: 'flex',
-              justifyContent: 'center'
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '15px'
             }}>
               <div style={{
                 position: 'relative',
@@ -728,6 +740,37 @@ export default function ClientesMantenimiento() {
                   </button>
                 )}
               </div>
+              
+              {/* Checkbox para mostrar todos los clientes */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                color: '#6c757d'
+              }}>
+                <input
+                  type="checkbox"
+                  id="mostrarTodos"
+                  checked={mostrarTodosClientes}
+                  onChange={(e) => toggleMostrarTodos(e.target.checked)}
+                  style={{
+                    transform: 'scale(1.2)',
+                    cursor: 'pointer'
+                  }}
+                />
+                <label 
+                  htmlFor="mostrarTodos"
+                  style={{
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    fontWeight: mostrarTodosClientes ? '600' : 'normal',
+                    color: mostrarTodosClientes ? '#667eea' : '#6c757d'
+                  }}
+                >
+                  📋 Mostrar todos los clientes (ignorar filtros de tipo)
+                </label>
+              </div>
             </div>
 
             {/* Información de resultados */}
@@ -737,10 +780,18 @@ export default function ClientesMantenimiento() {
               color: '#7f8c8d',
               fontSize: '14px'
             }}>
-              {filtroBusqueda ? (
-                `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes`
+              {mostrarTodosClientes ? (
+                filtroBusqueda ? (
+                  `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes (todos los tipos, filtrado por búsqueda)`
+                ) : (
+                  `Mostrando todos los ${clientes.length} clientes (filtros de tipo desactivados)`
+                )
               ) : (
-                `Total: ${clientes.length} clientes`
+                filtroBusqueda ? (
+                  `Mostrando ${clientesFiltrados.length} de ${clientes.length} clientes`
+                ) : (
+                  `Total: ${clientesFiltrados.length} clientes${filtroTipoCliente !== 'todos' ? ` (filtro: ${filtroTipoCliente})` : ''}`
+                )
               )}
             </div>
 
