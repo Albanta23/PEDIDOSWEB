@@ -11,6 +11,9 @@ export default function App() {
   const [tab, setTab] = useState('clientes');
   const [editorAbierto, setEditorAbierto] = useState(false);
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  // Obtener la(s) URL(s) de cestas desde la variable de entorno
+  const cestasUrls = (import.meta.env.VITE_CESTAS_URL || '').split(',').map(u => u.trim()).filter(Boolean);
+  const cestasUrl = cestasUrls[0] || 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3200.app.github.dev';
   return (
     <div style={{fontFamily:'Inter, Arial, sans-serif', minHeight:'100vh', background:'#f4f7fb'}}>
       <header style={{background:'#1976d2',color:'#fff',padding:'18px 32px',fontSize:28,fontWeight:700,letterSpacing:1,boxShadow:'0 2px 8px #1976d233'}}>CRM de Clientes y Pedidos</header>
@@ -22,7 +25,6 @@ export default function App() {
         <button onClick={()=>setMostrarHistorial(m=>!m)} style={{padding:'8px 18px',border:'none',borderRadius:6,background:mostrarHistorial?'#1976d2':'#fff',color:mostrarHistorial?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Historial pedidos clientes</button>
         <button 
           onClick={() => {
-            const cestasUrl = `https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3200.app.github.dev`;
             window.open(cestasUrl, '_blank');
           }} 
           style={{
