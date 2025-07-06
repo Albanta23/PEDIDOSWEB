@@ -15,7 +15,8 @@ const ClienteSchema = new mongoose.Schema({
   mensajeVentas: { type: String },
   bloqueadoVentas: { type: Boolean, default: false },
   observaciones: { type: String },
-  activo: { type: Boolean, default: true }
+  activo: { type: Boolean, default: true },
+  esCestaNavidad: { type: Boolean, default: false } // Campo para marcar clientes de cestas de navidad
 });
 
 module.exports = mongoose.model('Cliente', ClienteSchema);

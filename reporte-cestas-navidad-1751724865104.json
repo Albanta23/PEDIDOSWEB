@@ -1,0 +1,81 @@
+{
+  "fecha": "2025-07-05T14:14:25.103Z",
+  "archivo": "ejemplo-cestas-navidad.csv",
+  "resultados": {
+    "ok": true,
+    "marcados": 1,
+    "noEncontrados": [
+      {
+        "cliente": {
+          "nombre": "María González López",
+          "email": "maria.gonzalez@email.com",
+          "telefono": "677987654",
+          "nif": "87654321B",
+          "direccion": "Avenida Libertad 45",
+          "original": {
+            "nombre": "María González López",
+            "email": "maria.gonzalez@email.com",
+            "telefono": "677987654",
+            "nif": "87654321B",
+            "direccion": "Avenida Libertad 45"
+          }
+        },
+        "motivo": "No encontrado en base de datos"
+      },
+      {
+        "cliente": {
+          "nombre": "Antonio Martín Ruiz",
+          "email": "antonio.martin@email.com",
+          "telefono": "688555444",
+          "nif": "11223344C",
+          "direccion": "Plaza Central 12",
+          "original": {
+            "nombre": "Antonio Martín Ruiz",
+            "email": "antonio.martin@email.com",
+            "telefono": "688555444",
+            "nif": "11223344C",
+            "direccion": "Plaza Central 12"
+          }
+        },
+        "motivo": "No encontrado en base de datos"
+      },
+      {
+        "cliente": {
+          "nombre": "Carmen Fernández Díaz",
+          "email": "carmen.fernandez@email.com",
+          "telefono": "699777888",
+          "nif": "55667788D",
+          "direccion": "Calle San Juan 67",
+          "original": {
+            "nombre": "Carmen Fernández Díaz",
+            "email": "carmen.fernandez@email.com",
+            "telefono": "699777888",
+            "nif": "55667788D",
+            "direccion": "Calle San Juan 67"
+          }
+        },
+        "motivo": "No encontrado en base de datos"
+      },
+      {
+        "cliente": {
+          "nombre": "Roberto Silva Méndez",
+          "email": "roberto.silva@email.com",
+          "telefono": "611222333",
+          "nif": "99887766E",
+          "direccion": "Paseo del Parque 89",
+          "original": {
+            "nombre": "Roberto Silva Méndez",
+            "email": "roberto.silva@email.com",
+            "telefono": "611222333",
+            "nif": "99887766E",
+            "direccion": "Paseo del Parque 89"
+          }
+        },
+        "motivo": "No encontrado en base de datos"
+      }
+    ],
+    "errores": [],
+    "resumen": "1 clientes marcados como cestas de navidad"
+  },
+  "clientesProcesados": 5
+}

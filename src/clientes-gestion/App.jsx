@@ -20,6 +20,36 @@ export default function App() {
         <button onClick={()=>setTab('sage')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='sage'?'#1976d2':'#fff',color:tab==='sage'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Integración SAGE 50</button>
         <button onClick={()=>setTab('mantenimiento')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='mantenimiento'?'#1976d2':'#fff',color:tab==='mantenimiento'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Clientes</button>
         <button onClick={()=>setMostrarHistorial(m=>!m)} style={{padding:'8px 18px',border:'none',borderRadius:6,background:mostrarHistorial?'#1976d2':'#fff',color:mostrarHistorial?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Historial pedidos clientes</button>
+        <button 
+          onClick={() => {
+            const cestasUrl = `https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3200.app.github.dev`;
+            window.open(cestasUrl, '_blank');
+          }} 
+          style={{
+            padding:'8px 18px',
+            border:'none',
+            borderRadius:6,
+            background:'linear-gradient(135deg, #e74c3c, #c0392b)',
+            color:'#fff',
+            fontWeight:700,
+            transition:'all .2s',
+            boxShadow:'0 2px 8px rgba(231, 76, 60, 0.3)',
+            display:'flex',
+            alignItems:'center',
+            gap:'6px'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 4px 12px rgba(231, 76, 60, 0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 2px 8px rgba(231, 76, 60, 0.3)';
+          }}
+          title="Abrir Gestor de Cestas Navideñas"
+        >
+          🎄 CESTAS Y LOTES
+        </button>
         <div style={{marginLeft:'auto',display:'flex',gap:10}}>
           {tab==='clientes' && !mostrarHistorial && (
             <button onClick={()=>setEditorAbierto(true)} style={{background:'#28a745',color:'#fff',border:'none',borderRadius:6,padding:'8px 22px',fontWeight:700,fontSize:17,boxShadow:'0 1px 4px #28a74522'}}>+ Crear pedido</button>

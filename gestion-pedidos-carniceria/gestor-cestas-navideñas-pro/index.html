@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor Cestas Navideñas Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              light: '#38bdf8', // sky-400
+              DEFAULT: '#0284c7', // sky-600
+              dark: '#0369a1' // sky-700
+            },
+            secondary: {
+              DEFAULT: '#0d9488', // teal-600
+              dark: '#0f766e' // teal-700
+            },
+            neutral: { // Tailwind's default grays are usually good, but mapping them for clarity if used explicitly.
+              50: '#f9fafb',
+              100: '#f3f4f6',
+              200: '#e5e7eb',
+              300: '#d1d5db',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              700: '#374151',
+              800: '#1f2937',
+              900: '#111827'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2"
+  }
+}
+</script>
+<style>
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
+      color-adjust: exact !important; /* Standard */
+      font-size: 10pt; /* Base font size for print */
+    }
+
+    /* Hide elements not part of the main print content */
+    body > div#root > div > aside, /* Sidebar */
+    body > div#root > div > div > header, /* Top Bar */
+    body > div#root > div > .fixed.bottom-8.right-8.z-\[100\].space-y-3 /* Toast container (updated selector) */ {
+      display: none !important;
+    }
+
+    /* When a modal is targeted for printing */
+    .modal-currently-printing {
+      position: fixed !important; /* Use fixed to overlay everything, absolute might be contained */
+      left: 0 !important;
+      top: 0 !important;
+      width: 100vw !important; /* Full viewport width */
+      height: 100vh !important; /* Full viewport height */
+      overflow: visible !important;
+      background-color: white !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      z-index: 99999 !important; /* Ensure it's on top */
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      display: block !important; /* Crucial: ensure it's visible */
+    }
+
+    .modal-currently-printing > div[role="dialog"] { /* The modal's main dialog box */
+      max-width: none !important;
+      width: 100% !important; 
+      height: auto !important; 
+      min-height: 100% !important; /* Make it take at least full height of its parent */
+      box-shadow: none !important;
+      border: none !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      max-height: none !important;
+      display: flex !important;
+      flex-direction: column !important;
+      background-color: white !important;
+    }
+    
+    .modal-currently-printing .modal-header-print-hide,
+    .modal-currently-printing .modal-footer-print-hide {
+      display: none !important;
+    }
+
+    /* The actual content area of the invoice */
+    .modal-currently-printing .invoice-printable-content {
+      padding: 12mm 8mm !important; /* Margins for typical A4 */
+      font-size: 9pt; 
+      line-height: 1.3;
+      color: #333;
+      flex-grow: 1 !important;
+      width: 100% !important;
+      box-sizing: border-box;
+      background-color: white !important; /* Ensure content background is white */
+    }
+    
+    .modal-currently-printing .invoice-printable-content h1,
+    .modal-currently-printing .invoice-printable-content h2,
+    .modal-currently-printing .invoice-printable-content h3 {
+      color: black !important;
+      margin-top: 0;
+    }
+    .modal-currently-printing .invoice-printable-content h1 { font-size: 18pt; margin-bottom: 8mm; text-align: center; }
+    .modal-currently-printing .invoice-printable-content h2 { font-size: 13pt; margin-bottom: 5mm; }
+    .modal-currently-printing .invoice-printable-content h3 { font-size: 10pt; margin-bottom: 3mm; }
+    
+    .modal-currently-printing .invoice-printable-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4mm;
+      table-layout: auto; 
+    }
+    .modal-currently-printing .invoice-printable-content th,
+    .modal-currently-printing .invoice-printable-content td {
+      border: 1px solid #666; 
+      padding: 1.5mm 2mm; 
+      text-align: left;
+      vertical-align: top;
+      word-wrap: break-word; 
+    }
+    .modal-currently-printing .invoice-printable-content th {
+      background-color: #f0f0f0 !important; 
+      font-weight: 600; 
+      color: black;
+    }
+    /* Specific styles for constituent product rows */
+    .modal-currently-printing .invoice-printable-content .constituent-product-row td {
+        padding-left: 8mm !important; /* Indent constituent products */
+        font-size: 8pt;
+        color: #555;
+        border-top: none;
+        border-bottom: 1px dashed #ccc;
+    }
+    .modal-currently-printing .invoice-printable-content .constituent-product-row:last-child td {
+        border-bottom: 1px solid #666; /* Last constituent should have a solid line matching the hamper */
+    }
+
+
+    .modal-currently-printing .invoice-printable-content td.text-right,
+    .modal-currently-printing .invoice-printable-content th.text-right {
+        text-align: right !important;
+    }
+    .modal-currently-printing .invoice-printable-content td.text-center,
+    .modal-currently-printing .invoice-printable-content th.text-center {
+        text-align: center !important;
+    }
+    
+    .modal-currently-printing .invoice-vat-summary {
+        margin-top: 6mm;
+        page-break-inside: avoid;
+    }
+    .modal-currently-printing .invoice-vat-summary table {
+        width: auto; /* Don't force full width for summary table */
+        margin-left: auto; /* Align to right */
+        max-width: 60%; /* Or a fixed width */
+    }
+     .modal-currently-printing .invoice-vat-summary th,
+     .modal-currently-printing .invoice-vat-summary td {
+        border: 1px solid #666;
+        padding: 1mm 1.5mm;
+        font-size: 9pt;
+    }
+    .modal-currently-printing .invoice-vat-summary th {
+        background-color: #f0f0f0 !important;
+    }
+
+
+    .modal-currently-printing .invoice-totals-summary {
+      margin-top: 2mm; /* Reduced margin if VAT summary is present */
+      padding-top: 3mm;
+      border-top: 1px solid #000;
+      page-break-inside: avoid;
+    }
+     .modal-currently-printing .invoice-totals-summary p {
+      margin-bottom: 0.5mm;
+      font-size: 10pt;
+    }
+    .modal-currently-printing .invoice-totals-summary p strong {
+        font-weight: 600;
+    }
+
+
+    .modal-currently-printing .invoice-notes-print {
+      margin-top: 5mm;
+      font-style: italic;
+      font-size: 8pt;
+      page-break-inside: avoid;
+    }
+  }
+</style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-neutral-100">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

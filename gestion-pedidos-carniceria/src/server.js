@@ -617,6 +617,133 @@ app.post('/api/movimientos-stock/baja', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Comparar y marcar/crear clientes de cestas de navidad ---
+app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
+  try {
+    const { clientesCestasNavidad } = req.body;
+    
+    if (!Array.isArray(clientesCestasNavidad) || clientesCestasNavidad.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No se recibieron clientes de cestas de navidad' });
+    }
+
+    console.log('[CESTAS-NAVIDAD] Recibidos clientes para procesar:', clientesCestasNavidad.length);
+    
+    let marcados = 0, creados = 0, errores = [];
+    
+    for (const clienteCesta of clientesCestasNavidad) {
+      try {
+        // Buscar cliente por diferentes criterios (nombre, email, teléfono, etc.)
+        const criteriosBusqueda = [];
+        
+        if (clienteCesta.nombre) {
+          criteriosBusqueda.push({ nombre: { $regex: clienteCesta.nombre.trim(), $options: 'i' } });
+        }
+        if (clienteCesta.email) {
+          criteriosBusqueda.push({ email: { $regex: clienteCesta.email.trim(), $options: 'i' } });
+        }
+        if (clienteCesta.telefono) {
+          criteriosBusqueda.push({ telefono: { $regex: clienteCesta.telefono.trim(), $options: 'i' } });
+        }
+        if (clienteCesta.nif) {
+          criteriosBusqueda.push({ nif: { $regex: clienteCesta.nif.trim(), $options: 'i' } });
+        }
+        
+        if (criteriosBusqueda.length === 0 && !clienteCesta.nombre) {
+          errores.push({ cliente: clienteCesta, error: 'Datos insuficientes (falta nombre)' });
+          continue;
+        }
+        
+        // Buscar cliente en la base de datos
+        const clienteEncontrado = await Cliente.findOne({ $or: criteriosBusqueda });
+        
+        if (clienteEncontrado) {
+          // CLIENTE EXISTENTE: Marcarlo como cliente normal Y de cestas
+          await Cliente.updateOne(
+            { _id: clienteEncontrado._id },
+            { 
+              $set: { 
+                esCestaNavidad: true,
+                activo: true // También marcarlo como cliente normal
+              } 
+            }
+          );
+          marcados++;
+          console.log(`[CESTAS-NAVIDAD] ✅ Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
+        } else {
+          // CLIENTE NUEVO: Crear como cliente de cestas únicamente
+          const nuevoCliente = new Cliente({
+            nombre: clienteCesta.nombre || 'Cliente sin nombre',
+            email: clienteCesta.email || '',
+            telefono: clienteCesta.telefono || '',
+            nif: clienteCesta.nif || '',
+            direccion: clienteCesta.direccion || '',
+            codigoPostal: clienteCesta.codigoPostal || '',
+            poblacion: clienteCesta.poblacion || '',
+            provincia: clienteCesta.provincia || '',
+            activo: false,          // NO es cliente normal todavía
+            esCestaNavidad: true    // SÍ es cliente de cestas
+          });
+          
+          await nuevoCliente.save();
+          creados++;
+          console.log(`[CESTAS-NAVIDAD] 🆕 Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
+        }
+      } catch (e) {
+        errores.push({ cliente: clienteCesta, error: e.message });
+        console.error('[CESTAS-NAVIDAD][ERROR]', clienteCesta, e.message);
+      }
+    }
+    
+    console.log('[CESTAS-NAVIDAD] Resultado:', { marcados, creados, errores: errores.length });
+    res.json({ 
+      ok: true, 
+      marcados, 
+      creados,
+      errores,
+      resumen: `${marcados} clientes marcados como Normal+Cestas, ${creados} clientes nuevos creados como Solo Cestas`
+    });
+  } catch (e) {
+    console.error('[CESTAS-NAVIDAD][FATAL]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- ENDPOINT: Obtener estadísticas de cestas de navidad ---
+app.get('/api/clientes/estadisticas-cestas', async (req, res) => {
+  try {
+    const totalClientes = await Cliente.countDocuments();
+    const clientesCestasNavidad = await Cliente.countDocuments({ esCestaNavidad: true });
+    const clientesNormales = totalClientes - clientesCestasNavidad;
+    
+    res.json({
+      totalClientes,
+      clientesCestasNavidad,
+      clientesNormales,
+      porcentajeCestas: totalClientes > 0 ? Math.round((clientesCestasNavidad / totalClientes) * 100) : 0
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// --- ENDPOINT: Desmarcar todos los clientes de cestas de navidad ---
+app.post('/api/clientes/limpiar-cestas-navidad', async (req, res) => {
+  try {
+    const resultado = await Cliente.updateMany(
+      { esCestaNavidad: true },
+      { $set: { esCestaNavidad: false } }
+    );
+    
+    res.json({ 
+      ok: true, 
+      desmarcados: resultado.modifiedCount,
+      mensaje: `${resultado.modifiedCount} clientes desmarcados como cestas de navidad`
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 Gestión de Cestas de Navidad - Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #e1e8ed;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: 700;
+        }
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin: 10px 0 0 0;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        .feature-card h3 {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin: 0 0 15px 0;
+            font-weight: 700;
+        }
+        .feature-card p {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .demo-section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin: 0 0 20px 0;
+            font-weight: 700;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .csv-example {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 0;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+        .workflow {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 2px solid #e1e8ed;
+        }
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .step-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+        }
+        .step-description {
+            color: #7f8c8d;
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎄 Gestión de Cestas de Navidad</h1>
+            <p>Sistema completo para marcar y gestionar clientes de cestas navideñas</p>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">✅</div>
+                <div class="stat-label">Funcionalidad Implementada</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <div class="stat-number">🎄</div>
+                <div class="stat-label">Marcado Automático</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                <div class="stat-number">📊</div>
+                <div class="stat-label">Estadísticas en Tiempo Real</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #229954);">
+                <div class="stat-number">🔍</div>
+                <div class="stat-label">Filtros Inteligentes</div>
+            </div>
+        </div>
+
+        <!-- Características principales -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>📂 Importación CSV</h3>
+                <p>Importa listas de clientes de cestas de navidad desde archivos CSV con separadores flexibles (coma, punto y coma, tabulación).</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔍 Comparación Inteligente</h3>
+                <p>Busca automáticamente clientes por nombre, email, teléfono y NIF/CIF con coincidencias parciales insensibles a mayúsculas.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎯 Marcado Automático</h3>
+                <p>Marca automáticamente los clientes encontrados como "cestas de navidad" en la base de datos.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Estadísticas</h3>
+                <p>Muestra estadísticas en tiempo real: total de cestas, clientes normales y porcentajes.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔧 Gestión Individual</h3>
+                <p>Permite marcar/desmarcar clientes individualmente con botones en la interfaz.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🧹 Limpieza Masiva</h3>
+                <p>Opción para limpiar todas las marcas de cestas de navidad de una vez.</p>
+            </div>
+        </div>
+
+        <!-- Flujo de trabajo -->
+        <div class="demo-section">
+            <h2>🚀 Flujo de Trabajo</h2>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Preparar Archivo CSV</div>
+                        <div class="step-description">Exporta la lista de clientes de cestas de navidad desde tu sistema externo en formato CSV.</div>
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Importar en el Sistema</div>
+                        <div class="step-description">Usa el botón "🎄 Importar Cestas de Navidad" en la gestión de clientes.</div>
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Verificar Resultados</div>
+                        <div class="step-description">El sistema muestra cuántos clientes se marcaron y cuáles no se encontraron.</div>
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Usar Filtros</div>
+                        <div class="step-description">Filtra la lista por tipo de cliente para campañas específicas.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formato CSV -->
+        <div class="demo-section">
+            <h2>📁 Formato del Archivo CSV</h2>
+            <p>El archivo CSV debe incluir al menos una de estas columnas (nombres flexibles):</p>
+            <div class="csv-example">
+nombre,email,telefono,nif,direccion
+Juan Pérez García,juan.perez@email.com,666123456,12345678A,Calle Mayor 123
+María González López,maria.gonzalez@email.com,677987654,87654321B,Avenida Libertad 45
+Antonio Martín Ruiz,antonio.martin@email.com,688555444,11223344C,Plaza Central 12
+            </div>
+        </div>
+
+        <!-- Uso desde línea de comandos -->
+        <div class="demo-section">
+            <h2>🖥️ Uso desde Línea de Comandos</h2>
+            <div class="code-block">
+# Procesar archivo CSV
+node procesarCestasNavidad.js archivo-cestas.csv
+
+# Ejemplo con el archivo de prueba incluido
+node procesarCestasNavidad.js ejemplo-cestas-navidad.csv
+            </div>
+        </div>
+
+        <!-- Enlaces de acceso -->
+        <div class="demo-section">
+            <h2>🔗 Acceso al Sistema</h2>
+            <div class="button-group">
+                <a href="http://localhost:3100" class="btn btn-primary" target="_blank">
+                    👥 Gestión de Clientes (Frontend)
+                </a>
+                <a href="http://localhost:10001/api/clientes" class="btn btn-success" target="_blank">
+                    🗄️ API de Clientes (Backend)
+                </a>
+                <a href="http://localhost:10001/api/clientes/estadisticas-cestas" class="btn btn-warning" target="_blank">
+                    📊 Estadísticas de Cestas
+                </a>
+                <a href="/DOCUMENTACION_CESTAS_NAVIDAD.md" class="btn btn-danger" target="_blank">
+                    📖 Documentación Completa
+                </a>
+            </div>
+        </div>
+
+        <!-- Ejemplos de API -->
+        <div class="demo-section">
+            <h2>🔌 Endpoints de API</h2>
+            
+            <h3>Marcar Clientes de Cestas</h3>
+            <div class="code-block">
+POST /api/clientes/marcar-cestas-navidad
+Content-Type: application/json
+
+{
+  "clientesCestasNavidad": [
+    {
+      "nombre": "Juan Pérez",
+      "email": "juan@email.com",
+      "telefono": "666123456",
+      "nif": "12345678A"
+    }
+  ]
+}
+            </div>
+
+            <h3>Obtener Estadísticas</h3>
+            <div class="code-block">
+GET /api/clientes/estadisticas-cestas
+
+Respuesta:
+{
+  "totalClientes": 150,
+  "clientesCestasNavidad": 25,
+  "clientesNormales": 125,
+  "porcentajeCestas": 17
+}
+            </div>
+
+            <h3>Limpiar Todas las Marcas</h3>
+            <div class="code-block">
+POST /api/clientes/limpiar-cestas-navidad
+            </div>
+        </div>
+
+        <!-- Base de datos -->
+        <div class="demo-section">
+            <h2>🗄️ Esquema de Base de Datos</h2>
+            <p>Se agregó el siguiente campo al modelo Cliente:</p>
+            <div class="code-block">
+{
+  esCestaNavidad: { type: Boolean, default: false }
+}
+            </div>
+        </div>
+
+        <!-- Estado actual -->
+        <div class="demo-section">
+            <h2>✅ Estado Actual</h2>
+            <div class="feature-grid">
+                <div class="feature-card" style="border-color: #27ae60; background: #d5f4e6;">
+                    <h3 style="color: #27ae60;">✅ Backend Implementado</h3>
+                    <p style="color: #2c3e50;">Endpoints funcionales en puerto 10001</p>
+                </div>
+                <div class="feature-card" style="border-color: #27ae60; background: #d5f4e6;">
+                    <h3 style="color: #27ae60;">✅ Frontend Actualizado</h3>
+                    <p style="color: #2c3e50;">Interfaz con filtros y gestión visual</p>
+                </div>
+                <div class="feature-card" style="border-color: #27ae60; background: #d5f4e6;">
+                    <h3 style="color: #27ae60;">✅ Script CLI</h3>
+                    <p style="color: #2c3e50;">Procesamiento automático desde línea de comandos</p>
+                </div>
+                <div class="feature-card" style="border-color: #27ae60; background: #d5f4e6;">
+                    <h3 style="color: #27ae60;">✅ Documentación</h3>
+                    <p style="color: #2c3e50;">Guía completa de uso y configuración</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e1e8ed;">
+            <p style="color: #7f8c8d; font-style: italic;">
+                🎄 Sistema de Gestión de Cestas de Navidad - Implementación Completa
+            </p>
+        </div>
+    </div>
+</body>
+</html>

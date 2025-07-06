@@ -41,12 +41,18 @@ export default function ClientesMantenimiento() {
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroProducto, setFiltroProducto] = useState('');
   const [pedidosFiltrados, setPedidosFiltrados] = useState([]);
+  
+  // Estados para gestión de cestas de navidad
+  const [estadisticasCestas, setEstadisticasCestas] = useState(null);
+  const [mostrarGestionCestas, setMostrarGestionCestas] = useState(false);
+  const [filtroTipoCliente, setFiltroTipoCliente] = useState('todos'); // 'todos', 'cestas', 'normales'
 
   const cargarClientes = () => {
     axios.get(`${API_URL}/clientes`)
       .then(res => {
         setClientes(res.data);
         setClientesFiltrados(res.data);
+        aplicarFiltros(res.data, filtroBusqueda, filtroTipoCliente);
       })
       .catch(() => {
         setClientes([]);
@@ -54,20 +60,50 @@ export default function ClientesMantenimiento() {
       });
   };
 
-  // Función para filtrar clientes
-  const filtrarClientes = (busqueda) => {
-    setFiltroBusqueda(busqueda);
-    if (!busqueda.trim()) {
-      setClientesFiltrados(clientes);
-    } else {
-      const filtrados = clientes.filter(cliente =>
+  // Cargar estadísticas de cestas de navidad
+  const cargarEstadisticasCestas = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/clientes/estadisticas-cestas`);
+      setEstadisticasCestas(res.data);
+    } catch (error) {
+      console.error('Error cargando estadísticas de cestas:', error);
+    }
+  };
+
+  // Función para aplicar filtros (búsqueda + tipo de cliente)
+  const aplicarFiltros = (listaClientes, busqueda, tipoCliente) => {
+    let filtrados = [...listaClientes];
+    
+    // Filtro por tipo de cliente
+    if (tipoCliente === 'cestas') {
+      filtrados = filtrados.filter(cliente => cliente.esCestaNavidad === true);
+    } else if (tipoCliente === 'normales') {
+      filtrados = filtrados.filter(cliente => cliente.esCestaNavidad !== true);
+    }
+    
+    // Filtro por búsqueda
+    if (busqueda.trim()) {
+      filtrados = filtrados.filter(cliente =>
         cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
         (cliente.email && cliente.email.toLowerCase().includes(busqueda.toLowerCase())) ||
         (cliente.telefono && cliente.telefono.includes(busqueda)) ||
         (cliente.cif && cliente.cif.toLowerCase().includes(busqueda.toLowerCase()))
       );
-      setClientesFiltrados(filtrados);
     }
+    
+    setClientesFiltrados(filtrados);
+  };
+
+  // Función para filtrar clientes
+  const filtrarClientes = (busqueda) => {
+    setFiltroBusqueda(busqueda);
+    aplicarFiltros(clientes, busqueda, filtroTipoCliente);
+  };
+
+  // Cambiar filtro de tipo de cliente
+  const cambiarFiltroTipoCliente = (tipo) => {
+    setFiltroTipoCliente(tipo);
+    aplicarFiltros(clientes, filtroBusqueda, tipo);
   };
 
   const cargarPedidosCliente = async (clienteNombre) => {
@@ -156,7 +192,10 @@ export default function ClientesMantenimiento() {
     setFiltroProducto('');
   };
 
-  useEffect(() => { cargarClientes(); }, []);
+  useEffect(() => { 
+    cargarClientes(); 
+    cargarEstadisticasCestas();
+  }, []);
 
   const handleGuardar = async () => {
     if (!form.nombre) { setMensaje('El nombre es obligatorio'); return; }
@@ -250,10 +289,153 @@ export default function ClientesMantenimiento() {
     }
   };
 
-  // Efecto para actualizar filtro cuando cambian los clientes
-  React.useEffect(() => {
-    filtrarClientes(filtroBusqueda);
-  }, [clientes]);
+  // Importar clientes de cestas de navidad desde CSV
+  const handleImportCestasNavidad = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setMensaje('🔄 Procesando archivo de cestas de navidad...');
+    
+    try {
+      const text = await file.text();
+      
+      if (!text || text.trim().length === 0) {
+        setMensaje('❌ El archivo está vacío');
+        return;
+      }
+      
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      
+      if (lines.length < 2) {
+        setMensaje('❌ CSV vacío o sin datos (menos de 2 líneas)');
+        return;
+      }
+      
+      // Detectar separador y parsing mejorado
+      const separadores = [',', ';', '\t'];
+      const primeraLinea = lines[0];
+      let separador = ',';
+      let maxColumnas = 0;
+      
+      // Función para parsear línea CSV con comillas
+      const parsearLineaCSV = (linea, sep) => {
+        const resultado = [];
+        let enComillas = false;
+        let valorActual = '';
+        
+        for (let i = 0; i < linea.length; i++) {
+          const char = linea[i];
+          
+          if (char === '"') {
+            enComillas = !enComillas;
+          } else if (char === sep && !enComillas) {
+            resultado.push(valorActual.trim());
+            valorActual = '';
+          } else {
+            valorActual += char;
+          }
+        }
+        resultado.push(valorActual.trim());
+        return resultado;
+      };
+      
+      for (const sep of separadores) {
+        const columnas = parsearLineaCSV(primeraLinea, sep).length;
+        if (columnas > maxColumnas) {
+          maxColumnas = columnas;
+          separador = sep;
+        }
+      }
+      
+      const headers = parsearLineaCSV(lines[0], separador).map(h => h.replace(/"/g, ''));
+      const clientesCestas = lines.slice(1).map(line => {
+        const cols = parsearLineaCSV(line, separador).map(col => col.replace(/"/g, ''));
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+        
+        return {
+          nombre: obj.RazonSocial || obj.NomComercial || obj.nombre || obj.Nombre || obj.NOMBRE || '',
+          email: obj.Email || obj.email || obj.EMAIL || obj.correo || obj.Correo || '',
+          telefono: obj.Telefono || obj.telefono || obj.TELEFONO || obj.tel || obj.Tel || '',
+          nif: obj.CIF || obj.nif || obj.NIF || obj.cif || obj.dni || obj.DNI || '',
+          direccion: obj.Direccion || obj.direccion || obj.DIRECCION || '',
+          codigoPostal: obj.CodPostal || obj.codigoPostal || obj.CODIGO_POSTAL || '',
+          poblacion: obj.Poblacion || obj.poblacion || obj.POBLACION || '',
+          provincia: obj.Provincia || obj.provincia || obj.PROVINCIA || ''
+        };
+      }).filter(cliente => cliente.nombre.trim());
+      
+      if (clientesCestas.length === 0) {
+        return setMensaje('No se detectaron clientes válidos en el archivo');
+      }
+      
+      // Enviar a la API para marcar
+      const response = await axios.post(`${API_URL}/clientes/marcar-cestas-navidad`, {
+        clientesCestasNavidad: clientesCestas
+      });
+      
+      console.log('[INFO] Procesamiento completado:', response.data);
+      
+      if (response.data.ok) {
+        const { marcados, creados, errores } = response.data;
+        let mensaje = `✅ Procesamiento completado:\n`;
+        mensaje += `• ${marcados} clientes existentes marcados como Normal + Cestas\n`;
+        mensaje += `• ${creados} clientes nuevos creados como Solo Cestas\n`;
+        if (errores.length > 0) {
+          mensaje += `• ${errores.length} errores encontrados`;
+        }
+        setMensaje(mensaje);
+        cargarClientes();
+        cargarEstadisticasCestas();
+      } else {
+        setMensaje('Error procesando cestas de navidad: ' + response.data.error);
+      }
+      
+    } catch (error) {
+      console.error('Error procesando cestas de navidad:', error);
+      setMensaje('Error procesando archivo de cestas de navidad');
+    }
+    
+    // Limpiar input si existe
+    if (e.target && e.target.value !== undefined) {
+      e.target.value = '';
+    }
+  };
+
+  // Alternar estado de cesta de navidad de un cliente
+  const toggleCestaNavidad = async (cliente) => {
+    try {
+      const nuevoEstado = !cliente.esCestaNavidad;
+      await axios.put(`${API_URL}/clientes/${cliente._id || cliente.id}`, {
+        ...cliente,
+        esCestaNavidad: nuevoEstado
+      });
+      
+      setMensaje(`Cliente ${nuevoEstado ? 'marcado como' : 'desmarcado de'} cesta de navidad`);
+      cargarClientes();
+      cargarEstadisticasCestas();
+    } catch (error) {
+      setMensaje('Error actualizando cliente');
+    }
+  };
+
+  // Limpiar todas las marcas de cestas de navidad
+  const limpiarTodasCestas = async () => {
+    if (!window.confirm('¿Estás seguro de que quieres desmarcar TODOS los clientes de cestas de navidad?')) {
+      return;
+    }
+    
+    try {
+      const response = await axios.post(`${API_URL}/clientes/limpiar-cestas-navidad`);
+      if (response.data.ok) {
+        setMensaje(`✅ ${response.data.desmarcados} clientes desmarcados como cestas de navidad`);
+        cargarClientes();
+        cargarEstadisticasCestas();
+      }
+    } catch (error) {
+      setMensaje('Error limpiando marcas de cestas de navidad');
+    }
+  };
 
   // --- Scroll horizontal con click derecho ---
   const tablaRef = React.useRef();
@@ -452,6 +634,31 @@ export default function ClientesMantenimiento() {
                   style={{ display: 'none' }}
                 />
               </label>
+
+              {/* Botón para importar cestas de navidad */}
+              <label style={{
+                background: 'linear-gradient(135deg, #e67e22, #d35400)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '15px 25px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                🎄 Importar Clientes de Cestas de Navidad
+                <input 
+                  type="file" 
+                  accept=".csv,.txt" 
+                  onChange={handleImportCestasNavidad}
+                  style={{ display: 'none' }}
+                />
+              </label>
             </div>
 
             {/* Filtro de búsqueda */}
@@ -537,6 +744,190 @@ export default function ClientesMantenimiento() {
               )}
             </div>
 
+            {/* Panel de gestión de cestas de navidad */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '15px',
+              padding: '20px',
+              marginBottom: '25px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              border: '2px solid #e1e8ed'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '15px'
+              }}>
+                <h4 style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#2c3e50'
+                }}>
+                  🎄 Gestión de Cestas de Navidad
+                </h4>
+                <button
+                  onClick={() => setMostrarGestionCestas(!mostrarGestionCestas)}
+                  style={{
+                    background: 'linear-gradient(135deg, #3498db, #2980b9)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  {mostrarGestionCestas ? '🔼 Ocultar' : '🔽 Mostrar'}
+                </button>
+              </div>
+
+              {mostrarGestionCestas && (
+                <>
+                  {/* Estadísticas */}
+                  {estadisticasCestas && (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gap: '15px',
+                      marginBottom: '20px'
+                    }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                        color: 'white',
+                        padding: '15px',
+                        borderRadius: '10px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: '24px', fontWeight: '700' }}>{estadisticasCestas.clientesCestasNavidad}</div>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>Cestas de Navidad</div>
+                      </div>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #3498db, #2980b9)',
+                        color: 'white',
+                        padding: '15px',
+                        borderRadius: '10px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: '24px', fontWeight: '700' }}>{estadisticasCestas.clientesNormales}</div>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>Clientes Normales</div>
+                      </div>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #27ae60, #229954)',
+                        color: 'white',
+                        padding: '15px',
+                        borderRadius: '10px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: '24px', fontWeight: '700' }}>{estadisticasCestas.porcentajeCestas}%</div>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>% Cestas</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Filtros por tipo de cliente */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    marginBottom: '15px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <button
+                      onClick={() => cambiarFiltroTipoCliente('todos')}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        background: filtroTipoCliente === 'todos' ? 
+                          'linear-gradient(135deg, #667eea, #764ba2)' : '#f8f9fa',
+                        color: filtroTipoCliente === 'todos' ? 'white' : '#6c757d',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      👥 Todos ({clientes.length})
+                    </button>
+                    <button
+                      onClick={() => cambiarFiltroTipoCliente('cestas')}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        background: filtroTipoCliente === 'cestas' ? 
+                          'linear-gradient(135deg, #e74c3c, #c0392b)' : '#f8f9fa',
+                        color: filtroTipoCliente === 'cestas' ? 'white' : '#6c757d',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      🎄 Cestas ({estadisticasCestas?.clientesCestasNavidad || 0})
+                    </button>
+                    <button
+                      onClick={() => cambiarFiltroTipoCliente('normales')}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        background: filtroTipoCliente === 'normales' ? 
+                          'linear-gradient(135deg, #3498db, #2980b9)' : '#f8f9fa',
+                        color: filtroTipoCliente === 'normales' ? 'white' : '#6c757d',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      👤 Normales ({estadisticasCestas?.clientesNormales || 0})
+                    </button>
+                  </div>
+
+                  {/* Acciones rápidas */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <button
+                      onClick={() => cargarEstadisticasCestas()}
+                      style={{
+                        background: 'linear-gradient(135deg, #27ae60, #229954)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      🔄 Actualizar Estadísticas
+                    </button>
+                    <button
+                      onClick={limpiarTodasCestas}
+                      style={{
+                        background: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      🗑️ Limpiar Todas las Marcas
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Tabla de clientes simplificada */}
             <div style={{
               overflowX: 'auto',
@@ -573,6 +964,18 @@ export default function ClientesMantenimiento() {
                       fontSize: '16px',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
+                      width: '150px'
+                    }}>
+                      🎄 Cesta Navidad
+                    </th>
+                    <th style={{
+                      textAlign: 'center',
+                      padding: '20px',
+                      fontWeight: '700',
+                      color: '#495057',
+                      fontSize: '16px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
                       width: '200px'
                     }}>
                       ⚙️ Acciones
@@ -582,7 +985,7 @@ export default function ClientesMantenimiento() {
                 <tbody>
                   {clientesFiltrados.length === 0 ? (
                     <tr>
-                      <td colSpan="2" style={{
+                      <td colSpan="3" style={{
                         textAlign: 'center',
                         padding: '40px',
                         color: '#7f8c8d',
@@ -653,6 +1056,41 @@ export default function ClientesMantenimiento() {
                             </div>
                           </div>
                         </td>
+                        
+                        {/* Columna de cesta de navidad */}
+                        <td style={{ padding: '20px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                            <div style={{
+                              fontSize: '24px',
+                              marginBottom: '4px'
+                            }}>
+                              {c.esCestaNavidad ? '🎄' : '👤'}
+                            </div>
+                            <button
+                              onClick={() => toggleCestaNavidad(c)}
+                              style={{
+                                background: c.esCestaNavidad ? 
+                                  'linear-gradient(135deg, #e74c3c, #c0392b)' : 
+                                  'linear-gradient(135deg, #95a5a6, #7f8c8d)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '6px 12px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                whiteSpace: 'nowrap'
+                              }}
+                              title={c.esCestaNavidad ? 
+                                'Click para desmarcar como cesta de navidad' : 
+                                'Click para marcar como cesta de navidad'}
+                            >
+                              {c.esCestaNavidad ? 'Cesta 🎄' : 'Normal 👤'}
+                            </button>
+                          </div>
+                        </td>
+                        
                         <td style={{ padding: '20px', textAlign: 'center' }}>
                           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                             <button

@@ -1,0 +1,5647 @@
+{
+  "fechaGeneracion": "2025-07-05T17:07:19.749Z",
+  "estadisticas": {
+    "totalClientes": 51,
+    "clientesActivos": 51,
+    "totalCestas": 51,
+    "valorTotal": 10046,
+    "cestasPorTipo": {
+      "BÁSICA": 30,
+      "PREMIUM": 14,
+      "DELUXE": 7
+    }
+  },
+  "clientes": [
+    {
+      "numCliente": 14,
+      "razonSocial": "ESTHER BALLESTEROS BARBA",
+      "nomComercial": "ESTHER BALLESTEROS BARBA",
+      "cif": "11953470W",
+      "direccion": "Mercado de Abastos.Planta Baja. Puesto nº 10",
+      "codPostal": "49000",
+      "poblacion": "ZAMORA",
+      "provincia": "ZAMORA",
+      "telefono": "980532418",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": true,
+      "formaPago": "TRANSF. 90 D",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 87,
+      "razonSocial": "RADIO POPULAR, S.A.",
+      "nomComercial": "RADIO POPULAR, S.A.",
+      "cif": "A28281368",
+      "direccion": "C/ SOL ORIENTE, 11-15",
+      "codPostal": "37002",
+      "poblacion": "SALAMANCA",
+      "provincia": "SALAMANCA",
+      "telefono": "980530237",
+      "fax": "980534003",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "CONTADO",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 88,
+      "razonSocial": "JUAN II, S.A.",
+      "nomComercial": "JUAN II, S.A.",
+      "cif": "A49005135",
+      "direccion": "C/ PASEO DEL ESPOLON, 1",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "980690300",
+      "fax": "980692376",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 102,
+      "razonSocial": "PIELES Y CUEROS JIMENEZ, S.L.",
+      "nomComercial": "PIELES Y CUEROS JIMENEZ, S.L.",
+      "cif": "B49126154",
+      "direccion": "Crta Salamanca, 1",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "980691010",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANSF. 30 D",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 146,
+      "razonSocial": "EXCMO AYUNTAMIENTO DE PEDROSA DEL REY",
+      "nomComercial": "EXCMO AYUNTAMIENTO DE PEDROSA DEL REY",
+      "cif": "P4711400D",
+      "direccion": "PLAZA JUAN CARLOS I, 1",
+      "codPostal": "47112",
+      "poblacion": "PEDROSA DEL REY",
+      "provincia": "VALLADOLID",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANSFERENCI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 164,
+      "razonSocial": "AUTORRECAMBIOS TORREIRO, S.L.",
+      "nomComercial": "AUTORRECAMBIOS TORREIRO, S.L.",
+      "cif": "B15122153",
+      "direccion": "Polig. de la Gandara, Parcela 6",
+      "codPostal": "15406",
+      "poblacion": "EL FERROL",
+      "provincia": "A CORUÑA",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANS.DIA FI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 242,
+      "razonSocial": "BODEGA COOPERATIVA VINO DE TORO",
+      "nomComercial": "BODEGA COOPERATIVA VINO DE TORO",
+      "cif": "F49004310",
+      "direccion": "Ctra Tordesillas, km 13",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "980690347",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "REC0",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.724Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 255,
+      "razonSocial": "TABERNA O TRISQUEL, S.L.",
+      "nomComercial": "TABERNA O TRISQUEL, S.L.",
+      "cif": "B15595549",
+      "direccion": "C/ Sartaña, 19",
+      "codPostal": "15404",
+      "poblacion": "EL FERROL",
+      "provincia": "A CORUÑA",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANSFERENCI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.725Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 411,
+      "razonSocial": "JULIO INCINILLAS SIMON",
+      "nomComercial": "JULIO INCINILLAS SIMON",
+      "cif": "13108089K",
+      "direccion": "AVDA DE LA PAZ, 34",
+      "codPostal": "9004",
+      "poblacion": "BURGOS",
+      "provincia": "BURGOS",
+      "telefono": "947273211",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.725Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 451,
+      "razonSocial": "EXCMO AYUNTAMIENTO DE TORO",
+      "nomComercial": "EXCMO AYUNTAMIENTO DE TORO",
+      "cif": "P4924400G",
+      "direccion": "C/ PLAZA MAYOR,1",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANSFERENCI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.725Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 593,
+      "razonSocial": "SATLI E INVERSIONES GRUPO SOL, S.L.",
+      "nomComercial": "SATLI E INVERSIONES GRUPO SOL, S.L.",
+      "cif": "B92096395",
+      "direccion": "C/ ROSA, 100",
+      "codPostal": "29680",
+      "poblacion": "ESTEPONA",
+      "provincia": "MÁLAGA",
+      "telefono": "952882488",
+      "fax": "952882375",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.725Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 731,
+      "razonSocial": "EXCAVACIONES JOSE MARTINEZ, S.L.",
+      "nomComercial": "EXCAVACIONES JOSE MARTINEZ, S.L.",
+      "cif": "B50624089",
+      "direccion": "C/ BOMBERO, 30",
+      "codPostal": "50600",
+      "poblacion": "EJEA DE LOS CABALLEROS",
+      "provincia": "ZARAGOZA",
+      "telefono": "976660844",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.725Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 758,
+      "razonSocial": "BANQUE PSA FINANCEC",
+      "nomComercial": "BANQUE PSA FINANCEC",
+      "cif": "W0012543E",
+      "direccion": "C/ JULIAN CAMARILLO, 6 A 1º",
+      "codPostal": "28037",
+      "poblacion": "MADRID",
+      "provincia": "MADRID",
+      "telefono": "670849714",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.725Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 791,
+      "razonSocial": "CONSORCIO DE LA INSTITUCION FERIAL DE CASTILLA Y LEON",
+      "nomComercial": "CONSORCIO DE LA INSTITUCION FERIAL DE CASTILLA Y LEON",
+      "cif": "V47016985",
+      "direccion": "Avda  Ramon Pradera, S/N",
+      "codPostal": "47009",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANSFERENCI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 817,
+      "razonSocial": "JOSE ANTONIO ALVAREZ MARRON",
+      "nomComercial": "JOSE ANTONIO ALVAREZ MARRON",
+      "cif": "10765322B",
+      "direccion": "C/ CONDE SAN ISIDRO PARQUE ESPAÑA",
+      "codPostal": "29640",
+      "poblacion": "FUENGIROLA",
+      "provincia": "MALAGA",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "CONTRAREEMBO",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 818,
+      "razonSocial": "ASTURIANA DE AUTOMOVILES Y REPUESTO",
+      "nomComercial": "ASTURIANA DE AUTOMOVILES Y REPUESTO",
+      "cif": "A33022765",
+      "direccion": "AVDA GALICIA, KM 274",
+      "codPostal": "49024",
+      "poblacion": "ZAMORA",
+      "provincia": "ZAMORA",
+      "telefono": "980525516",
+      "fax": "980525182",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 841,
+      "razonSocial": "GRANITOS DE ATIOS, S.A.",
+      "nomComercial": "GRANITOS DE ATIOS, S.A.",
+      "cif": "A36062206",
+      "direccion": "C/ POLIG.IND. A GRANXA, S/N",
+      "codPostal": "36400",
+      "poblacion": "PORRIÑO",
+      "provincia": "PONTEVEDRA",
+      "telefono": "609850200",
+      "fax": "986346361",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 881,
+      "razonSocial": "EMBUTIDOS BALLESTEROS, S.L.",
+      "nomComercial": "EMBUTIDOS BALLESTEROS, S.L.",
+      "cif": "B49143456",
+      "direccion": "CTRA. NACIONAL 122, KM. 424",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "980690604",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 927,
+      "razonSocial": "INDUSTRIAS CEVECO LA LINEA, S.L.",
+      "nomComercial": "INDUSTRIAS CEVECO LA LINEA, S.L.",
+      "cif": "B11789559",
+      "direccion": "POL. IND. ZABAL BAJO, PARCELA 46",
+      "codPostal": "11315",
+      "poblacion": "LA LINEA DE LA CONCEPCION",
+      "provincia": "CADIZ",
+      "telefono": "956643808",
+      "fax": "956644130",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 941,
+      "razonSocial": "SISTEMAS DE OFICINA DE MARBELLA, S.",
+      "nomComercial": "SISTEMAS DE OFICINA DE MARBELLA, S.",
+      "cif": "A29280138",
+      "direccion": "URB. MARBELLA REAL, LOCAL 28-29",
+      "codPostal": "29600",
+      "poblacion": "MARBELLA",
+      "provincia": "MÁLAGA",
+      "telefono": "952860125",
+      "fax": "952772460",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 943,
+      "razonSocial": "DIZ CONSTRUCCIONES Y PROYECCIONES,",
+      "nomComercial": "DIZ CONSTRUCCIONES Y PROYECCIONES,",
+      "cif": "B36184224",
+      "direccion": "C/ LOUREIRO CRESPO, 54 8º",
+      "codPostal": "36004",
+      "poblacion": "PONTEVEDRA",
+      "provincia": "PONTEVEDRA",
+      "telefono": "986847934",
+      "fax": "986847934",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 952,
+      "razonSocial": "R.V. EDIPRESS, S.L.",
+      "nomComercial": "R.V. EDIPRESS, S.L.",
+      "cif": "B83229724",
+      "direccion": "C/ AGUSTIN DE FOXA, 17 7º B",
+      "codPostal": "28036",
+      "poblacion": "MADRID",
+      "provincia": "MADRID",
+      "telefono": "609034986",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.726Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 954,
+      "razonSocial": "AGUSTINA OLARTE, S.L.",
+      "nomComercial": "AGUSTINA OLARTE, S.L.",
+      "cif": "B29691581",
+      "direccion": "C/ EDUARDO EVANGELISTA, 49",
+      "codPostal": "29670",
+      "poblacion": "SAN PEDRO DE ALCANTARA",
+      "provincia": "MÁLAGA",
+      "telefono": "952799654",
+      "fax": "952799914",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 956,
+      "razonSocial": "PUIPLAST, S.L.",
+      "nomComercial": "PUIPLAST, S.L.",
+      "cif": "B96226568",
+      "direccion": "C/ LITUANIA, 11 Apto Correos nº 102",
+      "codPostal": "46200",
+      "poblacion": "PAIPORTA",
+      "provincia": "VALENCIA",
+      "telefono": "963973846",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "TRANSFERENCI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 957,
+      "razonSocial": "COVIPRO, S.L.",
+      "nomComercial": "COVIPRO, S.L.",
+      "cif": "B47009626",
+      "direccion": "C/ GAMAZO, 19 1º DRCHA",
+      "codPostal": "47004",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "983217951",
+      "fax": "983217951",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 959,
+      "razonSocial": "ROYDA, S.L.",
+      "nomComercial": "ROYDA, S.L.",
+      "cif": "B50926740",
+      "direccion": "C/ LA BOMBA, 4 LOCAL",
+      "codPostal": "50120",
+      "poblacion": "MONZALBARBA",
+      "provincia": "ZARAGOZA",
+      "telefono": "976773539",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 961,
+      "razonSocial": "CRISTALERIA ALCIBAR, S.L.",
+      "nomComercial": "CRISTALERIA ALCIBAR, S.L.",
+      "cif": "B20589784",
+      "direccion": "C/ PASEO UBARBURU, 35 PABELLON 13 B",
+      "codPostal": "20014",
+      "poblacion": "SAN SEBASTIAN",
+      "provincia": "GUIPUZCOA",
+      "telefono": "943016505",
+      "fax": "943400512",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 966,
+      "razonSocial": "HIMOVI, S.A.",
+      "nomComercial": "HIMOVI, S.A.",
+      "cif": "B47054341",
+      "direccion": "C/ ARZOBISPO GANDASEGUI, 5 8º IZQDA",
+      "codPostal": "47002",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "983292157",
+      "fax": "983295299",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 971,
+      "razonSocial": "JUAN CARLOS LOPEZ MARTINEZ",
+      "nomComercial": "JUAN CARLOS LOPEZ MARTINEZ",
+      "cif": "09270338G",
+      "direccion": "AVDA SALAMANCA, 2 3º C",
+      "codPostal": "47014",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "667565666",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 975,
+      "razonSocial": "INDUCABLE, S.L.",
+      "nomComercial": "INDUCABLE, SL.",
+      "cif": "B47314075",
+      "direccion": "CTRA. SALAMANCA, KM 127",
+      "codPostal": "47014",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "983407584",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 977,
+      "razonSocial": "INTELCO ZAMORA, S.C.L.",
+      "nomComercial": "INTELCO ZAMORA, S.C.L.",
+      "cif": "F49149230",
+      "direccion": "C/La Hiniesta, 51 Bajo",
+      "codPostal": "49025",
+      "poblacion": "ZAMORA",
+      "provincia": "ZAMORA",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "CONTADO",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1044,
+      "razonSocial": "Mª CARMEN ALVAREZ VERDEAL",
+      "nomComercial": "Mª CARMEN ALVAREZ VERDEAL",
+      "cif": "76398427V",
+      "direccion": "P. RIO DO POZO. AVDA DOS FERREIROS, P 175-178",
+      "codPostal": "15573",
+      "poblacion": "NARON",
+      "provincia": "LA CORUÑA",
+      "telefono": "981388177",
+      "fax": "",
+      "email": "administracion@metalessalvador.es",
+      "recargoEquiv": true,
+      "formaPago": "TRANSFERENCI",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1091,
+      "razonSocial": "CIRIACO HERNANDEZ ALONSO",
+      "nomComercial": "CIRIACO HERNANDEZ ALONSO",
+      "cif": "11945707J",
+      "direccion": "C/ BARRIO ALABERGA, 15 2º IQZDA",
+      "codPostal": "20100",
+      "poblacion": "RENTERIA",
+      "provincia": "GUIPUZCOA",
+      "telefono": "943535430",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1108,
+      "razonSocial": "DOLORES VILA VILA",
+      "nomComercial": "DOLORES VILA VILA",
+      "cif": "77729014P",
+      "direccion": "C/ Mayor, 20",
+      "codPostal": "08692",
+      "poblacion": "PUIG-REIG",
+      "provincia": "BARCELONA",
+      "telefono": "938380561",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "CONTRAREEMBO",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.727Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1130,
+      "razonSocial": "SUMINISTROS CLIMATIZACION COSTA DEL",
+      "nomComercial": "SUMINISTROS CLIMATIZACION COSTA DEL",
+      "cif": "B92453653",
+      "direccion": "APTO DE CORREOS 774",
+      "codPostal": "29600",
+      "poblacion": "MARBELLA",
+      "provincia": "MÁLAGA",
+      "telefono": "686654645",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1131,
+      "razonSocial": "JALME, S.L.",
+      "nomComercial": "JALME, S.L.",
+      "cif": "B24484099",
+      "direccion": "C/ PLAZA LUIS DEL OLMO, 2",
+      "codPostal": "24400",
+      "poblacion": "PONFERRADA",
+      "provincia": "LEÓN",
+      "telefono": "987418378",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1159,
+      "razonSocial": "TALLERES PARTAL Y MARQUEZ, S.L.",
+      "nomComercial": "TALLERES PARTAL Y MARQUEZ, S.L.",
+      "cif": "B29150612",
+      "direccion": "C/ FRANKLIN, 1 POLIGONO INDUSTRIAL.",
+      "codPostal": "29680",
+      "poblacion": "ESTEPONA",
+      "provincia": "MÁLAGA",
+      "telefono": "952790852",
+      "fax": "952791002",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1173,
+      "razonSocial": "CALDERERIA DE LA CALLE, S.L.",
+      "nomComercial": "CALDERERIA DE LA CALLE, S.L.",
+      "cif": "B49203037",
+      "direccion": "CTRA. TORO-POZOANTIGUO, KM 0,5 CAMINO RUALES, S/N",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "980696201",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "REC0",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1174,
+      "razonSocial": "CONTRATAS COVIPRO, S.L.",
+      "nomComercial": "CONTRATAS COVIPRO, S.L.",
+      "cif": "B47477823",
+      "direccion": "C/ GAMAZO, 19 1º DRCHA",
+      "codPostal": "47004",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "983217951",
+      "fax": "983217951",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1177,
+      "razonSocial": "CASARES Y BONIS, C.B.",
+      "nomComercial": "CASARES Y BONIS, C.B.",
+      "cif": "E49215288",
+      "direccion": "C/ VIRGEN DE GRACIA, 34",
+      "codPostal": "49800",
+      "poblacion": "TORO",
+      "provincia": "ZAMORA",
+      "telefono": "",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1181,
+      "razonSocial": "TRANSPORTISTAS AUTONOMOS TORESANOS,",
+      "nomComercial": "TRANSPORTISTAS AUTONOMOS TORESANOS,",
+      "cif": "B49213077",
+      "direccion": "C/ VILLAR, S/N",
+      "codPostal": "49800",
+      "poblacion": "TAGARABUENA",
+      "provincia": "ZAMORA",
+      "telefono": "980691512",
+      "fax": "610717210",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1264,
+      "razonSocial": "MECAQUIMICA S.L",
+      "nomComercial": "MECAQUIMICA S.L.",
+      "cif": "B37350501",
+      "direccion": "HOCES DEL DURATON,PARCEL 113,NAVES",
+      "codPostal": "37008",
+      "poblacion": "SALAMANCA",
+      "provincia": "SALAMANCA",
+      "telefono": "923289285",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1351,
+      "razonSocial": "BUFETE CALDERON, S.L.",
+      "nomComercial": "BUFETE CALDERON, S.L.",
+      "cif": "B80218001",
+      "direccion": "C/ RIO ALBERCHE, 6",
+      "codPostal": "28690",
+      "poblacion": "BRUNETE",
+      "provincia": "MADRID",
+      "telefono": "918159128",
+      "fax": "918159128",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.728Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1360,
+      "razonSocial": "SAJORAMA, S.L.",
+      "nomComercial": "SAJORAMA, S.L.",
+      "cif": "B84011998",
+      "direccion": "C/ MANZANARES, 13-15",
+      "codPostal": "28794",
+      "poblacion": "GUADALIX DE LA SIERRA",
+      "provincia": "MADRID",
+      "telefono": "",
+      "fax": "918480700",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.729Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1366,
+      "razonSocial": "OLIDETEC, S.L.",
+      "nomComercial": "OLIDETEC, S.L.",
+      "cif": "B47503511",
+      "direccion": "C/ LOTO, 16",
+      "codPostal": "47012",
+      "poblacion": "VALLADOLID",
+      "provincia": "VALLADOLID",
+      "telefono": "647620168",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "CONTADO",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.729Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1373,
+      "razonSocial": "ESTRUCTURAS GARCIA Y PACHECO, S.L.",
+      "nomComercial": "ESTRUCTURAS GARCIA Y PACHECO, S.L.",
+      "cif": "B92293208",
+      "direccion": "C/ ANTONIO MACHADO, 8 BLOQUE 3 2º A",
+      "codPostal": "29670",
+      "poblacion": "SAN PEDRO DE ALCANTARA",
+      "provincia": "MÁLAGA",
+      "telefono": "952781639",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.729Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1375,
+      "razonSocial": "UBICACION, S.L.",
+      "nomComercial": "UBICACION, S.L.",
+      "cif": "B29417979",
+      "direccion": "P.I. LA HERMITA. C/ COSTA DEL SOL,",
+      "codPostal": "29600",
+      "poblacion": "MARBELLA",
+      "provincia": "MÁLAGA",
+      "telefono": "952778116",
+      "fax": "952775586",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.729Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1376,
+      "razonSocial": "MECANO SOFTWARE, S.L.",
+      "nomComercial": "MECANO SOFTWARE, S.L.",
+      "cif": "B82225889",
+      "direccion": "C/ CTRA DE CANILLAS, 138 2ª LOCAL 1",
+      "codPostal": "28043",
+      "poblacion": "MADRID",
+      "provincia": "MADRID",
+      "telefono": "609363202",
+      "fax": "913884717",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.730Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1377,
+      "razonSocial": "BOUTIQUE DEL MARMOL LEYVA, S.L.",
+      "nomComercial": "BOUTIQUE DEL MARMOL LEYVA, S.L.",
+      "cif": "B92319532",
+      "direccion": "PLAZA DE LOS MISIONEROS, 8",
+      "codPostal": "29680",
+      "poblacion": "ESTEPONA",
+      "provincia": "MÁLAGA",
+      "telefono": "609713619",
+      "fax": "951972008",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.730Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1385,
+      "razonSocial": "CEVECO COMPLEMENTOS, S.L.",
+      "nomComercial": "CEVECO COMPLEMENTOS, S.L.",
+      "cif": "B72019441",
+      "direccion": "P.I. ZABAL BAJO, PARCELA 17",
+      "codPostal": "11315",
+      "poblacion": "LA LINEA DE LA CONCEPCION",
+      "provincia": "CADIZ",
+      "telefono": "YA NO EXISTE",
+      "fax": "",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.730Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    },
+    {
+      "numCliente": 1386,
+      "razonSocial": "FRANJUS SECURITY MARBELLA, S.A.",
+      "nomComercial": "FRANJUS SECURITY  MARBELLA, S.A.",
+      "cif": "A29231222",
+      "direccion": "C/ CARBÓN. EDIF. 112-A, 2º PLANTA.",
+      "codPostal": "29600",
+      "poblacion": "MARBELLA",
+      "provincia": "MÁLAGA",
+      "telefono": "639426997",
+      "fax": "952862979",
+      "email": "",
+      "recargoEquiv": false,
+      "formaPago": "",
+      "descuento1": 0,
+      "descuento2": 0,
+      "descuento3": 0,
+      "tipoCliente": "",
+      "exentoIVA": false,
+      "activo": true,
+      "fechaRegistro": "2025-07-05T17:07:19.730Z",
+      "categoria": "CESTAS_NAVIDEÑAS"
+    }
+  ],
+  "cestas": [
+    {
+      "numeroOrden": 1001,
+      "cliente": {
+        "numCliente": 14,
+        "razonSocial": "ESTHER BALLESTEROS BARBA",
+        "cif": "11953470W",
+        "direccion": "Mercado de Abastos.Planta Baja. Puesto nº 10",
+        "poblacion": "ZAMORA",
+        "provincia": "ZAMORA",
+        "telefono": "980532418",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "TRANSF. 90 D",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1002,
+      "cliente": {
+        "numCliente": 87,
+        "razonSocial": "RADIO POPULAR, S.A.",
+        "cif": "A28281368",
+        "direccion": "C/ SOL ORIENTE, 11-15",
+        "poblacion": "SALAMANCA",
+        "provincia": "SALAMANCA",
+        "telefono": "980530237",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1003,
+      "cliente": {
+        "numCliente": 88,
+        "razonSocial": "JUAN II, S.A.",
+        "cif": "A49005135",
+        "direccion": "C/ PASEO DEL ESPOLON, 1",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "980690300",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1004,
+      "cliente": {
+        "numCliente": 102,
+        "razonSocial": "PIELES Y CUEROS JIMENEZ, S.L.",
+        "cif": "B49126154",
+        "direccion": "Crta Salamanca, 1",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "980691010",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "TRANSF. 30 D",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1005,
+      "cliente": {
+        "numCliente": 146,
+        "razonSocial": "EXCMO AYUNTAMIENTO DE PEDROSA DEL REY",
+        "cif": "P4711400D",
+        "direccion": "PLAZA JUAN CARLOS I, 1",
+        "poblacion": "PEDROSA DEL REY",
+        "provincia": "VALLADOLID",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "TRANSFERENCI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1006,
+      "cliente": {
+        "numCliente": 164,
+        "razonSocial": "AUTORRECAMBIOS TORREIRO, S.L.",
+        "cif": "B15122153",
+        "direccion": "Polig. de la Gandara, Parcela 6",
+        "poblacion": "EL FERROL",
+        "provincia": "A CORUÑA",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "TRANS.DIA FI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1007,
+      "cliente": {
+        "numCliente": 242,
+        "razonSocial": "BODEGA COOPERATIVA VINO DE TORO",
+        "cif": "F49004310",
+        "direccion": "Ctra Tordesillas, km 13",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "980690347",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.724Z",
+      "fechaEntrega": "2025-07-20T17:07:19.724Z",
+      "formaPago": "REC0",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.724Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1008,
+      "cliente": {
+        "numCliente": 255,
+        "razonSocial": "TABERNA O TRISQUEL, S.L.",
+        "cif": "B15595549",
+        "direccion": "C/ Sartaña, 19",
+        "poblacion": "EL FERROL",
+        "provincia": "A CORUÑA",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.725Z",
+      "fechaEntrega": "2025-07-20T17:07:19.725Z",
+      "formaPago": "TRANSFERENCI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.725Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1009,
+      "cliente": {
+        "numCliente": 411,
+        "razonSocial": "JULIO INCINILLAS SIMON",
+        "cif": "13108089K",
+        "direccion": "AVDA DE LA PAZ, 34",
+        "poblacion": "BURGOS",
+        "provincia": "BURGOS",
+        "telefono": "947273211",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.725Z",
+      "fechaEntrega": "2025-07-20T17:07:19.725Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.725Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1010,
+      "cliente": {
+        "numCliente": 451,
+        "razonSocial": "EXCMO AYUNTAMIENTO DE TORO",
+        "cif": "P4924400G",
+        "direccion": "C/ PLAZA MAYOR,1",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.725Z",
+      "fechaEntrega": "2025-07-20T17:07:19.725Z",
+      "formaPago": "TRANSFERENCI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.725Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1011,
+      "cliente": {
+        "numCliente": 593,
+        "razonSocial": "SATLI E INVERSIONES GRUPO SOL, S.L.",
+        "cif": "B92096395",
+        "direccion": "C/ ROSA, 100",
+        "poblacion": "ESTEPONA",
+        "provincia": "MÁLAGA",
+        "telefono": "952882488",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.725Z",
+      "fechaEntrega": "2025-07-20T17:07:19.725Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.725Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1012,
+      "cliente": {
+        "numCliente": 731,
+        "razonSocial": "EXCAVACIONES JOSE MARTINEZ, S.L.",
+        "cif": "B50624089",
+        "direccion": "C/ BOMBERO, 30",
+        "poblacion": "EJEA DE LOS CABALLEROS",
+        "provincia": "ZARAGOZA",
+        "telefono": "976660844",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.725Z",
+      "fechaEntrega": "2025-07-20T17:07:19.725Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.725Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1013,
+      "cliente": {
+        "numCliente": 758,
+        "razonSocial": "BANQUE PSA FINANCEC",
+        "cif": "W0012543E",
+        "direccion": "C/ JULIAN CAMARILLO, 6 A 1º",
+        "poblacion": "MADRID",
+        "provincia": "MADRID",
+        "telefono": "670849714",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.725Z",
+      "fechaEntrega": "2025-07-20T17:07:19.725Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.725Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1014,
+      "cliente": {
+        "numCliente": 791,
+        "razonSocial": "CONSORCIO DE LA INSTITUCION FERIAL DE CASTILLA Y LEON",
+        "cif": "V47016985",
+        "direccion": "Avda  Ramon Pradera, S/N",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "TRANSFERENCI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1015,
+      "cliente": {
+        "numCliente": 817,
+        "razonSocial": "JOSE ANTONIO ALVAREZ MARRON",
+        "cif": "10765322B",
+        "direccion": "C/ CONDE SAN ISIDRO PARQUE ESPAÑA",
+        "poblacion": "FUENGIROLA",
+        "provincia": "MALAGA",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTRAREEMBO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1016,
+      "cliente": {
+        "numCliente": 818,
+        "razonSocial": "ASTURIANA DE AUTOMOVILES Y REPUESTO",
+        "cif": "A33022765",
+        "direccion": "AVDA GALICIA, KM 274",
+        "poblacion": "ZAMORA",
+        "provincia": "ZAMORA",
+        "telefono": "980525516",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1017,
+      "cliente": {
+        "numCliente": 841,
+        "razonSocial": "GRANITOS DE ATIOS, S.A.",
+        "cif": "A36062206",
+        "direccion": "C/ POLIG.IND. A GRANXA, S/N",
+        "poblacion": "PORRIÑO",
+        "provincia": "PONTEVEDRA",
+        "telefono": "609850200",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1018,
+      "cliente": {
+        "numCliente": 881,
+        "razonSocial": "EMBUTIDOS BALLESTEROS, S.L.",
+        "cif": "B49143456",
+        "direccion": "CTRA. NACIONAL 122, KM. 424",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "980690604",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1019,
+      "cliente": {
+        "numCliente": 927,
+        "razonSocial": "INDUSTRIAS CEVECO LA LINEA, S.L.",
+        "cif": "B11789559",
+        "direccion": "POL. IND. ZABAL BAJO, PARCELA 46",
+        "poblacion": "LA LINEA DE LA CONCEPCION",
+        "provincia": "CADIZ",
+        "telefono": "956643808",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1020,
+      "cliente": {
+        "numCliente": 941,
+        "razonSocial": "SISTEMAS DE OFICINA DE MARBELLA, S.",
+        "cif": "A29280138",
+        "direccion": "URB. MARBELLA REAL, LOCAL 28-29",
+        "poblacion": "MARBELLA",
+        "provincia": "MÁLAGA",
+        "telefono": "952860125",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1021,
+      "cliente": {
+        "numCliente": 943,
+        "razonSocial": "DIZ CONSTRUCCIONES Y PROYECCIONES,",
+        "cif": "B36184224",
+        "direccion": "C/ LOUREIRO CRESPO, 54 8º",
+        "poblacion": "PONTEVEDRA",
+        "provincia": "PONTEVEDRA",
+        "telefono": "986847934",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1022,
+      "cliente": {
+        "numCliente": 952,
+        "razonSocial": "R.V. EDIPRESS, S.L.",
+        "cif": "B83229724",
+        "direccion": "C/ AGUSTIN DE FOXA, 17 7º B",
+        "poblacion": "MADRID",
+        "provincia": "MADRID",
+        "telefono": "609034986",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.726Z",
+      "fechaEntrega": "2025-07-20T17:07:19.726Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.726Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1023,
+      "cliente": {
+        "numCliente": 954,
+        "razonSocial": "AGUSTINA OLARTE, S.L.",
+        "cif": "B29691581",
+        "direccion": "C/ EDUARDO EVANGELISTA, 49",
+        "poblacion": "SAN PEDRO DE ALCANTARA",
+        "provincia": "MÁLAGA",
+        "telefono": "952799654",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1024,
+      "cliente": {
+        "numCliente": 956,
+        "razonSocial": "PUIPLAST, S.L.",
+        "cif": "B96226568",
+        "direccion": "C/ LITUANIA, 11 Apto Correos nº 102",
+        "poblacion": "PAIPORTA",
+        "provincia": "VALENCIA",
+        "telefono": "963973846",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "TRANSFERENCI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1025,
+      "cliente": {
+        "numCliente": 957,
+        "razonSocial": "COVIPRO, S.L.",
+        "cif": "B47009626",
+        "direccion": "C/ GAMAZO, 19 1º DRCHA",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "983217951",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1026,
+      "cliente": {
+        "numCliente": 959,
+        "razonSocial": "ROYDA, S.L.",
+        "cif": "B50926740",
+        "direccion": "C/ LA BOMBA, 4 LOCAL",
+        "poblacion": "MONZALBARBA",
+        "provincia": "ZARAGOZA",
+        "telefono": "976773539",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1027,
+      "cliente": {
+        "numCliente": 961,
+        "razonSocial": "CRISTALERIA ALCIBAR, S.L.",
+        "cif": "B20589784",
+        "direccion": "C/ PASEO UBARBURU, 35 PABELLON 13 B",
+        "poblacion": "SAN SEBASTIAN",
+        "provincia": "GUIPUZCOA",
+        "telefono": "943016505",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1028,
+      "cliente": {
+        "numCliente": 966,
+        "razonSocial": "HIMOVI, S.A.",
+        "cif": "B47054341",
+        "direccion": "C/ ARZOBISPO GANDASEGUI, 5 8º IZQDA",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "983292157",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1029,
+      "cliente": {
+        "numCliente": 971,
+        "razonSocial": "JUAN CARLOS LOPEZ MARTINEZ",
+        "cif": "09270338G",
+        "direccion": "AVDA SALAMANCA, 2 3º C",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "667565666",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1030,
+      "cliente": {
+        "numCliente": 975,
+        "razonSocial": "INDUCABLE, S.L.",
+        "cif": "B47314075",
+        "direccion": "CTRA. SALAMANCA, KM 127",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "983407584",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1031,
+      "cliente": {
+        "numCliente": 977,
+        "razonSocial": "INTELCO ZAMORA, S.C.L.",
+        "cif": "F49149230",
+        "direccion": "C/La Hiniesta, 51 Bajo",
+        "poblacion": "ZAMORA",
+        "provincia": "ZAMORA",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1032,
+      "cliente": {
+        "numCliente": 1044,
+        "razonSocial": "Mª CARMEN ALVAREZ VERDEAL",
+        "cif": "76398427V",
+        "direccion": "P. RIO DO POZO. AVDA DOS FERREIROS, P 175-178",
+        "poblacion": "NARON",
+        "provincia": "LA CORUÑA",
+        "telefono": "981388177",
+        "email": "administracion@metalessalvador.es"
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "TRANSFERENCI",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1033,
+      "cliente": {
+        "numCliente": 1091,
+        "razonSocial": "CIRIACO HERNANDEZ ALONSO",
+        "cif": "11945707J",
+        "direccion": "C/ BARRIO ALABERGA, 15 2º IQZDA",
+        "poblacion": "RENTERIA",
+        "provincia": "GUIPUZCOA",
+        "telefono": "943535430",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1034,
+      "cliente": {
+        "numCliente": 1108,
+        "razonSocial": "DOLORES VILA VILA",
+        "cif": "77729014P",
+        "direccion": "C/ Mayor, 20",
+        "poblacion": "PUIG-REIG",
+        "provincia": "BARCELONA",
+        "telefono": "938380561",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.727Z",
+      "fechaEntrega": "2025-07-20T17:07:19.727Z",
+      "formaPago": "CONTRAREEMBO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.727Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1035,
+      "cliente": {
+        "numCliente": 1130,
+        "razonSocial": "SUMINISTROS CLIMATIZACION COSTA DEL",
+        "cif": "B92453653",
+        "direccion": "APTO DE CORREOS 774",
+        "poblacion": "MARBELLA",
+        "provincia": "MÁLAGA",
+        "telefono": "686654645",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1036,
+      "cliente": {
+        "numCliente": 1131,
+        "razonSocial": "JALME, S.L.",
+        "cif": "B24484099",
+        "direccion": "C/ PLAZA LUIS DEL OLMO, 2",
+        "poblacion": "PONFERRADA",
+        "provincia": "LEÓN",
+        "telefono": "987418378",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1037,
+      "cliente": {
+        "numCliente": 1159,
+        "razonSocial": "TALLERES PARTAL Y MARQUEZ, S.L.",
+        "cif": "B29150612",
+        "direccion": "C/ FRANKLIN, 1 POLIGONO INDUSTRIAL.",
+        "poblacion": "ESTEPONA",
+        "provincia": "MÁLAGA",
+        "telefono": "952790852",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1038,
+      "cliente": {
+        "numCliente": 1173,
+        "razonSocial": "CALDERERIA DE LA CALLE, S.L.",
+        "cif": "B49203037",
+        "direccion": "CTRA. TORO-POZOANTIGUO, KM 0,5 CAMINO RUALES, S/N",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "980696201",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "REC0",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1039,
+      "cliente": {
+        "numCliente": 1174,
+        "razonSocial": "CONTRATAS COVIPRO, S.L.",
+        "cif": "B47477823",
+        "direccion": "C/ GAMAZO, 19 1º DRCHA",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "983217951",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1040,
+      "cliente": {
+        "numCliente": 1177,
+        "razonSocial": "CASARES Y BONIS, C.B.",
+        "cif": "E49215288",
+        "direccion": "C/ VIRGEN DE GRACIA, 34",
+        "poblacion": "TORO",
+        "provincia": "ZAMORA",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1041,
+      "cliente": {
+        "numCliente": 1181,
+        "razonSocial": "TRANSPORTISTAS AUTONOMOS TORESANOS,",
+        "cif": "B49213077",
+        "direccion": "C/ VILLAR, S/N",
+        "poblacion": "TAGARABUENA",
+        "provincia": "ZAMORA",
+        "telefono": "980691512",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1042,
+      "cliente": {
+        "numCliente": 1264,
+        "razonSocial": "MECAQUIMICA S.L",
+        "cif": "B37350501",
+        "direccion": "HOCES DEL DURATON,PARCEL 113,NAVES",
+        "poblacion": "SALAMANCA",
+        "provincia": "SALAMANCA",
+        "telefono": "923289285",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1043,
+      "cliente": {
+        "numCliente": 1351,
+        "razonSocial": "BUFETE CALDERON, S.L.",
+        "cif": "B80218001",
+        "direccion": "C/ RIO ALBERCHE, 6",
+        "poblacion": "BRUNETE",
+        "provincia": "MADRID",
+        "telefono": "918159128",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.728Z",
+      "fechaEntrega": "2025-07-20T17:07:19.728Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.728Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1044,
+      "cliente": {
+        "numCliente": 1360,
+        "razonSocial": "SAJORAMA, S.L.",
+        "cif": "B84011998",
+        "direccion": "C/ MANZANARES, 13-15",
+        "poblacion": "GUADALIX DE LA SIERRA",
+        "provincia": "MADRID",
+        "telefono": "",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.729Z",
+      "fechaEntrega": "2025-07-20T17:07:19.729Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.729Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1045,
+      "cliente": {
+        "numCliente": 1366,
+        "razonSocial": "OLIDETEC, S.L.",
+        "cif": "B47503511",
+        "direccion": "C/ LOTO, 16",
+        "poblacion": "VALLADOLID",
+        "provincia": "VALLADOLID",
+        "telefono": "647620168",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.729Z",
+      "fechaEntrega": "2025-07-20T17:07:19.729Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.729Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1046,
+      "cliente": {
+        "numCliente": 1373,
+        "razonSocial": "ESTRUCTURAS GARCIA Y PACHECO, S.L.",
+        "cif": "B92293208",
+        "direccion": "C/ ANTONIO MACHADO, 8 BLOQUE 3 2º A",
+        "poblacion": "SAN PEDRO DE ALCANTARA",
+        "provincia": "MÁLAGA",
+        "telefono": "952781639",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.729Z",
+      "fechaEntrega": "2025-07-20T17:07:19.729Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.729Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1047,
+      "cliente": {
+        "numCliente": 1375,
+        "razonSocial": "UBICACION, S.L.",
+        "cif": "B29417979",
+        "direccion": "P.I. LA HERMITA. C/ COSTA DEL SOL,",
+        "poblacion": "MARBELLA",
+        "provincia": "MÁLAGA",
+        "telefono": "952778116",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.729Z",
+      "fechaEntrega": "2025-07-20T17:07:19.729Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.729Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1048,
+      "cliente": {
+        "numCliente": 1376,
+        "razonSocial": "MECANO SOFTWARE, S.L.",
+        "cif": "B82225889",
+        "direccion": "C/ CTRA DE CANILLAS, 138 2ª LOCAL 1",
+        "poblacion": "MADRID",
+        "provincia": "MADRID",
+        "telefono": "609363202",
+        "email": ""
+      },
+      "tipoCesta": "DELUXE",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota 5J (1kg)",
+          "cantidad": 1,
+          "peso": "1kg",
+          "precio": 120,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 28,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Bellota (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 38,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico Bellota (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 24,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Morcilla de Burgos (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 8,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Gran Reserva (600g)",
+          "cantidad": 1,
+          "peso": "600g",
+          "precio": 35,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales Premium (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 18,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso de Cabra Semicurado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 16,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Crianza DO Toro",
+          "cantidad": 2,
+          "peso": "750ml",
+          "precio": 25,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Premium Brut",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 30,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Gourmet (750ml)",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel de Roble (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 18,
+          "categoria": "DULCES"
+        },
+        {
+          "nombre": "Paté de Foie Gras (125g)",
+          "cantidad": 1,
+          "peso": "125g",
+          "precio": 28,
+          "categoria": "CONSERVAS"
+        },
+        {
+          "nombre": "Turron de Jijona Artesanal (200g)",
+          "cantidad": 1,
+          "peso": "200g",
+          "precio": 15,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 463,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.730Z",
+      "fechaEntrega": "2025-07-20T17:07:19.730Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.730Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1049,
+      "cliente": {
+        "numCliente": 1377,
+        "razonSocial": "BOUTIQUE DEL MARMOL LEYVA, S.L.",
+        "cif": "B92319532",
+        "direccion": "PLAZA DE LOS MISIONEROS, 8",
+        "poblacion": "ESTEPONA",
+        "provincia": "MÁLAGA",
+        "telefono": "609713619",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.730Z",
+      "fechaEntrega": "2025-07-20T17:07:19.730Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.730Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1050,
+      "cliente": {
+        "numCliente": 1385,
+        "razonSocial": "CEVECO COMPLEMENTOS, S.L.",
+        "cif": "B72019441",
+        "direccion": "P.I. ZABAL BAJO, PARCELA 17",
+        "poblacion": "LA LINEA DE LA CONCEPCION",
+        "provincia": "CADIZ",
+        "telefono": "YA NO EXISTE",
+        "email": ""
+      },
+      "tipoCesta": "BÁSICA",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 35,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 12.5,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Curado (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 15,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 20,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Virgen Extra (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 12,
+          "categoria": "ACEITES"
+        }
+      ],
+      "precioTotal": 112.5,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.730Z",
+      "fechaEntrega": "2025-07-20T17:07:19.730Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.730Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    },
+    {
+      "numeroOrden": 1051,
+      "cliente": {
+        "numCliente": 1386,
+        "razonSocial": "FRANJUS SECURITY MARBELLA, S.A.",
+        "cif": "A29231222",
+        "direccion": "C/ CARBÓN. EDIF. 112-A, 2º PLANTA.",
+        "poblacion": "MARBELLA",
+        "provincia": "MÁLAGA",
+        "telefono": "639426997",
+        "email": ""
+      },
+      "tipoCesta": "PREMIUM",
+      "productos": [
+        {
+          "nombre": "Jamón Ibérico Bellota (750g)",
+          "cantidad": 1,
+          "peso": "750g",
+          "precio": 65,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Chorizo Ibérico Premium (400g)",
+          "cantidad": 1,
+          "peso": "400g",
+          "precio": 18,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Lomo Embuchado Premium (350g)",
+          "cantidad": 1,
+          "peso": "350g",
+          "precio": 25,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Salchichón Ibérico (300g)",
+          "cantidad": 1,
+          "peso": "300g",
+          "precio": 16,
+          "categoria": "EMBUTIDOS"
+        },
+        {
+          "nombre": "Queso Manchego Curado (500g)",
+          "cantidad": 1,
+          "peso": "500g",
+          "precio": 22,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Queso Cabrales (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 14,
+          "categoria": "QUESOS"
+        },
+        {
+          "nombre": "Vino Tinto Gran Reserva",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 35,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Cava Brut Nature",
+          "cantidad": 1,
+          "peso": "750ml",
+          "precio": 18,
+          "categoria": "VINOS"
+        },
+        {
+          "nombre": "Aceite de Oliva Premium (500ml)",
+          "cantidad": 1,
+          "peso": "500ml",
+          "precio": 20,
+          "categoria": "ACEITES"
+        },
+        {
+          "nombre": "Miel Artesanal (250g)",
+          "cantidad": 1,
+          "peso": "250g",
+          "precio": 12,
+          "categoria": "DULCES"
+        }
+      ],
+      "precioTotal": 245,
+      "estado": "PENDIENTE",
+      "fechaCreacion": "2025-07-05T17:07:19.730Z",
+      "fechaEntrega": "2025-07-20T17:07:19.730Z",
+      "formaPago": "CONTADO",
+      "descuentoAplicado": 0,
+      "historiaEstados": [
+        {
+          "estado": "PENDIENTE",
+          "fecha": "2025-07-05T17:07:19.730Z",
+          "usuario": "SISTEMA",
+          "observaciones": "Cesta generada automáticamente"
+        }
+      ]
+    }
+  ]
+}

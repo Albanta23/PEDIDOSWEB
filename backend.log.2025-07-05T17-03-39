@@ -1,0 +1,13 @@
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] MongoDB starting : pid=8513 port=27017 dbpath=/workspaces/PEDIDOSWEB/./data/db 64-bit host=codespaces-c6cc55
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] db version v3.6.8
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] git version: 8e540c0b6db93ce994cc548f000900bdc740f80a
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] OpenSSL version: OpenSSL 1.1.1f  31 Mar 2020
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] allocator: tcmalloc
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] modules: none
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] build environment:
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten]     distarch: x86_64
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten]     target_arch: x86_64
+2025-07-05T17:03:17.873+0000 I CONTROL  [initandlisten] options: { net: { port: 27017 }, processManagement: { fork: true }, storage: { dbPath: "./data/db" }, systemLog: { destination: "file", path: "./backend.log" } }
+2025-07-05T17:03:17.874+0000 I STORAGE  [initandlisten] exception in initAndListen: NonExistentPath: Data directory /workspaces/PEDIDOSWEB/./data/db not found., terminating
+2025-07-05T17:03:17.874+0000 I CONTROL  [initandlisten] now exiting
+2025-07-05T17:03:17.874+0000 I CONTROL  [initandlisten] shutting down with code:100

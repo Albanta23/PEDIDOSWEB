@@ -1,0 +1,753 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Cestas Navideñas 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c5530 0%, #5d8a60 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            color: #2c5530;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        .table-container h2 {
+            color: #2c5530;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #2c5530;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .tipo-básica { background: #28a745; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.9em; }
+        .tipo-premium { background: #ffc107; color: #333; padding: 5px 10px; border-radius: 20px; font-size: 0.9em; }
+        .tipo-deluxe { background: #dc3545; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.9em; }
+        
+        .estado-pendiente { background: #17a2b8; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.9em; }
+        
+        .footer {
+            background: #2c5530;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #5d8a60 0%, #2c5530 100%);
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .summary-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-item .number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .summary-item .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎄 Reporte de Cestas Navideñas 2025 🎄</h1>
+            <p class="subtitle">Gestión Completa de Pedidos - Generado el 5/7/2025, 17:07:19</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>51</h3>
+                <p>Total Clientes</p>
+            </div>
+            <div class="stat-card">
+                <h3>51</h3>
+                <p>Clientes Activos</p>
+            </div>
+            <div class="stat-card">
+                <h3>51</h3>
+                <p>Cestas Generadas</p>
+            </div>
+            <div class="stat-card">
+                <h3>€10046.00</h3>
+                <p>Valor Total</p>
+            </div>
+        </div>
+        
+        <div class="summary-box">
+            <h3>📊 Distribución por Tipo de Cesta</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="number">30</span>
+                    <span class="label">Cestas Básicas</span>
+                </div>
+                <div class="summary-item">
+                    <span class="number">14</span>
+                    <span class="label">Cestas Premium</span>
+                </div>
+                <div class="summary-item">
+                    <span class="number">7</span>
+                    <span class="label">Cestas Deluxe</span>
+                </div>
+                <div class="summary-item">
+                    <span class="number">€196.98</span>
+                    <span class="label">Valor Promedio</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <h2>📋 Listado Completo de Cestas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nº Orden</th>
+                        <th>Cliente</th>
+                        <th>Población</th>
+                        <th>Provincia</th>
+                        <th>Tipo Cesta</th>
+                        <th>Precio Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td>1001</td>
+            <td>ESTHER BALLESTEROS BARBA</td>
+            <td>ZAMORA</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1002</td>
+            <td>RADIO POPULAR, S.A.</td>
+            <td>SALAMANCA</td>
+            <td>SALAMANCA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1003</td>
+            <td>JUAN II, S.A.</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1004</td>
+            <td>PIELES Y CUEROS JIMENEZ, S.L.</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1005</td>
+            <td>EXCMO AYUNTAMIENTO DE PEDROSA DEL REY</td>
+            <td>PEDROSA DEL REY</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1006</td>
+            <td>AUTORRECAMBIOS TORREIRO, S.L.</td>
+            <td>EL FERROL</td>
+            <td>A CORUÑA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1007</td>
+            <td>BODEGA COOPERATIVA VINO DE TORO</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1008</td>
+            <td>TABERNA O TRISQUEL, S.L.</td>
+            <td>EL FERROL</td>
+            <td>A CORUÑA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1009</td>
+            <td>JULIO INCINILLAS SIMON</td>
+            <td>BURGOS</td>
+            <td>BURGOS</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1010</td>
+            <td>EXCMO AYUNTAMIENTO DE TORO</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1011</td>
+            <td>SATLI E INVERSIONES GRUPO SOL, S.L.</td>
+            <td>ESTEPONA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1012</td>
+            <td>EXCAVACIONES JOSE MARTINEZ, S.L.</td>
+            <td>EJEA DE LOS CABALLEROS</td>
+            <td>ZARAGOZA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1013</td>
+            <td>BANQUE PSA FINANCEC</td>
+            <td>MADRID</td>
+            <td>MADRID</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1014</td>
+            <td>CONSORCIO DE LA INSTITUCION FERIAL DE CASTILLA Y LEON</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1015</td>
+            <td>JOSE ANTONIO ALVAREZ MARRON</td>
+            <td>FUENGIROLA</td>
+            <td>MALAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1016</td>
+            <td>ASTURIANA DE AUTOMOVILES Y REPUESTO</td>
+            <td>ZAMORA</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1017</td>
+            <td>GRANITOS DE ATIOS, S.A.</td>
+            <td>PORRIÑO</td>
+            <td>PONTEVEDRA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1018</td>
+            <td>EMBUTIDOS BALLESTEROS, S.L.</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1019</td>
+            <td>INDUSTRIAS CEVECO LA LINEA, S.L.</td>
+            <td>LA LINEA DE LA CONCEPCION</td>
+            <td>CADIZ</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1020</td>
+            <td>SISTEMAS DE OFICINA DE MARBELLA, S.</td>
+            <td>MARBELLA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1021</td>
+            <td>DIZ CONSTRUCCIONES Y PROYECCIONES,</td>
+            <td>PONTEVEDRA</td>
+            <td>PONTEVEDRA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1022</td>
+            <td>R.V. EDIPRESS, S.L.</td>
+            <td>MADRID</td>
+            <td>MADRID</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1023</td>
+            <td>AGUSTINA OLARTE, S.L.</td>
+            <td>SAN PEDRO DE ALCANTARA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1024</td>
+            <td>PUIPLAST, S.L.</td>
+            <td>PAIPORTA</td>
+            <td>VALENCIA</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1025</td>
+            <td>COVIPRO, S.L.</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1026</td>
+            <td>ROYDA, S.L.</td>
+            <td>MONZALBARBA</td>
+            <td>ZARAGOZA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1027</td>
+            <td>CRISTALERIA ALCIBAR, S.L.</td>
+            <td>SAN SEBASTIAN</td>
+            <td>GUIPUZCOA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1028</td>
+            <td>HIMOVI, S.A.</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1029</td>
+            <td>JUAN CARLOS LOPEZ MARTINEZ</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1030</td>
+            <td>INDUCABLE, S.L.</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1031</td>
+            <td>INTELCO ZAMORA, S.C.L.</td>
+            <td>ZAMORA</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1032</td>
+            <td>Mª CARMEN ALVAREZ VERDEAL</td>
+            <td>NARON</td>
+            <td>LA CORUÑA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1033</td>
+            <td>CIRIACO HERNANDEZ ALONSO</td>
+            <td>RENTERIA</td>
+            <td>GUIPUZCOA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1034</td>
+            <td>DOLORES VILA VILA</td>
+            <td>PUIG-REIG</td>
+            <td>BARCELONA</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1035</td>
+            <td>SUMINISTROS CLIMATIZACION COSTA DEL</td>
+            <td>MARBELLA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1036</td>
+            <td>JALME, S.L.</td>
+            <td>PONFERRADA</td>
+            <td>LEÓN</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1037</td>
+            <td>TALLERES PARTAL Y MARQUEZ, S.L.</td>
+            <td>ESTEPONA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1038</td>
+            <td>CALDERERIA DE LA CALLE, S.L.</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1039</td>
+            <td>CONTRATAS COVIPRO, S.L.</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1040</td>
+            <td>CASARES Y BONIS, C.B.</td>
+            <td>TORO</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1041</td>
+            <td>TRANSPORTISTAS AUTONOMOS TORESANOS,</td>
+            <td>TAGARABUENA</td>
+            <td>ZAMORA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1042</td>
+            <td>MECAQUIMICA S.L</td>
+            <td>SALAMANCA</td>
+            <td>SALAMANCA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1043</td>
+            <td>BUFETE CALDERON, S.L.</td>
+            <td>BRUNETE</td>
+            <td>MADRID</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1044</td>
+            <td>SAJORAMA, S.L.</td>
+            <td>GUADALIX DE LA SIERRA</td>
+            <td>MADRID</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1045</td>
+            <td>OLIDETEC, S.L.</td>
+            <td>VALLADOLID</td>
+            <td>VALLADOLID</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1046</td>
+            <td>ESTRUCTURAS GARCIA Y PACHECO, S.L.</td>
+            <td>SAN PEDRO DE ALCANTARA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1047</td>
+            <td>UBICACION, S.L.</td>
+            <td>MARBELLA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1048</td>
+            <td>MECANO SOFTWARE, S.L.</td>
+            <td>MADRID</td>
+            <td>MADRID</td>
+            <td><span class="tipo-deluxe">DELUXE</span></td>
+            <td>€463.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1049</td>
+            <td>BOUTIQUE DEL MARMOL LEYVA, S.L.</td>
+            <td>ESTEPONA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1050</td>
+            <td>CEVECO COMPLEMENTOS, S.L.</td>
+            <td>LA LINEA DE LA CONCEPCION</td>
+            <td>CADIZ</td>
+            <td><span class="tipo-básica">BÁSICA</span></td>
+            <td>€112.50</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+        <tr>
+            <td>1051</td>
+            <td>FRANJUS SECURITY MARBELLA, S.A.</td>
+            <td>MARBELLA</td>
+            <td>MÁLAGA</td>
+            <td><span class="tipo-premium">PREMIUM</span></td>
+            <td>€245.00</td>
+            <td><span class="estado-pendiente">PENDIENTE</span></td>
+        </tr>
+    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Sistema de Gestión de Pedidos - Cestas Navideñas</p>
+            <p>Reporte generado automáticamente el 5/7/2025, 17:07:19</p>
+        </div>
+    </div>
+</body>
+</html>
