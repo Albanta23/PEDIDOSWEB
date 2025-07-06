@@ -674,7 +674,7 @@ export default function ClientesMantenimiento() {
               }}>
                 <input
                   type="text"
-                  placeholder="🔍 Buscar cliente por nombre, email, teléfono o CIF..."
+                  placeholder="Buscar cliente por nombre, email, teléfono o CIF..."
                   value={filtroBusqueda}
                   onChange={(e) => filtrarClientes(e.target.value)}
                   style={{
