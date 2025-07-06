@@ -80,7 +80,29 @@ async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, 
   });
 }
 
+/**
+ * Registra un movimiento genérico de stock (entrada, baja, transferencia, devolución, etc)
+ * @param {Object} params - { tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso }
+ */
+async function registrarMovimientoStock({ tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso }) {
+  if (!tiendaId || !producto || !cantidad || !tipo) return;
+  await MovimientoStock.create({
+    tiendaId,
+    producto,
+    cantidad,
+    unidad: unidad || 'kg',
+    lote: lote || '',
+    motivo: motivo || '',
+    tipo,
+    fecha: fecha ? new Date(fecha) : new Date(),
+    pedidoId,
+    transferenciaId,
+    peso: typeof peso !== 'undefined' ? peso : undefined
+  });
+}
+
 module.exports = {
   registrarEntradasStockPorPedido,
-  registrarBajaStock
+  registrarBajaStock,
+  registrarMovimientoStock
 };

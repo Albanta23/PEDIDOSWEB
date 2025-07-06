@@ -12,6 +12,8 @@ const MovimientoStockSchema = new mongoose.Schema({
   motivo: { type: String }, // Ej: "Pedido fábrica", "Caducidad", "Deterioro"
   pedidoId: { type: String }, // Si viene de un pedido
   peso: { type: Number, min: 0 }, // Peso en kg (opcional)
+  tiendaDestino: { type: String }, // Para traspasos y devoluciones, almacena el destino
+  transferenciaId: { type: String }, // Para enlazar con la transferencia
 });
 
 module.exports = mongoose.model('MovimientoStock', MovimientoStockSchema);

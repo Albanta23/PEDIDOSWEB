@@ -19,7 +19,7 @@ const Transferencia = require('./models/Transferencia'); // Importar modelo de t
 const Producto = require('./models/Producto'); // Importar modelo de productos
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimientos de almacén
 const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
-const { registrarEntradasStockPorPedido, registrarBajaStock } = require('./utils/stock');
+const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimientoStock } = require('./utils/stock');
 
 const pedidosTiendaController = require('./pedidosTiendaController');
 const pedidosClientesController = require('./pedidosClientesController');
@@ -407,6 +407,7 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
         // Salida en origen
         await registrarMovimientoStock({
           tiendaId: transferencia.origenId || transferencia.origen,
+          tiendaDestino: transferencia.destinoId || transferencia.destino,
           producto: prod.producto,
           cantidad: prod.cantidad,
           unidad: prod.unidad || 'kg',
@@ -420,6 +421,7 @@ app.patch('/api/transferencias/:id/confirmar', async (req, res) => {
         // Entrada en destino
         await registrarMovimientoStock({
           tiendaId: transferencia.destinoId || transferencia.destino,
+          tiendaDestino: transferencia.origenId || transferencia.origen,
           producto: prod.producto,
           cantidad: prod.cantidad,
           unidad: prod.unidad || 'kg',
