@@ -4,6 +4,7 @@ import { HomeIcon, CubeIcon, ArchiveBoxIcon, ShoppingBagIcon, DocumentTextIcon, 
 export const NAVIGATION_ITEMS: NavItemType[] = [
   { name: 'Dashboard', path: '/', icon: HomeIcon }, // Already 'Dashboard', universal enough
   { name: 'Productos', path: '/products', icon: CubeIcon },
+  { name: 'Clientes Cestas', path: '/clientes-cestas', icon: UsersIcon },
   { name: 'Cestas', path: '/hampers', icon: ArchiveBoxIcon },
   { name: 'Inventario', path: '/inventory', icon: ShoppingBagIcon },
   { name: 'Presupuestos', path: '/quotes', icon: DocumentMagnifyingGlassIcon },

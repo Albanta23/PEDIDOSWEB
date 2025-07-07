@@ -5,10 +5,10 @@ import { useData } from '../../contexts/DataContext';
 import { Product } from '../../types';
 import Input from '../shared/forms/Input';
 import Button from '../shared/Button';
-import { PencilIcon } from '../icons/HeroIcons';
+import { PencilIcon, TrashIcon } from '../icons/HeroIcons';
 
 const InventoryPage: React.FC = () => {
-  const { products, suppliers, updateProduct } = useData();
+  const { products, suppliers, updateProduct, clearAllProducts, forceResetInventory, openConfirmModal } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingStock, setEditingStock] = useState<{ productId: string; currentStock: number } | null>(null);
   const [newStockValue, setNewStockValue] = useState<string>('');
@@ -36,10 +36,70 @@ const InventoryPage: React.FC = () => {
     }
   };
 
+  const handleClearAllProducts = () => {
+    openConfirmModal(
+      `¿Está seguro de que desea eliminar TODOS los productos del inventario? Esta acción no se puede deshacer. Se eliminarán ${products.length} productos.`,
+      () => {
+        try {
+          clearAllProducts();
+          alert('Todos los productos han sido eliminados del inventario.');
+        } catch (error) {
+          alert(error instanceof Error ? error.message : 'Error al eliminar productos');
+        }
+      },
+      'Eliminar Todo el Inventario',
+      'danger'
+    );
+  };
+
+  const handleForceResetInventory = () => {
+    openConfirmModal(
+      `¿Está seguro de que desea REINICIAR COMPLETAMENTE el inventario? Esto eliminará TODOS los productos y cestas. Esta acción no se puede deshacer.`,
+      () => {
+        try {
+          forceResetInventory();
+          alert('El inventario ha sido completamente reiniciado.');
+        } catch (error) {
+          alert(error instanceof Error ? error.message : 'Error al reiniciar inventario');
+        }
+      },
+      'Reiniciar Inventario Completo',
+      'danger'
+    );
+  };
+
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold text-neutral-900 mb-6">Control de Inventario</h1>
+      <div className="flex justify-between items-start mb-6">
+        <h1 className="text-3xl font-semibold text-neutral-900">Control de Inventario</h1>
+        
+        {/* Danger Zone */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-red-800 mb-3">Zona de Peligro</h3>
+          <div className="space-y-2">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleClearAllProducts}
+              disabled={products.length === 0}
+            >
+              <TrashIcon className="h-4 w-4 mr-2" />
+              Eliminar Todos los Productos ({products.length})
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleForceResetInventory}
+              disabled={products.length === 0}
+            >
+              <TrashIcon className="h-4 w-4 mr-2" />
+              Reiniciar Inventario Completo
+            </Button>
+          </div>
+        </div>
+      </div>
+      
       <div className="mb-6">
         <Input
           type="text"

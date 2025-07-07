@@ -597,6 +597,27 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Obtener solo clientes de cestas navideñas ---
+app.get('/api/clientes/cestas-navidad', async (req, res) => {
+  try {
+    const { activos } = req.query;
+    let filtro = { esCestaNavidad: true };
+    
+    // Si se especifica el parámetro activos, filtrar también por activo
+    if (activos === 'true') {
+      filtro.activo = true;
+    }
+    
+    const clientesCestas = await Cliente.find(filtro).sort({ nombre: 1 });
+    res.json({
+      total: clientesCestas.length,
+      clientes: clientesCestas
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // --- ENDPOINT: Obtener movimientos de stock por tienda ---
 app.get('/api/movimientos-stock', async (req, res) => {
   try {

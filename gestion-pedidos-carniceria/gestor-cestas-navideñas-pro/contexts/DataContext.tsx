@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useCallback, ReactNode, useContext } from 'react';
 import { 
   Product, Hamper, Customer, Order, Invoice, Supplier, 
@@ -6,7 +5,6 @@ import {
   PaymentStatus, ActivityLogEntry, OrderItem, VAT_TYPES, PRODUCT_FAMILIES, DetailedInvoiceLineItem
 } from '../types';
 import Modal from '../components/shared/Modal'; 
-import Button from '../components/shared/Button'; 
 
 // Define and export STOCK_AFFECTING_STATUSES
 export const STOCK_AFFECTING_STATUSES: OrderStatus[] = [
@@ -29,6 +27,8 @@ interface DataContextType {
   addProduct: (productData: Omit<Product, 'id'>) => Product;
   updateProduct: (productData: Product) => void;
   deleteProduct: (productId: string) => void;
+  clearAllProducts: () => void;
+  forceResetInventory: () => void;
   getProductById: (productId: string) => Product | undefined;
 
   addHamper: (hamperData: Omit<Hamper, 'id' | 'calculatedTotalCostPrice' | 'calculatedTotalWeightGrams' | 'calculatedTotalVolumeMilliliters' | 'calculatedTotalInputVat' | 'calculatedProfit' | 'calculatedProfitPercentage'>) => Hamper;
@@ -350,7 +350,7 @@ const tabArticulosXmlData = `<?xml version="1.0" encoding="UTF-8"?>
 <TabArticulos>
 <NumArticulo>120020</NumArticulo>
 <Descripcion>SALCHICHON IBERICO BELLOTA VELA 225 GRS/250GRS</Descripcion>
-<Comentario>Elaborado con piezas nobles de cerdo ibérico de bellota, con un picado más fino de la carne, condimentado con ajo y pimienta y alcanzando un equilibrio perfecto entre magro y grasa, que le confiere una textura suave y un sabor único.</Comentario>
+<Comentario>Elaborado con piezas nobles de cerdo ibérico de bellota, con un picado más fino de la carne, condimentado with ajo y pimienta y alcanzando un equilibrio perfecto entre magro y grasa, que le confiere una textura suave y un sabor único.</Comentario>
 <Familia>EMBUTIDOS</Familia>
 <SubFamilia>IBERICOS</SubFamilia>
 <Especificacion>BELLOTA</Especificacion>
@@ -1622,7 +1622,7 @@ const tabArticulosXmlData = `<?xml version="1.0" encoding="UTF-8"?>
 <TabArticulos>
 <NumArticulo>120139</NumArticulo>
 <Descripcion>CAJA DE MADERA FUNDACION PERSONAS</Descripcion>
-<Familia>EMBALAJES</FamilIA>
+<Familia>EMBALAJES</Familia>
 <PCompra>8.8</PCompra>
 <IVA>G</IVA>
 <Activo>1</Activo>
@@ -3209,7 +3209,33 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         addActivityLogEntry(`Producto "${productToDelete.name}" eliminado.`, 'product_stock', productId);
     }
   };
+
+  // Clear all products from inventory
+  const clearAllProducts = () => {
+    // Check if any product is used in hampers
+    const usedProducts = products.filter(product => 
+      hampers.some(h => h.components.some(c => c.productId === product.id))
+    );
+    
+    if (usedProducts.length > 0) {
+      const productNames = usedProducts.map(p => p.name).join(', ');
+      throw new Error(`Los siguientes productos no pueden ser eliminados porque están siendo usados en cestas: ${productNames}`);
+    }
+    
+    setProducts([]);
+    addActivityLogEntry(`Todos los productos del inventario han sido eliminados (${products.length} productos).`, 'product_stock');
+  };
+
+  // Clear all products and reset to empty state (ignoring hamper dependencies)
+  const forceResetInventory = () => {
+    setProducts([]);
+    // Also clear hampers since they depend on products
+    setHampers([]);
+    addActivityLogEntry(`Inventario completamente reiniciado. Todos los productos y cestas eliminados.`, 'product_stock');
+  };
+
   const getProductById = useCallback((productId: string) => products.find(p => p.id === productId), [products]);
+
 
   // Hamper Management
   const calculateHamperDetails = useCallback((components: HamperComponent[], sellingPrice?: number) => {
@@ -3435,7 +3461,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     }
                 });
             });
-             addActivityLogEntry(`Stock revertido (actualización) para pedido ${originalOrder.orderNumber} (estado original ${effectiveOriginalStatus}).`, 'product_stock', originalOrder.id);
+            addActivityLogEntry(`Stock revertido (actualización) para pedido ${originalOrder.orderNumber} (estado original ${effectiveOriginalStatus}).`, 'product_stock', originalOrder.id);
         }
 
         if (newStatusAffectsStock) {
@@ -3699,7 +3725,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     suppliers, 
     activityLog, 
 
-    addProduct, updateProduct, deleteProduct, getProductById,
+    addProduct, updateProduct, deleteProduct, clearAllProducts, forceResetInventory, getProductById,
     addHamper, updateHamper, deleteHamper, getHamperById, calculateHamperDetails,
     addCustomer, updateCustomer, deleteCustomer, getCustomerById,
     addOrder, updateOrder, getOrderById,
