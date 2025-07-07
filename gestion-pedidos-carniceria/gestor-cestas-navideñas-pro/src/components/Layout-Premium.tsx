@@ -83,13 +83,6 @@ const navigationItems = [
     bgColor: 'bg-yellow-50',
   },
   {
-    name: 'Clientes',
-    href: '/customers',
-    icon: Users,
-    color: 'text-pink-600',
-    bgColor: 'bg-pink-50',
-  },
-  {
     name: 'Proveedores',
     href: '/suppliers',
     icon: Truck,
@@ -102,6 +95,13 @@ const navigationItems = [
     icon: Building,
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
+  },
+  {
+    name: 'Gestión de Clientes',
+    href: '/clientes-cestas',
+    icon: Users,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50',
   },
 ];
 

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import ClienteFormCestas from './ClienteFormCestas';
 
 interface Cliente {
   _id: string;
@@ -47,6 +48,7 @@ interface EstadisticasClientes {
 }
 
 const ClientManagementPagePremium: React.FC = () => {
+  console.log("Montando ClientManagementPagePremium");
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'cestas' | 'normales'>('cestas');
   const [filtroActivo, setFiltroActivo] = useState<'todos' | 'activos' | 'inactivos'>('todos');
@@ -54,13 +56,18 @@ const ClientManagementPagePremium: React.FC = () => {
   const [estadisticas, setEstadisticas] = useState<EstadisticasClientes | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [clienteEdit, setClienteEdit] = useState<any | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
 
   // Cargar clientes y estadísticas al montar el componente
   useEffect(() => {
+    console.log("Llamando a cargarDatos, filtroTipo:", filtroTipo);
     cargarDatos();
   }, [filtroTipo]);
 
   const cargarDatos = async () => {
+    console.log("Ejecutando cargarDatos");
     try {
       setLoading(true);
       setError(null);
@@ -155,11 +162,19 @@ const ClientManagementPagePremium: React.FC = () => {
             Administra tus clientes y cestas navideñas premium
           </p>
         </div>
-        <Button variant="premium" size="lg">
+        <Button variant="premium" size="lg" onClick={() => { setClienteEdit(null); setReadOnly(false); setShowForm(true); }}>
           <Plus className="h-5 w-5 mr-2" />
           Nuevo Cliente
         </Button>
       </div>
+      {showForm && (
+        <ClienteFormCestas
+          cliente={clienteEdit}
+          readOnly={readOnly}
+          onSuccess={() => { setShowForm(false); setClienteEdit(null); setReadOnly(false); cargarDatos(); }}
+          onCancel={() => { setShowForm(false); setClienteEdit(null); setReadOnly(false); }}
+        />
+      )}
 
       {/* Error State */}
       {error && (
@@ -335,11 +350,11 @@ const ClientManagementPagePremium: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex space-x-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => { setClienteEdit(cliente); setReadOnly(true); setShowForm(true); }}>
                     <Eye className="h-4 w-4 mr-2" />
                     Ver
                   </Button>
-                  <Button variant="ghost" size="sm" className="flex-1">
+                  <Button variant="ghost" size="sm" className="flex-1" onClick={() => { setClienteEdit(cliente); setReadOnly(false); setShowForm(true); }}>
                     <Edit className="h-4 w-4 mr-2" />
                     Editar
                   </Button>

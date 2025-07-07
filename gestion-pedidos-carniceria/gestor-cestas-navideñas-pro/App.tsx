@@ -9,7 +9,6 @@ import InventoryPage from './components/pages/InventoryPage';
 import QuoteManagementPage from './components/pages/QuoteManagementPage';
 import OrderPage from './components/pages/OrderPage';
 import InvoicingPage from './components/pages/InvoicingPage';
-import CustomerPage from './components/pages/CustomerPage';
 import SupplierPage from './components/pages/SupplierPage';
 import TaxInfoPage from './components/pages/TaxInfoPage';
 import { DataProvider } from './contexts/DataContext';
@@ -32,7 +31,6 @@ const App: React.FC = () => {
                 <Route path="/quotes" element={<QuoteManagementPage />} />
                 <Route path="/orders" element={<OrderPage />} />
                 <Route path="/invoices" element={<InvoicingPage />} />
-                <Route path="/customers" element={<CustomerPage />} />
                 <Route path="/suppliers" element={<SupplierPage />} />
                 <Route path="/tax-info" element={<TaxInfoPage />} />
               </Routes>

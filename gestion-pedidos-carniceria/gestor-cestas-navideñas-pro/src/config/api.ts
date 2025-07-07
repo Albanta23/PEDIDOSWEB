@@ -3,9 +3,9 @@
 
 const getApiBaseUrl = () => {
   // 1. Prioridad: Variable de entorno explícita
-  if (import.meta.env.VITE_API_BASE_URL) {
+  if (import.meta.env.VITE_API_URL) {
     // Si ya está definida, usarla tal como está (sin agregar /api)
-    return import.meta.env.VITE_API_BASE_URL;
+    return import.meta.env.VITE_API_URL;
   }
   
   // 2. Detección automática basada en hostname (solo si no hay variable de entorno)
@@ -19,12 +19,12 @@ const getApiBaseUrl = () => {
   
   // Vercel deployment
   if (hostname.includes('vercel.app')) {
-    return import.meta.env.VITE_API_BASE_URL || 'https://your-backend-url.vercel.app/api';
+    return import.meta.env.VITE_API_URL || 'https://your-backend-url.vercel.app/api';
   }
   
   // Render deployment
   if (hostname.includes('onrender.com')) {
-    return import.meta.env.VITE_API_BASE_URL || 'https://your-backend-url.onrender.com/api';
+    return import.meta.env.VITE_API_URL || 'https://your-backend-url.onrender.com/api';
   }
   
   // Desarrollo local
@@ -33,7 +33,7 @@ const getApiBaseUrl = () => {
   }
   
   // Fallback
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:10001/api';
+  return import.meta.env.VITE_API_URL || 'http://localhost:10001/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -42,7 +42,7 @@ const API_BASE_URL = getApiBaseUrl();
 if (import.meta.env.DEV) {
   console.log(`🔧 API Base URL configurada: ${API_BASE_URL}`);
   console.log(`🌍 Entorno: ${import.meta.env.MODE}`);
-  console.log(`🔑 Variable VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL || 'No definida'}`);
+  console.log(`🔑 Variable VITE_API_URL: ${import.meta.env.VITE_API_URL || 'No definida'}`);
 }
 
 export const API_ENDPOINTS = {
@@ -54,6 +54,7 @@ export const API_ENDPOINTS = {
     marcarCestasNavidad: `${API_BASE_URL}/clientes/marcar-cestas-navidad`,
     limpiarCestasNavidad: `${API_BASE_URL}/clientes/limpiar-cestas-navidad`,
     importar: `${API_BASE_URL}/clientes/importar`,
+    create: `${API_BASE_URL}/clientes`, // Añadido endpoint para crear cliente
   },
   
   // Productos
