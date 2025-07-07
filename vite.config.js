@@ -19,17 +19,7 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     strictPort: true,
-    hmr: {
-      overlay: false, // Deshabilitar overlay de errores que puede causar reinicios
-      ...(process.env.CODESPACE_NAME ? {
-        protocol: 'wss',
-        host: `${process.env.CODESPACE_NAME}-3000.app.github.dev`,
-        clientPort: 443,
-        port: 443
-      } : {
-        port: 24678 // Puerto específico para HMR en local
-      })
-    },
+    hmr: false, // Desactivar HMR completamente
     watch: {
       usePolling: false,
       interval: 1000,

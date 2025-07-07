@@ -1,5 +1,6 @@
 import axios from 'axios';
-const API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/transferencias` : '/api/transferencias';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://pedidos-backend-0e1s.onrender.com';
+const API = `${API_BASE}/transferencias`;
 
 export const crearTransferencia = (data) => axios.post(API, data);
 export const listarTransferencias = () => axios.get(API);
