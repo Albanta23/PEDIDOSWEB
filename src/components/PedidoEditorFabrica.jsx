@@ -192,15 +192,65 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     <div
       style={{
         overflowX: 'auto',
+        overflowY: 'auto',
         borderRadius: 12,
         boxShadow: '0 2px 12px #0001',
         background: '#fff',
         position: 'relative',
         padding: '0',
         maxWidth: '100vw',
-        minWidth: 0
+        minWidth: 0,
+        height: '100%',
+        minHeight: 0
       }}
     >
+      <style>{`
+        @media screen and (max-width: 1024px) {
+          .tabla-edicion-fabrica {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-width: 100vw;
+            min-width: 0;
+          }
+          .tabla-edicion-fabrica thead, .tabla-edicion-fabrica tbody, .tabla-edicion-fabrica tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+          }
+          .tabla-edicion-fabrica td, .tabla-edicion-fabrica th {
+            word-break: break-word;
+            white-space: pre-line;
+            min-width: 80px;
+            font-size: 16px;
+            padding: 10px 6px;
+          }
+          .celda-producto {
+            min-width: 220px;
+            max-width: 100%;
+            white-space: pre-line;
+            word-break: break-word;
+            padding: 0;
+          }
+          .input-producto {
+            width: 100%;
+            min-width: 180px;
+            max-width: 100%;
+            min-height: 44px;
+            height: auto;
+            font-size: 16px;
+            padding: 10px 8px;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            box-sizing: border-box;
+            resize: vertical;
+            overflow-wrap: break-word;
+            white-space: pre-line;
+            display: block;
+          }
+        }
+      `}</style>
       {borradorCorruptoEliminado && (
         <div style={{position:'absolute',top:10,right:18,zIndex:10,background:'#fff3cd',color:'#856404',border:'1px solid #ffeeba',borderRadius:8,padding:'10px 18px',fontWeight:600,fontSize:15,boxShadow:'0 2px 8px #0001'}}>
           Se detectó y eliminó un borrador local corrupto o vacío. Se restauraron las líneas originales del pedido.
@@ -241,12 +291,13 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
           marginTop: 70,
           minWidth: 600,
           tableLayout: 'fixed',
-          wordBreak: 'break-word'
+          wordBreak: 'break-word',
+          background: '#fff'
         }}
       >
         <thead>
           <tr>
-            <th style={{ minWidth: 120, maxWidth: 180, fontSize: 14, padding: 6, wordBreak: 'break-word' }}>Producto</th>
+            <th className="celda-producto" style={{ minWidth: 120, maxWidth: 300, fontSize: 14, padding: 6, wordBreak: 'break-word', whiteSpace: 'pre-line' }}>Producto</th>
             <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Cant. pedida</th>
             <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Peso (kg)</th>
             <th style={{ minWidth: 70, maxWidth: 90, fontSize: 14, padding: 6 }}>Cant. enviada</th>
