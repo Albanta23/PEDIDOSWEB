@@ -26,9 +26,9 @@ const OrderPage: React.FC = () => {
     return orders.filter(order => {
       const customer = customers.find(c => c.id === order.customerId);
       return (
-        order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (customer?.name.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        order.status.toLowerCase().includes(searchTerm.toLowerCase())
+        order.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (customer?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        order.status?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }).sort((a,b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()); // Sort by most recent
   }, [orders, customers, searchTerm]);
@@ -126,7 +126,7 @@ const OrderPage: React.FC = () => {
               <h4 className="font-semibold mt-2 mb-1">Artículos:</h4>
               <ul className="list-disc list-inside pl-2 space-y-1 bg-neutral-50 p-3 rounded-md border border-neutral-200">
                 {viewingOrder.items.map((item, index) => (
-                  <li key={index} className="text-sm">{item.hamperName} (x{item.quantity}) - {(item.unitPrice * item.quantity).toFixed(2)}€</li>
+                  <li key={item.hamperId + '-' + index} className="text-sm">{item.hamperName} (x{item.quantity}) - {(item.unitPrice * item.quantity).toFixed(2)}€</li>
                 ))}
               </ul>
             </div>
@@ -156,7 +156,7 @@ const OrderPage: React.FC = () => {
               const customer = customers.find(c => c.id === order.customerId);
               const canInvoice = [OrderStatus.DELIVERED, OrderStatus.SHIPPED, OrderStatus.PENDING_PAYMENT, OrderStatus.PROCESSING].includes(order.status) && !invoices.some(inv => inv.orderId === order.id);
               return (
-                <tr key={order.id} className="hover:bg-neutral-50 transition-colors">
+                <tr key={order.id || order.orderNumber || Math.random()} className="hover:bg-neutral-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-DEFAULT hover:underline cursor-pointer" onClick={() => openViewModal(order.id)}>{order.orderNumber}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">{customer?.name || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">{new Date(order.orderDate).toLocaleDateString()}</td>

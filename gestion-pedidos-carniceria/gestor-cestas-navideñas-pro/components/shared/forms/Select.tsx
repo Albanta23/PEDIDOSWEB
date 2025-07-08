@@ -18,8 +18,8 @@ const Select: React.FC<SelectProps> = ({ label, id, error, containerClassName, c
         {...props}
       >
         {props.placeholder && <option value="">{props.placeholder}</option>}
-        {options.map(option => (
-          <option key={option.value} value={option.value}>{option.label}</option>
+        {options.map((option, idx) => (
+          <option key={String(option.value) + '-' + idx} value={option.value}>{option.label}</option>
         ))}
       </select>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}

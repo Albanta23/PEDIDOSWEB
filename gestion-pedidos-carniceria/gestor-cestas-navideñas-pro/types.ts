@@ -43,6 +43,11 @@ export interface Customer {
   address?: string;
   cifNif?: string;
   cif?: string; // Alias para cifNif para compatibilidad
+  // Campos para filtrado avanzado y cestas navidad:
+  esCestaNavidad?: boolean;
+  poblacion?: string;
+  provincia?: string;
+  nif?: string;
 }
 
 export enum OrderStatus {

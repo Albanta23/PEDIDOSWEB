@@ -19,10 +19,12 @@ const Transferencia = require('./models/Transferencia'); // Importar modelo de t
 const Producto = require('./models/Producto'); // Importar modelo de productos
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimientos de almacén
 const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
+const Presupuesto = require('./models/Presupuesto'); // Modelo de presupuestos
 const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimientoStock } = require('./utils/stock');
 
 const pedidosTiendaController = require('./pedidosTiendaController');
 const pedidosClientesController = require('./pedidosClientesController');
+const pedidosLotesController = require('./pedidosLotesController'); // Controlador de pedidos de cestas/lotes
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -618,6 +620,12 @@ app.get('/api/clientes/cestas-navidad', async (req, res) => {
   }
 });
 
+// --- ENDPOINTS PEDIDOS DE CESTAS/LOTES ---
+app.get('/api/pedidos-lotes', pedidosLotesController.listar);
+app.post('/api/pedidos-lotes', pedidosLotesController.crear);
+app.put('/api/pedidos-lotes/:id', pedidosLotesController.actualizar);
+app.delete('/api/pedidos-lotes/:id', pedidosLotesController.eliminar);
+
 // --- ENDPOINT: Obtener movimientos de stock por tienda ---
 app.get('/api/movimientos-stock', async (req, res) => {
   try {
@@ -770,6 +778,32 @@ app.post('/api/clientes/limpiar-cestas-navidad', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// --- API presupuestos ---
+app.get('/api/presupuestos', async (req, res) => {
+  try {
+    const presupuestos = await Presupuesto.find();
+    res.json({ ok: true, presupuestos });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/presupuestos', async (req, res) => {
+  try {
+    const data = req.body;
+    // Generar quoteNumber simple (puedes mejorar la lógica)
+    const count = await Presupuesto.countDocuments();
+    const quoteNumber = `PRESUP-${count + 1}`;
+    const presupuesto = new Presupuesto({ ...data, quoteNumber });
+    await presupuesto.save();
+    res.json({ ok: true, presupuesto });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// --- FIN API presupuestos ---
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {

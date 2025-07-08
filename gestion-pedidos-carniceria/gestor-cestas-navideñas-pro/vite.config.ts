@@ -9,5 +9,14 @@ export default defineConfig(() => ({
     alias: {
       '@': resolve(__dirname, '.'),
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:10001', // Puerto correcto del backend
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 }));

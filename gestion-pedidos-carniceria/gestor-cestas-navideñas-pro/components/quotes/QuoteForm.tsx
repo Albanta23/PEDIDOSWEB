@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Quote, QuoteItem, Customer, QuoteStatus } from '../../types';
+import { Quote, QuoteItem, QuoteStatus } from '../../types';
 import { useData } from '../../contexts/DataContext';
 import { useToast } from '../../contexts/ToastContext';
 import Select from '../shared/forms/Select';
@@ -8,6 +8,7 @@ import Textarea from '../shared/forms/Textarea';
 import Button from '../shared/Button';
 import { PlusCircleIcon, TrashIcon } from '../icons/HeroIcons';
 import { QUOTE_STATUS_OPTIONS } from '../../constants';
+import { useClientesCestasNavidad, CustomerCestaNavidad } from '../../src/hooks/useClientesCestasNavidad';
 
 interface QuoteFormProps {
   quote?: Quote | null;
@@ -16,8 +17,20 @@ interface QuoteFormProps {
 }
 
 const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onSaveSuccess, onCancel }) => {
-  const { customers, hampers, getHamperById, calculateOrderTotals, addQuote, updateQuote } = useData();
+  const { hampers, calculateOrderTotals, addQuote, updateQuote } = useData();
   const { addToast } = useToast();
+  const { clientes: clientesCestas, loading: loadingClientes, error: errorClientes } = useClientesCestasNavidad();
+  const [customerSearch, setCustomerSearch] = useState('');
+  const filteredCustomers = React.useMemo(() => {
+    return (Array.isArray(clientesCestas) ? clientesCestas : []).filter((c: CustomerCestaNavidad) =>
+      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+      (c.nif?.toLowerCase().includes(customerSearch.toLowerCase())) ||
+      (c.email?.toLowerCase().includes(customerSearch.toLowerCase())) ||
+      (c.phone?.toLowerCase().includes(customerSearch.toLowerCase())) ||
+      (c.poblacion?.toLowerCase().includes(customerSearch.toLowerCase())) ||
+      (c.provincia?.toLowerCase().includes(customerSearch.toLowerCase()))
+    );
+  }, [clientesCestas, customerSearch]);
 
   const [customerId, setCustomerId] = useState<string>('');
   const [items, setItems] = useState<QuoteItem[]>([]);
@@ -66,12 +79,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onSaveSuccess, onCancel })
   
   useEffect(() => {
     if (customerId && !quote) { // Pre-fill address for new quotes if customer selected
-        const customer = customers.find(c => c.id === customerId);
+        const customer = clientesCestas.find((c: CustomerCestaNavidad) => c.id === customerId);
         if (customer && customer.address && !shippingAddress) {
             setShippingAddress(customer.address);
         }
     }
-  }, [customerId, customers, quote, shippingAddress]);
+  }, [customerId, clientesCestas, quote, shippingAddress]);
 
   const handleAddItem = () => {
     if (hampers.length > 0) {
@@ -140,13 +153,25 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onSaveSuccess, onCancel })
     }
   };
   
-  const customerOptions = customers.map(c => ({ value: c.id, label: c.name }));
+  const customerOptions = filteredCustomers.map((c: CustomerCestaNavidad) => ({ value: c.id, label: c.name, key: c.id }));
   const hamperOptions = hampers.map(h => ({ value: h.id, label: `${h.name} (${h.sellingPrice.toFixed(2)}€)` }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Select label="Cliente" value={customerId} onChange={(e) => setCustomerId(e.target.value)} options={customerOptions} placeholder="Seleccionar Cliente" required />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Buscar cliente</label>
+          <input
+            type="text"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 mb-2"
+            placeholder="Buscar por nombre, NIF, email, teléfono, población o provincia"
+            value={customerSearch}
+            onChange={e => setCustomerSearch(e.target.value)}
+          />
+          <Select label="Cliente" value={customerId} onChange={(e) => setCustomerId(e.target.value)} options={customerOptions} placeholder="Seleccionar Cliente" required />
+          {loadingClientes && <div className="text-sm text-gray-500 mt-2">Cargando clientes...</div>}
+          {errorClientes && <div className="text-sm text-red-500 mt-2">Error cargando clientes</div>}
+        </div>
         <Select label="Estado del Presupuesto" value={status} onChange={(e) => setStatus(e.target.value as QuoteStatus)} options={QUOTE_STATUS_OPTIONS} />
       </div>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -11,6 +11,7 @@ import OrderPage from './components/pages/OrderPage';
 import InvoicingPage from './components/pages/InvoicingPage';
 import SupplierPage from './components/pages/SupplierPage';
 import TaxInfoPage from './components/pages/TaxInfoPage';
+import BatchOrderPage from './components/pages/BatchOrderPage';
 import { DataProvider } from './contexts/DataContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
@@ -33,6 +34,7 @@ const App: React.FC = () => {
                 <Route path="/invoices" element={<InvoicingPage />} />
                 <Route path="/suppliers" element={<SupplierPage />} />
                 <Route path="/tax-info" element={<TaxInfoPage />} />
+                <Route path="/batch-orders" element={<BatchOrderPage />} />
               </Routes>
             </LayoutPremium>
           </HashRouter>

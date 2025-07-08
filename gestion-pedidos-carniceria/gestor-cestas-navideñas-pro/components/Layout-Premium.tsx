@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
-import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
+import { useTheme } from '../src/contexts/ThemeContext';
+import Button from '../shared/Button';
 import {
   LayoutDashboard,
   Package,
   ShoppingCart,
   Users,
-  FileText,
-  TrendingUp,
-  Settings,
   Menu,
   X,
   Sun,
@@ -18,13 +14,11 @@ import {
   ChevronDown,
   Bell,
   Search,
-  Home,
   Gift,
   Warehouse,
   Calculator,
   Receipt,
   Truck,
-  CreditCard,
   Building,
 } from 'lucide-react';
 
@@ -103,6 +97,13 @@ const navigationItems = [
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
   },
+  {
+    name: 'Pedidos Cestas/Lotes',
+    href: '/batch-orders',
+    icon: Gift,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50',
+  },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -128,10 +129,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
+        className={
+          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0" +
+          (sidebarOpen ? " translate-x-0" : " -translate-x-full")
+        }
       >
         <div className="flex h-full flex-col bg-white/80 backdrop-blur-lg border-r border-gray-200/50 dark:bg-gray-900/80 dark:border-gray-700/50">
           {/* Header */}
@@ -162,27 +163,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={cn(
-                    "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-                    isActive
-                      ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg transform scale-105"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-                  )}
+                  className={
+                    "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200" +
+                    (isActive
+                      ? " bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg transform scale-105"
+                      : " text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white")
+                  }
                   onClick={() => setSidebarOpen(false)}
                 >
                   <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-md mr-3 transition-colors",
-                      isActive
-                        ? "bg-white/20"
-                        : `${item.bgColor} dark:bg-gray-700`
-                    )}
+                    className={
+                      "flex h-8 w-8 items-center justify-center rounded-md mr-3 transition-colors" +
+                      (isActive ? " bg-white/20" : ` ${item.bgColor} dark:bg-gray-700`)
+                    }
                   >
                     <Icon
-                      className={cn(
-                        "h-4 w-4",
-                        isActive ? "text-white" : item.color
-                      )}
+                      className={
+                        "h-4 w-4" + (isActive ? " text-white" : item.color)
+                      }
                     />
                   </div>
                   {item.name}
