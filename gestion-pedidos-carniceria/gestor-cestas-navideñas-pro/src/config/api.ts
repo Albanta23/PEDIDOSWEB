@@ -74,10 +74,10 @@ export const API_ENDPOINTS = {
   
   // Transferencias
   transferencias: {
-    getAll: `${API_BASE_URL}/transferencias`,
-    crear: `${API_BASE_URL}/transferencias`,
-    actualizar: (id: string) => `${API_BASE_URL}/transferencias/${id}`,
-    confirmar: (id: string) => `${API_BASE_URL}/transferencias/${id}/confirmar`,
+    getAll: `${API_BASE_URL}/api/transferencias`,
+    crear: `${API_BASE_URL}/api/transferencias`,
+    actualizar: (id: string) => `${API_BASE_URL}/api/transferencias/${id}`,
+    confirmar: (id: string) => `${API_BASE_URL}/api/transferencias/${id}/confirmar`,
   },
   
   // Movimientos de stock
