@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import FormularioEntradaStock from './FormularioEntradaStock';
-import { getMovimientosStock } from '../services/movimientosStockService'; // To show history
+import { getMovimientosStock } from '../services/movimientosStockService';
+import { getProveedores } from '../services/proveedoresService'; // For fetching supplier names
 import { useProductos } from './ProductosContext';
+import { Button } from './ui/Button'; // Assuming relative path
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'; // Assuming relative path
+import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
 
 // Define a constant for the factory/central warehouse ID
-// This should match an ID in the `tiendas` array or be a special known ID.
-// Assuming 'tienda9' is the fábrica based on previous observations.
 const ID_ALMACEN_FABRICA = 'tienda9';
-const NOMBRE_ALMACEN_FABRICA = 'Fábrica / Almacén Central'; // For display
+const NOMBRE_ALMACEN_FABRICA = 'Fábrica / Almacén Central';
 
 const GestionEntradasFabricaPanel = ({ onClose }) => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -15,13 +17,26 @@ const GestionEntradasFabricaPanel = ({ onClose }) => {
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   const [errorHistorial, setErrorHistorial] = useState('');
   const { productos } = useProductos();
+  const [proveedoresMap, setProveedoresMap] = useState({});
+
+  useEffect(() => {
+    const fetchProveedores = async () => {
+      try {
+        const provs = await getProveedores();
+        const map = {};
+        provs.forEach(p => map[p._id] = p.nombre);
+        setProveedoresMap(map);
+      } catch (error) {
+        console.error("Error fetching suppliers for panel:", error);
+      }
+    };
+    fetchProveedores();
+  }, []);
 
   const cargarHistorialEntradas = useCallback(async () => {
     setCargandoHistorial(true);
     setErrorHistorial('');
     try {
-      // Fetch all movements for the factory warehouse and filter for type 'entrada'
-      // or a specific type like 'compra_proveedor' if that's used.
       const todosMovimientos = await getMovimientosStock({ tiendaId: ID_ALMACEN_FABRICA });
       const entradas = todosMovimientos.filter(
         (mov) => mov.tipo === 'entrada' || mov.motivo?.toLowerCase().includes('compra') || mov.motivo?.toLowerCase().includes('entrada manual')
@@ -39,8 +54,8 @@ const GestionEntradasFabricaPanel = ({ onClose }) => {
   }, [cargarHistorialEntradas]);
 
   const handleEntradaRegistrada = () => {
-    setMostrarFormulario(false); // Hide form after successful entry
-    cargarHistorialEntradas(); // Refresh history
+    setMostrarFormulario(false);
+    cargarHistorialEntradas();
   };
 
   const getProductName = (productIdentifier) => {
@@ -48,82 +63,113 @@ const GestionEntradasFabricaPanel = ({ onClose }) => {
     return product ? product.nombre : productIdentifier;
   };
 
+  const getSupplierName = (supplierId) => {
+    return proveedoresMap[supplierId] || supplierId || '-';
+  }
 
   return (
-    <div style={{ padding: '20px', background: '#f0f2f5', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto', background: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e8e8e8', paddingBottom: '15px', marginBottom: '25px' }}>
-          <h2 style={{ color: '#333', margin: 0 }}>Gestión de Entradas - {NOMBRE_ALMACEN_FABRICA}</h2>
-          <button
-            onClick={onClose}
-            style={{ background: '#ccc', color: '#333', border: 'none', borderRadius: '4px', padding: '8px 15px', cursor: 'pointer' }}
-          >
-            Cerrar Panel
-          </button>
-        </div>
-
-        {!mostrarFormulario && (
-          <button
-            onClick={() => setMostrarFormulario(true)}
-            style={{ background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', padding: '10px 18px', cursor: 'pointer', fontSize: '16px', marginBottom: '25px' }}
-          >
-            + Registrar Nueva Entrada en Fábrica
-          </button>
-        )}
-
-        {mostrarFormulario && (
-          <div style={{ marginBottom: '30px', border: '1px dashed #007bff', padding: '20px', borderRadius: '8px' }}>
-            <FormularioEntradaStock
-              tiendaId={ID_ALMACEN_FABRICA}
-              onEntradaRegistrada={handleEntradaRegistrada}
-              contexto="fabrica"
-            />
-            <button
-              onClick={() => setMostrarFormulario(false)}
-              style={{ background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 15px', cursor: 'pointer', marginTop: '15px' }}
-            >
-              Cancelar Nueva Entrada
-            </button>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <Card className="max-w-4xl mx-auto shadow-xl">
+        <CardHeader className="border-b">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl text-gray-800">Gestión de Entradas - {NOMBRE_ALMACEN_FABRICA}</CardTitle>
+            <Button variant="ghost" size="icon" onClick={onClose} title="Cerrar Panel">
+              <XCircle className="h-6 w-6 text-gray-500 hover:text-gray-700" />
+            </Button>
           </div>
-        )}
+        </CardHeader>
+        <CardContent className="p-6">
+          {!mostrarFormulario && (
+            <Button
+              variant="premium"
+              size="lg"
+              onClick={() => setMostrarFormulario(true)}
+              className="mb-6 w-full md:w-auto"
+            >
+              <PlusCircle className="mr-2 h-5 w-5" /> Registrar Nueva Entrada en Fábrica
+            </Button>
+          )}
 
-        <div>
-          <h3 style={{ color: '#333', borderBottom: '1px solid #e8e8e8', paddingBottom: '10px', marginBottom: '15px' }}>Historial de Entradas en Fábrica</h3>
-          {cargandoHistorial && <p>Cargando historial...</p>}
-          {errorHistorial && <p style={{ color: 'red' }}>{errorHistorial}</p>}
-          {!cargandoHistorial && !errorHistorial && historialEntradas.length === 0 && (
-            <p>No hay entradas registradas para la fábrica.</p>
+          {mostrarFormulario && (
+            <Card variant="outline" className="mb-6 p-2 md:p-0 shadow-inner bg-slate-50"> {/* Contenedor del formulario */}
+              {/* FormularioEntradaStock ya tiene su propio Card, así que podemos quitar este Card si FormularioEntradaStock se ve bien solo */}
+              <FormularioEntradaStock
+                tiendaId={ID_ALMACEN_FABRICA}
+                onEntradaRegistrada={handleEntradaRegistrada}
+                contexto="fabrica"
+              />
+              <div className="mt-4 flex justify-end p-4 md:p-0">
+                <Button variant="outline" onClick={() => setMostrarFormulario(false)}>
+                  Cancelar Nueva Entrada
+                </Button>
+              </div>
+            </Card>
           )}
-          {!cargandoHistorial && !errorHistorial && historialEntradas.length > 0 && (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f2f2f2', borderBottom: '1px solid #ddd' }}>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Fecha</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Producto</th>
-                  <th style={{ padding: '10px', textAlign: 'right' }}>Cantidad</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Unidad</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Lote</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Motivo/Ref.</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Proveedor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historialEntradas.map((mov, index) => (
-                  <tr key={mov._id || index} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '10px' }}>{new Date(mov.fecha).toLocaleDateString()}</td>
-                    <td style={{ padding: '10px' }}>{getProductName(mov.producto)}</td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>{mov.cantidad}</td>
-                    <td style={{ padding: '10px' }}>{mov.unidad}</td>
-                    <td style={{ padding: '10px' }}>{mov.lote || '-'}</td>
-                    <td style={{ padding: '10px' }}>{mov.referenciaDocumento || mov.motivo || '-'}</td>
-                    <td style={{ padding: '10px' }}>{mov.proveedorId || '-'} {/* TODO: Fetch supplier name if ID stored */}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-700 flex items-center">
+                <ListChecks className="mr-2 h-6 w-6 text-primary-500"/>
+                Historial de Entradas en Fábrica
+              </h3>
+              <Button variant="outline" size="sm" onClick={cargarHistorialEntradas} disabled={cargandoHistorial}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${cargandoHistorial ? 'animate-spin' : ''}`} />
+                Refrescar
+              </Button>
+            </div>
+
+            {cargandoHistorial && (
+              <div className="flex justify-center items-center py-10">
+                <RefreshCw className="h-8 w-8 animate-spin text-primary-500" />
+                <p className="ml-3 text-gray-600">Cargando historial...</p>
+              </div>
+            )}
+            {errorHistorial && (
+              <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-md flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2"/> {errorHistorial}
+              </div>
+            )}
+            {!cargandoHistorial && !errorHistorial && historialEntradas.length === 0 && (
+              <div className="text-center py-10 bg-gray-100 rounded-lg">
+                <ListChecks className="h-12 w-12 text-gray-400 mx-auto mb-3"/>
+                <p className="text-gray-500">No hay entradas registradas para la fábrica.</p>
+              </div>
+            )}
+            {!cargandoHistorial && !errorHistorial && historialEntradas.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                <table className="min-w-full divide-y divide-gray-200 bg-white">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Producto</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Cantidad</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unidad</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lote</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ref./Motivo</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Proveedor</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">P. Coste</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {historialEntradas.map((mov) => (
+                      <tr key={mov._id || mov.fecha + mov.producto} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{new Date(mov.fecha).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium">{getProductName(mov.producto)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{mov.cantidad}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{mov.unidad}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{mov.lote || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs" title={mov.referenciaDocumento || mov.motivo}>{mov.referenciaDocumento || mov.motivo || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{getSupplierName(mov.proveedorId)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{mov.precioCoste ? `${mov.precioCoste.toFixed(2)}€` : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
