@@ -14,6 +14,11 @@ const MovimientoStockSchema = new mongoose.Schema({
   peso: { type: Number, min: 0 }, // Peso en kg (opcional)
   tiendaDestino: { type: String }, // Para traspasos y devoluciones, almacena el destino
   transferenciaId: { type: String }, // Para enlazar con la transferencia
+  // Campos adicionales para entradas de stock
+  proveedorId: { type: String }, // Podría ser mongoose.Schema.Types.ObjectId si Proveedor es un modelo referenciado
+  precioCoste: { type: Number }, // Precio de coste total de la entrada o por unidad, según se defina
+  referenciaDocumento: { type: String }, // Nro de albarán o factura de compra
+  notasEntrada: { type: String } // Notas específicas de la entrada
 });
 
 module.exports = mongoose.model('MovimientoStock', MovimientoStockSchema);

@@ -14,6 +14,7 @@ import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
 import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
+import GestionEntradasFabricaPanel from './components/GestionEntradasFabricaPanel'; // Importar nuevo panel
 import { ProductosProvider } from './components/ProductosContext';
 import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
 import SidebarClientes from './clientes-gestion/SidebarClientes';
@@ -58,6 +59,7 @@ function App() {
   const [mostrarHistoricoTienda, setMostrarHistoricoTienda] = useState(false);
   const [pedidoEditando, setPedidoEditando] = useState(null);
   const [mostrarGestion, setMostrarGestion] = useState(false);
+  const [mostrarGestionEntradasFabrica, setMostrarGestionEntradasFabrica] = useState(false); // Nuevo estado
   const [mostrarAlmacenTienda, setMostrarAlmacenTienda] = useState(false);
   // Estado para la vista de clientes
   const [vistaClientes, setVistaClientes] = useState('mantenimiento');
@@ -380,11 +382,21 @@ function App() {
   }
 
   // --- RENDER PRINCIPAL ---
-  if (!modo && !mostrarGestion) {
-    return <SeleccionModo onSeleccion={setModo} pedidos={pedidos} tiendas={tiendas} onGestion={() => setMostrarGestion(true)} expedicionesClientes={() => setModo('expedicionesClientes')} />;
+  if (!modo && !mostrarGestion && !mostrarGestionEntradasFabrica) {
+    return <SeleccionModo
+             onSeleccion={setModo}
+             pedidos={pedidos}
+             tiendas={tiendas}
+             onGestion={() => setMostrarGestion(true)}
+             onGestionEntradasFabrica={() => setMostrarGestionEntradasFabrica(true)} // Nueva prop
+             expedicionesClientes={() => setModo('expedicionesClientes')}
+           />;
   }
   if (mostrarGestion) {
     return <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />;
+  }
+  if (mostrarGestionEntradasFabrica) { // Nuevo render condicional
+    return <GestionEntradasFabricaPanel onClose={() => setMostrarGestionEntradasFabrica(false)} />;
   }
 
   // NUEVO: acceso directo a ExpedicionesClientes

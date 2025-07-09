@@ -28,12 +28,49 @@ export async function registrarBajaStock({ tiendaId, producto, cantidad, unidad,
   return await res.json();
 }
 
-export async function registrarEntradaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso }) {
+export async function registrarEntradaStock({
+  tiendaId,
+  producto,
+  cantidad,
+  unidad,
+  lote,
+  motivo,
+  pedidoId, // Optional
+  peso,
+  proveedorId,
+  precioCoste,
+  fechaEntrada,
+  referenciaDocumento,
+  notas
+}) {
+  const body = {
+    tiendaId,
+    producto,
+    cantidad: Number(cantidad), // Ensure quantity is a number
+    unidad,
+    lote,
+    motivo,
+    pedidoId,
+    peso: peso ? Number(peso) : undefined, // Ensure peso is a number or undefined
+    proveedorId,
+    precioCoste: precioCoste ? Number(precioCoste) : undefined, // Ensure precioCoste is a number or undefined
+    referenciaDocumento,
+    notas
+  };
+
+  // If fechaEntrada is provided by form, use it for the 'fecha' field of MovimientoStock model
+  if (fechaEntrada) {
+    body.fecha = fechaEntrada;
+  }
+
   const res = await fetch(`${API_URL}/movimientos-stock/entrada`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tiendaId, producto, cantidad, unidad, lote, motivo, pedidoId, peso })
+    body: JSON.stringify(body)
   });
-  if (!res.ok) throw new Error('Error al registrar entrada de stock');
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: 'Error al registrar entrada de stock' }));
+    throw new Error(errorData.message || 'Error al registrar entrada de stock');
+ }
   return await res.json();
 }

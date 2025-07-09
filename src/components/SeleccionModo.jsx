@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaIndustry, FaCashRegister, FaTools, FaTruck, FaBoxOpen } from "react-icons/fa";
+import { FaIndustry, FaCashRegister, FaTools, FaTruck, FaBoxOpen, FaDollyFlatbed } from "react-icons/fa"; // Added FaDollyFlatbed
 import logo from "../assets/logo1.png";
 import Watermark from './Watermark';
 import SupervisionPanel from './SupervisionPanel';
@@ -7,7 +7,7 @@ import AlmacenCentralPanel from './AlmacenCentralPanel';
 import { useAppUpdates } from '../hooks/useAppUpdates';
 import { ProductosProvider } from './ProductosContext';
 
-export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion, expedicionesClientes }) {
+export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion, onGestionEntradasFabrica, expedicionesClientes }) { // Added onGestionEntradasFabrica
   const [showSupervision, setShowSupervision] = useState(false);
   const { updateAvailable, forceUpdate } = useAppUpdates();
   const [showUpdateMsg, setShowUpdateMsg] = useState(false);
@@ -181,6 +181,28 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
         >
           <FaBoxOpen size={48} style={{ marginBottom: 10 }} />
           Almacén Central
+        </button>
+        <button
+          onClick={onGestionEntradasFabrica} // Call the new prop
+          style={{
+            width: 120,
+            height: 120,
+            background: "#607d8b", // Example color
+            color: "#fff",
+            border: "none",
+            borderRadius: 16,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 18,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #bbb",
+            textAlign: 'center'
+          }}
+        >
+          <FaDollyFlatbed size={48} style={{ marginBottom: 10 }} />
+          Entradas Fábrica
         </button>
       </div>
       {showSupervision && (

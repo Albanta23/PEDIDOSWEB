@@ -82,9 +82,12 @@ async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, 
 
 /**
  * Registra un movimiento genérico de stock (entrada, baja, transferencia, devolución, etc)
- * @param {Object} params - { tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso }
+ * @param {Object} params - { tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notasEntrada }
  */
-async function registrarMovimientoStock({ tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso }) {
+async function registrarMovimientoStock({
+  tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha,
+  pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notasEntrada
+}) {
   if (!tiendaId || !producto || !cantidad || !tipo) return;
   await MovimientoStock.create({
     tiendaId,
@@ -97,7 +100,11 @@ async function registrarMovimientoStock({ tiendaId, producto, cantidad, unidad, 
     fecha: fecha ? new Date(fecha) : new Date(),
     pedidoId,
     transferenciaId,
-    peso: typeof peso !== 'undefined' ? peso : undefined
+    peso: typeof peso !== 'undefined' ? peso : undefined,
+    proveedorId,
+    precioCoste,
+    referenciaDocumento,
+    notasEntrada
   });
 }
 

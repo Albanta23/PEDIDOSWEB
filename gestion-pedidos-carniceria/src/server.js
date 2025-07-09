@@ -20,6 +20,7 @@ const Producto = require('./models/Producto'); // Importar modelo de productos
 const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimientos de almacén
 const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
 const Presupuesto = require('./models/Presupuesto'); // Modelo de presupuestos
+const Proveedor = require('./models/Proveedor'); // Modelo de proveedores
 const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimientoStock } = require('./utils/stock');
 
 const pedidosTiendaController = require('./pedidosTiendaController');
@@ -652,6 +653,53 @@ app.post('/api/movimientos-stock/baja', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Registrar ENTRADA de stock manual ---
+app.post('/api/movimientos-stock/entrada', async (req, res) => {
+  try {
+    const {
+      tiendaId,
+      producto,
+      cantidad,
+      unidad,
+      lote,
+      motivo,
+      fecha, // Opcional, si no se provee, se usa Date.now() en registrarMovimientoStock
+      pedidoId, // Opcional
+      peso, // Opcional
+      proveedorId, // Nuevo
+      precioCoste, // Nuevo
+      referenciaDocumento, // Nuevo
+      notasEntrada // Nuevo
+    } = req.body;
+
+    // Validación básica
+    if (!tiendaId || !producto || !cantidad) {
+      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios: tiendaId, producto, cantidad.' });
+    }
+
+    await registrarMovimientoStock({
+      tiendaId,
+      producto,
+      cantidad,
+      unidad,
+      lote,
+      motivo: motivo || 'Entrada manual', // Motivo por defecto si no se especifica
+      tipo: 'entrada', // Tipo fijo para este endpoint
+      fecha,
+      pedidoId,
+      peso,
+      proveedorId,
+      precioCoste,
+      referenciaDocumento,
+      notasEntrada
+    });
+    res.status(201).json({ ok: true, message: 'Entrada de stock registrada correctamente.' });
+  } catch (e) {
+    console.error('Error al registrar entrada de stock:', e);
+    res.status(400).json({ ok: false, error: e.message });
+  }
+});
+
 // --- ENDPOINT: Comparar y marcar/crear clientes de cestas de navidad ---
 app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
   try {
@@ -804,6 +852,65 @@ app.post('/api/presupuestos', async (req, res) => {
 });
 
 // --- FIN API presupuestos ---
+
+// --- ENDPOINTS DE PROVEEDORES ---
+// Listar todos los proveedores
+app.get('/api/proveedores', async (req, res) => {
+  try {
+    const proveedores = await Proveedor.find({ activo: true }).sort({ nombre: 1 });
+    res.json(proveedores);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Crear un nuevo proveedor
+app.post('/api/proveedores', async (req, res) => {
+  try {
+    const nuevoProveedor = new Proveedor(req.body);
+    await nuevoProveedor.save();
+    res.status(201).json(nuevoProveedor);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Obtener un proveedor por ID
+app.get('/api/proveedores/:id', async (req, res) => {
+  try {
+    const proveedor = await Proveedor.findById(req.params.id);
+    if (!proveedor) return res.status(404).json({ error: 'Proveedor no encontrado' });
+    res.json(proveedor);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Actualizar un proveedor
+app.put('/api/proveedores/:id', async (req, res) => {
+  try {
+    const proveedor = await Proveedor.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!proveedor) return res.status(404).json({ error: 'Proveedor no encontrado' });
+    res.json(proveedor);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Eliminar un proveedor (o marcar como inactivo)
+app.delete('/api/proveedores/:id', async (req, res) => {
+  try {
+    // Considerar marcar como inactivo en lugar de borrar si hay referencias
+    const proveedor = await Proveedor.findByIdAndUpdate(req.params.id, { activo: false }, { new: true });
+    // const proveedor = await Proveedor.findByIdAndDelete(req.params.id);
+    if (!proveedor) return res.status(404).json({ error: 'Proveedor no encontrado' });
+    res.json({ message: 'Proveedor marcado como inactivo' });
+    // res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// --- FIN ENDPOINTS DE PROVEEDORES ---
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {

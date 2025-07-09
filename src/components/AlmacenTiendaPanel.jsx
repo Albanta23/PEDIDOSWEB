@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getMovimientosStock, registrarBajaStock } from '../services/movimientosStockService';
 import TransferenciasPanel from './TransferenciasPanel';
+import FormularioEntradaStock from './FormularioEntradaStock'; // Importar el nuevo formulario
 import { useProductos } from './ProductosContext';
 import { useSocket } from './SocketContext';
 import jsPDF from 'jspdf';
@@ -18,8 +19,8 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
   const { productos } = useProductos();
   const [movimientos, setMovimientos] = useState([]);
   const [cargando, setCargando] = useState(true);
-  // Nueva pestaña para transferencias y devoluciones
-  const [tab, setTab] = useState('stock'); // stock | bajas | transferencias
+  // Pestañas: stock | movimientos | bajas | entradas | transferencias
+  const [tab, setTab] = useState('stock');
   // Filtros
   const [filtroProducto, setFiltroProducto] = useState('');
   const [filtroLote, setFiltroLote] = useState('');
@@ -342,7 +343,7 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
         
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', // Ajustar minmax para más botones
           gap: '16px'
         }}>
           <button 
@@ -499,6 +500,45 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
           >
             <span style={{ fontSize: '24px' }}>🔄</span>
             <span>Transferencias</span>
+          </button>
+
+          <button
+            onClick={() => setTab('entradas')}
+            style={{
+              padding: '16px 20px',
+              border: 'none',
+              borderRadius: '12px',
+              background: tab === 'entradas'
+                ? 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)'
+                : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              color: tab === 'entradas' ? '#fff' : '#495057',
+              fontWeight: '700',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: tab === 'entradas'
+                ? '0 4px 16px rgba(255, 193, 7, 0.3)'
+                : '0 2px 8px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={e => {
+              if (tab !== 'entradas') {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (tab !== 'entradas') {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              }
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>📥</span>
+            <span>Registrar Entrada</span>
           </button>
 
           <button 
@@ -860,6 +900,20 @@ export default function AlmacenTiendaPanel({ tiendaActual }) {
       {tab==='transferencias' && (
         <div>
           <TransferenciasPanel tiendas={window.tiendas || []} tiendaActual={tienda} modoFabrica={false} onTransferenciaConfirmada={refrescarMovimientos} />
+        </div>
+      )}
+      {tab==='entradas' && (
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', marginTop: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <h3 style={{color:'#ff8f00', borderBottom: '2px solid #ff8f00', paddingBottom: '10px', marginBottom: '20px'}}>Registrar Nueva Compra/Entrada en Tienda</h3>
+          <FormularioEntradaStock
+            tiendaId={tiendaForzada?.id}
+            onEntradaRegistrada={() => {
+              refrescarMovimientos();
+              // Opcionalmente cambiar a la pestaña de movimientos o stock para ver el resultado
+              // setTab('movimientos');
+            }}
+            contexto="tienda"
+          />
         </div>
       )}
     </div>
