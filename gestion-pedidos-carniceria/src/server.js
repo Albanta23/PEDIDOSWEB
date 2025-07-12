@@ -590,27 +590,36 @@ app.post('/api/clientes/importar', async (req, res) => {
   }
 });
 
-// --- ENDPOINT: Obtener todos los clientes ---
+// --- ENDPOINTS FUNCIONALES ---
 app.get('/api/clientes', async (req, res) => {
   try {
-    const clientes = await Cliente.find();
+    const clientes = await Cliente.find().sort({ nombre: 1 });
     res.json(clientes);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
+app.get('/api/clientes/cestas-navidad', async (req, res) => {
+  try {
+    const { activos } = req.query;
+    let filtro = { esCestaNavidad: true };
+    if (activos === 'true') filtro.activo = true;
+    const clientesCestas = await Cliente.find(filtro).sort({ nombre: 1 });
+    res.json({ total: clientesCestas.length, clientes: clientesCestas });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.get('/api/pedidos-lotes', pedidosLotesController.listar);
+app.post('/api/pedidos-lotes', pedidosLotesController.crear);
+app.put('/api/pedidos-lotes/:id', pedidosLotesController.actualizar);
+app.delete('/api/pedidos-lotes/:id', pedidosLotesController.eliminar);
 
-// --- ENDPOINTS MÍNIMOS PARA EVITAR 404 EN FRONTEND MODERNIZADO ---
+// --- ENDPOINTS MÍNIMOS SOLO PARA RUTAS SIN LÓGICA REAL ---
 app.get('/api/presupuestos', async (req, res) => {
   res.json([]);
 });
-app.get('/api/pedidos-lotes', async (req, res) => {
-  res.json([]);
-});
 app.get('/api/pedidos', async (req, res) => {
-  res.json([]);
-});
-app.get('/api/clientes/cestas-navidad', async (req, res) => {
   res.json([]);
 });
 // --- FIN ENDPOINTS MÍNIMOS ---
