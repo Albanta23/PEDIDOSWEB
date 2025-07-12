@@ -616,11 +616,6 @@ export default function ClientesMantenimiento() {
                   setForm({ nombre: '', email: '', telefono: '', direccion: '' });
                 }}
                 style={{
-                  background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '15px 25px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: 'pointer',
