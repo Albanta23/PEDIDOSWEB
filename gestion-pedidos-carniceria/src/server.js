@@ -627,6 +627,20 @@ app.get('/api/pedidos', async (req, res) => {
 // Registrar endpoint de envío a proveedor (Mailjet V2)
 require('./mailjetProveedorEmailV2')(app);
 
+// --- ENDPOINT: Get movimientos de stock ---
+app.get('/api/movimientos-stock', async (req, res) => {
+  try {
+    const { tiendaId } = req.query;
+    if (!tiendaId) {
+      return res.status(400).json({ ok: false, error: 'tiendaId es requerido' });
+    }
+    const movimientos = await MovimientoStock.find({ tiendaId }).sort({ fecha: -1 });
+    res.json(movimientos);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // --- ENDPOINT: Registrar baja de stock manual ---
 app.post('/api/movimientos-stock/baja', async (req, res) => {
   try {
