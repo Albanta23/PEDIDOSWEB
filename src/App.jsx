@@ -396,7 +396,11 @@ function App() {
     return <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />;
   }
   if (mostrarGestionEntradasFabrica) { // Nuevo render condicional
-    return <GestionEntradasFabricaPanel onClose={() => setMostrarGestionEntradasFabrica(false)} />;
+    return (
+      <ProductosProvider>
+        <GestionEntradasFabricaPanel onClose={() => setMostrarGestionEntradasFabrica(false)} />
+      </ProductosProvider>
+    );
   }
 
   // NUEVO: acceso directo a ExpedicionesClientes

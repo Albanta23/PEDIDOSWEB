@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Liberar puertos antes de iniciar
+for PORT in 10001 3000 3100; do
+  PID=$(lsof -ti tcp:$PORT)
+  if [ -n "$PID" ]; then
+    echo "Liberando puerto $PORT (matando proceso $PID)..."
+    kill -9 $PID
+  fi
+done
+
 # Función para limpiar todos los procesos hijos
 cleanup() {
   echo "\nDeteniendo todos los procesos..."
@@ -31,9 +40,9 @@ npm start &
 FRONTEND_PID=$!
 
 # Iniciar el frontend gestor-cestas-navideñas-pro
-if [ -d /workspaces/PEDIDOSWEB/gestor-cestas-navideñas-pro ]; then
+if [ -d /workspaces/PEDIDOSWEB/gestion-pedidos-carniceria/gestor-cestas-navideñas-pro ]; then
   echo "Iniciando frontend gestor-cestas-navideñas-pro..."
-  (cd /workspaces/PEDIDOSWEB/gestor-cestas-navideñas-pro && npm install && npm run dev) &
+  (cd /workspaces/PEDIDOSWEB/gestion-pedidos-carniceria/gestor-cestas-navideñas-pro && npm install && npm run dev -- --host) &
   GESTOR_PID=$!
 else
   echo "No se encontró el directorio gestor-cestas-navideñas-pro."

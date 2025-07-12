@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../src/contexts/ThemeContext';
-import Button from '../shared/Button';
+import { Button } from './ui/Button';
 import {
   LayoutDashboard,
   Package,

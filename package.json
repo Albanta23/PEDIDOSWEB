@@ -8,10 +8,13 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "axios": "^1.9.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "csv-parser": "^3.2.0",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
+    "lucide-react": "^0.300.0",
     "mailgun-js": "^0.22.0",
     "mongoose": "^6.12.5",
     "node-fetch": "^3.3.2",
@@ -21,10 +24,10 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.2",
     "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^3.3.1",
     "vite": "^4.5.9",
     "web-vitals": "^3.1.0",
-    "xlsx": "^0.18.5",
-    "lucide-react": "^0.300.0"
+    "xlsx": "^0.18.5"
   },
   "overrides": {
     "@svgr/webpack": "^8.0.1",
