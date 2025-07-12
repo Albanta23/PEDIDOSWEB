@@ -299,7 +299,9 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
       if (typeof tiendaIdEnvio === 'string' && tiendaIdEnvio.trim().toLowerCase() === 'clientes') tiendaIdEnvio = TIENDA_CLIENTES_ID;
       
       const bodyData = { tienda: tiendaActual?.nombre || '', tiendaId: tiendaIdEnvio, fecha: new Date().toLocaleDateString(), lineas: lineasProveedorMayus, pdfBase64, forzarTextoPlano };
-      const res = await fetch(`${API_URL}/api/enviar-proveedor-v2`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyData) });
+      // CORRECCIÓN: evitar duplicidad /api/api/enviar-proveedor-v2
+      const endpoint = API_URL.endsWith('/api') ? `${API_URL}/enviar-proveedor-v2` : `${API_URL}/api/enviar-proveedor-v2`;
+      const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyData) });
 
       if (res.ok) { setMensajeProveedor("¡Pedido enviado al proveedor!"); handleProveedorLimpiar(); }
       else { setMensajeProveedor("Error al enviar el email al proveedor."); }
@@ -397,7 +399,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <span role="img" aria-label="crear">📝</span> Crear Nuevo Pedido
           </button>
           <button onClick={() => setMostrarModalProveedor(true)} className="btn-secondary-modern">
-            <span role="img" aria-label="cerdo">🐷</span> Pedidos de Fresco (Proveedor)
+            <img src="/logo_2.jpg" alt="Proveedor" style={{height:28,width:28,marginRight:8,verticalAlign:'middle',borderRadius:6}} /> Pedidos de Fresco (Proveedor)
           </button>
         </div>
       )}
@@ -592,7 +594,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
           <div style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 4px 32px #0004',minWidth:320,maxWidth:540,minHeight:420,maxHeight:'90vh',position:'relative',overflow:'auto'}}>
             <button onClick={()=>setMostrarModalProveedor(false)} style={{position:'absolute',top:12,right:12,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:700,cursor:'pointer'}}>Cerrar</button>
             <h2 style={{marginTop:0,marginBottom:16,fontSize:22,color:'#b71c1c',display:'flex',alignItems:'center'}}>
-              <span role="img" aria-label="cerdo" style={{fontSize:32,marginRight:10}}>🐷</span>Lista para proveedor
+              <img src="/logo_2.jpg" alt="Proveedor" style={{height:32,width:32,marginRight:10,borderRadius:8}} />Lista para proveedor
             </h2>
             <div style={{overflowX:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',marginBottom:16,minWidth:400}}>
@@ -652,10 +654,22 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                 className="btn-premium"
                 style={{
                   opacity: (enviandoProveedor || !!mensajeProveedor) ? 0.5 : 1,
-                  cursor: (enviandoProveedor || !!mensajeProveedor) ? 'not-allowed' : 'pointer'
+                  cursor: (enviandoProveedor || !!mensajeProveedor) ? 'not-allowed' : 'pointer',
+                  padding: 0,
+                  border: 'none',
+                  background: 'none',
+                  boxShadow: 'none',
+                  minWidth: 48,
+                  minHeight: 48,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
-                {enviandoProveedor ? 'Enviando...' : 'Enviar'}
+                <img src="/logo_2.jpg" alt="Enviar al proveedor" style={{height:48,width:48,borderRadius:12,objectFit:'cover',boxShadow:'0 2px 8px #0002'}} />
+                <span style={{fontSize:13,marginTop:4,color:'#333',fontWeight:500,letterSpacing:0.5}}>Enviar</span>
+                {enviandoProveedor && <span style={{marginTop:6,fontWeight:600}}>Enviando...</span>}
               </button>
               <button onClick={()=>setMostrarHistorialProveedor(true)} className="btn-primary-modern" style={{marginLeft:8, padding:'7px 18px'}}>
                 <span role="img" aria-label="historial" style={{marginRight:6}}>📦</span>Historial
