@@ -14,7 +14,9 @@ import { abrirHistoricoEnVentana } from './utils/historicoVentana';
 import { obtenerPedidos, crearPedido, actualizarPedido, eliminarPedido } from './services/pedidosService';
 import { listarAvisos, crearAviso, marcarAvisoVisto } from './services/avisosService';
 import GestionMantenimientoPanel from './components/GestionMantenimientoPanel';
-import GestionEntradasFabricaPanel from './components/GestionEntradasFabricaPanel'; // Importar nuevo panel
+import GestionEntradasWrapper from './components/GestionEntradasWrapper'; // Importar wrapper con autenticación
+import LoginEntradasPanel from './components/LoginEntradasPanel'; // Importar modal de login
+import GestionEntradasFabricaPanel from './components/GestionEntradasFabricaPanel'; // Importar panel principal
 import { ProductosProvider } from './components/ProductosContext';
 import AlmacenTiendaPanel from "./components/AlmacenTiendaPanel";
 import SidebarClientes from './clientes-gestion/SidebarClientes';
@@ -60,6 +62,8 @@ function App() {
   const [pedidoEditando, setPedidoEditando] = useState(null);
   const [mostrarGestion, setMostrarGestion] = useState(false);
   const [mostrarGestionEntradasFabrica, setMostrarGestionEntradasFabrica] = useState(false); // Nuevo estado
+  const [mostrarLoginEntradas, setMostrarLoginEntradas] = useState(false); // Estado para modal de login
+  const [userRoleEntradas, setUserRoleEntradas] = useState(null); // Rol del usuario autenticado
   const [mostrarAlmacenTienda, setMostrarAlmacenTienda] = useState(false);
   // Estado para la vista de clientes
   const [vistaClientes, setVistaClientes] = useState('mantenimiento');
@@ -338,11 +342,24 @@ function App() {
     setPedidoEditando(pedido);
   }
 
-  useEffect(() => {
-    if (logueado && modo === 'tienda') {
-      console.log('[DEBUG] tiendaSeleccionada:', tiendaSeleccionada);
-    }
-  }, [tiendaSeleccionada, logueado, modo]);
+  // Funciones para manejar el login de entradas
+  const handleLoginEntradas = (userRole) => {
+    setUserRoleEntradas(userRole);
+    setMostrarLoginEntradas(false);
+    setMostrarGestionEntradasFabrica(true);
+  };
+
+  const handleCloseLoginEntradas = () => {
+    setMostrarLoginEntradas(false);
+    setUserRoleEntradas(null);
+  };
+
+  const handleCloseGestionEntradas = () => {
+    setMostrarGestionEntradasFabrica(false);
+    setUserRoleEntradas(null);
+  };
+
+  // ...existing code...
 
   // Comentado para evitar re-renders innecesarios
   // useEffect(() => {
@@ -382,24 +399,37 @@ function App() {
   }
 
   // --- RENDER PRINCIPAL ---
-  if (!modo && !mostrarGestion && !mostrarGestionEntradasFabrica) {
+  if (!modo && !mostrarGestion && !mostrarGestionEntradasFabrica && !mostrarLoginEntradas) {
     return <SeleccionModo
              onSeleccion={setModo}
              pedidos={pedidos}
              tiendas={tiendas}
              onGestion={() => setMostrarGestion(true)}
-             onGestionEntradasFabrica={() => setMostrarGestionEntradasFabrica(true)} // Nueva prop
+             onGestionEntradasFabrica={() => setMostrarLoginEntradas(true)} // Abrir modal de login
              expedicionesClientes={() => setModo('expedicionesClientes')}
            />;
   }
   if (mostrarGestion) {
     return <GestionMantenimientoPanel onClose={() => setMostrarGestion(false)} />;
   }
-  if (mostrarGestionEntradasFabrica) { // Nuevo render condicional
+  if (mostrarGestionEntradasFabrica) { // Renderizar panel de gestión de entradas
     return (
       <ProductosProvider>
-        <GestionEntradasFabricaPanel onClose={() => setMostrarGestionEntradasFabrica(false)} />
+        <GestionEntradasFabricaPanel 
+          onClose={handleCloseGestionEntradas} 
+          userRole={userRoleEntradas}
+        />
       </ProductosProvider>
+    );
+  }
+
+  // Renderizar modal de login para entradas
+  if (mostrarLoginEntradas) {
+    return (
+      <LoginEntradasPanel 
+        onLogin={handleLoginEntradas} 
+        onClose={handleCloseLoginEntradas}
+      />
     );
   }
 

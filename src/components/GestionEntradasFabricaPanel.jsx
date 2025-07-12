@@ -11,13 +11,20 @@ import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucid
 const ID_ALMACEN_FABRICA = 'tienda9';
 const NOMBRE_ALMACEN_FABRICA = 'Fábrica / Almacén Central';
 
-const GestionEntradasFabricaPanel = ({ onClose }) => {
+// Importar iconos adicionales
+import { User, Shield } from 'lucide-react';
+
+const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [historialEntradas, setHistorialEntradas] = useState([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   const [errorHistorial, setErrorHistorial] = useState('');
   const { productos } = useProductos();
   const [proveedoresMap, setProveedoresMap] = useState({});
+  
+  // Permisos basados en el rol - Ahora todos tienen acceso completo
+  const esAdministrador = userRole === 'administrador';
+  const puedeRegistrarEntradas = true; // Tanto usuario como administrador pueden registrar entradas
 
   useEffect(() => {
     const fetchProveedores = async () => {
@@ -72,7 +79,28 @@ const GestionEntradasFabricaPanel = ({ onClose }) => {
       <Card className="max-w-4xl mx-auto shadow-xl">
         <CardHeader className="border-b">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl text-gray-800">Gestión de Entradas - {NOMBRE_ALMACEN_FABRICA}</CardTitle>
+            <div className="flex-1">
+              <CardTitle className="text-2xl text-gray-800 flex items-center">
+                <div className="mr-3">
+                  {esAdministrador ? (
+                    <div className="flex items-center">
+                      <Shield className="h-6 w-6 text-purple-600 mr-2" />
+                      <span className="text-purple-700 text-sm font-medium bg-purple-100 px-2 py-1 rounded">
+                        Administrador
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <User className="h-6 w-6 text-blue-600 mr-2" />
+                      <span className="text-blue-700 text-sm font-medium bg-blue-100 px-2 py-1 rounded">
+                        Usuario
+                      </span>
+                    </div>
+                  )}
+                </div>
+                Gestión de Entradas - {NOMBRE_ALMACEN_FABRICA}
+              </CardTitle>
+            </div>
             <Button variant="ghost" size="icon" onClick={onClose} title="Cerrar Panel">
               <XCircle className="h-6 w-6 text-gray-500 hover:text-gray-700" />
             </Button>
