@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import FormularioEntradaStock from './FormularioEntradaStock';
 import { getMovimientosStock } from '../services/movimientosStockService';
-import { getProveedores } from '../services/proveedoresService'; // For fetching supplier names
+import { getProveedores } from '../services/proveedoresService';
 import { useProductos } from './ProductosContext';
-import { Button } from './ui/Button'; // Assuming relative path
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'; // Assuming relative path
-import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
+import { Button } from './ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
+import { Badge } from './ui/Badge';
+import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle, PackagePlus } from 'lucide-react';
 
-// Define a constant for the factory/central warehouse ID
 const ID_ALMACEN_FABRICA = 'tienda9';
 const NOMBRE_ALMACEN_FABRICA = 'Fábrica / Almacén Central';
 
@@ -64,17 +64,20 @@ const GestionEntradasFabricaPanel = ({ onClose }) => {
   };
 
   const getSupplierName = (supplierId) => {
-    return proveedoresMap[supplierId] || supplierId || '-';
+    return proveedoresMap[supplierId] || supplierId || 'N/A';
   }
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      <Card className="max-w-4xl mx-auto shadow-xl">
-        <CardHeader className="border-b">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl text-gray-800">Gestión de Entradas - {NOMBRE_ALMACEN_FABRICA}</CardTitle>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
+      <Card variant="premium" className="max-w-7xl mx-auto shadow-2xl">
+        <CardHeader className="border-b border-gray-200/50">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle gradient className="text-3xl">Gestión de Entradas</CardTitle>
+              <p className="text-gray-500 mt-1">{NOMBRE_ALMACEN_FABRICA}</p>
+            </div>
             <Button variant="ghost" size="icon" onClick={onClose} title="Cerrar Panel">
-              <XCircle className="h-6 w-6 text-gray-500 hover:text-gray-700" />
+              <XCircle className="h-7 w-7 text-gray-400 hover:text-red-500 transition-colors" />
             </Button>
           </div>
         </CardHeader>
@@ -82,85 +85,91 @@ const GestionEntradasFabricaPanel = ({ onClose }) => {
           {!mostrarFormulario && (
             <Button
               variant="premium"
-              size="lg"
+              size="xl"
               onClick={() => setMostrarFormulario(true)}
-              className="mb-6 w-full md:w-auto"
+              className="mb-8 w-full md:w-auto animate-pulse hover:animate-none"
             >
-              <PlusCircle className="mr-2 h-5 w-5" /> Registrar Nueva Entrada en Fábrica
+              <PackagePlus className="mr-3 h-6 w-6" /> Registrar Nueva Entrada de Mercancía
             </Button>
           )}
 
           {mostrarFormulario && (
-            <Card variant="outline" className="mb-6 p-2 md:p-0 shadow-inner bg-slate-50"> {/* Contenedor del formulario */}
-              {/* FormularioEntradaStock ya tiene su propio Card, así que podemos quitar este Card si FormularioEntradaStock se ve bien solo */}
+            <Card variant="glass" className="mb-8 p-4 md:p-6 shadow-inner bg-white/60">
               <FormularioEntradaStock
                 tiendaId={ID_ALMACEN_FABRICA}
                 onEntradaRegistrada={handleEntradaRegistrada}
                 contexto="fabrica"
               />
-              <div className="mt-4 flex justify-end p-4 md:p-0">
-                <Button variant="outline" onClick={() => setMostrarFormulario(false)}>
-                  Cancelar Nueva Entrada
+              <div className="mt-6 flex justify-end">
+                <Button variant="destructive" onClick={() => setMostrarFormulario(false)}>
+                  <XCircle className="mr-2 h-4 w-4" /> Cancelar
                 </Button>
               </div>
             </Card>
           )}
 
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-700 flex items-center">
-                <ListChecks className="mr-2 h-6 w-6 text-primary-500"/>
-                Historial de Entradas en Fábrica
+            <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+              <h3 className="text-2xl font-semibold text-gray-800 flex items-center">
+                <ListChecks className="mr-3 h-7 w-7 text-purple-600"/>
+                Historial de Entradas
               </h3>
-              <Button variant="outline" size="sm" onClick={cargarHistorialEntradas} disabled={cargandoHistorial}>
+              <Button variant="outline" size="default" onClick={cargarHistorialEntradas} disabled={cargandoHistorial}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${cargandoHistorial ? 'animate-spin' : ''}`} />
-                Refrescar
+                {cargandoHistorial ? 'Actualizando...' : 'Refrescar Historial'}
               </Button>
             </div>
 
             {cargandoHistorial && (
-              <div className="flex justify-center items-center py-10">
-                <RefreshCw className="h-8 w-8 animate-spin text-primary-500" />
-                <p className="ml-3 text-gray-600">Cargando historial...</p>
+              <div className="flex justify-center items-center py-12">
+                <RefreshCw className="h-10 w-10 animate-spin text-purple-500" />
+                <p className="ml-4 text-lg text-gray-600">Cargando, por favor espere...</p>
               </div>
             )}
             {errorHistorial && (
-              <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-md flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2"/> {errorHistorial}
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md shadow-md flex items-center">
+                <AlertTriangle className="h-6 w-6 mr-3"/>
+                <div>
+                  <p className="font-bold">Error</p>
+                  <p>{errorHistorial}</p>
+                </div>
               </div>
             )}
             {!cargandoHistorial && !errorHistorial && historialEntradas.length === 0 && (
-              <div className="text-center py-10 bg-gray-100 rounded-lg">
-                <ListChecks className="h-12 w-12 text-gray-400 mx-auto mb-3"/>
-                <p className="text-gray-500">No hay entradas registradas para la fábrica.</p>
+              <div className="text-center py-16 bg-gray-100/50 rounded-xl border border-dashed">
+                <ListChecks className="h-16 w-16 text-gray-300 mx-auto mb-4"/>
+                <h3 className="text-xl font-semibold text-gray-600">No hay entradas registradas</h3>
+                <p className="text-gray-400 mt-2">Utilice el botón de "Registrar Nueva Entrada" para comenzar.</p>
               </div>
             )}
             {!cargandoHistorial && !errorHistorial && historialEntradas.length > 0 && (
-              <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200 bg-white">
-                  <thead className="bg-gray-100">
+              <div className="overflow-x-auto rounded-xl border border-gray-200/80 shadow-lg bg-white">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Producto</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Cantidad</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unidad</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lote</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ref./Motivo</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Proveedor</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">P. Coste</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Fecha</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Producto</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Cantidad</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Unidad</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Lote</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Ref./Motivo</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Proveedor</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">P. Coste</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200/80">
                     {historialEntradas.map((mov) => (
-                      <tr key={mov._id || mov.fecha + mov.producto} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{new Date(mov.fecha).toLocaleDateString()}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium">{getProductName(mov.producto)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{mov.cantidad}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{mov.unidad}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{mov.lote || '-'}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs" title={mov.referenciaDocumento || mov.motivo}>{mov.referenciaDocumento || mov.motivo || '-'}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{getSupplierName(mov.proveedorId)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{mov.precioCoste ? `${mov.precioCoste.toFixed(2)}€` : '-'}</td>
+                      <tr key={mov._id || mov.fecha + mov.producto} className="hover:bg-purple-50/50 transition-colors duration-200">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{new Date(mov.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">{getProductName(mov.producto)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">{mov.cantidad}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{mov.unidad}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <Badge variant={mov.lote ? 'secondary' : 'outline'}>{mov.lote || 'N/A'}</Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate max-w-sm" title={mov.referenciaDocumento || mov.motivo}>{mov.referenciaDocumento || mov.motivo || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{getSupplierName(mov.proveedorId)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-right font-mono">{mov.precioCoste ? `${mov.precioCoste.toFixed(2)}€` : '-'}</td>
                       </tr>
                     ))}
                   </tbody>
