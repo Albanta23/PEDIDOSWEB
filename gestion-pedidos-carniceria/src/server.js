@@ -33,6 +33,9 @@ const server = http.createServer(app); // Usar solo HTTP, compatible con Render
 // Middleware de logging para depuración de CORS
 app.use((req, res, next) => {
   console.log(`[CORS] Origin recibido: ${req.headers.origin} | Ruta: ${req.originalUrl}`);
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   next();
 });
 
