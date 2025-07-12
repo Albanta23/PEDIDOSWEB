@@ -59,7 +59,7 @@ function corsOrigin(origin, callback) {
   if (!origin) return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
   const originLc = origin.toLowerCase();
   const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
-  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(-[0-9]+)?\.app\.github\.dev$/;
   const matchGithubDev = githubDevRegex.test(originLc);
   const matchVercel = /\.vercel\.app$/.test(originLc);
   const matchRender = /\.onrender\.com$/.test(originLc);
@@ -82,7 +82,7 @@ app.use(cors({
 }));
 
 // --- Socket.IO: CORS seguro y compatible con subdominios efímeros ---
-const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(-[0-9]+)?\.app\.github\.dev$/;
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
