@@ -688,6 +688,29 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Listar movimientos de stock por tienda o filtro ---
+app.get('/api/movimientos-stock', async (req, res) => {
+  try {
+    const { tiendaId, producto, fechaInicio, fechaFin } = req.query;
+    let filtro = {};
+    if (tiendaId) filtro.tiendaId = tiendaId;
+    if (producto) filtro.producto = producto;
+    if (fechaInicio || fechaFin) {
+      filtro.fecha = {};
+      if (fechaInicio) filtro.fecha.$gte = new Date(fechaInicio);
+      if (fechaFin) {
+        const fin = new Date(fechaFin);
+        fin.setHours(23,59,59,999);
+        filtro.fecha.$lte = fin;
+      }
+    }
+    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
+    res.json(movimientos);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // --- ENDPOINT: Comparar y marcar/crear clientes de cestas de navidad ---
 app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
   try {
