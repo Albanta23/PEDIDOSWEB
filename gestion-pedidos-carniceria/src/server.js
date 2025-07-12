@@ -47,7 +47,7 @@ const allowedOrigins = [
   'https://localhost:3100',
   'https://127.0.0.1:3000',
   'https://127.0.0.1:3100',
-  'https://pedidosweb-phi.vercel.app',
+  'https_//pedidosweb-phi.vercel.app',
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev',
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-5173.app.github.dev',
   'https://pedidos-backend-0e1s.onrender.com',
