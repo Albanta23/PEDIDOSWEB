@@ -39,11 +39,14 @@
 
 - El acceso al frontend de clientes-gestion requiere autenticación por usuario y pin:
   - Usuarios válidos: "Amaya"/"Amaya", "Raquel"/"Raquel".
-  - **Solo se permite el acceso tras un login exitoso (usuario y PIN correctos y submit del formulario).**
+  - **Siempre se muestra el login al iniciar y se puede cerrar sesión desde cualquier pantalla.**
+  - Solo se permite el acceso tras un login exitoso (usuario y PIN correctos y submit del formulario).
   - No se permite el acceso si los campos de usuario o PIN están vacíos, ni solo por escribir el usuario.
+  - No se permite acceso automático por localStorage.
 - El acceso al gestor de cestas navideñas pro solo está permitido para:
   - Usuario "Elier" con pin "1973".
   - Usuario "Amaya" con pin "Amaya".
-  - **Siempre se solicita login, no se permite acceso automático por localStorage ni por URL.**
-  - Si no hay usuario y pin válidos, se solicitará login.
-- El sistema almacena el usuario autenticado en localStorage tras login para persistencia, pero no para acceso automático.
+  - **Siempre se muestra el login al iniciar y se puede cerrar sesión desde cualquier pantalla.**
+  - Solo se permite el acceso tras un login exitoso (usuario y PIN correctos y submit del formulario).
+  - No se permite el acceso si los campos de usuario o PIN están vacíos, ni solo por escribir el usuario.
+  - No se permite acceso automático por localStorage.

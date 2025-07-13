@@ -20,11 +20,7 @@ export default function App() {
   const [usuario, setUsuario] = useState('');
   const [pin, setPin] = useState('');
   const [errorLogin, setErrorLogin] = useState('');
-  const [autenticado, setAutenticado] = useState(() => {
-    const usuarioLS = localStorage.getItem('usuarioCRM') || '';
-    const user = USUARIOS.find(u => u.nombre === usuarioLS);
-    return user ? true : false;
-  });
+  const [autenticado, setAutenticado] = useState(false);
   // Obtener la(s) URL(s) de cestas desde la variable de entorno
   const cestasUrls = (import.meta.env.VITE_CESTAS_URL || '').split(',').map(u => u.trim()).filter(Boolean);
   const cestasUrl = cestasUrls[0] || 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3200.app.github.dev';
@@ -58,9 +54,18 @@ export default function App() {
     );
   }
 
+  // Panel principal con botón de logout
   return (
     <div style={{fontFamily:'Inter, Arial, sans-serif', minHeight:'100vh', background:'#f4f7fb'}}>
       <header style={{background:'#1976d2',color:'#fff',padding:'18px 32px',fontSize:28,fontWeight:700,letterSpacing:1,boxShadow:'0 2px 8px #1976d233'}}>CRM de Clientes y Pedidos</header>
+      <div style={{position:'absolute',top:18,right:32}}>
+        <button onClick={() => {
+          setAutenticado(false);
+          setUsuario('');
+          setPin('');
+          localStorage.removeItem('usuarioCRM');
+        }} style={{background:'#d32f2f',color:'#fff',border:'none',borderRadius:6,padding:'8px 22px',fontWeight:700,fontSize:17,boxShadow:'0 1px 4px #d32f2f22',cursor:'pointer'}}>Cerrar sesión</button>
+      </div>
       <nav style={{display:'flex',gap:16,padding:'16px 32px',background:'#e3eafc',alignItems:'center',boxShadow:'0 2px 8px #1976d211'}}>
         <button onClick={()=>setTab('clientes')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='clientes'?'#1976d2':'#fff',color:tab==='clientes'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Pedidos directos</button>
         <button onClick={()=>setTab('woo')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='woo'?'#1976d2':'#fff',color:tab==='woo'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Pedidos WooCommerce</button>
