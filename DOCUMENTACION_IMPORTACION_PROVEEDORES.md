@@ -34,3 +34,17 @@
   - Si el archivo contiene estos encabezados, los datos se registran correctamente.
 - Añadir validaciones en el formulario para evitar datos incompletos y asegurar la persistencia de la selección de proveedor entre sesiones o recargas.
 - Mejorar el autocompletado de productos en el formulario avanzado, permitiendo búsqueda por nombre, referencia, familia o proveedor, y añadiendo filtros dinámicos para agilizar la selección.
+
+## Seguridad y acceso
+
+- El acceso al frontend de clientes-gestion requiere autenticación por usuario y pin:
+  - Usuarios válidos: "Amaya"/"Amaya", "Raquel"/"Raquel".
+  - **Solo se permite el acceso tras un login exitoso (usuario y PIN correctos y submit del formulario).**
+  - No se permite el acceso si los campos de usuario o PIN están vacíos, ni solo por escribir el usuario.
+- El acceso al gestor de cestas navideñas pro solo está permitido para:
+  - Usuario "Elier" con pin "1973".
+  - Usuario "Amaya" con pin "Amaya".
+  - El login se puede realizar por formulario o automáticamente si se accede desde clientes-gestion y se envían ambos datos por URL (`usuario=Amaya&pin=Amaya`).
+  - Si no hay usuario y pin válidos, se solicitará login.
+- Si el usuario accede primero a clientes-gestion y pulsa la pasarela, se abrirá el gestor de cestas navideñas pro logueando automáticamente a "Amaya" si corresponde.
+- El sistema almacena el usuario autenticado en localStorage y lo transmite por la URL para permitir el acceso cruzado.
