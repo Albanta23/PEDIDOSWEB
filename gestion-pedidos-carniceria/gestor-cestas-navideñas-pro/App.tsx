@@ -25,13 +25,7 @@ const App: React.FC = () => {
   const [usuario, setUsuario] = useState('');
   const [pin, setPin] = useState('');
   const [errorLogin, setErrorLogin] = useState('');
-  const [autenticado, setAutenticado] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const usuarioLS = params.get('usuario') || localStorage.getItem('usuarioCRM') || '';
-    const pinLS = params.get('pin') || localStorage.getItem('pinCRM') || '';
-    const user = USUARIOS_CESTAS.find(u => u.nombre === usuarioLS && u.pin === pinLS);
-    return user ? true : false;
-  });
+  const [autenticado, setAutenticado] = useState(false);
 
   if (!autenticado) {
     return (

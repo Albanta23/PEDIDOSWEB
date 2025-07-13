@@ -44,7 +44,6 @@
 - El acceso al gestor de cestas navideñas pro solo está permitido para:
   - Usuario "Elier" con pin "1973".
   - Usuario "Amaya" con pin "Amaya".
-  - El login se puede realizar por formulario o automáticamente si se accede desde clientes-gestion y se envían ambos datos por URL (`usuario=Amaya&pin=Amaya`).
+  - **Siempre se solicita login, no se permite acceso automático por localStorage ni por URL.**
   - Si no hay usuario y pin válidos, se solicitará login.
-- Si el usuario accede primero a clientes-gestion y pulsa la pasarela, se abrirá el gestor de cestas navideñas pro logueando automáticamente a "Amaya" si corresponde.
-- El sistema almacena el usuario autenticado en localStorage y lo transmite por la URL para permitir el acceso cruzado.
+- El sistema almacena el usuario autenticado en localStorage tras login para persistencia, pero no para acceso automático.
