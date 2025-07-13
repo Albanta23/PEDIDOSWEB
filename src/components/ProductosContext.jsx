@@ -3,11 +3,10 @@ import axios from 'axios';
 
 const ProductosContext = createContext();
 
-// Cambiar la URL para que funcione correctamente en cualquier entorno
-const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
-const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
-console.log('[DEBUG ProductosContext] API_URL:', API_URL);
-console.log('[DEBUG ProductosContext] VITE_API_URL:', import.meta.env.VITE_API_URL);
+// Construcción robusta de la URL base para productos
+let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+const PRODUCTOS_API_ENDPOINT = `${apiUrl}/productos`;
 
 export function ProductosProvider({ children }) {
   const [productos, setProductos] = useState([]);
@@ -16,7 +15,7 @@ export function ProductosProvider({ children }) {
   const cargarProductos = async () => {
     setCargando(true);
     try {
-      const res = await axios.get(`${API_URL_CORRECTO}/productos`);
+      const res = await axios.get(PRODUCTOS_API_ENDPOINT);
       setProductos(res.data);
     } catch (e) {
       setProductos([]);

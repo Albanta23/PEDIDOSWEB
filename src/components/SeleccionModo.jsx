@@ -183,11 +183,17 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
           Almacén Central
         </button>
         <button
-          onClick={onGestionEntradasFabrica} // Call the new prop
+          onClick={e => {
+            if (typeof onGestionEntradasFabrica === 'function') {
+              onGestionEntradasFabrica();
+            } else {
+              alert('Función de gestión de entradas no disponible');
+            }
+          }}
           style={{
             width: 120,
             height: 120,
-            background: "#607d8b", // Example color
+            background: "#607d8b",
             color: "#fff",
             border: "none",
             borderRadius: 16,
@@ -198,8 +204,11 @@ export default function SeleccionModo({ onSeleccion, pedidos, tiendas, onGestion
             fontSize: 18,
             cursor: "pointer",
             boxShadow: "0 2px 8px #bbb",
-            textAlign: 'center'
+            textAlign: 'center',
+            outline: 'none',
+            transition: 'box-shadow 0.2s',
           }}
+          title="Acceso al panel técnico de entradas de fábrica"
         >
           <FaDollyFlatbed size={48} style={{ marginBottom: 10 }} />
           Entradas Fábrica
