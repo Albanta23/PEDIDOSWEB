@@ -56,12 +56,22 @@ const App: React.FC = () => {
     );
   }
 
+  // Panel principal con botón de logout
   return (
     <ThemeProvider defaultTheme="light" storageKey="cestas-theme">
       <DataProvider>
         <ToastProvider>
           <HashRouter>
             <LayoutPremium>
+              <div style={{position:'absolute',top:18,right:32}}>
+                <button onClick={() => {
+                  setAutenticado(false);
+                  setUsuario('');
+                  setPin('');
+                  localStorage.removeItem('usuarioCRM');
+                  localStorage.removeItem('pinCRM');
+                }} style={{background:'#d32f2f',color:'#fff',border:'none',borderRadius:6,padding:'8px 22px',fontWeight:700,fontSize:17,boxShadow:'0 1px 4px #d32f2f22',cursor:'pointer'}}>Cerrar sesión</button>
+              </div>
               <Routes>
                 <Route path="/" element={<DashboardPagePremium />} />
                 <Route path="/products" element={<ProductManagementPagePremium />} />

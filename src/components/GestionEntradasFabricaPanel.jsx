@@ -7,9 +7,9 @@ import { Button } from './ui/Button'; // Assuming relative path
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'; // Assuming relative path
 import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
 
-// Define a constant for the factory/central warehouse ID
-const ID_ALMACEN_FABRICA = 'tienda9';
-const NOMBRE_ALMACEN_FABRICA = 'Fábrica / Almacén Central';
+// Define a constant for the central warehouse ID (almacen central)
+const ID_ALMACEN_CENTRAL = 'almacen_central';
+const NOMBRE_ALMACEN_CENTRAL = 'Almacén Central';
 
 // Importar iconos adicionales
 import { User, Shield } from 'lucide-react';
@@ -59,7 +59,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
     setCargandoHistorial(true);
     setErrorHistorial('');
     try {
-      const todosMovimientos = await getMovimientosStock({ tiendaId: ID_ALMACEN_FABRICA });
+      const todosMovimientos = await getMovimientosStock({ tiendaId: ID_ALMACEN_CENTRAL });
       const entradas = todosMovimientos.filter(
         (mov) => mov.tipo === 'entrada' || mov.motivo?.toLowerCase().includes('compra') || mov.motivo?.toLowerCase().includes('entrada manual')
       ).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -90,13 +90,20 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   }
 
   // Nueva función para registrar entrada avanzada
+  /**
+   * Flujo de registro de entrada técnica:
+   * 1. Valida proveedor, líneas, referencia y fecha.
+   * 2. Envía cada línea al servicio de registro, incluyendo todos los datos relevantes.
+   * 3. Actualiza el historial y oculta el formulario.
+   * 4. Las entradas quedan disponibles para consumo en ventas y expediciones.
+   */
   const handleRegistrarEntradaAvanzada = async ({ proveedor, lineas, referenciaDocumento, fechaEntrada }) => {
     setCargandoHistorial(true);
     setErrorHistorial('');
     try {
       for (const l of lineas) {
         await registrarEntradaStock({
-          tiendaId: ID_ALMACEN_FABRICA,
+          tiendaId: ID_ALMACEN_CENTRAL,
           producto: l.producto,
           cantidad: l.cantidad || 0,
           unidad: 'kg', // Puedes ajustar según el producto

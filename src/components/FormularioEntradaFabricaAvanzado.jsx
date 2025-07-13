@@ -3,7 +3,17 @@ import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { useProveedores } from './ProveedoresContext';
 import { useProductos } from './ProductosContext'; // <--- Importar contexto de productos
+import { useLotesDisponiblesProducto } from '../hooks/useLotesDisponiblesProducto';
 import { v4 as uuidv4 } from 'uuid';
+
+/**
+ * Este formulario avanzado permite registrar entradas técnicas en fábrica, capturando todos los datos relevantes:
+ * - Proveedor (selección y validación)
+ * - Producto, cantidad, peso, lote, precio coste, observaciones
+ * - Referencia de documento (albarán/factura) y fecha de entrada
+ * Las líneas de productos se validan para asegurar que ningún campo obligatorio quede vacío.
+ * Al enviar, se llama a onRegistrar con todos los datos para su registro en el sistema y disponibilidad en los paneles de ventas y expediciones.
+ */
 
 const lineaVacia = {
   id: uuidv4(),
@@ -188,85 +198,97 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
                 </tr>
               </thead>
               <tbody>
-                {lineas.map((l, idx) => (
-                  <tr key={l.id} className="bg-white">
-                    <td className="px-2 py-2">
-                      <input
-                        type="text"
-                        value={l.producto}
-                        onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
-                        placeholder="Buscar por nombre o referencia"
-                        className="w-full px-2 py-1 border border-gray-300 rounded"
-                        required
-                        list={`productos-catalogo-${filtroFamilia || 'todas'}`}
-                      />
-                      <datalist id={`productos-catalogo-${filtroFamilia || 'todas'}`}>
-                        {productosFiltrados.map(prod => (
-                          <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                            {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''} {prod.familia ? `- ${prod.familia}` : ''}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    <td className="px-2 py-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={l.cantidad}
-                        onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                        placeholder="Unidades"
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={l.peso}
-                        onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                        placeholder="Peso (kg)"
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <input
-                        type="text"
-                        value={l.lote}
-                        onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                        placeholder="Lote"
-                        className="w-full px-2 py-1 border border-gray-300 rounded"
-                        required
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={l.precioCoste}
-                        onChange={e => actualizarLinea(idx, 'precioCoste', e.target.value)}
-                        placeholder="Precio"
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <input
-                        type="text"
-                        value={l.observaciones}
-                        onChange={e => actualizarLinea(idx, 'observaciones', e.target.value)}
-                        placeholder="Observaciones"
-                        className="w-full px-2 py-1 border border-gray-300 rounded"
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      {lineas.length > 1 && (
-                        <Button type="button" variant="outline" size="icon" onClick={() => eliminarLinea(idx)} title="Eliminar línea">🗑️</Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {lineas.map((l, idx) => {
+                  const { lotes } = useLotesDisponiblesProducto(l.producto, fechaEntrada || new Date().toISOString().split('T')[0]);
+                  return (
+                    <tr key={l.id} className="bg-white">
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={l.producto}
+                          onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
+                          placeholder="Buscar por nombre o referencia"
+                          className="w-full px-2 py-1 border border-gray-300 rounded"
+                          required
+                          list={`productos-catalogo-${filtroFamilia || 'todas'}`}
+                        />
+                        <datalist id={`productos-catalogo-${filtroFamilia || 'todas'}`}>
+                          {productosFiltrados.map(prod => (
+                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''} {prod.familia ? `- ${prod.familia}` : ''}
+                            </option>
+                          ))}
+                        </datalist>
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={l.cantidad}
+                          onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
+                          placeholder="Unidades"
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={l.peso}
+                          onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+                          placeholder="Peso (kg)"
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <label className="block text-xs text-gray-600 mb-1">Lote</label>
+                        <input
+                          type="text"
+                          value={l.lote}
+                          onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
+                          placeholder="Escribe o selecciona lote"
+                          className="w-full px-2 py-1 border border-gray-300 rounded mb-1"
+                          required
+                          list={`lotes-disponibles-${l.producto}-${idx}`}
+                        />
+                        <datalist id={`lotes-disponibles-${l.producto}-${idx}`}>
+                          {lotes.map(loteObj => (
+                            <option key={loteObj.lote} value={loteObj.lote}>
+                              {loteObj.lote} (Stock: {loteObj.cantidad} / {loteObj.peso}kg)
+                            </option>
+                          ))}
+                        </datalist>
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={l.precioCoste}
+                          onChange={e => actualizarLinea(idx, 'precioCoste', e.target.value)}
+                          placeholder="Precio"
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={l.observaciones}
+                          onChange={e => actualizarLinea(idx, 'observaciones', e.target.value)}
+                          placeholder="Observaciones"
+                          className="w-full px-2 py-1 border border-gray-300 rounded"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        {lineas.length > 1 && (
+                          <Button type="button" variant="outline" size="icon" onClick={() => eliminarLinea(idx)} title="Eliminar línea">🗑️</Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <div className="mt-2">
