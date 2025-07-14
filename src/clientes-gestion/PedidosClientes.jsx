@@ -154,6 +154,23 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       .catch(()=>setPedidos([]));
   }, []);
 
+  const [sincronizando, setSincronizando] = useState(false);
+
+  const handleSincronizar = async () => {
+    setSincronizando(true);
+    try {
+      await axios.get(`${API_URL}/pedidos-woo/sincronizar`);
+      // Volver a cargar los pedidos después de sincronizar
+      axios.get(`${API_URL}/pedidos-clientes`)
+        .then(res => setPedidos(res.data))
+        .catch(()=>setPedidos([]));
+    } catch (error) {
+      console.error('Error al sincronizar los pedidos de WooCommerce', error);
+    } finally {
+      setSincronizando(false);
+    }
+  };
+
   return (
     <div style={{ 
       position: 'fixed',
@@ -199,6 +216,26 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             Gestión profesional de pedidos con vista expandida
           </p>
         </div>
+        <button
+          onClick={handleSincronizar}
+          disabled={sincronizando}
+          style={{
+            background: 'rgba(255,255,255,0.2)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            fontSize: '16px',
+            transition: 'background 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          {sincronizando ? 'Sincronizando...' : 'Sincronizar con WooCommerce'}
+        </button>
         <div style={{
           background: 'rgba(255,255,255,0.2)',
           padding: '8px 16px',
@@ -873,6 +910,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                   <th style={{ padding: '12px', textAlign: 'left' }}>Cliente</th>
                   <th style={{ padding: '12px', textAlign: 'left' }}>Fecha</th>
                   <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
+                  <th style={{ padding: '12px', textAlign: 'left' }}>Origen</th>
                   <th style={{ padding: '12px', textAlign: 'left' }}>Devoluciones</th>
                 </tr>
               </thead>
@@ -883,6 +921,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     <td style={{ padding: '12px' }}>{pedido.clienteNombre}</td>
                     <td style={{ padding: '12px' }}>{new Date(pedido.fechaPedido).toLocaleDateString()}</td>
                     <td style={{ padding: '12px' }}>{pedido.estado}</td>
+                    <td style={{ padding: '12px' }}>
+                      {pedido.origen?.tipo === 'woocommerce' ? 'WooCommerce' : 'Manual'}
+                    </td>
                     <td style={{ padding: '12px' }}>
                       {pedido.devoluciones && pedido.devoluciones.length > 0 && (
                         <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center' }}>

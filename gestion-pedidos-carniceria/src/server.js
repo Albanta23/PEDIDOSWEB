@@ -152,6 +152,9 @@ app.delete('/api/pedidos-clientes/:id', pedidosClientesController.eliminar);
 app.post('/api/pedidos-clientes/:id/devolucion-parcial', pedidosClientesController.devolucionParcial);
 app.post('/api/pedidos-clientes/:id/devolucion-total', pedidosClientesController.devolucionTotal);
 
+const woocommerceController = require('./woocommerceController');
+app.get('/api/pedidos-woo/sincronizar', woocommerceController.sincronizarPedidos);
+
 // --- ENDPOINTS REST ORIGINALES (DEPRECATED, SOLO PARA COMPATIBILIDAD TEMPORAL) ---
 app.get('/api/pedidos', async (req, res) => {
   try {

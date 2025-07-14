@@ -62,12 +62,13 @@ export default function ExpedicionesClientes() {
               <th style={{ padding: 8, border: '1px solid #eee' }}>Cliente</th>
               <th style={{ padding: 8, border: '1px solid #eee' }}>Dirección</th>
               <th style={{ padding: 8, border: '1px solid #eee' }}>Estado</th>
+              <th style={{ padding: 8, border: '1px solid #eee' }}>Origen</th>
               <th style={{ padding: 8, border: '1px solid #eee' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {pedidos.filter(p => (p.estado || '').toLowerCase() !== 'preparado').length === 0 && (
-              <tr><td colSpan={5} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
             )}
             {pedidos.filter(p => (p.estado || '').toLowerCase() !== 'preparado').map(p => (
               <tr key={p._id || p.id}>
@@ -75,6 +76,9 @@ export default function ExpedicionesClientes() {
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.clienteNombre || p.nombreCliente || p.cliente || '-'}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.direccion || p.direccionEnvio || '-'}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.estado || '-'}</td>
+                <td style={{ padding: 8, border: '1px solid #eee' }}>
+                  {p.origen?.tipo === 'woocommerce' ? 'WooCommerce' : 'Manual'}
+                </td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>
                   <button style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer', marginRight: 8 }}
                     onClick={() => setPedidoEditando(p)}>
