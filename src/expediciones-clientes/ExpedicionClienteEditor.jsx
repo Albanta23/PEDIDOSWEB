@@ -77,7 +77,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     setMensaje('');
     setGuardando(true);
     try {
-      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'preparado', usuarioTramitando: usuario || 'expediciones' });
+      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'preparado', usuarioTramitando: usuario || 'expediciones', bultos });
       setMensaje('Pedido cerrado y preparado');
       setEstado('preparado');
       setEditado(false);
