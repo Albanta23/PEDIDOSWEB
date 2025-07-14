@@ -46,3 +46,13 @@ export async function borrarPedidoCliente(id) {
   const res = await axios.delete(`${API_BASE_URL}/pedidos-clientes/${id}`);
   return res.data;
 }
+
+export async function registrarDevolucionParcial(pedidoId, devolucion) {
+  const response = await axios.post(`${API_BASE_URL}/pedidos-clientes/${pedidoId}/devolucion-parcial`, devolucion);
+  return response.data;
+}
+
+export async function registrarDevolucionTotal(pedidoId, motivo, aptoParaVenta) {
+  const response = await axios.post(`${API_BASE_URL}/pedidos-clientes/${pedidoId}/devolucion-total`, { motivo, aptoParaVenta });
+  return response.data;
+}
