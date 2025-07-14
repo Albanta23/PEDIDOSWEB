@@ -108,6 +108,93 @@ module.exports = {
       res.status(400).json({ error: err.message });
     }
   },
+
+  async devolucionParcial(req, res) {
+    try {
+      const { id } = req.params;
+      const { lineas, motivo } = req.body;
+      const pedido = await PedidoCliente.findById(id);
+      if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+      for (const linea of lineas) {
+        if (linea.aptoParaVenta) {
+          await registrarBajaStock({
+            tiendaId: 'almacen_central',
+            producto: linea.producto,
+            cantidad: -Math.abs(linea.cantidadDevuelta),
+            unidad: linea.formato || 'kg',
+            lote: linea.lote || '',
+            motivo: `Devolución cliente (parcial): ${motivo}`,
+            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+          });
+        } else {
+          await registrarBajaStock({
+            tiendaId: 'almacen_central',
+            producto: linea.producto,
+            cantidad: linea.cantidadDevuelta,
+            unidad: linea.formato || 'kg',
+            lote: linea.lote || '',
+            motivo: `Baja por devolución cliente (parcial): ${motivo}`,
+            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+          });
+        }
+      }
+
+      pedido.historialEstados.push({ estado: 'devuelto_parcial', usuario: 'expediciones', fecha: new Date() });
+      pedido.devoluciones = pedido.devoluciones || [];
+      pedido.devoluciones.push({ tipo: 'parcial', fecha: new Date(), lineas, motivo });
+      await pedido.save();
+
+      res.json(pedido);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+
+  async devolucionTotal(req, res) {
+    try {
+      const { id } = req.params;
+      const { motivo, aptoParaVenta } = req.body;
+      const pedido = await PedidoCliente.findById(id);
+      if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+      for (const linea of pedido.lineas) {
+        if (linea.esComentario) continue;
+        if (aptoParaVenta) {
+          await registrarBajaStock({
+            tiendaId: 'almacen_central',
+            producto: linea.producto,
+            cantidad: -Math.abs(linea.cantidad),
+            unidad: linea.formato || 'kg',
+            lote: linea.lote || '',
+            motivo: `Devolución cliente (total): ${motivo}`,
+            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+          });
+        } else {
+          await registrarBajaStock({
+            tiendaId: 'almacen_central',
+            producto: linea.producto,
+            cantidad: linea.cantidad,
+            unidad: linea.formato || 'kg',
+            lote: linea.lote || '',
+            motivo: `Baja por devolución cliente (total): ${motivo}`,
+            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+          });
+        }
+      }
+
+      pedido.estado = 'devuelto_total';
+      pedido.historialEstados.push({ estado: 'devuelto_total', usuario: 'expediciones', fecha: new Date() });
+      pedido.devoluciones = pedido.devoluciones || [];
+      pedido.devoluciones.push({ tipo: 'total', fecha: new Date(), motivo });
+      await pedido.save();
+
+      res.json(pedido);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+
   async eliminar(req, res) {
     try {
       const { id } = req.params;

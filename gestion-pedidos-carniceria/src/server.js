@@ -149,7 +149,8 @@ app.get('/api/pedidos-clientes', pedidosClientesController.listar);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
 app.delete('/api/pedidos-clientes/:id', pedidosClientesController.eliminar);
-app.post('/api/pedidos-clientes/devolucion', pedidosClientesController.registrarDevolucion);
+app.post('/api/pedidos-clientes/:id/devolucion-parcial', pedidosClientesController.devolucionParcial);
+app.post('/api/pedidos-clientes/:id/devolucion-total', pedidosClientesController.devolucionTotal);
 
 // --- ENDPOINTS REST ORIGINALES (DEPRECATED, SOLO PARA COMPATIBILIDAD TEMPORAL) ---
 app.get('/api/pedidos', async (req, res) => {

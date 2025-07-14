@@ -139,6 +139,15 @@
     background-color: #c82333;
   }
 
+  .btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+  }
+
+  .btn-warning:hover {
+    background-color: #e0a800;
+  }
+
   .editor-footer-actions {
     padding: 12px 16px;
     background-color: #ffffff;

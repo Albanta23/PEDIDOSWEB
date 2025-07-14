@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
-import { actualizarPedidoCliente } from './pedidosClientesExpedicionService';
+import { actualizarPedidoCliente, registrarDevolucionParcial, registrarDevolucionTotal } from './pedidosClientesExpedicionService';
 import './ExpedicionClienteEditor.css';
+import ModalDevolucion from './ModalDevolucion';
 
 export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onActualizado }) {
   const [lineas, setLineas] = useState([]);
@@ -11,6 +12,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
   const [guardando, setGuardando] = useState(false);
   const [editado, setEditado] = useState(false);
   const [bultos, setBultos] = useState(pedido.bultos || lineas.filter(l => !l.esComentario).length || 0);
+  const [showModalDevolucion, setShowModalDevolucion] = useState(false);
   const lineasRef = useRef();
 
   useEffect(() => {
@@ -91,16 +93,62 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     }
   }
 
+  const esPreparado = estado === 'preparado' || estado === 'entregado';
+
+  const handleDevolucionParcial = async (devolucion) => {
+    setError('');
+    setMensaje('');
+    setGuardando(true);
+    try {
+      await registrarDevolucionParcial(pedido._id || pedido.id, devolucion);
+      setMensaje('Devolución parcial registrada correctamente');
+      if (onActualizado) onActualizado();
+      setTimeout(() => setMensaje(''), 2000);
+    } catch {
+      setError('Error al registrar la devolución parcial');
+    } finally {
+      setGuardando(false);
+      setShowModalDevolucion(false);
+    }
+  };
+
+  const handleDevolucionTotal = async () => {
+    const motivo = prompt('Introduce el motivo de la devolución total:');
+    if (!motivo) return;
+
+    const aptoParaVenta = window.confirm('¿Los productos son aptos para la venta?');
+
+    setError('');
+    setMensaje('');
+    setGuardando(true);
+    try {
+      await registrarDevolucionTotal(pedido._id || pedido.id, motivo, aptoParaVenta);
+      setMensaje('Devolución total registrada correctamente');
+      if (onActualizado) onActualizado();
+      setTimeout(() => {
+        setMensaje('');
+        onClose();
+      }, 1200);
+    } catch {
+      setError('Error al registrar la devolución total');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   return (
-    <div className="expedicion-cliente-editor-container">
-      <div className="editor-header">
-        <h3>Editar Pedido Nº {pedido.numeroPedido || pedido.id}</h3>
-        <div className="editor-actions-main">
-          <button className="btn-success" onClick={editado ? handleGuardar : undefined} disabled={guardando || !editado}>Guardar</button>
-          <button className="btn-premium" onClick={handleCerrar} disabled={guardando || estado === 'preparado'}>Cerrar pedido</button>
-          <button className="btn-default" onClick={onClose}>Cerrar ventana</button>
+    <>
+      <div className="expedicion-cliente-editor-container">
+        <div className="editor-header">
+          <h3>Editar Pedido Nº {pedido.numeroPedido || pedido.id}</h3>
+          <div className="editor-actions-main">
+            {!esPreparado && <button className="btn-success" onClick={editado ? handleGuardar : undefined} disabled={guardando || !editado}>Guardar</button>}
+            {!esPreparado && <button className="btn-premium" onClick={handleCerrar} disabled={guardando || estado === 'preparado'}>Cerrar pedido</button>}
+            {esPreparado && <button className="btn-warning" onClick={() => setShowModalDevolucion(true)}>Devolución Parcial</button>}
+            {esPreparado && <button className="btn-danger" onClick={handleDevolucionTotal}>Devolución Total</button>}
+            <button className="btn-default" onClick={onClose}>Cerrar ventana</button>
+          </div>
         </div>
-      </div>
 
       <div className="info-pedido">
         <div><b>Cliente:</b> {pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || '-'}</div>
@@ -210,5 +258,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       {mensaje && <div className="editor-feedback feedback-success">{mensaje}</div>}
       {error && <div className="editor-feedback feedback-error">{error}</div>}
     </div>
+      {showModalDevolucion && <ModalDevolucion pedido={pedido} onClose={() => setShowModalDevolucion(false)} onDevolucion={handleDevolucionParcial} />}
+    </>
   );
 }
