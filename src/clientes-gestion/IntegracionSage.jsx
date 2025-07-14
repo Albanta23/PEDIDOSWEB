@@ -42,18 +42,62 @@ export default function IntegracionSage() {
   };
 
   const exportToCSV = () => {
-    const data = getSelectedPedidosData().map(p => ({
-      NumeroPedido: p.numeroPedido,
-      Cliente: p.clienteNombre,
-      Fecha: new Date(p.fechaPedido).toLocaleDateString(),
-      Estado: p.estado,
-      Lineas: p.lineas.map(l => `${l.producto} (x${l.cantidad})`).join(', ')
-    }));
-    const csv = Papa.unparse(data);
+    const data = [];
+    getSelectedPedidosData().forEach(p => {
+      p.lineas.forEach(l => {
+        if (!l.esComentario) {
+          data.push({
+            TIPO: 'ALB',
+            CODIGO: p.numeroPedido,
+            FECHA: new Date(p.fechaPedido).toLocaleDateString('es-ES'),
+            CLIENTE: p.clienteId,
+            DESCRIPCION: l.producto,
+            CANTIDAD: l.cantidad,
+            PRECIO: l.precio || 0, // Asumiendo que las líneas tienen un precio
+            TOTAL: (l.cantidad * (l.precio || 0)).toFixed(2)
+          });
+        }
+      });
+    });
+    const csv = Papa.unparse(data, { delimiter: ';' });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'pedidos_sage.csv');
+    link.setAttribute('download', 'albaranes_sage.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToXML = () => {
+    const pedidosSeleccionados = getSelectedPedidosData();
+    const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
+<SageImport>
+  ${pedidosSeleccionados.map(pedido => `
+  <DeliveryNote>
+    <Header>
+      <Number>${pedido.numeroPedido}</Number>
+      <Date>${new Date(pedido.fechaPedido).toLocaleDateString('es-ES')}</Date>
+      <Customer>${pedido.clienteId}</Customer>
+    </Header>
+    <Lines>
+      ${pedido.lineas.filter(l => !l.esComentario).map(linea => `
+      <Line>
+        <Item>${linea.producto}</Item>
+        <Description>${linea.producto}</Description>
+        <Quantity>${linea.cantidad}</Quantity>
+        <Price>${linea.precio || 0}</Price>
+      </Line>
+      `).join('')}
+    </Lines>
+  </DeliveryNote>
+  `).join('')}
+</SageImport>`;
+
+    const blob = new Blob([xmlString], { type: 'application/xml' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', 'albaranes_sage.xml');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -79,6 +123,7 @@ export default function IntegracionSage() {
       <div>
         <button onClick={exportToExcel} disabled={selectedPedidos.length === 0}>Exportar a Excel</button>
         <button onClick={exportToCSV} disabled={selectedPedidos.length === 0}>Exportar a CSV</button>
+        <button onClick={exportToXML} disabled={selectedPedidos.length === 0}>Exportar a XML</button>
         <button onClick={exportToJSON} disabled={selectedPedidos.length === 0}>Exportar a JSON</button>
       </div>
 
