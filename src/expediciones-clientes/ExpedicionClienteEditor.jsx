@@ -153,6 +153,9 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       <div className="info-pedido">
         <div><b>Cliente:</b> {pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || '-'}</div>
         <div><b>Dirección:</b> {pedido.direccion || pedido.direccionEnvio || '-'}</div>
+        {pedido.origen?.tipo === 'woocommerce' && (
+          <div><b>Total Pedido:</b> {pedido.total?.toFixed(2)}€</div>
+        )}
       </div>
 
       <div className="estado-pedido" style={{ color: estado === 'en_espera' ? '#d32f2f' : estado === 'en_preparacion' ? '#388e3c' : '#1976d2' }}>
@@ -248,6 +251,12 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
             </div>
           </div>
         ))}
+        {pedido.notasCliente && (
+          <div className="linea-comentario-card">
+            <h4>📝 NOTAS DEL CLIENTE:</h4>
+            <p>{pedido.notasCliente}</p>
+          </div>
+        )}
       </div>
 
       <div className="editor-footer-actions">

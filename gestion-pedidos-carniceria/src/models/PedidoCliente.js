@@ -9,7 +9,11 @@ const LineaClienteSchema = new mongoose.Schema({
   cantidadEnviada: Number,
   lote: String,
   preparada: Boolean,
-  esComentario: Boolean
+  esComentario: Boolean,
+  precio: Number,
+  iva: Number,
+  tipoProducto: String, // 'simple' o 'variable'
+  variaciones: mongoose.Schema.Types.Mixed
 });
 
 const PedidoClienteSchema = new mongoose.Schema({
@@ -32,7 +36,15 @@ const PedidoClienteSchema = new mongoose.Schema({
       usuario: String,
       fecha: { type: Date, default: Date.now }
     }
-  ]
+  ],
+  origen: {
+    tipo: String, // 'manual', 'woocommerce'
+    id: String
+  },
+  notasCliente: String,
+  subtotal: Number,
+  totalIva: Number,
+  total: Number
 }, { timestamps: true });
 
 PedidoClienteSchema.index({ numeroPedido: 1 }, { unique: true });

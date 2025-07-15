@@ -19,12 +19,19 @@ module.exports = {
             lineas: pedidoWoo.line_items.map(item => ({
               producto: item.name,
               cantidad: item.quantity,
-              precio: item.price
+              precio: item.price,
+              iva: item.total_tax,
+              tipoProducto: item.variation_id ? 'variable' : 'simple',
+              variaciones: item.meta_data
             })),
             origen: {
               tipo: 'woocommerce',
               id: pedidoWoo.id
-            }
+            },
+            notasCliente: pedidoWoo.customer_note,
+            subtotal: pedidoWoo.total - pedidoWoo.total_tax,
+            totalIva: pedidoWoo.total_tax,
+            total: pedidoWoo.total
           });
           await nuevoPedido.save();
         }

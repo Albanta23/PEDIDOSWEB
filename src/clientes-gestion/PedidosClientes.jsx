@@ -911,6 +911,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                   <th style={{ padding: '12px', textAlign: 'left' }}>Fecha</th>
                   <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
                   <th style={{ padding: '12px', textAlign: 'left' }}>Origen</th>
+                  <th style={{ padding: '12px', textAlign: 'left' }}>Total</th>
                   <th style={{ padding: '12px', textAlign: 'left' }}>Devoluciones</th>
                 </tr>
               </thead>
@@ -924,6 +925,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     <td style={{ padding: '12px' }}>
                       {pedido.origen?.tipo === 'woocommerce' ? 'WooCommerce' : 'Manual'}
                     </td>
+                    <td style={{ padding: '12px' }}>{pedido.total?.toFixed(2) || 'N/A'}€</td>
                     <td style={{ padding: '12px' }}>
                       {pedido.devoluciones && pedido.devoluciones.length > 0 && (
                         <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center' }}>
