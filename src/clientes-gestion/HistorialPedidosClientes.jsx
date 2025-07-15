@@ -16,6 +16,9 @@ function formatDateInput(date) {
   return date.toISOString().slice(0, 10);
 }
 
+import ModalDevolucion from '../expediciones-clientes/ModalDevolucion';
+import { registrarDevolucionParcial, registrarDevolucionTotal } from '../expediciones-clientes/pedidosClientesExpedicionService';
+
 export default function HistorialPedidosClientes({ soloPreparados }) {
   const [clientes, setClientes] = useState([]);
   const [clienteId, setClienteId] = useState('');
@@ -26,6 +29,38 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
   const [cargando, setCargando] = useState(false);
   const [pedidoDetalle, setPedidoDetalle] = useState(null);
   const [cancelandoId, setCancelandoId] = useState(null);
+  const [showModalDevolucion, setShowModalDevolucion] = useState(false);
+  const [pedidoDevolucion, setPedidoDevolucion] = useState(null);
+
+  const handleDevolucionParcial = (pedido) => {
+    setPedidoDevolucion(pedido);
+    setShowModalDevolucion(true);
+  };
+
+  const handleDevolucionTotal = async (pedido) => {
+    const motivo = prompt('Introduce el motivo de la devolución total:');
+    if (!motivo) return;
+
+    const aptoParaVenta = window.confirm('¿Los productos son aptos para la venta?');
+
+    try {
+      await registrarDevolucionTotal(pedido._id, motivo, aptoParaVenta);
+      // Recargar pedidos
+    } catch (error) {
+      alert('Error al registrar la devolución total');
+    }
+  };
+
+  const procesarDevolucionParcial = async (devolucion) => {
+    try {
+      await registrarDevolucionParcial(pedidoDevolucion._id, devolucion);
+      setShowModalDevolucion(false);
+      setPedidoDevolucion(null);
+      // Recargar pedidos
+    } catch (error) {
+      alert('Error al registrar la devolución parcial');
+    }
+  };
 
   const cancelarPedido = async (pedido) => {
     if (!window.confirm('¿Seguro que quieres cancelar este pedido?')) return;
@@ -606,31 +641,39 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                         }) : '-'}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <button 
-                          onClick={()=>setPedidoDetalle(p)}
-                          style={{
-                            padding: '8px 16px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                            boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
-                          }}
-                          onMouseEnter={e => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
-                          }}
-                          onMouseLeave={e => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
-                          }}
-                        >
-                          👁️ Ver detalle
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            onClick={()=>setPedidoDetalle(p)}
+                            style={{
+                              padding: '8px 16px',
+                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                            }}
+                            onMouseEnter={e => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
+                            }}
+                            onMouseLeave={e => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+                            }}
+                          >
+                            👁️ Ver detalle
+                          </button>
+                          {(p.estado === 'preparado' || p.estado === 'entregado') && (
+                            <>
+                              <button className="btn-warning" onClick={() => handleDevolucionParcial(p)}>Devolución Parcial</button>
+                              <button className="btn-danger" onClick={() => handleDevolucionTotal(p)}>Devolución Total</button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -640,6 +683,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
           </div>
           
           {pedidoDetalle && <PedidoClienteDetalle pedido={pedidoDetalle} onClose={()=>setPedidoDetalle(null)} />}
+          {showModalDevolucion && <ModalDevolucion pedido={pedidoDevolucion} onClose={() => setShowModalDevolucion(false)} onDevolucion={procesarDevolucionParcial} />}
         </>
       )}
     </div>

@@ -54,6 +54,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
   // Guardar cambios (pasa a EN PREPARACION)
   async function handleGuardar() {
+    console.log('Guardando bultos:', bultos);
     setError('');
     setMensaje('');
     setGuardando(true);
@@ -73,6 +74,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
   // Cerrar pedido (pasa a PREPARADO)
   async function handleCerrar() {
+    console.log('Cerrando con bultos:', bultos);
     setError('');
     setMensaje('');
     setGuardando(true);
@@ -144,8 +146,6 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
           <div className="editor-actions-main">
             {!esPreparado && <button className="btn-success" onClick={editado ? handleGuardar : undefined} disabled={guardando || !editado}>Guardar</button>}
             {!esPreparado && <button className="btn-premium" onClick={handleCerrar} disabled={guardando || estado === 'preparado'}>Cerrar pedido</button>}
-            {esPreparado && <button className="btn-warning" onClick={() => setShowModalDevolucion(true)}>Devolución Parcial</button>}
-            {esPreparado && <button className="btn-danger" onClick={handleDevolucionTotal}>Devolución Total</button>}
             <button className="btn-default" onClick={onClose}>Cerrar ventana</button>
           </div>
         </div>
