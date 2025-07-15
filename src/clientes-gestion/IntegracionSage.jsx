@@ -53,8 +53,9 @@ export default function IntegracionSage() {
             CLIENTE: p.clienteId,
             DESCRIPCION: l.producto,
             CANTIDAD: l.cantidad,
-            PRECIO: l.precio || 0, // Asumiendo que las líneas tienen un precio
-            TOTAL: (l.cantidad * (l.precio || 0)).toFixed(2)
+            PRECIO: l.precio || 0,
+            TOTAL: (l.cantidad * (l.precio || 0)).toFixed(2),
+            IVA: l.iva || 0
           });
         }
       });
@@ -87,9 +88,15 @@ export default function IntegracionSage() {
         <Description>${linea.producto}</Description>
         <Quantity>${linea.cantidad}</Quantity>
         <Price>${linea.precio || 0}</Price>
+        <TaxRate>${linea.iva || 0}</TaxRate>
       </Line>
       `).join('')}
     </Lines>
+    <Summary>
+      <Subtotal>${pedido.subtotal || 0}</Subtotal>
+      <TaxAmount>${pedido.totalIva || 0}</TaxAmount>
+      <Total>${pedido.total || 0}</Total>
+    </Summary>
   </DeliveryNote>
   `).join('')}
 </SageImport>`;
