@@ -54,6 +54,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
   // Guardar cambios (pasa a EN PREPARACION)
   async function handleGuardar() {
+    console.log('Guardando bultos:', bultos);
     setError('');
     setMensaje('');
     setGuardando(true);
@@ -73,6 +74,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
   // Cerrar pedido (pasa a PREPARADO)
   async function handleCerrar() {
+    console.log('Cerrando con bultos:', bultos);
     setError('');
     setMensaje('');
     setGuardando(true);

@@ -63,7 +63,8 @@ module.exports = {
       const { id } = req.params;
       const pedidoPrevio = await PedidoCliente.findById(id);
       if (!pedidoPrevio) return res.status(404).json({ error: 'Pedido no encontrado' });
-      const { estado, usuarioTramitando, lineas } = req.body;
+      const { estado, usuarioTramitando, lineas, bultos } = req.body;
+      console.log('Bultos recibidos en backend:', bultos);
       let update = { ...req.body };
       // Cambios de estado y registro en historial
       if (estado && estado !== pedidoPrevio.estado) {
