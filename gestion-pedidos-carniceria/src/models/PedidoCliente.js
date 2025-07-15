@@ -19,6 +19,7 @@ const LineaClienteSchema = new mongoose.Schema({
 const PedidoClienteSchema = new mongoose.Schema({
   clienteId: String,
   clienteNombre: String,
+  nif: String,
   direccion: String,
   estado: { type: String, default: 'en_espera' },
   numeroPedido: Number,

@@ -8,7 +8,7 @@ export default function PedidosBorrador() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API_URL}/pedidos-clientes?estado=borrador_woocommerce`)
+    axios.get(`${API_URL}/pedidos-clientes?estado=borrador_woocommerce&origen.tipo=woocommerce`)
       .then(res => setPedidos(res.data))
       .catch(() => setPedidos([]))
       .finally(() => setCargando(false));
@@ -37,6 +37,7 @@ export default function PedidosBorrador() {
               <th>Nº Pedido</th>
               <th>Cliente</th>
               <th>Código Cliente</th>
+              <th>NIF/CIF</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -50,6 +51,13 @@ export default function PedidosBorrador() {
                     type="text"
                     value={p.clienteId || ''}
                     onChange={e => handleUpdatePedido(p._id, 'clienteId', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={p.nif || ''}
+                    onChange={e => handleUpdatePedido(p._id, 'nif', e.target.value)}
                   />
                 </td>
                 <td>
