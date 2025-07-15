@@ -667,12 +667,8 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                           >
                             👁️ Ver detalle
                           </button>
-                          {(p.estado === 'preparado' || p.estado === 'entregado') && (
-                            <>
-                              <button className="btn-warning" onClick={() => handleDevolucionParcial(p)}>Devolución Parcial</button>
-                              <button className="btn-danger" onClick={() => handleDevolucionTotal(p)}>Devolución Total</button>
-                            </>
-                          )}
+                          <button className="btn-warning" onClick={() => handleDevolucionParcial(p)}>Devolución Parcial</button>
+                          <button className="btn-danger" onClick={() => handleDevolucionTotal(p)}>Devolución Total</button>
                         </div>
                       </td>
                     </tr>
