@@ -13,7 +13,7 @@ module.exports = {
           const nuevoPedido = new PedidoCliente({
             numeroPedido: pedidoWoo.number,
             fechaPedido: pedidoWoo.date_created,
-            estado: pedidoWoo.status,
+            estado: 'borrador_woocommerce',
             clienteNombre: `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`,
             direccion: `${pedidoWoo.billing.address_1}, ${pedidoWoo.billing.city}, ${pedidoWoo.billing.state} ${pedidoWoo.billing.postcode}`,
             lineas: pedidoWoo.line_items.map(item => ({
