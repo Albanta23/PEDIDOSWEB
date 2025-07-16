@@ -155,6 +155,19 @@ app.post('/api/pedidos-clientes/:id/devolucion-total', pedidosClientesController
 const woocommerceController = require('./woocommerceController');
 app.get('/api/pedidos-woo/sincronizar', woocommerceController.sincronizarPedidos);
 app.get('/api/productos-woo/sincronizar', woocommerceController.sincronizarProductos);
+app.get('/api/productos-woo', async (req, res) => {
+  const ProductoWoo = require('./models/ProductoWoo');
+  const productos = await ProductoWoo.find();
+  res.json(productos);
+});
+app.put('/api/productos-woo', async (req, res) => {
+  const ProductoWoo = require('./models/ProductoWoo');
+  const { productos } = req.body;
+  for (const producto of productos) {
+    await ProductoWoo.findByIdAndUpdate(producto._id, producto);
+  }
+  res.json({ message: 'Productos actualizados' });
+});
 
 // --- ENDPOINTS REST ORIGINALES (DEPRECATED, SOLO PARA COMPATIBILIDAD TEMPORAL) ---
 app.get('/api/pedidos', async (req, res) => {
