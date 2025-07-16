@@ -22,6 +22,11 @@ export default function ModalDevolucion({ pedido, onClose, onDevolucion }) {
     setLineasDevueltas(lineasDevueltas.map(l => l.producto === linea.producto ? { ...l, aptoParaVenta: apto } : l));
   };
 
+  const handlePesoChange = (e, linea) => {
+    const peso = parseFloat(e.target.value);
+    setLineasDevueltas(lineasDevueltas.map(l => l.producto === linea.producto ? { ...l, pesoDevuelto: peso } : l));
+  };
+
   const handleSubmit = () => {
     onDevolucion({ lineas: lineasDevueltas, motivo });
     onClose();
@@ -45,6 +50,7 @@ export default function ModalDevolucion({ pedido, onClose, onDevolucion }) {
                 <th>Devolver</th>
                 <th>Producto</th>
                 <th>Cantidad a devolver</th>
+                <th>Peso a devolver (kg)</th>
                 <th>Apto para venta</th>
               </tr>
             </thead>
@@ -62,6 +68,16 @@ export default function ModalDevolucion({ pedido, onClose, onDevolucion }) {
                       max={linea.cantidad}
                       defaultValue={linea.cantidad}
                       onChange={e => handleCantidadChange(e, linea)}
+                      disabled={!lineasDevueltas.some(l => l.producto === linea.producto)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      defaultValue={linea.peso || 0}
+                      onChange={e => handlePesoChange(e, linea)}
                       disabled={!lineasDevueltas.some(l => l.producto === linea.producto)}
                     />
                   </td>
