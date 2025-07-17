@@ -509,14 +509,32 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       <datalist id="productos-lista-global-tienda">
                         {productos
                           .filter(prod => {
-                            // Solo mostrar productos con referencia exacta
+                            // Obtener el valor del input
                             const inputValue = linea.producto ? linea.producto.trim().toLowerCase() : '';
                             // Si el input está vacío, no mostrar nada
-                            if (!inputValue) return false;
+                            if (!inputValue || inputValue.length < 4) return false;
                             
-                            // Si la referencia coincide exactamente, mostrar el producto
-                            return prod.referencia && 
-                              String(prod.referencia).toLowerCase() === inputValue;
+                            // Verificar coincidencias de varias formas:
+                            
+                            // 1. Si la referencia coincide exactamente
+                            if (prod.referencia && String(prod.referencia).toLowerCase() === inputValue) {
+                              return true;
+                            }
+                            
+                            // 2. Si el input tiene al menos 4 caracteres y coincide parcialmente con el nombre
+                            if (prod.nombre && prod.nombre.toLowerCase().includes(inputValue)) {
+                              return true;
+                            }
+                            
+                            // 3. Verificar si hay coincidencia con palabras individuales de 4+ caracteres
+                            const palabrasInput = inputValue.split(/\s+/).filter(palabra => palabra.length >= 4);
+                            if (palabrasInput.length > 0 && prod.nombre) {
+                              return palabrasInput.some(palabra => 
+                                prod.nombre.toLowerCase().includes(palabra)
+                              );
+                            }
+                            
+                            return false;
                           })
                           .map(prod => (
                             <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>

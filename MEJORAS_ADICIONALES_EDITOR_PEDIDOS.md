@@ -9,7 +9,7 @@ Se han implementado mejoras adicionales en el editor de pedidos de tienda para g
 1. **Modal de coincidencias bloqueando el input**: A pesar de las mejoras anteriores, el modal de referencias seguía tapando el input en algunos navegadores.
 2. **Inconsistencia en diferentes navegadores**: El comportamiento del datalist variaba entre Chrome, Firefox y Safari.
 3. **Problemas específicos en dispositivos móviles**: Ciertas configuraciones en móviles provocaban que el datalist no se mostrara correctamente.
-4. **Exceso de opciones en el datalist**: El datalist mostraba demasiadas opciones, dificultando la selección precisa por referencia.
+4. **Búsqueda demasiado restrictiva**: El sistema solo permitía búsqueda por referencia exacta, dificultando encontrar productos por su nombre o descripción.
 
 ## Soluciones Técnicas Implementadas
 
@@ -29,17 +29,22 @@ Se ha creado el archivo `src/styles/datalist-position.css` con soluciones espec�
 - La selección de productos mediante referencia numérica es más intuitiva
 - Al seleccionar un producto, el foco se mueve automáticamente al campo de cantidad
 
-### 4. Filtrado por Coincidencia Exacta de Referencias
-- Se ha modificado el datalist para que solo muestre productos cuando la referencia coincida exactamente
-- Esto elimina las distracciones y facilita la selección precisa del producto deseado
-- Si un usuario introduce una referencia exacta, se mostrará únicamente el producto correspondiente
+### 4. Búsqueda Inteligente por Coincidencias de 4 o Más Caracteres
+- Se ha mejorado el datalist para mostrar coincidencias parciales cuando el usuario introduce 4 o más caracteres consecutivos
+- El sistema ahora busca coincidencias en:
+  - Referencias exactas (como antes)
+  - Coincidencias parciales en el nombre del producto (si tienen 4 o más caracteres)
+  - Palabras individuales de 4 o más caracteres dentro del nombre del producto
+- Esto permite búsquedas como "chorizo", "sarta", "ibérico", etc., mostrando todos los productos relevantes
+- La búsqueda sigue siendo eficiente al requerir al menos 4 caracteres, evitando mostrar demasiados resultados
 
 ## Comportamiento Esperado
 1. Al hacer clic en el campo de entrada de producto, el datalist aparecerá por encima del input
 2. Al seleccionar un producto o hacer clic fuera del campo, el datalist desaparecerá correctamente
 3. Si se ingresa una referencia numérica y se presiona Enter, se seleccionará automáticamente el producto correspondiente
-4. El datalist solo mostrará productos cuando la referencia coincida exactamente con lo que el usuario ha escrito
-5. En dispositivos móviles, la experiencia será consistente con la de escritorio
+4. Si se ingresan 4 o más caracteres, el datalist mostrará todos los productos que contengan esa secuencia en su nombre
+5. Palabras como "chorizo", "sarta", "ibérico", etc., mostrarán todos los productos relevantes con esas palabras
+6. En dispositivos móviles, la experiencia será consistente con la de escritorio
 
 ## Compatibilidad
 Esta implementación ha sido probada y funciona correctamente en:
