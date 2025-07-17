@@ -507,11 +507,23 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                         className={`producto-nombre-input ${!productoExiste(linea.producto) && linea.producto ? 'input-error' : ''}`}
                       />
                       <datalist id="productos-lista-global-tienda">
-                        {productos.map(prod => (
-                          <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                            {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                          </option>
-                        ))}
+                        {productos
+                          .filter(prod => {
+                            // Solo mostrar productos con referencia exacta
+                            const inputValue = linea.producto ? linea.producto.trim().toLowerCase() : '';
+                            // Si el input está vacío, no mostrar nada
+                            if (!inputValue) return false;
+                            
+                            // Si la referencia coincide exactamente, mostrar el producto
+                            return prod.referencia && 
+                              String(prod.referencia).toLowerCase() === inputValue;
+                          })
+                          .map(prod => (
+                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                            </option>
+                          ))
+                        }
                       </datalist>
                     </div>
                     {!productoExiste(linea.producto) && linea.producto && (
