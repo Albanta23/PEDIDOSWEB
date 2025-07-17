@@ -1,0 +1,115 @@
+/* Estilos para mejorar la visualización de datalist y listas desplegables */
+
+/* Mejorar el estilo y posicionamiento de la lista de opciones de productos */
+datalist {
+  max-height: 200px;
+  overflow-y: auto;
+  display: none; /* El navegador maneja la visualización */
+}
+
+/* Establecer estilos específicos para opciones en datalist y select cuando están abiertos */
+option {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Estilos específicos para mejorar la visualización de la lista de autocompletado */
+input[list]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+/* Asegurar que el input de productos tenga mayor prioridad en z-index */
+.producto-nombre-input {
+  position: relative;
+  z-index: 5 !important; /* Mayor prioridad que modales de coincidencias */
+}
+
+/* Solución para navegadores Chrome, Edge, Safari */
+@supports (-webkit-appearance: none) {
+  /* Estilo para los elementos option dentro de datalist */
+  input[list] + datalist option {
+    font-size: 14px;
+    padding: 8px 12px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  input[list] + datalist option:hover {
+    background-color: #f8f9fa;
+  }
+}
+
+/* Solución específica para Firefox */
+@-moz-document url-prefix() {
+  input[list] {
+    position: relative;
+  }
+  
+  input[list]::-moz-list-bullet {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ced4da;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+}
+
+/* Estilo para modales para que no bloqueen la pantalla */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1001;
+  position: relative;
+}
+
+/* Estilos específicos para dispositivos móviles */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+    max-height: 85vh;
+  }
+  
+  /* Estilos para el campo de entrada de productos en móviles */
+  .producto-nombre-input {
+    font-size: 16px !important; /* Evita el zoom automático en iOS */
+    padding: 10px !important;
+  }
+  
+  /* Asegurar que la lista de datalist no bloquee la interfaz */
+  input[list]:focus {
+    z-index: 5;
+  }
+  
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}

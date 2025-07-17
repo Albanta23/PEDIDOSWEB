@@ -1,0 +1,70 @@
+/* Estilos específicos para el componente PedidoList y el editor de pedidos de tienda */
+
+/* Mejorar el posicionamiento y visualización del campo de entrada de productos */
+.producto-nombre-input {
+  position: relative;
+  z-index: 100 !important; /* Asegurar que esté por encima de los modales */
+  font-size: 16px; /* Tamaño adecuado para evitar zoom en iOS */
+  width: 100%;
+}
+
+/* Estilos para la tarjeta de línea de pedido */
+.linea-pedido-card {
+  position: relative;
+  z-index: 1;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos para la tarjeta cuando el producto es inválido */
+.producto-invalido-card {
+  border: 1px solid #ff6b6b;
+  background-color: #fff0f0;
+}
+
+/* Estilo para mensajes de error */
+.error-text {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Mejorar la visualización del modal que muestra coincidencias de productos */
+.modal-overlay {
+  padding: 15px;
+}
+
+.modal-content {
+  max-width: 90%;
+}
+
+/* Estilos para dispositivos móviles */
+@media (max-width: 768px) {
+  .linea-pedido-card {
+    padding: 12px;
+  }
+  
+  .form-group input, .form-group select {
+    font-size: 16px !important; /* Evitar zoom en iOS */
+    padding: 10px !important;
+    width: 100%;
+  }
+  
+  /* Mejorar el posicionamiento del datalist en móviles */
+  input[list].producto-nombre-input {
+    position: relative;
+    z-index: 1000 !important;
+  }
+  
+  /* Estilos para modales en dispositivos móviles */
+  .modal-content {
+    width: 95%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}

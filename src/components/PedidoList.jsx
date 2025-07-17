@@ -7,6 +7,8 @@ import axios from 'axios';
 import { useProductos } from './ProductosContext';
 import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
 import './PedidoEditorFabrica.css'; // Reutilizar estilos
+import '../styles/datalist-fix.css'; // Importar arreglos para datalist
+import '../styles/pedido-list.css'; // Estilos específicos para PedidoList
 
 // Definir API_URL global seguro para todas las llamadas
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
@@ -456,6 +458,34 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
                       list="productos-lista-global-tienda"
                       value={linea.producto}
                       onChange={e => handleLineaChange(idx, 'producto', e.target.value)}
+                      onKeyDown={e => {
+                        // Si se presiona Enter, buscar producto por referencia exacta
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const valor = e.target.value.trim();
+                          // Buscar producto por referencia exacta
+                          const productoEncontrado = productos.find(p => p.referencia && 
+                            String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+                          if (productoEncontrado) {
+                            handleLineaChange(idx, 'producto', productoEncontrado.nombre);
+                            // Enfocar el campo de cantidad después de seleccionar un producto
+                            const cantidadInput = document.getElementById(`cantidad-tienda-${idx}`);
+                            if (cantidadInput) cantidadInput.focus();
+                          }
+                        }
+                      }}
+                      onBlur={e => {
+                        // Al perder foco, verificar si es una referencia exacta
+                        const valor = e.target.value.trim();
+                        const productoEncontrado = productos.find(p => p.referencia && 
+                          String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+                        if (productoEncontrado) {
+                          handleLineaChange(idx, 'producto', productoEncontrado.nombre);
+                          // También enfocar el campo de cantidad después de seleccionar un producto por referencia
+                          const cantidadInput = document.getElementById(`cantidad-tienda-${idx}`);
+                          if (cantidadInput) cantidadInput.focus();
+                        }
+                      }}
                       placeholder="Nombre o referencia del producto"
                       className={`producto-nombre-input ${!productoExiste(linea.producto) && linea.producto ? 'input-error' : ''}`}
                     />
