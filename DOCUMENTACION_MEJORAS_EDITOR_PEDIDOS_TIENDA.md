@@ -26,9 +26,16 @@ Se ha creado un nuevo archivo `src/styles/pedido-list.css` con estilos específi
 - Agregar estilos específicos para dispositivos móviles
 - Corregir la visualización de los modales para evitar bloqueos de pantalla
 
-### 3. Mejoras en el Componente PedidoList.jsx
+### 3. Nuevo Archivo CSS para Posicionamiento del DataList
+Se ha creado un archivo adicional `src/styles/datalist-position.css` específicamente para:
+- Solucionar definitivamente el problema del datalist que no aparecía correctamente posicionado
+- Implementar espaciadores para garantizar que el datalist aparezca por encima del input
+- Ajustar los z-index para asegurar la correcta superposición de elementos
+- Proporcionar soluciones específicas para todos los navegadores modernos
+
+### 4. Mejoras en el Componente PedidoList.jsx
 Se han implementado las siguientes mejoras en el código:
-- Importación del nuevo archivo CSS específico
+- Importación de los archivos CSS específicos
 - Mejora en la función de búsqueda de productos por referencia
 - Implementación de selección automática de productos al ingresar referencia exacta
 - Optimización del enfoque automático en el campo de cantidad después de seleccionar un producto
@@ -46,6 +53,12 @@ Se han validado los cambios para asegurar que:
 - La selección por referencia funcione correctamente
 - Los modales se visualicen correctamente en diferentes dispositivos
 - No haya conflictos con la funcionalidad existente
+
+## Mejoras Futuras Propuestas
+- Implementar búsqueda por coincidencia parcial de referencias de productos
+- Al escribir una referencia parcial (por ejemplo, "123"), mostrar todos los productos que contengan esa secuencia en su referencia
+- Mejorar el rendimiento de la búsqueda con técnicas de debounce/throttle
+- Añadir opción para búsqueda avanzada por categorías
 
 ## Mantenimiento Futuro
 Para futuros desarrollos, se recomienda:

@@ -27,15 +27,44 @@ input[list]::-webkit-calendar-picker-indicator {
 
 /* Solución para navegadores Chrome, Edge, Safari */
 @supports (-webkit-appearance: none) {
+  /* Forzar que las opciones aparezcan por encima del input */
+  input[list] {
+    position: relative;
+  }
+
+  /* Crear una solución personalizada para el datalist */
+  .custom-datalist {
+    position: absolute;
+    bottom: 100%; /* Posicionar encima del input */
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+  }
+
+  .custom-datalist.show {
+    display: block;
+  }
+
   /* Estilo para los elementos option dentro de datalist */
-  input[list] + datalist option {
+  input[list] + datalist option,
+  .custom-datalist-option {
     font-size: 14px;
     padding: 8px 12px;
     background-color: #ffffff;
     border-bottom: 1px solid #e9ecef;
+    display: block;
+    cursor: pointer;
   }
   
-  input[list] + datalist option:hover {
+  input[list] + datalist option:hover,
+  .custom-datalist-option:hover {
     background-color: #f8f9fa;
   }
 }
@@ -48,13 +77,13 @@ input[list]::-webkit-calendar-picker-indicator {
   
   input[list]::-moz-list-bullet {
     position: absolute;
-    top: 100%;
+    bottom: 100%; /* Cambiar a aparecer encima en lugar de debajo */
     left: 0;
     right: 0;
     background: white;
     border: 1px solid #ced4da;
-    border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 8px 8px 0 0; /* Ajustar bordes redondeados */
+    box-shadow: 0 -4px 8px rgba(0,0,0,0.1); /* Ajustar sombra para que sea coherente */
     z-index: 1000;
   }
 }

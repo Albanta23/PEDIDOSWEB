@@ -6,6 +6,34 @@
   z-index: 100 !important; /* Asegurar que esté por encima de los modales */
   font-size: 16px; /* Tamaño adecuado para evitar zoom en iOS */
   width: 100%;
+  margin-bottom: 5px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+}
+
+/* Contenedor para el input de producto para posicionar correctamente el datalist */
+.producto-input-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+/* Espacio reservado para el datalist arriba del input */
+.datalist-space {
+  height: 200px;
+  visibility: hidden;
+  display: none;
+  transition: height 0.3s ease;
+}
+
+.datalist-space.active {
+  display: block;
+}
+
+/* Cuando el input tiene focus, mostrar el espacio para el datalist */
+.producto-nombre-input:focus + .datalist-space {
+  display: block;
+  visibility: visible;
 }
 
 /* Estilos para la tarjeta de línea de pedido */
@@ -37,10 +65,27 @@
 /* Mejorar la visualización del modal que muestra coincidencias de productos */
 .modal-overlay {
   padding: 15px;
+  z-index: 1000; /* Asegurarse de que esté por debajo del input de producto */
 }
 
 .modal-content {
   max-width: 90%;
+  position: relative;
+}
+
+/* Específicamente para el modal de coincidencias de productos */
+.modal-referencias-coincidentes {
+  position: absolute;
+  bottom: 100%; /* Posicionar encima del input */
+  left: 0;
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 10px; /* Espacio entre el modal y el input */
+  z-index: 50; /* Menor que el input pero visible */
 }
 
 /* Estilos para dispositivos móviles */

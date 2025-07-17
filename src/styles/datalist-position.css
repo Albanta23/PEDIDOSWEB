@@ -1,0 +1,84 @@
+/* Estilos adicionales para posicionamiento datalist */
+
+.datalist-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.datalist-spacer {
+  position: absolute;
+  height: 200px;
+  width: 100%;
+  top: -200px;
+  left: 0;
+  z-index: 1;
+}
+
+/* Contenedor principal para el input con datalist */
+.producto-input-container {
+  position: relative;
+  z-index: 100;
+}
+
+/* Asegurar que el datalist aparezca por encima del input */
+datalist {
+  position: relative;
+  z-index: 1000;
+}
+
+/* Corregir posicionamiento del modal de opciones */
+.datalist-options-modal {
+  position: absolute;
+  top: -205px; /* Justo encima del input */
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ced4da;
+  border-radius: 8px 8px 0 0;
+  z-index: 999;
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Asegurar que el input esté siempre por encima de otros elementos */
+.producto-nombre-input {
+  position: relative;
+  z-index: 200 !important;
+  background-color: white;
+}
+
+/* Solución específica para Chrome y navegadores basados en Webkit */
+@supports (-webkit-appearance: none) {
+  input[list] {
+    position: relative;
+    z-index: 200;
+  }
+
+  /* Forzar que el dropdown aparezca encima */
+  input[list]::-webkit-calendar-picker-indicator {
+    position: relative;
+    z-index: 300;
+  }
+}
+
+/* Solución específica para Firefox */
+@-moz-document url-prefix() {
+  input[list] {
+    position: relative;
+    z-index: 200;
+  }
+}
+
+/* Ajustes para dispositivos móviles */
+@media (max-width: 768px) {
+  .datalist-options-modal {
+    max-height: 150px;
+    top: -155px;
+  }
+  
+  .datalist-spacer {
+    height: 150px;
+    top: -150px;
+  }
+}
