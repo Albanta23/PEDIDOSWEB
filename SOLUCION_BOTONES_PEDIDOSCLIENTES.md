@@ -1,3 +1,4 @@
+````markdown
 # Solución a Botones Desaparecidos en PedidosClientes
 
 ## Fecha: 17 de Julio de 2025
@@ -47,14 +48,33 @@ Se realizaron los siguientes cambios en el componente `PedidosClientes.jsx`:
   background: 'rgba(79, 172, 254, 0.05)',
   borderRadius: '16px',
   position: 'relative',
-  bottom: '20px',
   zIndex: 1600,
-  marginBottom: '160px' /* Espacio adicional para evitar que el panel fijo oculte los botones */
+  marginBottom: '160px', /* Espacio adicional para evitar que el panel fijo oculte los botones */
+  bottom: '20px'
 }}>
 ```
 
-### Resultado
-Los botones "Añadir línea" y "Añadir comentario" ahora son visibles y funcionales nuevamente, apareciendo por encima del panel fijo inferior.
+### Corrección de errores adicionales (17 de julio de 2025)
+Se detectaron y corrigieron advertencias en la consola de Vite durante la ejecución de la aplicación:
 
-### Notas Adicionales
-También se corrigió un error de sintaxis CSS donde faltaba una coma entre propiedades de estilo.
+```
+[vite] warning: Duplicate key "bottom" in object literal
+1097|              zIndex: 1600,
+1098|              marginBottom: '160px' /* Espacio adicional para evitar que el panel fijo oculte los botones */,
+1099|              bottom: '20px'
+   |              ^
+```
+
+En la solución original, se había introducido un error donde la propiedad "bottom" aparecía dos veces en el mismo objeto de estilo: una vez con valor '0' en la línea 1096 y otra con valor '20px' en la línea 1099. 
+
+**Solución implementada:**
+1. Se eliminó la primera aparición de `bottom: '0'`
+2. Se mantuvo la segunda aparición `bottom: '20px'` 
+3. Se corrigió la sintaxis del objeto de estilo (comas correctamente colocadas)
+
+### Resultado
+- Los botones "Añadir línea" y "Añadir comentario" ahora son visibles y funcionales
+- Se eliminaron las advertencias en la consola de desarrollo
+- Se mejoró la calidad del código y se evitaron posibles comportamientos inesperados
+
+````

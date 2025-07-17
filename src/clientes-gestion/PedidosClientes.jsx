@@ -1093,9 +1093,8 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             background: 'rgba(79, 172, 254, 0.05)',
             borderRadius: '16px',
             position: 'relative',
-            bottom: '0',
             zIndex: 1600,
-            marginBottom: '160px' /* Espacio adicional para evitar que el panel fijo oculte los botones */,
+            marginBottom: '160px', /* Espacio adicional para evitar que el panel fijo oculte los botones */
             bottom: '20px'
           }}>
             <button 
