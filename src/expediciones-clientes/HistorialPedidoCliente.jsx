@@ -34,6 +34,10 @@ export default function HistorialPedidoCliente({ pedidoId, visible, onClose }) {
                 <div><b>Usuario:</b> {h.usuario || '-'}</div>
                 {h.comentario && <div><b>Comentario:</b> {h.comentario}</div>}
                 {h.bultos !== undefined && h.bultos !== null && <div><b>Bultos:</b> {h.bultos}</div>}
+                <div style={{ marginTop: '8px' }}>
+                  <button className="btn-warning" style={{ marginRight: '8px' }}>Devolución Parcial</button>
+                  <button className="btn-danger">Devolución Total</button>
+                </div>
               </li>
             ))}
           </ul>

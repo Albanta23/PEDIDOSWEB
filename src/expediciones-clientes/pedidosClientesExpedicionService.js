@@ -1,20 +1,21 @@
 // Servicio para obtener pedidos de clientes para expedición
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+const API_BASE_URL = API_URL.endsWith('/api') ? API_URL : API_URL + '/api';
 
 export async function obtenerPedidosClientesExpedicion() {
-  const res = await axios.get(`${API_URL}/api/pedidos-clientes`);
+  const res = await axios.get(`${API_BASE_URL}/pedidos-clientes`);
   return res.data;
 }
 
 export async function actualizarEstadoPedidoCliente(id, nuevoEstado) {
-  const res = await axios.put(`${API_URL}/api/pedidos-clientes/${id}`, { estado: nuevoEstado });
+  const res = await axios.put(`${API_BASE_URL}/pedidos-clientes/${id}`, { estado: nuevoEstado });
   return res.data;
 }
 
 export async function obtenerHistorialPedidoCliente(id) {
-  const res = await axios.get(`${API_URL}/api/pedidos-clientes/${id}`);
+  const res = await axios.get(`${API_BASE_URL}/pedidos-clientes/${id}`);
   return res.data.historial || [];
 }
 
@@ -37,11 +38,21 @@ export async function actualizarPedidoCliente(id, datos) {
       }
     }
   }
-  const res = await axios.put(`${API_URL}/api/pedidos-clientes/${id}`, datosFiltrados);
+  const res = await axios.put(`${API_BASE_URL}/pedidos-clientes/${id}`, datosFiltrados);
   return res.data;
 }
 
 export async function borrarPedidoCliente(id) {
-  const res = await axios.delete(`${API_URL}/api/pedidos-clientes/${id}`);
+  const res = await axios.delete(`${API_BASE_URL}/pedidos-clientes/${id}`);
   return res.data;
+}
+
+export async function registrarDevolucionParcial(pedidoId, devolucion) {
+  const response = await axios.post(`${API_BASE_URL}/pedidos-clientes/${pedidoId}/devolucion-parcial`, devolucion);
+  return response.data;
+}
+
+export async function registrarDevolucionTotal(pedidoId, motivo, aptoParaVenta) {
+  const response = await axios.post(`${API_BASE_URL}/pedidos-clientes/${pedidoId}/devolucion-total`, { motivo, aptoParaVenta });
+  return response.data;
 }

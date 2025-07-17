@@ -24,6 +24,16 @@ const TIENDAS = [
   ])
 ];
 
+/**
+ * Este panel muestra la disponibilidad de productos en el almacén central y en tiendas, incluyendo:
+ * - Producto, lote, peso, cantidad, unidad, motivo, fecha
+ * - Permite consultar el stock actual y el historial de movimientos
+ * - Las entradas registradas en fábrica/almacén central están disponibles para expediciones y ventas
+ * - El stock se actualiza en tiempo real tras cada entrada, baja o transferencia
+ *
+ * Para expediciones a clientes/tiendas, consultar el stock por producto/lote/peso/cantidad y realizar transferencias desde el almacén central.
+ */
+
 // Panel principal para gestión del almacén central
 export default function AlmacenCentralPanel() {
   const [isLogged, setIsLogged] = useState(false);

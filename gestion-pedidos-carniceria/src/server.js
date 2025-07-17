@@ -33,6 +33,9 @@ const server = http.createServer(app); // Usar solo HTTP, compatible con Render
 // Middleware de logging para depuración de CORS
 app.use((req, res, next) => {
   console.log(`[CORS] Origin recibido: ${req.headers.origin} | Ruta: ${req.originalUrl}`);
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   next();
 });
 
@@ -47,11 +50,12 @@ const allowedOrigins = [
   'https://localhost:3100',
   'https://127.0.0.1:3000',
   'https://127.0.0.1:3100',
-  'https_//pedidosweb-phi.vercel.app',
+  'https://pedidosweb-phi.vercel.app',
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3000.app.github.dev',
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-5173.app.github.dev',
-  'https://pedidos-backend-0e1s.onrender.com',
-  'https://pedidosweb-phi.vercel.app',
+  'https://pedidosweb-etl1eydr3-albanta23s-projects.vercel.app', // Dominio Vercel producción
+  'https://pedidosweb-x158-azawqk45h-albanta23s-projects.vercel.app',
+  'https://pedidos-backend-0e1s.onrender.com', // Dominio Render backend
 ];
 
 // Permitir cualquier subdominio de app.github.dev y dominios válidos
@@ -146,7 +150,25 @@ app.get('/api/pedidos-clientes', pedidosClientesController.listar);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
 app.delete('/api/pedidos-clientes/:id', pedidosClientesController.eliminar);
-app.post('/api/pedidos-clientes/devolucion', pedidosClientesController.registrarDevolucion);
+app.post('/api/pedidos-clientes/:id/devolucion-parcial', pedidosClientesController.devolucionParcial);
+app.post('/api/pedidos-clientes/:id/devolucion-total', pedidosClientesController.devolucionTotal);
+
+const woocommerceController = require('./woocommerceController');
+app.get('/api/pedidos-woo/sincronizar', woocommerceController.sincronizarPedidos);
+app.get('/api/productos-woo/sincronizar', woocommerceController.sincronizarProductos);
+app.get('/api/productos-woo', async (req, res) => {
+  const ProductoWoo = require('./models/ProductoWoo');
+  const productos = await ProductoWoo.find();
+  res.json(productos);
+});
+app.put('/api/productos-woo', async (req, res) => {
+  const ProductoWoo = require('./models/ProductoWoo');
+  const { productos } = req.body;
+  for (const producto of productos) {
+    await ProductoWoo.findByIdAndUpdate(producto._id, producto);
+  }
+  res.json({ message: 'Productos actualizados' });
+});
 
 // --- ENDPOINTS REST ORIGINALES (DEPRECATED, SOLO PARA COMPATIBILIDAD TEMPORAL) ---
 app.get('/api/pedidos', async (req, res) => {
@@ -627,20 +649,6 @@ app.get('/api/pedidos', async (req, res) => {
 // Registrar endpoint de envío a proveedor (Mailjet V2)
 require('./mailjetProveedorEmailV2')(app);
 
-// --- ENDPOINT: Get movimientos de stock ---
-app.get('/api/movimientos-stock', async (req, res) => {
-  try {
-    const { tiendaId } = req.query;
-    if (!tiendaId) {
-      return res.status(400).json({ ok: false, error: 'tiendaId es requerido' });
-    }
-    const movimientos = await MovimientoStock.find({ tiendaId }).sort({ fecha: -1 });
-    res.json(movimientos);
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
 // --- ENDPOINT: Registrar baja de stock manual ---
 app.post('/api/movimientos-stock/baja', async (req, res) => {
   try {
@@ -696,6 +704,29 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
   } catch (e) {
     console.error('Error al registrar entrada de stock:', e);
     res.status(400).json({ ok: false, error: e.message });
+  }
+});
+
+// --- ENDPOINT: Listar movimientos de stock por tienda o filtro ---
+app.get('/api/movimientos-stock', async (req, res) => {
+  try {
+    const { tiendaId, producto, fechaInicio, fechaFin } = req.query;
+    let filtro = {};
+    if (tiendaId) filtro.tiendaId = tiendaId;
+    if (producto) filtro.producto = producto;
+    if (fechaInicio || fechaFin) {
+      filtro.fecha = {};
+      if (fechaInicio) filtro.fecha.$gte = new Date(fechaInicio);
+      if (fechaFin) {
+        const fin = new Date(fechaFin);
+        fin.setHours(23,59,59,999);
+        filtro.fecha.$lte = fin;
+      }
+    }
+    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
+    res.json(movimientos);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

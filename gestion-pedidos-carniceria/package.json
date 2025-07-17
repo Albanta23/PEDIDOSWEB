@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.5",
+    "@woocommerce/woocommerce-rest-api": "^1.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",

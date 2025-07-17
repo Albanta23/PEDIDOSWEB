@@ -30,7 +30,78 @@ export default function SidebarClientes({ onSelect, selected }) {
       >
         Mantenimiento
       </button>
-      {/* Aquí puedes añadir más botones en el futuro */}
+      <button
+        style={{
+          background: selected === 'pedidos' ? '#1976d2' : '#fff',
+          color: selected === 'pedidos' ? '#fff' : '#1976d2',
+          border: 'none',
+          borderRadius: 8,
+          padding: '12px 18px',
+          fontWeight: 600,
+          fontSize: 17,
+          margin: '0 12px',
+          cursor: 'pointer',
+          boxShadow: selected === 'pedidos' ? '0 2px 8px #1976d233' : 'none',
+          transition: 'all 0.2s'
+        }}
+        onClick={() => onSelect('pedidos')}
+      >
+        Crear Pedido
+      </button>
+      <button
+        style={{
+          background: selected === 'borradores' ? '#1976d2' : '#fff',
+          color: selected === 'borradores' ? '#fff' : '#1976d2',
+          border: 'none',
+          borderRadius: 8,
+          padding: '12px 18px',
+          fontWeight: 600,
+          fontSize: 17,
+          margin: '0 12px',
+          cursor: 'pointer',
+          boxShadow: selected === 'borradores' ? '0 2px 8px #1976d233' : 'none',
+          transition: 'all 0.2s'
+        }}
+        onClick={() => onSelect('borradores')}
+      >
+        Pedidos en Borrador
+      </button>
+      <button
+        style={{
+          background: selected === 'historial' ? '#1976d2' : '#fff',
+          color: selected === 'historial' ? '#fff' : '#1976d2',
+          border: 'none',
+          borderRadius: 8,
+          padding: '12px 18px',
+          fontWeight: 600,
+          fontSize: 17,
+          margin: '0 12px',
+          cursor: 'pointer',
+          boxShadow: selected === 'historial' ? '0 2px 8px #1976d233' : 'none',
+          transition: 'all 0.2s'
+        }}
+        onClick={() => onSelect('historial')}
+      >
+        Historial
+      </button>
+      <button
+        style={{
+          background: selected === 'sage' ? '#1976d2' : '#fff',
+          color: selected === 'sage' ? '#fff' : '#1976d2',
+          border: 'none',
+          borderRadius: 8,
+          padding: '12px 18px',
+          fontWeight: 600,
+          fontSize: 17,
+          margin: '0 12px',
+          cursor: 'pointer',
+          boxShadow: selected === 'sage' ? '0 2px 8px #1976d233' : 'none',
+          transition: 'all 0.2s'
+        }}
+        onClick={() => onSelect('sage')}
+      >
+        Integración SAGE
+      </button>
     </div>
   );
 }

@@ -25,8 +25,18 @@ export default defineConfig({
       interval: 1000,
       ignored: ['**/node_modules/**', '**/.git/**'] // Ignorar directorios que pueden causar reinicios
     },
-    // proxy: {
-    //   '/api': 'https://pedidos-backend-0e1s.onrender.com'
-    // }
+    proxy: {
+      '/api': {
+        target: 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/socket.io': {
+        target: 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
 });

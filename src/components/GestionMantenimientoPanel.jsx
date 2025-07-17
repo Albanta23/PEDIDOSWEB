@@ -3,15 +3,19 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import { cabeceraPDF, piePDF } from '../utils/exportPDFBase';
+import { useProveedores } from './ProveedoresContext';
 
 const PIN = '1973';
 
 const tabs = [
   { key: 'productos', label: 'Productos' },
+  { key: 'productos-woo', label: 'Productos WooCommerce' },
   { key: 'clientes', label: 'Clientes' },
   { key: 'proveedores', label: 'Proveedores' },
   { key: 'recetas', label: 'Recetas' },
 ];
+
+import ProductosWooPanel from './ProductosWooPanel';
 
 export default function GestionMantenimientoPanel({ onClose }) {
   const [pin, setPin] = useState('');
@@ -104,8 +108,9 @@ export default function GestionMantenimientoPanel({ onClose }) {
   // Cargar productos de la base de datos al montar
   useEffect(() => {
     if (acceso && tab === 'productos') {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
-      axios.get(`${API_URL}/api/productos`)
+      let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+      if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+      axios.get(`${apiUrl}/productos`)
         .then(res => setProductosDB(res.data))
         .catch(() => setProductosDB([]));
     }
@@ -174,6 +179,184 @@ export default function GestionMantenimientoPanel({ onClose }) {
     piePDF(doc);
     doc.save(`productos_${filtroFamilia || 'todas'}_${Date.now()}.pdf`);
   };
+
+  // --- Componente CRUD de proveedores ---
+  function ProveedorCrud() {
+    const { proveedores, loading, error, addProveedor, updateProveedor, deleteProveedor } = useProveedores();
+    const [editMode, setEditMode] = useState(false);
+    const [editados, setEditados] = useState({});
+    const [nuevo, setNuevo] = useState({ codigo:'', nombre:'', razonComercial:'', nif:'', email:'', telefono:'', direccion:'', activo:true });
+    const [guardando, setGuardando] = useState(false);
+    const [mensaje, setMensaje] = useState('');
+
+    // Guardar cambios
+    const handleGuardar = async () => {
+      setGuardando(true);
+      try {
+        // Nuevo proveedor
+        if (nuevo.nombre && nuevo.codigo) {
+          await addProveedor(nuevo);
+          setNuevo({ codigo:'', nombre:'', razonComercial:'', nif:'', email:'', telefono:'', direccion:'', activo:true });
+          setMensaje('Proveedor añadido correctamente');
+        }
+        // Editados
+        for (const id of Object.keys(editados)) {
+          await updateProveedor(id, editados[id]);
+        }
+        setEditados({});
+        setMensaje('Cambios guardados');
+      } catch (e) {
+        setMensaje('Error al guardar: ' + (e.message || e));
+      } finally {
+        setGuardando(false);
+        setTimeout(()=>setMensaje(''),2000);
+      }
+    };
+
+    // Borrar proveedor
+    const handleBorrar = async (id) => {
+      if (!window.confirm('¿Seguro que quieres borrar este proveedor?')) return;
+      await deleteProveedor(id);
+      setMensaje('Proveedor eliminado');
+      setTimeout(()=>setMensaje(''),2000);
+    };
+
+    return (
+      <div style={{marginTop:24}}>
+        {loading && <div style={{color:'#1976d2'}}>Cargando proveedores...</div>}
+        {error && <div style={{color:'#d32f2f'}}>{error}</div>}
+        {mensaje && <div style={{color:'#388e3c',marginBottom:8}}>{mensaje}</div>}
+        <button onClick={()=>setEditMode(!editMode)} style={{marginBottom:12,background:editMode?'#d32f2f':'#1976d2',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}}>
+          {editMode ? 'Cancelar edición' : 'Editar proveedores'}
+        </button>
+        {editMode && <button onClick={handleGuardar} style={{marginLeft:8,background:'#388e3c',color:'#fff',border:'none',borderRadius:8,padding:'8px 18px',fontWeight:700,cursor:'pointer'}} disabled={guardando}>Guardar cambios</button>}
+        <div style={{maxHeight:320,overflow:'auto',border:'1px solid #eee',borderRadius:8,marginTop:16}}>
+          <table style={{width:'100%',fontSize:13}}>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Razón comercial</th>
+                <th>NIF</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Activo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {editMode && (
+                <tr style={{background:'#e8f5e9'}}>
+                  <td><input value={nuevo.codigo} onChange={e=>setNuevo(n=>({...n,codigo:e.target.value}))} placeholder="Código" /></td>
+                  <td><input value={nuevo.nombre} onChange={e=>setNuevo(n=>({...n,nombre:e.target.value}))} placeholder="Nombre" /></td>
+                  <td><input value={nuevo.razonComercial} onChange={e=>setNuevo(n=>({...n,razonComercial:e.target.value}))} placeholder="Razón comercial" /></td>
+                  <td><input value={nuevo.nif} onChange={e=>setNuevo(n=>({...n,nif:e.target.value}))} placeholder="NIF" /></td>
+                  <td><input value={nuevo.email} onChange={e=>setNuevo(n=>({...n,email:e.target.value}))} placeholder="Email" /></td>
+                  <td><input value={nuevo.telefono} onChange={e=>setNuevo(n=>({...n,telefono:e.target.value}))} placeholder="Teléfono" /></td>
+                  <td><input value={nuevo.direccion} onChange={e=>setNuevo(n=>({...n,direccion:e.target.value}))} placeholder="Dirección" /></td>
+                  <td><input type="checkbox" checked={nuevo.activo} onChange={e=>setNuevo(n=>({...n,activo:e.target.checked}))} /></td>
+                  <td></td>
+                </tr>
+              )}
+              {proveedores.map((p,i) => (
+                <tr key={p._id||i} style={{background:i%2?'#fafdff':'#fff'}}>
+                  <td>{editMode ? <input value={editados[p._id]?.codigo ?? p.codigo} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],codigo:e.target.value}}))} /> : p.codigo}</td>
+                  <td>{editMode ? <input value={editados[p._id]?.nombre ?? p.nombre} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],nombre:e.target.value}}))} /> : p.nombre}</td>
+                  <td>{editMode ? <input value={editados[p._id]?.razonComercial ?? p.razonComercial} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],razonComercial:e.target.value}}))} /> : p.razonComercial}</td>
+                  <td>{editMode ? <input value={editados[p._id]?.nif ?? p.nif} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],nif:e.target.value}}))} /> : p.nif}</td>
+                  <td>{editMode ? <input value={editados[p._id]?.email ?? p.email} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],email:e.target.value}}))} /> : p.email}</td>
+                  <td>{editMode ? <input value={editados[p._id]?.telefono ?? p.telefono} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],telefono:e.target.value}}))} /> : p.telefono}</td>
+                  <td>{editMode ? <input value={editados[p._id]?.direccion ?? p.direccion} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],direccion:e.target.value}}))} /> : p.direccion}</td>
+                  <td>{editMode ? <input type="checkbox" checked={editados[p._id]?.activo ?? p.activo} onChange={e=>setEditados(ed=>({...ed,[p._id]:{...p,...ed[p._id],activo:e.target.checked}}))} /> : (p.activo ? 'Sí' : 'No')}</td>
+                  <td><button onClick={()=>handleBorrar(p._id)} style={{color:'#dc3545',background:'none',border:'none',cursor:'pointer',fontSize:18}} title="Borrar">🗑</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Componente para importar proveedores desde varios formatos ---
+  function ImportarProveedoresMultiFormato() {
+    const { addProveedor } = useProveedores();
+    const [importando, setImportando] = useState(false);
+    const [mensaje, setMensaje] = useState('');
+    const [error, setError] = useState('');
+
+    const handleImport = async (e) => {
+      setMensaje('');
+      setError('');
+      setImportando(true);
+      const file = e.target.files[0];
+      if (!file) return setImportando(false);
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        let rows = [];
+        if (ext === 'json') {
+          const text = await file.text();
+          rows = JSON.parse(text);
+        } else if (ext === 'csv') {
+          const text = await file.text();
+          const lines = text.split(/\r?\n/).filter(Boolean);
+          const headers = lines[0].split(',');
+          rows = lines.slice(1).map(line => {
+            const values = line.split(',');
+            const obj = {};
+            headers.forEach((h, i) => { obj[h.trim()] = values[i]?.trim() || ''; });
+            return obj;
+          });
+        } else if (ext === 'xlsx' || ext === 'xls') {
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data);
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        } else {
+          setError('Formato no soportado. Usa CSV, Excel (.xlsx/.xls) o JSON.');
+          setImportando(false);
+          return;
+        }
+        let insertados = 0;
+        for (const row of rows) {
+          try {
+            await addProveedor({
+              codigo: row.codigo || row['Código'] || row['Codigo'] || row.ID || '',
+              nombre: row.nombre || row['Nombre'] || '',
+              razonComercial: row.razonComercial || row['Razón comercial'] || row['Razon comercial'] || '',
+              nif: row.nif || row['NIF'] || row['CIF'] || row['Cif'] || row['cif'] || '',
+              email: row.email || row['Email'] || '',
+              telefono: row.telefono || row['Teléfono'] || row['Telefono'] || '',
+              direccion: row.direccion || row['Dirección'] || row['Direccion'] || '',
+              codigoPostal: row.codigoPostal || row['C.postal'] || row['C.Postal'] || '',
+              poblacion: row.poblacion || row['Población'] || row['Poblacion'] || '',
+              provincia: row.provincia || row['Provincia'] || '',
+              activo: row.activo !== undefined ? Boolean(row.activo) : true
+            });
+            insertados++;
+          } catch (e) {
+            // Si hay error, continuar con el siguiente
+          }
+        }
+        setMensaje(`Importación completada: ${insertados} proveedores insertados.`);
+      } catch (err) {
+        setError('Error al procesar el archivo.');
+      } finally {
+        setImportando(false);
+      }
+    };
+
+    return (
+      <div style={{margin:'24px 0',padding:'18px',background:'#f5f7fa',borderRadius:12}}>
+        <h3 style={{color:'#1976d2'}}>Importar proveedores (CSV, Excel, JSON)</h3>
+        <input type="file" accept=".csv,.xlsx,.xls,.json" onChange={handleImport} disabled={importando} />
+        {importando && <span style={{marginLeft:12, color:'#1976d2'}}>Importando...</span>}
+        {mensaje && <div style={{color:'#388e3c',marginTop:8}}>{mensaje}</div>}
+        {error && <div style={{color:'#d32f2f',marginTop:8}}>{error}</div>}
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4f6f8', display: 'flex', flexDirection: 'column' }}>
@@ -553,7 +736,9 @@ export default function GestionMantenimientoPanel({ onClose }) {
             {tab === 'proveedores' && (
               <div>
                 <h2 style={{ color: '#1976d2', fontWeight: 800 }}>Gestión de proveedores</h2>
-                <div style={{ marginTop: 32, color: '#888' }}><i>Próximamente...</i></div>
+                <p>Importa proveedores desde CSV, Excel o JSON y gestiona el catálogo.</p>
+                <ImportarProveedoresMultiFormato />
+                <ProveedorCrud />
               </div>
             )}
             {tab === 'recetas' && (
@@ -562,6 +747,7 @@ export default function GestionMantenimientoPanel({ onClose }) {
                 <div style={{ marginTop: 32, color: '#888' }}><i>Próximamente...</i></div>
               </div>
             )}
+            {tab === 'productos-woo' && <ProductosWooPanel />}
           </div>
         </div>
       )}

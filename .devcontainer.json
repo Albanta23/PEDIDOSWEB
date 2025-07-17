@@ -1,0 +1,9 @@
+{
+  "name": "PEDIDOSWEB Codespace",
+  "portsAttributes": {
+    "10001": { "label": "Backend Express", "onAutoForward": "openPreview", "visibility": "public" },
+    "3000": { "label": "Frontend Principal", "onAutoForward": "openPreview", "visibility": "public" },
+    "3100": { "label": "Frontend Alternativo", "onAutoForward": "openPreview", "visibility": "public" },
+    "5173": { "label": "Frontend Vite Dev", "onAutoForward": "openPreview", "visibility": "public" }
+  }
+}

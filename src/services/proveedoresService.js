@@ -1,10 +1,21 @@
 // Servicio para gestionar proveedores
 
-let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001/api';
-if (!API_URL.endsWith('/api')) {
-  API_URL = API_URL.replace(/\/?$/, '/api');
+function getApiUrl() {
+  if (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL) {
+    let apiUrl = process.env.VITE_API_URL.replace(/\/$/, '');
+    if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+    return apiUrl;
+  }
+  // Frontend Vite
+  try {
+    let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+    if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+    return apiUrl;
+  } catch (e) {}
+  return 'http://localhost:10001/api';
 }
 
+const API_URL = getApiUrl();
 const PROVEEDORES_ENDPOINT = `${API_URL}/proveedores`;
 
 export async function getProveedores() {

@@ -74,3 +74,13 @@ export async function registrarEntradaStock({
  }
   return await res.json();
 }
+
+export async function registrarDevolucionStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {
+  const res = await fetch(`${API_URL}/movimientos-stock/devolucion`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tiendaId, producto, cantidad, unidad, lote, motivo, peso })
+  });
+  if (!res.ok) throw new Error('Error al registrar devolución de stock');
+  return await res.json();
+}
