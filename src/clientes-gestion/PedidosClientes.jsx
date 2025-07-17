@@ -7,11 +7,14 @@ import { FaUndo, FaExclamationTriangle } from 'react-icons/fa';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
-export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales }) {
+export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales, pedidoId }) {
   const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(clienteInicial || null);
   const [busquedaCliente, setBusquedaCliente] = useState(clienteInicial?.nombre || '');
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const [mostrarResumen, setMostrarResumen] = useState(false);
+  const [codigoSage, setCodigoSage] = useState(clienteInicial?.codigoCliente || '');
+  const [nifCliente, setNifCliente] = useState(clienteInicial?.nif || '');
   const [lineas, setLineas] = useState(
     lineasIniciales && lineasIniciales.length > 0 ? 
     lineasIniciales.map(linea => ({
@@ -19,9 +22,13 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       cantidad: linea.cantidad || 1,
       formato: linea.formato || FORMATOS_PEDIDO[0],
       comentario: linea.comentario || '',
-      esComentario: linea.esComentario || false
+      esComentario: linea.esComentario || false,
+      precioUnitario: linea.precioUnitario || 0,
+      iva: linea.iva || 0,
+      descuento: linea.descuento || 0,
+      subtotal: linea.subtotal || 0
     })) :
-    [{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]
+    [{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', precioUnitario: 0, iva: 0, descuento: 0, subtotal: 0 }]
   );
   const [mensaje, setMensaje] = useState('');
   const { productos, cargando } = useProductos();
@@ -35,11 +42,47 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       .catch(()=>setClientes([]));
   }, []);
 
+  // Efecto para cargar el pedido a editar
+  useEffect(() => {
+    if (pedidoId) {
+      axios.get(`${API_URL}/pedidos-clientes/${pedidoId}`)
+        .then(res => {
+          const pedido = res.data;
+          
+          // Buscar el cliente correspondiente
+          const cliente = clientes.find(c => c._id === pedido.clienteId || c.id === pedido.clienteId);
+          if (cliente) {
+            setClienteSeleccionado(cliente);
+            setBusquedaCliente(cliente.nombre);
+            setCodigoSage(cliente.codigoCliente || '');
+            setNifCliente(cliente.nif || '');
+          }
+          
+          // Cargar las líneas del pedido
+          if (pedido.lineas && pedido.lineas.length > 0) {
+            setLineas(pedido.lineas.map(linea => ({
+              producto: linea.producto || '',
+              cantidad: linea.cantidad || 1,
+              formato: linea.formato || FORMATOS_PEDIDO[0],
+              comentario: linea.comentario || '',
+              esComentario: linea.esComentario || false
+            })));
+          }
+        })
+        .catch(error => {
+          console.error('Error al cargar el pedido para editar:', error);
+          setMensaje('❌ Error al cargar el pedido para editar');
+        });
+    }
+  }, [pedidoId, clientes]);
+
   // Efecto para manejar props de reutilización
   useEffect(() => {
     if (clienteInicial) {
       setClienteSeleccionado(clienteInicial);
       setBusquedaCliente(clienteInicial.nombre || '');
+      setCodigoSage(clienteInicial.codigoCliente || '');
+      setNifCliente(clienteInicial.nif || '');
     }
     if (lineasIniciales && lineasIniciales.length > 0) {
       const lineasFormateadas = lineasIniciales.map(linea => ({
@@ -59,13 +102,48 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   }, [lineas, productos]);
 
   const handleLineaChange = (idx, campo, valor) => {
-    setLineas(lineas.map((l, i) => i === idx ? { ...l, [campo]: valor } : l));
+    const lineasActualizadas = lineas.map((l, i) => {
+      if (i === idx) {
+        const lineaActualizada = { ...l, [campo]: valor };
+        
+        // Si cambia el precio o la cantidad, recalcular el subtotal
+        if (campo === 'precioUnitario' || campo === 'cantidad') {
+          const precio = campo === 'precioUnitario' ? valor : lineaActualizada.precioUnitario;
+          const cantidad = campo === 'cantidad' ? valor : lineaActualizada.cantidad;
+          lineaActualizada.subtotal = precio * cantidad;
+        }
+        
+        return lineaActualizada;
+      }
+      return l;
+    });
+    
+    setLineas(lineasActualizadas);
   };
   const handleAgregarLinea = () => {
-    setLineas([...lineas, { producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
+    setLineas([...lineas, { 
+      producto: '', 
+      cantidad: 1, 
+      formato: FORMATOS_PEDIDO[0], 
+      comentario: '',
+      precioUnitario: 0,
+      iva: 0,
+      descuento: 0,
+      subtotal: 0
+    }]);
   };
   const handleAgregarComentario = () => {
-    setLineas([...lineas, { esComentario: true, comentario: '' }]);
+    setLineas([...lineas, { 
+      esComentario: true, 
+      comentario: '',
+      producto: '', 
+      cantidad: 1, 
+      formato: FORMATOS_PEDIDO[0],
+      precioUnitario: 0,
+      iva: 0,
+      descuento: 0,
+      subtotal: 0
+    }]);
   };
   const handleEliminarLinea = (idx) => {
     setLineas(lineas.filter((_, i) => i !== idx));
@@ -74,35 +152,89 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const lineasValidas = lineas.filter(l => !l.esComentario && l.producto && l.cantidad > 0);
   const puedeCrear = clienteSeleccionado && lineasValidas.length > 0;
 
-  const handleCrearPedido = async () => {
+  const handleCrearPedido = async (pedidoId) => {
     if (!puedeCrear) {
       setMensaje('Selecciona un cliente y añade al menos una línea de producto válida.');
       return;
     }
+    
+    const pedidoData = {
+      clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
+      clienteNombre: clienteSeleccionado.nombre,
+      direccion: clienteSeleccionado.direccion || '',
+      codigoPostal: clienteSeleccionado.codigoPostal || '',
+      poblacion: clienteSeleccionado.poblacion || '',
+      provincia: clienteSeleccionado.provincia || '',
+      lineas: lineas.filter(l => l.esComentario || (l.producto && l.cantidad > 0)).map(linea => ({
+        producto: linea.producto || '',
+        cantidad: linea.cantidad || 1,
+        formato: linea.formato || FORMATOS_PEDIDO[0],
+        comentario: linea.comentario || '',
+        esComentario: linea.esComentario || false,
+        precioUnitario: linea.precioUnitario || 0,
+        iva: linea.iva || 0,
+        descuento: linea.descuento || 0,
+        subtotal: linea.subtotal || 0
+      })),
+      tipo: 'cliente',
+      fechaPedido: new Date().toISOString(),
+      estado: 'enviado',
+      codigoSage: codigoSage || '',
+      nifCliente: nifCliente || '',
+      // Datos específicos para WooCommerce
+      datosFacturacion: {
+        nif: nifCliente || '',
+        nombre: clienteSeleccionado.nombre || '',
+        direccion: clienteSeleccionado.direccion || '',
+        codigoPostal: clienteSeleccionado.codigoPostal || '',
+        poblacion: clienteSeleccionado.poblacion || '',
+        provincia: clienteSeleccionado.provincia || '',
+        pais: clienteSeleccionado.pais || 'España'
+      },
+      // Si proviene de WooCommerce, mantener los datos originales
+      origen: {
+        tipo: pedidoId && pedidoId.startsWith('wc_') ? 'woocommerce' : 'manual',
+        idOriginal: pedidoId && pedidoId.startsWith('wc_') ? pedidoId : null
+      },
+      esBorrador: false, // Al guardar desde aquí, ya no es borrador
+      totales: {
+        subtotal: lineas.reduce((sum, linea) => !linea.esComentario ? sum + (linea.subtotal || (linea.precioUnitario * linea.cantidad)) : sum, 0),
+        iva: lineas.reduce((sum, linea) => !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.iva || 0) / 100) : sum, 0),
+        descuento: lineas.reduce((sum, linea) => !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.descuento || 0) / 100) : sum, 0),
+        envio: 0, // Valor predeterminado, se puede actualizar
+        total: 0 // Se calculará después
+      }
+    };
+    
+    // Calcular el total final
+    pedidoData.totales.total = pedidoData.totales.subtotal + pedidoData.totales.iva - pedidoData.totales.descuento + pedidoData.totales.envio;
+    
     try {
-      await axios.post(`${API_URL}/pedidos-clientes`, {
-        clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
-        clienteNombre: clienteSeleccionado.nombre,
-        direccion: clienteSeleccionado.direccion,
-        codigoPostal: clienteSeleccionado.codigoPostal,
-        poblacion: clienteSeleccionado.poblacion,
-        provincia: clienteSeleccionado.provincia,
-        lineas,
-        tipo: 'cliente',
-        fechaPedido: new Date().toISOString(),
-        estado: 'enviado'
-      });
-      setMensaje('Pedido creado correctamente.');
-      setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
-      setClienteSeleccionado(null);
-      setBusquedaCliente('');
-      setMostrarSugerencias(false);
+      let response;
+      
+      if (pedidoId) {
+        // Actualizar pedido existente
+        response = await axios.put(`${API_URL}/pedidos-clientes/${pedidoId}`, pedidoData);
+        setMensaje('✅ Pedido actualizado correctamente.');
+      } else {
+        // Crear nuevo pedido
+        response = await axios.post(`${API_URL}/pedidos-clientes`, pedidoData);
+        setMensaje('✅ Pedido creado correctamente.');
+        
+        // Limpiar formulario solo para nuevos pedidos
+        setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
+        setClienteSeleccionado(null);
+        setBusquedaCliente('');
+        setMostrarSugerencias(false);
+      }
+      
       setTimeout(()=> {
         setMensaje('');
-        if (onPedidoCreado) onPedidoCreado();
+        if (onPedidoCreado) onPedidoCreado(response.data);
       }, 1200);
     } catch (e) {
-      setMensaje('Error al crear pedido.');
+      console.error('Error al gestionar pedido:', e.response?.data || e.message);
+      setMensaje(`❌ Error al ${pedidoId ? 'actualizar' : 'crear'} pedido: ${e.response?.data?.mensaje || e.message}`);
     }
   };
 
@@ -139,6 +271,8 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const handleSeleccionarCliente = (cliente) => {
     setClienteSeleccionado(cliente);
     setBusquedaCliente(cliente.nombre);
+    setCodigoSage(cliente.codigoCliente || '');
+    setNifCliente(cliente.nif || '');
     setMostrarSugerencias(false);
   };
 
@@ -179,9 +313,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       width: '100vw',
       height: '100vh',
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '20px',
+      padding: '20px 20px 120px 20px', /* Añadimos espacio abajo para el área fija */
       overflowY: 'auto',
-      zIndex: 999
+      zIndex: 900
     }}>
       {/* Header profesional con iconos */}
       <div style={{
@@ -210,10 +344,10 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         }}>🛒</div>
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '700' }}>
-            Editor de Pedidos - Pantalla Completa
+            {pedidoId ? 'Editar Pedido Existente' : 'Crear Nuevo Pedido'}
           </h1>
           <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '18px' }}>
-            Gestión profesional de pedidos con vista expandida
+            {pedidoId ? `Modificando el pedido #${pedidoId}` : 'Gestión profesional de pedidos con vista expandida'}
           </p>
         </div>
         <button
@@ -487,6 +621,68 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                   </span>
                 </div>
               )}
+              
+              {/* Información de código SAGE y NIF/CIF */}
+              <div style={{
+                display: 'flex',
+                gap: '16px',
+                marginTop: '12px',
+                padding: '8px 12px',
+                background: 'rgba(255, 255, 255, 0.7)',
+                borderRadius: '8px',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                flexWrap: 'wrap'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}>
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#64748b',
+                    fontWeight: '600'
+                  }}>
+                    CÓDIGO SAGE50:
+                  </span>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#1e293b',
+                    fontWeight: '700',
+                    background: codigoSage ? 'rgba(16, 185, 129, 0.1)' : 'rgba(251, 113, 133, 0.1)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    display: 'inline-block'
+                  }}>
+                    {codigoSage || 'No asignado'}
+                  </span>
+                </div>
+                
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}>
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#64748b',
+                    fontWeight: '600'
+                  }}>
+                    NIF/CIF:
+                  </span>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#1e293b',
+                    fontWeight: '700',
+                    background: nifCliente ? 'rgba(16, 185, 129, 0.1)' : 'rgba(251, 113, 133, 0.1)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    display: 'inline-block'
+                  }}>
+                    {nifCliente || 'No disponible'}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -531,7 +727,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
           {/* Headers de la tabla */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '2fr 100px 150px 200px 60px',
+            gridTemplateColumns: '2fr 100px 120px 120px 80px 120px 60px',
             gap: '16px',
             padding: '16px 20px',
             background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
@@ -545,7 +741,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             <div>📦 Producto</div>
             <div>🔢 Cantidad</div>
             <div>📏 Formato</div>
-            <div>💬 Comentario</div>
+            <div>� Precio</div>
+            <div>�💬 Comentario</div>
+            <div>💲 Subtotal</div>
             <div>🗑️</div>
           </div>
 
@@ -633,7 +831,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
               ) : (
                 <div key={idx} style={{ 
                   display: 'grid',
-                  gridTemplateColumns: '2fr 100px 150px 200px 60px',
+                  gridTemplateColumns: '2fr 100px 120px 120px 80px 120px 60px',
                   gap: '16px',
                   alignItems: 'center',
                   background: '#fff',
@@ -737,6 +935,61 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     ))}
                   </select>
                   
+                  {/* Campo de precio unitario */}
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Precio..."
+                    value={linea.precioUnitario}
+                    onChange={e => handleLineaChange(idx, 'precioUnitario', Number(e.target.value))}
+                    style={{ 
+                      padding: '14px 18px', 
+                      width: '100%',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '10px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#4facfe';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  
+                  {/* Campo de IVA */}
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="100"
+                    placeholder="IVA %"
+                    value={linea.iva}
+                    onChange={e => handleLineaChange(idx, 'iva', Number(e.target.value))}
+                    style={{ 
+                      padding: '14px 18px', 
+                      width: '100%',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '10px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#4facfe';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  
                   <input
                     type="text"
                     placeholder="Observaciones..."
@@ -761,6 +1014,19 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     }}
                   />
                   
+                  {/* Campo de subtotal (calculado) */}
+                  <div style={{
+                    padding: '14px 18px',
+                    background: '#f1f5f9',
+                    borderRadius: '10px',
+                    fontWeight: '600',
+                    fontSize: '16px',
+                    color: '#334155',
+                    border: '2px solid #e2e8f0',
+                    textAlign: 'right'
+                  }}>
+                    {(linea.subtotal || linea.precioUnitario * linea.cantidad).toFixed(2)} €
+                  </div>
                   <button 
                     type="button" 
                     onClick={() => handleEliminarLinea(idx)} 
@@ -891,110 +1157,240 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
           </div>
         </div>
 
-        {/* Historial de pedidos */}
+        {/* Botón principal de confirmación - Panel fijo */}
         <div style={{
-          background: '#f8fafc',
-          padding: '24px',
-          borderRadius: '12px',
-          border: '2px solid #e2e8f0',
-          marginTop: '24px'
-        }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50', fontSize: '18px', fontWeight: '600' }}>
-            Historial de Pedidos
-          </h3>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#e2e8f0', color: '#334155' }}>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Nº Pedido</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Cliente</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Fecha</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Estado</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Origen</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Total</th>
-                  <th style={{ padding: '12px', textAlign: 'left' }}>Devoluciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pedidos.map(pedido => (
-                  <tr key={pedido._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '12px' }}>{pedido.numeroPedido}</td>
-                    <td style={{ padding: '12px' }}>{pedido.clienteNombre}</td>
-                    <td style={{ padding: '12px' }}>{new Date(pedido.fechaPedido).toLocaleDateString()}</td>
-                    <td style={{ padding: '12px' }}>{pedido.estado}</td>
-                    <td style={{ padding: '12px' }}>
-                      {pedido.origen?.tipo === 'woocommerce' ? 'WooCommerce' : 'Manual'}
-                    </td>
-                    <td style={{ padding: '12px' }}>{pedido.total?.toFixed(2) || 'N/A'}€</td>
-                    <td style={{ padding: '12px' }}>
-                      {pedido.devoluciones && pedido.devoluciones.length > 0 && (
-                        <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center' }}>
-                          <FaUndo style={{ marginRight: '5px' }} /> {pedido.devoluciones.length}
-                        </span>
-                      )}
-                      {pedido.estado === 'devuelto_parcial' && (
-                        <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center' }}>
-                          <FaExclamationTriangle style={{ marginRight: '5px' }} /> Parcial
-                        </span>
-                      )}
-                      {pedido.estado === 'devuelto_total' && (
-                        <span style={{ color: '#dc3545', display: 'flex', alignItems: 'center' }}>
-                          <FaExclamationTriangle style={{ marginRight: '5px' }} /> Total
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Botón principal de confirmación */}
-        <div style={{
-          background: puedeCrear ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : '#e9ecef',
-          padding: '32px',
-          borderRadius: '16px',
+          background: puedeCrear ? 'linear-gradient(135deg, #ebf4ff 0%, #ffffff 100%)' : '#f8f9fa',
+          padding: '15px 20px',
+          borderRadius: '20px 20px 0 0',
           textAlign: 'center',
-          border: puedeCrear ? '2px solid rgba(40, 167, 69, 0.3)' : '2px solid #dee2e6',
-          position: 'sticky',
-          bottom: '20px',
-          marginTop: '24px'
+          border: puedeCrear ? '3px solid rgba(37, 99, 235, 0.4)' : '3px solid #dee2e6',
+          borderBottom: 'none',
+          position: 'fixed',
+          bottom: '0',
+          left: '0',
+          right: '0',
+          width: '100%',
+          marginTop: '0',
+          zIndex: 1500,
+          boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.15)',
+          maxHeight: mostrarResumen ? '400px' : '110px', /* Más alto incluso cuando está colapsado */
+          overflow: mostrarResumen ? 'visible' : 'hidden',
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
         }}>
+          {/* Botón para mostrar/ocultar resumen */}
           <button 
-            onClick={handleCrearPedido} 
+            onClick={() => setMostrarResumen(!mostrarResumen)}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '80px',
+              background: '#e9f5ff',
+              border: '2px solid #2563EB',
+              cursor: 'pointer',
+              fontSize: '20px',
+              color: '#2563EB',
+              padding: '4px 12px',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.target.style.background = '#2563EB';
+              e.target.style.color = 'white';
+            }}
+            onMouseLeave={e => {
+              e.target.style.background = '#e9f5ff';
+              e.target.style.color = '#2563EB';
+            }}
+          >
+            {mostrarResumen ? 'Ocultar detalles ▲' : 'Ver detalles ▼'}
+          </button>
+          
+          {/* Resumen de totales */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            marginBottom: mostrarResumen ? '20px' : '5px',
+            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+            padding: mostrarResumen ? '20px' : '10px',
+            borderRadius: '12px',
+            border: '2px solid #e2e8f0',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+          }}>
+            <h3 style={{ 
+              width: '100%', 
+              textAlign: 'left', 
+              margin: '0 0 16px 0',
+              color: '#334155',
+              borderBottom: '1px solid #cbd5e1',
+              paddingBottom: '8px',
+              fontSize: '18px',
+              fontWeight: '700',
+              display: mostrarResumen ? 'block' : 'none'
+            }}>
+              Resumen de Pedido
+            </h3>
+            
+            {mostrarResumen && (
+              <>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: '#64748b', fontSize: '15px' }}>Subtotal:</span>
+                  <span style={{ color: '#334155', fontWeight: '600', fontSize: '15px' }}>
+                    {lineas.reduce((sum, linea) => 
+                      !linea.esComentario ? sum + (linea.subtotal || (linea.precioUnitario * linea.cantidad)) : sum, 0
+                    ).toFixed(2)} €
+                  </span>
+                </div>
+                
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: '#64748b', fontSize: '15px' }}>IVA:</span>
+                  <span style={{ color: '#334155', fontWeight: '600', fontSize: '15px' }}>
+                    {lineas.reduce((sum, linea) => 
+                      !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.iva || 0) / 100) : sum, 0
+                    ).toFixed(2)} €
+                  </span>
+                </div>
+                
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <span style={{ color: '#64748b', fontSize: '15px' }}>Descuento:</span>
+                  <span style={{ color: '#334155', fontWeight: '600', fontSize: '15px' }}>
+                    {lineas.reduce((sum, linea) => 
+                      !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.descuento || 0) / 100) : sum, 0
+                    ).toFixed(2)} €
+                  </span>
+                </div>
+                
+                <div style={{ width: '100%', height: '1px', background: '#cbd5e1', margin: '0 0 16px 0' }}></div>
+              </>
+            )}
+            
+            {!mostrarResumen ? (
+              <div style={{ 
+                width: '100%',
+                display: 'flex', 
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '12px',
+                marginTop: '10px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  gap: '15px',
+                  maxWidth: '800px',
+                  width: '100%'
+                }}>
+                  <span style={{ 
+                    color: '#1e3a8a', 
+                    fontSize: '20px', 
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: '#dbeafe',
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
+                    minWidth: '240px',
+                    justifyContent: 'center'
+                  }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="#2563EB"/>
+                    </svg>
+                    TOTAL DEL PEDIDO
+                  </span>
+                  <span style={{ 
+                    fontWeight: '700', 
+                    fontSize: '24px',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                    padding: '10px 25px',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.5)',
+                    minWidth: '140px',
+                    textAlign: 'center'
+                  }}>
+                    {(
+                      lineas.reduce((sum, linea) => !linea.esComentario ? sum + (linea.subtotal || (linea.precioUnitario * linea.cantidad)) : sum, 0) +
+                      lineas.reduce((sum, linea) => !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.iva || 0) / 100) : sum, 0) -
+                      lineas.reduce((sum, linea) => !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.descuento || 0) / 100) : sum, 0)
+                    ).toFixed(2)} €
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#0f172a', fontSize: '17px', fontWeight: '700' }}>
+                  TOTAL:
+                </span>
+                <span style={{ 
+                  color: '#0f172a', 
+                  fontWeight: '700', 
+                  fontSize: '17px',
+                  background: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  color: '#fff'
+                }}>
+                  {(
+                    lineas.reduce((sum, linea) => !linea.esComentario ? sum + (linea.subtotal || (linea.precioUnitario * linea.cantidad)) : sum, 0) +
+                    lineas.reduce((sum, linea) => !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.iva || 0) / 100) : sum, 0) -
+                    lineas.reduce((sum, linea) => !linea.esComentario ? sum + ((linea.subtotal || (linea.precioUnitario * linea.cantidad)) * (linea.descuento || 0) / 100) : sum, 0)
+                  ).toFixed(2)} €
+                </span>
+              </div>
+            )}
+          </div>
+        
+          <button 
+            onClick={() => handleCrearPedido(pedidoId)} 
             disabled={!puedeCrear}
             style={{ 
-              padding: '20px 60px', 
-              background: puedeCrear ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : '#6c757d',
+              padding: '16px 30px', 
+              width: '100%',
+              maxWidth: '600px',
+              background: puedeCrear ? 'linear-gradient(135deg, #059669 0%, #34d399 100%)' : '#94a3b8',
               color: '#fff', 
               border: 'none', 
               borderRadius: '16px', 
               fontWeight: '700',
-              fontSize: '20px',
+              fontSize: '22px',
               cursor: puedeCrear ? 'pointer' : 'not-allowed',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              boxShadow: puedeCrear ? '0 8px 24px rgba(40, 167, 69, 0.5)' : 'none',
+              transition: 'all 0.3s ease',
+              boxShadow: puedeCrear ? '0 8px 20px rgba(5, 150, 105, 0.5)' : 'none',
               opacity: puedeCrear ? 1 : 0.7,
               display: 'flex',
               alignItems: 'center',
-              gap: '16px',
-              margin: '0 auto'
+              justifyContent: 'center',
+              gap: '12px',
+              margin: '0 auto',
+              zIndex: 1001,
+              marginTop: '10px',
+              letterSpacing: '0.5px'
             }}
             onMouseEnter={e => {
               if (puedeCrear) {
-                e.target.style.transform = 'translateY(-4px)';
-                e.target.style.boxShadow = '0 12px 32px rgba(40, 167, 69, 0.6)';
+                e.target.style.transform = 'translateY(-3px) scale(1.03)';
+                e.target.style.boxShadow = '0 12px 24px rgba(5, 150, 105, 0.6)';
+                e.target.style.background = 'linear-gradient(135deg, #047857 0%, #10b981 100%)';
               }
             }}
             onMouseLeave={e => {
               if (puedeCrear) {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 8px 24px rgba(40, 167, 69, 0.5)';
+                e.target.style.transform = 'translateY(0) scale(1)';
+                e.target.style.boxShadow = '0 8px 20px rgba(5, 150, 105, 0.5)';
+                e.target.style.background = 'linear-gradient(135deg, #059669 0%, #34d399 100%)';
               }
             }}
           >
-            {puedeCrear ? '🚀 Confirmar y Enviar Pedido' : '⚠️ Completa los campos requeridos'}
+            {puedeCrear ? (pedidoId ? '🔄 ACTUALIZAR PEDIDO' : '🚀 CONFIRMAR Y ENVIAR PEDIDO') : '⚠️ COMPLETA LOS CAMPOS REQUERIDOS'}
           </button>
           
           {!puedeCrear && (
