@@ -55,6 +55,7 @@ const allowedOrigins = [
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-5173.app.github.dev',
   'https://pedidosweb-etl1eydr3-albanta23s-projects.vercel.app', // Dominio Vercel producción
   'https://pedidosweb-x158-azawqk45h-albanta23s-projects.vercel.app',
+  'https://pedidosweb-g5xxbj1wc-albanta23s-projects.vercel.app',
   'https://pedidos-backend-0e1s.onrender.com', // Dominio Render backend
 ];
 
