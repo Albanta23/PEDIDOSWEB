@@ -1331,7 +1331,6 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                   TOTAL:
                 </span>
                 <span style={{ 
-                  color: '#0f172a', 
                   fontWeight: '700', 
                   fontSize: '17px',
                   background: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
