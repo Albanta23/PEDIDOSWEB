@@ -9,10 +9,13 @@ const PIN = '1973';
 
 const tabs = [
   { key: 'productos', label: 'Productos' },
+  { key: 'productos-woo', label: 'Productos WooCommerce' },
   { key: 'clientes', label: 'Clientes' },
   { key: 'proveedores', label: 'Proveedores' },
   { key: 'recetas', label: 'Recetas' },
 ];
+
+import ProductosWooPanel from './ProductosWooPanel';
 
 export default function GestionMantenimientoPanel({ onClose }) {
   const [pin, setPin] = useState('');
@@ -744,6 +747,7 @@ export default function GestionMantenimientoPanel({ onClose }) {
                 <div style={{ marginTop: 32, color: '#888' }}><i>Próximamente...</i></div>
               </div>
             )}
+            {tab === 'productos-woo' && <ProductosWooPanel />}
           </div>
         </div>
       )}
