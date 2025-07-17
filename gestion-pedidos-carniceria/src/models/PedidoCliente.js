@@ -17,6 +17,8 @@ const LineaClienteSchema = new mongoose.Schema({
 });
 
 const PedidoClienteSchema = new mongoose.Schema({
+  datosFacturaWoo: mongoose.Schema.Types.Mixed, // Guardar todos los datos de factura recibidos de WooCommerce
+  numeroPedidoWoo: Number, // Número de pedido original de WooCommerce
   clienteId: String,
   clienteNombre: String,
   nif: String,

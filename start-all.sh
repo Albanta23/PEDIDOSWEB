@@ -30,7 +30,7 @@ echo "Iniciando backend..."
 BACKEND_PID=$!
 
 # Esperar un par de segundos para que el backend arranque
-sleep 5
+sleep 12
 
 # Iniciar el frontend principal
 echo "Iniciando frontend principal..."

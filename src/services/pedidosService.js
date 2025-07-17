@@ -32,7 +32,7 @@ export const crearPedido = async (pedido) => {
 export const actualizarPedido = async (id, pedidoActualizado) => {
   try {
     // Solo enviar campos permitidos por el backend
-    const camposPermitidos = ['lineas', 'estado', 'comentario', 'tipoPedido', 'fechaPedido', 'cliente', 'clienteId', 'tiendaId', 'numeroPedido', 'fechaCreacion']; // Se vuelve a incluir 'numeroPedido'
+    const camposPermitidos = ['lineas', 'estado', 'comentario', 'tipoPedido', 'fechaPedido', 'cliente', 'clienteId', 'tiendaId', 'numeroPedido', 'fechaCreacion'];
     const camposLineaPermitidos = ['producto', 'cantidad', 'peso', 'formato', 'comentario', 'cantidadEnviada', 'lote', 'preparada', 'esComentario'];
     const datosFiltrados = {};
     for (const key of camposPermitidos) {

@@ -5,10 +5,12 @@ const { registrarBajaStock } = require('./utils/stock');
 module.exports = {
   async listar(req, res) {
     try {
-      // Filtros: clienteId, fechaInicio, fechaFin
-      const { clienteId, fechaInicio, fechaFin } = req.query;
+      // Filtros: clienteId, fechaInicio, fechaFin, estado, origen.tipo
+      const { clienteId, fechaInicio, fechaFin, estado, origen } = req.query;
       let filtro = {};
       if (clienteId) filtro.clienteId = clienteId;
+      if (estado) filtro.estado = estado;
+      if (origen && origen.tipo) filtro['origen.tipo'] = origen.tipo;
       if (fechaInicio || fechaFin) {
         filtro.fechaPedido = {};
         if (fechaInicio) filtro.fechaPedido.$gte = new Date(fechaInicio);
@@ -64,10 +66,20 @@ module.exports = {
       const pedidoPrevio = await PedidoCliente.findById(id);
       if (!pedidoPrevio) return res.status(404).json({ error: 'Pedido no encontrado' });
       const { estado, usuarioTramitando, lineas, bultos } = req.body;
-      console.log('Bultos recibidos en backend:', bultos);
       let update = { ...req.body };
+      if (bultos) {
+        update.$push = update.$push || {};
+        update.$push.historialBultos = { bultos, fecha: new Date(), usuario: usuarioTramitando || req.body.usuario || 'expediciones' };
+      }
       // Cambios de estado y registro en historial
       if (estado && estado !== pedidoPrevio.estado) {
+        // Solo permitir migrar si el pedido ha sido revisado y completado
+        if (pedidoPrevio.estado === 'borrador_woocommerce' && estado !== 'borrador_woocommerce') {
+          if (!pedidoPrevio.revisado) {
+            return res.status(400).json({ error: 'El pedido debe ser revisado y completado en clientes-gestion antes de migrar.' });
+          }
+          update.estado = estado;
+        }
         update.$push = { historialEstados: { estado, usuario: usuarioTramitando || req.body.usuario || 'expediciones', fecha: new Date() } };
         update.usuarioTramitando = usuarioTramitando || req.body.usuario || 'expediciones';
       }
@@ -126,7 +138,7 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Devolución cliente (parcial): ${motivo}`,
-            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+            peso: linea.pesoDevuelto || linea.peso || undefined
           });
         } else {
           await registrarBajaStock({
@@ -136,7 +148,7 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Baja por devolución cliente (parcial): ${motivo}`,
-            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+            peso: linea.pesoDevuelto || linea.peso || undefined
           });
         }
       }
@@ -169,7 +181,7 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Devolución cliente (total): ${motivo}`,
-            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+            peso: linea.pesoDevuelto || linea.peso || undefined
           });
         } else {
           await registrarBajaStock({
@@ -179,7 +191,7 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Baja por devolución cliente (total): ${motivo}`,
-            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+            peso: linea.pesoDevuelto || linea.peso || undefined
           });
         }
       }
@@ -188,6 +200,8 @@ module.exports = {
       pedido.historialEstados.push({ estado: 'devuelto_total', usuario: 'expediciones', fecha: new Date() });
       pedido.devoluciones = pedido.devoluciones || [];
       pedido.devoluciones.push({ tipo: 'total', fecha: new Date(), motivo });
+      pedido.enviado = false; // Eliminar del historial de envío
+      pedido.enHistorialDevoluciones = true; // Marcar para historial de devoluciones
       await pedido.save();
 
       res.json(pedido);

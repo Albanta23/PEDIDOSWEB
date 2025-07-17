@@ -1,10 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ["jspdf", "socket.io-client"]
+  },
+  publicDir: 'public',
+  resolve: {
+    alias: {
+      '@public': resolve(__dirname, 'public'),
+    },
   },
   build: {
     rollupOptions: {
