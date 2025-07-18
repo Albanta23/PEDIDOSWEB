@@ -26,6 +26,7 @@ const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimiento
 const pedidosTiendaController = require('./pedidosTiendaController');
 const pedidosClientesController = require('./pedidosClientesController');
 const pedidosLotesController = require('./pedidosLotesController'); // Controlador de pedidos de cestas/lotes
+const clientesController = require('./clientesController'); // Controlador de clientes
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -33,9 +34,6 @@ const server = http.createServer(app); // Usar solo HTTP, compatible con Render
 // Middleware de logging para depuración de CORS
 app.use((req, res, next) => {
   console.log(`[CORS] Origin recibido: ${req.headers.origin} | Ruta: ${req.originalUrl}`);
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   next();
 });
 
@@ -59,14 +57,111 @@ const allowedOrigins = [
 
 // Permitir cualquier subdominio de app.github.dev y dominios válidos
 function corsOrigin(origin, callback) {
-  if (!origin) return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
+  console.log(`[CORS DEBUG] Verificando origen: ${origin}`);
+  
+  // Log específico para depurar peticiones de gestor de cestas
+  if (origin && (origin.includes('gestor-cestas') || origin.includes('debug-cestas'))) {
+    console.log(`[CORS-CESTAS] ⚠️ Petición de Gestor de Cestas detectada: ${origin}`);
+  }
+  
+  if (!origin) {
+    console.log('[CORS DEBUG] Petición sin origen, permitida');
+    return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
+  }
+  
   const originLc = origin.toLowerCase();
   const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
+  
   const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
   const matchGithubDev = githubDevRegex.test(originLc);
   const matchVercel = /\.vercel\.app$/.test(originLc);
   const matchRender = /\.onrender\.com$/.test(originLc);
   const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
+  
+  console.log(`[CORS DEBUG] Evaluación: 
+    - En lista: ${allowedOriginsLc.includes(originLc)}
+    - Vercel: ${matchVercel}
+    - Render: ${matchRender}
+    - Localhost: ${matchLocalhost}
+    - GitHub: ${matchGithubDev}`);
+  
+  if (
+    allowedOriginsLc.includes(originLc) ||
+    matchVercel ||
+    matchRender ||
+    matchLocalhost ||
+    matchGithubDev
+  ) {
+    console.log(`[CORS DEBUG] Origen permitido: ${origin}`);
+    return callback(null, origin); // Refleja el origin válido
+  }
+  
+  console.log(`[CORS DEBUG] Origen rechazado: ${origin}`);
+  return callback(new Error('Not allowed by CORS: ' + origin));
+}`);
+  
+  // Log específico para depurar peticiones de gestor de cestas
+  if (origin && (origin.includes('gestor-cestas') || origin.includes('debug-cestas'))) {
+    console.log(`[CORS-CESTAS] ⚠️ Petición de Gestor de Cestas detectada: ${origin}`);
+  }
+  
+  if (!origin) {
+    console.log('[CORS DEBUG] Petición sin origen, permitida');
+    return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
+  }
+  
+  const originLc = origin.toLowerCase();
+  const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
+  
+  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+  const matchGithubDev = githubDevRegex.test(originLc);
+  const matchVercel = /\.vercel\.app$/.test(originLc);
+  const matchRender = /\.onrender\.com$/.test(originLc);
+  const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
+  
+  console.log(`[CORS DEBUG] Evaluación: 
+    - En lista: ${allowedOriginsLc.includes(originLc)}
+    - Vercel: ${matchVercel}
+    - Render: ${matchRender}
+    - Localhost: ${matchLocalhost}
+    - GitHub: ${matchGithubDev}`);
+  
+  if (
+    allowedOriginsLc.includes(originLc) ||
+    matchVercel ||
+    matchRender ||
+    matchLocalhost ||
+    matchGithubDev
+  ) {
+    console.log(`[CORS DEBUG] Origen permitido: ${origin}`);
+    return callback(null, origin); // Refleja el origin válido
+  }
+  
+  console.log(`[CORS DEBUG] Origen rechazado: ${origin}`);
+  return callback(new Error('Not allowed by CORS: ' + origin));
+}`);
+  
+  if (!origin) {
+    console.log('[CORS DEBUG] Petición sin origen, permitida');
+    return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
+  }
+  
+  const originLc = origin.toLowerCase();
+  const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
+  
+  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+  const matchGithubDev = githubDevRegex.test(originLc);
+  const matchVercel = /\.vercel\.app$/.test(originLc);
+  const matchRender = /\.onrender\.com$/.test(originLc);
+  const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
+  
+  console.log(`[CORS DEBUG] Evaluación: 
+    - En lista: ${allowedOriginsLc.includes(originLc)}
+    - Vercel: ${matchVercel}
+    - Render: ${matchRender}
+    - Localhost: ${matchLocalhost}
+    - GitHub: ${matchGithubDev}`);
+  
   if (
     allowedOriginsLc.includes(originLc) ||
     matchVercel ||
@@ -74,8 +169,11 @@ function corsOrigin(origin, callback) {
     matchLocalhost ||
     matchGithubDev // <-- Permitir cualquier subdominio de app.github.dev
   ) {
+    console.log(`[CORS DEBUG] Origen permitido: ${origin}`);
     return callback(null, origin); // Refleja el origin válido
   }
+  
+  console.log(`[CORS DEBUG] Origen rechazado: ${origin}`);
   return callback(new Error('Not allowed by CORS: ' + origin));
 }
 
@@ -88,21 +186,7 @@ app.use(cors({
 const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      const originLc = origin.toLowerCase();
-      if (
-        allowedOrigins.includes(originLc) ||
-        githubDevRegex.test(originLc) ||
-        originLc.endsWith('.vercel.app') ||
-        originLc.endsWith('.onrender.com') ||
-        originLc.startsWith('http://localhost') ||
-        originLc.startsWith('http://127.0.0.1')
-      ) {
-        return callback(null, origin); // Refleja el origin válido
-      }
-      return callback(new Error('Not allowed by CORS (Socket.IO): ' + origin));
-    },
+    origin: corsOrigin, // Usar la misma función de validación CORS
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -148,12 +232,18 @@ app.delete('/api/pedidos-tienda/:id', pedidosTiendaController.eliminar);
 app.get('/api/pedidos-clientes', pedidosClientesController.listar);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
+app.put('/api/pedidos-clientes/:id/asignar-cliente', pedidosClientesController.asignarCliente);
 app.delete('/api/pedidos-clientes/:id', pedidosClientesController.eliminar);
 app.post('/api/pedidos-clientes/:id/devolucion-parcial', pedidosClientesController.devolucionParcial);
 app.post('/api/pedidos-clientes/:id/devolucion-total', pedidosClientesController.devolucionTotal);
 
 const woocommerceController = require('./woocommerceController');
 app.get('/api/pedidos-woo/sincronizar', woocommerceController.sincronizarPedidos);
+app.get('/api/pedidos-woo/sincronizar-forzado', (req, res) => {
+  // Este endpoint se utiliza para forzar la sincronización de todos los pedidos
+  req.query.forzar = 'true';
+  return woocommerceController.sincronizarPedidos(req, res);
+});
 app.get('/api/productos-woo/sincronizar', woocommerceController.sincronizarProductos);
 app.get('/api/productos-woo', async (req, res) => {
   const ProductoWoo = require('./models/ProductoWoo');
@@ -581,45 +671,150 @@ app.post('/api/productos', async (req, res) => {
   }
 });
 
-// --- ENDPOINT: Importar clientes desde Excel (bulk upsert) ---
-app.post('/api/clientes/importar', async (req, res) => {
-  try {
-    const clientes = req.body.clientes;
-    if (!Array.isArray(clientes) || clientes.length === 0) {
-      return res.status(400).json({ ok: false, error: 'No se recibieron clientes para importar' });
-    }
-    let insertados = 0, actualizados = 0, errores = [];
-    for (const cli of clientes) {
-      // Filtro por NIF o código si existe, si no por nombre
-      const filtro = cli.nif ? { nif: cli.nif } : cli.codigo ? { codigo: cli.codigo } : { nombre: cli.nombre };
-      try {
-        const existente = await Cliente.findOne(filtro);
-        if (existente) {
-          await Cliente.updateOne(filtro, { $set: cli });
-          actualizados++;
-        } else {
-          await Cliente.create(cli);
-          insertados++;
-        }
-      } catch (e) {
-        errores.push({ nombre: cli.nombre, error: e.message });
-      }
-    }
-    res.json({ ok: true, insertados, actualizados, errores });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
 // --- ENDPOINTS FUNCIONALES ---
-app.get('/api/clientes', async (req, res) => {
+// Rutas de clientes
+app.get('/api/clientes', clientesController.listar);
+// Colocar primero rutas específicas para evitar conflictos con :id
+app.post('/api/clientes/buscar-coincidencias', cors(), clientesController.buscarCoincidencias);
+// Aplicar middleware cors() explícitamente a la ruta problemática
+app.post('/api/clientes/importar', cors(), clientesController.importarClientes); // Nueva ruta para importar clientes desde Excel/CSV
+
+// Rutas específicas para cestas de navidad (ANTES de las rutas con :id)
+app.get('/api/clientes/cestas-navidad', async (req, res) => {
   try {
-    const clientes = await Cliente.find().sort({ nombre: 1 });
-    res.json(clientes);
+    const { activos } = req.query;
+    let filtro = { esCestaNavidad: true };
+    if (activos === 'true') filtro.activo = true;
+    const clientesCestas = await Cliente.find(filtro).sort({ nombre: 1 });
+    res.json({ total: clientesCestas.length, clientes: clientesCestas });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
+
+// --- ENDPOINT: Obtener estadísticas de cestas de navidad ---
+app.get('/api/clientes/estadisticas-cestas', async (req, res) => {
+  try {
+    const totalClientes = await Cliente.countDocuments();
+    const clientesCestasNavidad = await Cliente.countDocuments({ esCestaNavidad: true });
+    const clientesNormales = totalClientes - clientesCestasNavidad;
+    
+    res.json({
+      totalClientes,
+      clientesCestasNavidad,
+      clientesNormales,
+      porcentajeCestas: totalClientes > 0 ? Math.round((clientesCestasNavidad / totalClientes) * 100) : 0
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// --- ENDPOINT: Comparar y marcar/crear clientes de cestas de navidad ---
+app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
+  try {
+    const { clientesCestasNavidad } = req.body;
+    
+    if (!Array.isArray(clientesCestasNavidad) || clientesCestasNavidad.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No se recibieron clientes de cestas de navidad' });
+    }
+
+    console.log('[CESTAS-NAVIDAD] Recibidos clientes para procesar:', clientesCestasNavidad.length);
+    
+    let marcados = 0, creados = 0, errores = [];
+    
+    for (const clienteCesta of clientesCestasNavidad) {
+      try {
+        // Buscar cliente por diferentes criterios (nombre, email, teléfono, etc.)
+        const criteriosBusqueda = [];
+        
+        if (clienteCesta.nombre) {
+          criteriosBusqueda.push({ nombre: { $regex: clienteCesta.nombre.trim(), $options: 'i' } });
+        }
+        if (clienteCesta.email) {
+          criteriosBusqueda.push({ email: { $regex: clienteCesta.email.trim(), $options: 'i' } });
+        }
+        if (clienteCesta.telefono) {
+          criteriosBusqueda.push({ telefono: { $regex: clienteCesta.telefono.trim(), $options: 'i' } });
+        }
+        if (clienteCesta.nif) {
+          criteriosBusqueda.push({ nif: { $regex: clienteCesta.nif.trim(), $options: 'i' } });
+        }
+        
+        if (criteriosBusqueda.length === 0 && !clienteCesta.nombre) {
+          errores.push({ cliente: clienteCesta, error: 'Datos insuficientes (falta nombre)' });
+          continue;
+        }
+        
+        // Buscar cliente en la base de datos
+        const clienteEncontrado = await Cliente.findOne({ $or: criteriosBusqueda });
+        
+        if (clienteEncontrado) {
+          // CLIENTE EXISTENTE: Marcarlo como cliente normal Y de cestas
+          await Cliente.updateOne(
+            { _id: clienteEncontrado._id },
+            { $set: { esCestaNavidad: true } }
+          );
+          marcados++;
+          console.log(`[CESTAS-NAVIDAD] ✅ Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
+        } else {
+          // CLIENTE NUEVO: Crear como cliente de cestas únicamente
+          const nuevoCliente = await Cliente.create({
+            nombre: clienteCesta.nombre,
+            email: clienteCesta.email || '',
+            telefono: clienteCesta.telefono || '',
+            nif: clienteCesta.nif || '',
+            direccion: clienteCesta.direccion || '',
+            activo: true,
+            esCestaNavidad: true    // SÍ es cliente de cestas
+          });
+          creados++;
+          console.log(`[CESTAS-NAVIDAD] 🆕 Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
+        }
+      } catch (e) {
+        errores.push({ cliente: clienteCesta, error: e.message });
+        console.error(`[CESTAS-NAVIDAD] ❌ Error procesando cliente ${clienteCesta.nombre}:`, e.message);
+      }
+    }
+    
+    console.log('[CESTAS-NAVIDAD] Resultado:', { marcados, creados, errores: errores.length });
+    res.json({ 
+      ok: true, 
+      marcados, 
+      creados,
+      errores,
+      resumen: `${marcados} clientes marcados como Normal+Cestas, ${creados} clientes nuevos creados como Solo Cestas`
+    });
+  } catch (e) {
+    console.error('[CESTAS-NAVIDAD][FATAL]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- ENDPOINT: Desmarcar todos los clientes de cestas de navidad ---
+app.post('/api/clientes/limpiar-cestas-navidad', async (req, res) => {
+  try {
+    const resultado = await Cliente.updateMany(
+      { esCestaNavidad: true },
+      { $set: { esCestaNavidad: false } }
+    );
+    
+    res.json({ 
+      ok: true, 
+      desmarcados: resultado.modifiedCount,
+      mensaje: `${resultado.modifiedCount} clientes desmarcados como cestas de navidad`
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Rutas con parámetros después
+app.get('/api/clientes/:id', clientesController.obtener);
+app.post('/api/clientes', clientesController.crear);
+app.put('/api/clientes/:id', clientesController.actualizar);
+app.delete('/api/clientes/:id', clientesController.eliminar);
+
 app.get('/api/clientes/cestas-navidad', async (req, res) => {
   try {
     const { activos } = req.query;
@@ -820,41 +1015,7 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
   }
 });
 
-// --- ENDPOINT: Obtener estadísticas de cestas de navidad ---
-app.get('/api/clientes/estadisticas-cestas', async (req, res) => {
-  try {
-    const totalClientes = await Cliente.countDocuments();
-    const clientesCestasNavidad = await Cliente.countDocuments({ esCestaNavidad: true });
-    const clientesNormales = totalClientes - clientesCestasNavidad;
-    
-    res.json({
-      totalClientes,
-      clientesCestasNavidad,
-      clientesNormales,
-      porcentajeCestas: totalClientes > 0 ? Math.round((clientesCestasNavidad / totalClientes) * 100) : 0
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// --- ENDPOINT: Desmarcar todos los clientes de cestas de navidad ---
-app.post('/api/clientes/limpiar-cestas-navidad', async (req, res) => {
-  try {
-    const resultado = await Cliente.updateMany(
-      { esCestaNavidad: true },
-      { $set: { esCestaNavidad: false } }
-    );
-    
-    res.json({ 
-      ok: true, 
-      desmarcados: resultado.modifiedCount,
-      mensaje: `${resultado.modifiedCount} clientes desmarcados como cestas de navidad`
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+// API presupuestos - Endpoints para gestionar presupuestos
 
 // --- API presupuestos ---
 app.get('/api/presupuestos', async (req, res) => {
