@@ -224,5 +224,35 @@ module.exports = {
         error: error.message 
       });
     }
+  },
+
+  // Método para borrar todos los clientes de la base de datos
+  async borrarTodosLosClientes(req, res) {
+    try {
+      console.log('[BORRAR CLIENTES] Iniciando eliminación de todos los clientes...');
+      
+      // Contar clientes antes del borrado
+      const totalAntes = await Cliente.countDocuments();
+      console.log(`[BORRAR CLIENTES] Clientes encontrados: ${totalAntes}`);
+      
+      // Borrar todos los clientes
+      const resultado = await Cliente.deleteMany({});
+      
+      console.log(`[BORRAR CLIENTES] Clientes eliminados: ${resultado.deletedCount}`);
+      
+      res.json({
+        ok: true,
+        mensaje: `Se han eliminado ${resultado.deletedCount} clientes de la base de datos`,
+        clientesEliminados: resultado.deletedCount,
+        totalAnterior: totalAntes
+      });
+      
+    } catch (error) {
+      console.error('[BORRAR CLIENTES] Error:', error);
+      res.status(500).json({ 
+        ok: false, 
+        error: error.message 
+      });
+    }
   }
 };

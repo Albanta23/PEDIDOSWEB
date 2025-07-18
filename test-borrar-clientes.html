@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba - Borrar Todos los Clientes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .button {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+        }
+        .button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Prueba - Borrar Todos los Clientes</h1>
+        
+        <div class="test-section">
+            <h3>📊 Estado de la Base de Datos</h3>
+            <button class="button" style="background: linear-gradient(135deg, #3b82f6, #1e40af);" onclick="verificarClientes()">
+                📈 Verificar Número de Clientes
+            </button>
+            <div id="clienteCount"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚠️ Operación de Borrado</h3>
+            <p><strong>Advertencia:</strong> Esta operación eliminará TODOS los clientes de la base de datos.</p>
+            <button class="button" onclick="borrarTodosLosClientes()" id="deleteBtn">
+                🗑️ Borrar Todos los Clientes
+            </button>
+            <div id="deleteResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Log de Operaciones</h3>
+            <div id="logContainer" style="background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 5px; font-family: monospace; max-height: 300px; overflow-y: auto;">
+                <div>🚀 Sistema iniciado...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev/api';
+        
+        function log(message) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            logContainer.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        async function verificarClientes() {
+            log('🔍 Verificando número de clientes...');
+            
+            try {
+                const response = await fetch(`${API_URL}/clientes?page=1&limit=1`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const clientCount = Array.isArray(data) ? data.length : 0;
+                
+                document.getElementById('clienteCount').innerHTML = 
+                    `<div class="result info">📊 Clientes encontrados: ${clientCount}</div>`;
+                
+                log(`✅ Verificación completada: ${clientCount} clientes encontrados`);
+                
+            } catch (error) {
+                console.error('Error verificando clientes:', error);
+                document.getElementById('clienteCount').innerHTML = 
+                    `<div class="result error">❌ Error al verificar clientes: ${error.message}</div>`;
+                log(`❌ Error en verificación: ${error.message}`);
+            }
+        }
+
+        async function borrarTodosLosClientes() {
+            const deleteBtn = document.getElementById('deleteBtn');
+            const resultDiv = document.getElementById('deleteResult');
+            
+            // Confirmación
+            if (!confirm('⚠️ ¿Estás COMPLETAMENTE SEGURO de que quieres borrar TODOS los clientes?\n\nEsta operación NO se puede deshacer.')) {
+                log('❌ Operación cancelada por el usuario');
+                return;
+            }
+            
+            log('🚀 Iniciando operación de borrado...');
+            
+            // Deshabilitar botón y mostrar estado de carga
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<span class="spinner"></span>Borrando...';
+            
+            try {
+                log('📡 Enviando petición al servidor...');
+                
+                const response = await fetch(`${API_URL}/clientes/borrar-todos`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📥 Respuesta recibida: HTTP ${response.status}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(`📊 Datos recibidos: ${JSON.stringify(data)}`);
+                
+                if (data.ok) {
+                    resultDiv.innerHTML = 
+                        `<div class="result success">✅ Se han eliminado ${data.clientesEliminados} clientes exitosamente</div>`;
+                    log(`✅ Operación exitosa: ${data.clientesEliminados} clientes eliminados`);
+                } else {
+                    throw new Error(data.error || 'Error desconocido en el servidor');
+                }
+                
+            } catch (error) {
+                console.error('Error borrando clientes:', error);
+                resultDiv.innerHTML = 
+                    `<div class="result error">❌ Error al borrar los clientes: ${error.message}</div>`;
+                log(`❌ Error en operación: ${error.message}`);
+            } finally {
+                // Restaurar botón
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '🗑️ Borrar Todos los Clientes';
+                log('🔄 Operación finalizada');
+            }
+        }
+
+        // Verificar clientes al cargar la página
+        window.onload = function() {
+            log('🌐 Página cargada, verificando estado inicial...');
+            verificarClientes();
+        };
+    </script>
+</body>
+</html>

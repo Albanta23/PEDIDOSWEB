@@ -78,12 +78,9 @@ function corsOrigin(origin, callback) {
   const matchRender = /\.onrender\.com$/.test(originLc);
   const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
   
-  console.log(`[CORS DEBUG] Evaluación: 
-    - En lista: ${allowedOriginsLc.includes(originLc)}
-    - Vercel: ${matchVercel}
-    - Render: ${matchRender}
-    - Localhost: ${matchLocalhost}
-    - GitHub: ${matchGithubDev}`);
+  console.log('[CORS DEBUG] Evaluación: En lista: ' + allowedOriginsLc.includes(originLc) + 
+    ', Vercel: ' + matchVercel + ', Render: ' + matchRender + 
+    ', Localhost: ' + matchLocalhost + ', GitHub: ' + matchGithubDev);
   
   if (
     allowedOriginsLc.includes(originLc) ||
@@ -159,6 +156,7 @@ app.put('/api/pedidos-clientes/:id/asignar-cliente', pedidosClientesController.a
 app.delete('/api/pedidos-clientes/:id', pedidosClientesController.eliminar);
 app.post('/api/pedidos-clientes/:id/devolucion-parcial', pedidosClientesController.devolucionParcial);
 app.post('/api/pedidos-clientes/:id/devolucion-total', pedidosClientesController.devolucionTotal);
+app.post('/api/pedidos-clientes/:id/procesar-borrador', pedidosClientesController.procesarPedidoBorrador);
 
 const woocommerceController = require('./woocommerceController');
 app.get('/api/pedidos-woo/sincronizar', woocommerceController.sincronizarPedidos);
@@ -168,6 +166,166 @@ app.get('/api/pedidos-woo/sincronizar-forzado', (req, res) => {
   return woocommerceController.sincronizarPedidos(req, res);
 });
 app.get('/api/productos-woo/sincronizar', woocommerceController.sincronizarProductos);
+
+// Endpoint para limpiar clientes duplicados (versión optimizada)
+app.post('/api/clientes/limpiar-duplicados', async (req, res) => {
+  try {
+    const Cliente = require('./models/Cliente');
+    const { ejecutar = false } = req.body;
+    
+    console.log('[AVISO] Iniciando proceso de limpieza de clientes duplicados...');
+    
+    const conteoInicial = await Cliente.countDocuments();
+    console.log(`[INFO] Hay ${conteoInicial} clientes en la base de datos.`);
+    
+    // Enfoque alternativo: buscar duplicados usando consultas simples
+    const idsAEliminar = new Set();
+    let duplicadosEncontrados = 0;
+    
+    // 1. Buscar duplicados por NIF (grupos de a 1000 registros)
+    console.log('[PROGRESO] Buscando duplicados por NIF...');
+    const clientesConNif = await Cliente.find({ 
+      nif: { $ne: '', $exists: true, $ne: null } 
+    }).select('_id nif').lean();
+    
+    // Agrupar por NIF en memoria
+    const gruponsNif = {};
+    for (const cliente of clientesConNif) {
+      if (!gruponsNif[cliente.nif]) {
+        gruponsNif[cliente.nif] = [];
+      }
+      gruponsNif[cliente.nif].push(cliente._id);
+    }
+    
+    // Marcar duplicados para eliminar
+    for (const [nif, ids] of Object.entries(gruponsNif)) {
+      if (ids.length > 1) {
+        // Ordenar IDs y mantener el primero (más antiguo)
+        const idsOrdenados = ids.sort();
+        for (let i = 1; i < idsOrdenados.length; i++) {
+          idsAEliminar.add(idsOrdenados[i].toString());
+        }
+        duplicadosEncontrados++;
+      }
+    }
+    
+    console.log(`[INFO] Encontrados ${duplicadosEncontrados} grupos de clientes con el mismo NIF.`);
+    
+    // 2. Buscar duplicados por email
+    console.log('[PROGRESO] Buscando duplicados por email...');
+    const clientesConEmail = await Cliente.find({ 
+      email: { $ne: '', $exists: true, $ne: null } 
+    }).select('_id email').lean();
+    
+    // Agrupar por email en memoria
+    const gruposEmail = {};
+    for (const cliente of clientesConEmail) {
+      if (!gruposEmail[cliente.email]) {
+        gruposEmail[cliente.email] = [];
+      }
+      gruposEmail[cliente.email].push(cliente._id);
+    }
+    
+    // Marcar duplicados para eliminar
+    let duplicadosEmail = 0;
+    for (const [email, ids] of Object.entries(gruposEmail)) {
+      if (ids.length > 1) {
+        // Ordenar IDs y mantener el primero (más antiguo)
+        const idsOrdenados = ids.sort();
+        for (let i = 1; i < idsOrdenados.length; i++) {
+          idsAEliminar.add(idsOrdenados[i].toString());
+        }
+        duplicadosEmail++;
+      }
+    }
+    
+    console.log(`[INFO] Encontrados ${duplicadosEmail} grupos de clientes con el mismo email.`);
+    
+    // 3. Buscar duplicados por nombre (solo si hay menos de 15k registros)
+    let duplicadosNombre = 0;
+    if (conteoInicial < 15000) {
+      console.log('[PROGRESO] Buscando duplicados por nombre...');
+      const clientesConNombre = await Cliente.find({ 
+        nombre: { $ne: '', $exists: true, $ne: null } 
+      }).select('_id nombre').lean();
+      
+      // Agrupar por nombre en memoria
+      const gruposNombre = {};
+      for (const cliente of clientesConNombre) {
+        if (!gruposNombre[cliente.nombre]) {
+          gruposNombre[cliente.nombre] = [];
+        }
+        gruposNombre[cliente.nombre].push(cliente._id);
+      }
+      
+      // Marcar duplicados para eliminar
+      for (const [nombre, ids] of Object.entries(gruposNombre)) {
+        if (ids.length > 1) {
+          // Ordenar IDs y mantener el primero (más antiguo)
+          const idsOrdenados = ids.sort();
+          for (let i = 1; i < idsOrdenados.length; i++) {
+            idsAEliminar.add(idsOrdenados[i].toString());
+          }
+          duplicadosNombre++;
+        }
+      }
+      
+      console.log(`[INFO] Encontrados ${duplicadosNombre} grupos de clientes con el mismo nombre.`);
+    } else {
+      console.log('[INFO] Saltando búsqueda de duplicados por nombre debido al gran volumen de datos.');
+    }
+    
+    console.log(`[INFO] Se encontraron ${idsAEliminar.size} clientes duplicados para eliminar.`);
+    
+    if (!ejecutar) {
+      console.log('[INFO] Modo de prueba - no se eliminará nada. Para ejecutar la limpieza, envía {"ejecutar": true}');
+      return res.json({ 
+        ok: true, 
+        modoEjecucion: 'prueba',
+        clientesTotal: conteoInicial, 
+        clientesParaEliminar: idsAEliminar.size,
+        duplicadosNif: duplicadosEncontrados,
+        duplicadosEmail: duplicadosEmail,
+        duplicadosNombre: duplicadosNombre
+      });
+    }
+    
+    // Ejecutar eliminación
+    const idsArray = Array.from(idsAEliminar);
+    
+    // Eliminar en lotes de 50 para no sobrecargar la BD
+    const tamanoLote = 50;
+    let eliminados = 0;
+    
+    for (let i = 0; i < idsArray.length; i += tamanoLote) {
+      const lote = idsArray.slice(i, i + tamanoLote);
+      const resultado = await Cliente.deleteMany({ _id: { $in: lote } });
+      eliminados += resultado.deletedCount;
+      console.log(`[PROGRESO] Eliminados ${eliminados} de ${idsAEliminar.size} clientes duplicados...`);
+      
+      // Pausa pequeña entre lotes
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    const conteoFinal = await Cliente.countDocuments();
+    console.log(`[OK] Proceso completado. Clientes antes: ${conteoInicial}, después: ${conteoFinal}, eliminados: ${eliminados}`);
+    
+    res.json({ 
+      ok: true, 
+      modoEjecucion: 'eliminacion',
+      clientesAntes: conteoInicial, 
+      clientesDespues: conteoFinal, 
+      eliminados: eliminados,
+      duplicadosNif: duplicadosEncontrados,
+      duplicadosEmail: duplicadosEmail,
+      duplicadosNombre: duplicadosNombre
+    });
+  } catch (error) {
+    console.error('[ERROR] Error al limpiar clientes duplicados:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/productos-woo', async (req, res) => {
   const ProductoWoo = require('./models/ProductoWoo');
   const productos = await ProductoWoo.find();
@@ -601,6 +759,9 @@ app.get('/api/clientes', clientesController.listar);
 app.post('/api/clientes/buscar-coincidencias', cors(), clientesController.buscarCoincidencias);
 // Aplicar middleware cors() explícitamente a la ruta problemática
 app.post('/api/clientes/importar', cors(), clientesController.importarClientes); // Nueva ruta para importar clientes desde Excel/CSV
+
+// Ruta para borrar todos los clientes
+app.post('/api/clientes/borrar-todos', cors(), clientesController.borrarTodosLosClientes);
 
 // Rutas específicas para cestas de navidad (ANTES de las rutas con :id)
 app.get('/api/clientes/cestas-navidad', async (req, res) => {

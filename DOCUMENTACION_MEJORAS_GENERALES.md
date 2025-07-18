@@ -34,6 +34,9 @@ Se han realizado una serie de mejoras y correcciones en la aplicación para opti
 
 - Los pedidos en borrador no se envían a expediciones hasta que se hayan validado.
 - Al validar un pedido en borrador, se mueve al historial correspondiente.
+- **(Actualización 18 de julio de 2025)** Se ha añadido un campo `esTiendaOnline` al modelo de pedidos para identificar los pedidos que provienen de WooCommerce.
+- **(Actualización 18 de julio de 2025)** Se ha añadido un indicador visual (badge) con la etiqueta "TIENDA ONLINE" que aparece junto al título del pedido en la edición.
+- **(Actualización 18 de julio de 2025)** Se ha implementado un filtro en la vista de pedidos en borrador para mostrar solo los pedidos de la tienda online o todos los borradores.
 
 ### Gestión de Devoluciones
 
@@ -52,5 +55,8 @@ Se han realizado una serie de mejoras y correcciones en la aplicación para opti
 4.  Asegúrate de que la gestión de clientes de WooCommerce funciona como se espera.
 5.  Comprueba que los datos de facturación se preservan a lo largo de todo el flujo.
 6.  Verifica que la sincronización de productos de WooCommerce funciona correctamente.
-7.  Prueba la nueva gestión de devoluciones, incluyendo el campo de peso y el historial de devoluciones.
-8.  Asegúrate de que el registro de bultos funciona correctamente.
+7.  **(Actualización 18 de julio de 2025)** Comprueba que los pedidos de WooCommerce se muestran con la etiqueta "TIENDA ONLINE" en la edición.
+8.  **(Actualización 18 de julio de 2025)** Verifica que el filtro de pedidos en borrador permite mostrar solo los pedidos de la tienda online.
+9.  **(Actualización 18 de julio de 2025)** Asegúrate de que al procesar un pedido en borrador, mantiene la marca de pedido de tienda online.
+10. Prueba la nueva gestión de devoluciones, incluyendo el campo de peso y el historial de devoluciones.
+11. Asegúrate de que el registro de bultos funciona correctamente.

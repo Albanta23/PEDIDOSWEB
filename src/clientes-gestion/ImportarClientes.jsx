@@ -21,6 +21,47 @@ const ImportarClientes = ({ onClose, API_URL }) => {
   const [availableFields, setAvailableFields] = useState([]);
   const [shouldUpdate, setShouldUpdate] = useState(false);
 
+  // Estados para el borrado de clientes
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState('');
+
+  // Función para borrar todos los clientes
+  const handleBorrarTodosLosClientes = async () => {
+    setIsDeleting(true);
+    setDeleteMessage('');
+    
+    try {
+      console.log('Iniciando borrado de todos los clientes...');
+      
+      const response = await axios.post(`${API_URL}/clientes/borrar-todos`, {}, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Respuesta del borrado:', response.data);
+      
+      if (response.data.ok) {
+        setDeleteMessage(`✅ Se han eliminado ${response.data.clientesEliminados} clientes exitosamente`);
+      } else {
+        setDeleteMessage('❌ Error al borrar los clientes');
+      }
+      
+    } catch (error) {
+      console.error('Error borrando clientes:', error);
+      setDeleteMessage(`❌ Error al borrar los clientes: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      
+      // Limpiar el mensaje después de 5 segundos
+      setTimeout(() => {
+        setDeleteMessage('');
+      }, 5000);
+    }
+  };
+
   // Campos del sistema para mapear
   const systemFields = [
     { id: 'nombre', label: 'Nombre', required: true },
@@ -613,9 +654,146 @@ const ImportarClientes = ({ onClose, API_URL }) => {
   const renderStep1 = () => {
     return (
       <div style={{ padding: '20px' }}>
-        <h3 style={{ fontSize: '20px', marginBottom: '20px', color: '#2c3e50' }}>
-          Paso 1: Selecciona un archivo
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '20px', margin: 0, color: '#2c3e50' }}>
+            Paso 1: Selecciona un archivo
+          </h3>
+          
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{
+              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px rgba(239, 68, 68, 0.25)',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 12px rgba(239, 68, 68, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.25)';
+            }}
+          >
+            🗑️ Borrar Todos los Clientes
+          </button>
+        </div>
+
+        {/* Mensaje de confirmación de borrado */}
+        {deleteMessage && (
+          <div style={{
+            padding: '15px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            background: deleteMessage.includes('✅') ? '#d4edda' : '#f8d7da',
+            border: deleteMessage.includes('✅') ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
+            color: deleteMessage.includes('✅') ? '#155724' : '#721c24',
+            fontSize: '14px',
+            fontWeight: 'bold'
+          }}>
+            {deleteMessage}
+          </div>
+        )}
+
+        {/* Modal de confirmación de borrado */}
+        {showDeleteConfirm && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 2000
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '30px',
+              maxWidth: '500px',
+              margin: '20px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
+              <h3 style={{ fontSize: '24px', color: '#dc2626', marginBottom: '15px' }}>
+                ¿Estás seguro?
+              </h3>
+              <p style={{ fontSize: '16px', color: '#4a5568', marginBottom: '25px', lineHeight: '1.5' }}>
+                Esta acción eliminará <strong>TODOS los clientes</strong> de la base de datos.<br/>
+                Esta operación <strong>NO se puede deshacer</strong>.
+              </p>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  style={{
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer',
+                    opacity: isDeleting ? 0.5 : 1,
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleBorrarTodosLosClientes}
+                  disabled={isDeleting}
+                  style={{
+                    background: isDeleting ? '#9ca3af' : 'linear-gradient(135deg, #ef4444, #dc2626)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer',
+                    opacity: isDeleting ? 0.5 : 1,
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {isDeleting ? (
+                    <>
+                      <span style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid transparent',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></span>
+                      Borrando...
+                    </>
+                  ) : (
+                    '🗑️ Sí, Borrar Todo'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div style={{ 
           border: '2px dashed #cbd5e0', 
@@ -1128,18 +1306,29 @@ const ImportarClientes = ({ onClose, API_URL }) => {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000
-    }}>
+    <>
+      {/* CSS para la animación del spinner */}
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000
+      }}>
       <div style={{
         backgroundColor: 'white',
         borderRadius: '10px',
@@ -1253,6 +1442,7 @@ const ImportarClientes = ({ onClose, API_URL }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

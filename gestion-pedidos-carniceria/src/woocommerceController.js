@@ -43,28 +43,29 @@ module.exports = {
         if (!existe) {
           resultados.procesados++;
           
-          // Buscar cliente por múltiples criterios para mejorar la coincidencia
+                    // Buscar cliente por múltiples criterios para mejorar la coincidencia
           let clienteExistente = null;
+          let criteriosBusqueda = [];
           
-          // 1. Buscar por NIF/CIF si existe
+          // Recopilamos todos los criterios posibles de búsqueda en un array
           if (pedidoWoo.billing.vat) {
-            clienteExistente = await Cliente.findOne({ nif: pedidoWoo.billing.vat });
+            criteriosBusqueda.push({ nif: pedidoWoo.billing.vat });
           }
           
-          // 2. Si no, buscar por email
-          if (!clienteExistente && pedidoWoo.billing.email) {
-            clienteExistente = await Cliente.findOne({ email: pedidoWoo.billing.email });
+          if (pedidoWoo.billing.email) {
+            criteriosBusqueda.push({ email: pedidoWoo.billing.email });
           }
           
-          // 3. Si no, buscar por teléfono
-          if (!clienteExistente && pedidoWoo.billing.phone) {
-            clienteExistente = await Cliente.findOne({ telefono: pedidoWoo.billing.phone });
+          if (pedidoWoo.billing.phone) {
+            criteriosBusqueda.push({ telefono: pedidoWoo.billing.phone });
           }
           
-          // 4. Finalmente, buscar por nombre completo
-          if (!clienteExistente) {
-            const nombreCompleto = `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`;
-            clienteExistente = await Cliente.findOne({ nombre: nombreCompleto });
+          const nombreCompleto = `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`;
+          criteriosBusqueda.push({ nombre: nombreCompleto });
+          
+          // Buscar con $or para encontrar coincidencias con cualquiera de los criterios
+          if (criteriosBusqueda.length > 0) {
+            clienteExistente = await Cliente.findOne({ $or: criteriosBusqueda });
           }
           
           let clienteId = clienteExistente ? clienteExistente._id : null;
@@ -198,7 +199,8 @@ module.exports = {
             total: pedidoWoo.total,
             datosFacturaWoo: pedidoWoo.billing, // Guardar todos los datos de factura
             clienteExistente: !!clienteExistente, // Indicar si el cliente ya existía
-            clienteCreado: !clienteExistente // Indicar si se creó un nuevo cliente
+            clienteCreado: !clienteExistente, // Indicar si se creó un nuevo cliente
+            esTiendaOnline: true // Marcar como pedido de tienda online
           });
           
           await nuevoPedido.save();

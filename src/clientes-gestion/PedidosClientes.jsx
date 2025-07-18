@@ -196,6 +196,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         tipo: pedidoId && pedidoId.startsWith('wc_') ? 'woocommerce' : 'manual',
         idOriginal: pedidoId && pedidoId.startsWith('wc_') ? pedidoId : null
       },
+      esTiendaOnline: pedidoInicial?.esTiendaOnline || (pedidoId && pedidoId.startsWith('wc_')) || false,
       esBorrador: false, // Al guardar desde aquí, ya no es borrador
       totales: {
         subtotal: lineas.reduce((sum, linea) => !linea.esComentario ? sum + (linea.subtotal || (linea.precioUnitario * linea.cantidad)) : sum, 0),
@@ -345,6 +346,19 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '700' }}>
             {pedidoId ? 'Editar Pedido Existente' : 'Crear Nuevo Pedido'}
+            {(pedidoInicial?.esTiendaOnline || (pedidoInicial?.origen?.tipo === 'woocommerce')) && 
+              <span style={{ 
+                marginLeft: '10px', 
+                background: '#ff9800', 
+                color: 'white', 
+                padding: '2px 8px', 
+                borderRadius: '4px', 
+                fontSize: '18px',
+                verticalAlign: 'middle'
+              }}>
+                TIENDA ONLINE
+              </span>
+            }
           </h1>
           <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '18px' }}>
             {pedidoId ? `Modificando el pedido #${pedidoId}` : 'Gestión profesional de pedidos con vista expandida'}

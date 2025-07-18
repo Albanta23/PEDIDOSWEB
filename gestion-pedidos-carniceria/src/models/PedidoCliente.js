@@ -60,7 +60,8 @@ const PedidoClienteSchema = new mongoose.Schema({
   clienteExistente: Boolean, // Indica si el cliente ya existía en la BD
   clienteCreado: Boolean, // Indica si se creó un nuevo cliente
   verificadoManualmente: Boolean, // Indica si el usuario verificó manualmente los datos
-  yaActualizado: { type: Boolean, default: false } // Indica si el pedido ya fue sincronizado (para pedidos de WooCommerce)
+  yaActualizado: { type: Boolean, default: false }, // Indica si el pedido ya fue sincronizado (para pedidos de WooCommerce)
+  esTiendaOnline: { type: Boolean, default: false } // Indica si el pedido proviene de la tienda online
 }, { timestamps: true });
 
 PedidoClienteSchema.index({ numeroPedido: 1 }, { unique: true });

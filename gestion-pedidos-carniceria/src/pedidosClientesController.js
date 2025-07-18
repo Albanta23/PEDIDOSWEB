@@ -275,5 +275,46 @@ module.exports = {
       console.error('Error al asignar cliente a pedido:', error);
       res.status(500).json({ error: error.message });
     }
+  },
+
+  // Nuevo endpoint para procesar un pedido de borrador a pedido normal
+  async procesarPedidoBorrador(req, res) {
+    try {
+      const { id } = req.params;
+      const { usuario } = req.body;
+      
+      const pedido = await PedidoCliente.findById(id);
+      if (!pedido) {
+        return res.status(404).json({ error: 'Pedido no encontrado' });
+      }
+      
+      if (pedido.estado !== 'borrador_woocommerce') {
+        return res.status(400).json({ error: 'Este pedido no está en estado borrador' });
+      }
+      
+      // Actualizar el estado del pedido
+      pedido.estado = 'en_espera';
+      
+      // Registrar el cambio de estado en el historial
+      pedido.historialEstados.push({
+        estado: 'en_espera',
+        usuario: usuario || 'sistema',
+        fecha: new Date()
+      });
+      
+      // Asegurarse de que esté marcado como pedido de tienda online
+      pedido.esTiendaOnline = true;
+      
+      await pedido.save();
+      
+      res.json({ 
+        ok: true, 
+        mensaje: 'Pedido procesado correctamente', 
+        pedido 
+      });
+    } catch (error) {
+      console.error('Error al procesar pedido borrador:', error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };

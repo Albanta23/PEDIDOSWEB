@@ -16,6 +16,7 @@ export default function PedidosBorrador() {
   const [mensajeError, setMensajeError] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
   const [buscandoCliente, setBuscandoCliente] = useState(false);
+  const [filtroTiendaOnline, setFiltroTiendaOnline] = useState(true); // Por defecto mostramos los de tienda online
   const [nuevoCliente, setNuevoCliente] = useState({
     nombre: '',
     nif: '',
@@ -35,11 +36,16 @@ export default function PedidosBorrador() {
     axios.get(`${API_URL}/clientes`)
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
-  }, []);
+  }, [filtroTiendaOnline]); // Recargar cuando cambie el filtro
 
   const cargarPedidos = () => {
     setCargando(true);
-    axios.get(`${API_URL}/pedidos-clientes?estado=borrador_woocommerce&origen.tipo=woocommerce`)
+    // Si el filtro está activado, solo mostramos los pedidos de la tienda online (woocommerce)
+    const url = filtroTiendaOnline 
+      ? `${API_URL}/pedidos-clientes?estado=borrador_woocommerce&origen.tipo=woocommerce` 
+      : `${API_URL}/pedidos-clientes?estado=borrador`;
+    
+    axios.get(url)
       .then(res => setPedidos(res.data))
       .catch(() => setPedidos([]))
       .finally(() => setCargando(false));
@@ -48,6 +54,25 @@ export default function PedidosBorrador() {
   const handlePedidoCreado = () => {
     setPedidoEditando(null);
     cargarPedidos();
+  };
+  
+  // Nueva función para procesar un pedido de borrador a normal
+  const handleProcesarPedido = (pedido) => {
+    if (!window.confirm(`¿Está seguro de procesar el pedido #${pedido.numeroPedido} para enviar a expediciones? Este pedido aparecerá marcado como pedido de tienda online.`)) {
+      return;
+    }
+    
+    axios.post(`${API_URL}/pedidos-clientes/${pedido._id}/procesar-borrador`, {
+      usuario: localStorage.getItem('usuario') || 'Sistema'
+    })
+      .then(res => {
+        setMensajeExito(`Pedido #${pedido.numeroPedido} procesado correctamente. Ahora aparecerá en el listado de expediciones.`);
+        cargarPedidos(); // Recargar la lista de pedidos
+      })
+      .catch(err => {
+        console.error('Error al procesar pedido:', err);
+        setMensajeError('Error al procesar el pedido: ' + (err.response?.data?.error || err.message));
+      });
   };
 
   const handleEditarPedido = (pedido) => {
@@ -374,6 +399,20 @@ export default function PedidosBorrador() {
         >
           Sincronizar Pedidos WooCommerce
         </button>
+        
+        <div className="filtro-container">
+          <label className="switch">
+            <input 
+              type="checkbox" 
+              checked={filtroTiendaOnline} 
+              onChange={() => setFiltroTiendaOnline(!filtroTiendaOnline)} 
+            />
+            <span className="slider round"></span>
+          </label>
+          <span className="filtro-label">
+            {filtroTiendaOnline ? 'Mostrando solo pedidos de tienda online' : 'Mostrando todos los borradores'}
+          </span>
+        </div>
       </div>
       
       {mensajeError && <div className="error-mensaje">{mensajeError}</div>}
@@ -419,6 +458,14 @@ export default function PedidosBorrador() {
                       disabled={buscandoCliente}
                     >
                       {buscandoCliente ? 'Verificando...' : 'Editar'}
+                    </button>
+                    {' '}
+                    <button 
+                      className="boton-procesar" 
+                      onClick={() => handleProcesarPedido(p)}
+                      disabled={buscandoCliente}
+                    >
+                      Procesar
                     </button>
                   </td>
                 </tr>
@@ -468,6 +515,23 @@ export default function PedidosBorrador() {
         .estado-cliente.pendiente {
           background-color: #f44336;
           color: white;
+        }
+        .boton-editar {
+          background-color: #2196f3;
+          color: white;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 5px;
+        }
+        .boton-procesar {
+          background-color: #4caf50;
+          color: white;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
         }
         .error-mensaje {
           background-color: #ffebee;
@@ -541,6 +605,70 @@ export default function PedidosBorrador() {
           padding: 10px 15px;
           border-radius: 4px;
           cursor: pointer;
+        }
+        /* Estilos para el switch del filtro */
+        .filtro-container {
+          display: flex;
+          align-items: center;
+          margin-top: 15px;
+        }
+        .filtro-label {
+          margin-left: 10px;
+          font-size: 14px;
+        }
+        /* The switch - the box around the slider */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 34px;
+        }
+        /* Hide default HTML checkbox */
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        /* The slider */
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          -webkit-transition: .4s;
+          transition: .4s;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 26px;
+          width: 26px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          -webkit-transition: .4s;
+          transition: .4s;
+        }
+        input:checked + .slider {
+          background-color: #ff9800;
+        }
+        input:focus + .slider {
+          box-shadow: 0 0 1px #ff9800;
+        }
+        input:checked + .slider:before {
+          -webkit-transform: translateX(26px);
+          -ms-transform: translateX(26px);
+          transform: translateX(26px);
+        }
+        /* Rounded sliders */
+        .slider.round {
+          border-radius: 34px;
+        }
+        .slider.round:before {
+          border-radius: 50%;
         }
       `}</style>
     </div>
