@@ -153,9 +153,11 @@ module.exports = {
         }
       }
 
+      pedido.estado = 'devuelto_parcial';
       pedido.historialEstados.push({ estado: 'devuelto_parcial', usuario: 'expediciones', fecha: new Date() });
       pedido.devoluciones = pedido.devoluciones || [];
       pedido.devoluciones.push({ tipo: 'parcial', fecha: new Date(), lineas, motivo });
+      pedido.enHistorialDevoluciones = true; // Marcar para historial de devoluciones
       await pedido.save();
 
       res.json(pedido);
@@ -181,7 +183,7 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Devolución cliente (total): ${motivo}`,
-            peso: linea.pesoDevuelto || linea.peso || undefined
+            peso: linea.peso || undefined
           });
         } else {
           await registrarBajaStock({
@@ -191,7 +193,7 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Baja por devolución cliente (total): ${motivo}`,
-            peso: linea.pesoDevuelto || linea.peso || undefined
+            peso: linea.peso || undefined
           });
         }
       }

@@ -36,7 +36,9 @@ export default function ClientesMantenimiento() {
   const [form, setForm] = useState({ nombre: '', email: '', telefono: '', direccion: '' });
   const [mensaje, setMensaje] = useState('');
   const [pedidosCliente, setPedidosCliente] = useState([]);
+  const [devolucionesCliente, setDevolucionesCliente] = useState([]);
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
+  const [cargandoDevoluciones, setCargandoDevoluciones] = useState(false);
   const [mostrarEditorPedidos, setMostrarEditorPedidos] = useState(false);
   const [datosReutilizacion, setDatosReutilizacion] = useState(null);
   // Filtros para pedidos del cliente
@@ -160,6 +162,24 @@ export default function ClientesMantenimiento() {
     }
   };
 
+  const cargarDevolucionesCliente = async (clienteNombre) => {
+    setCargandoDevoluciones(true);
+    try {
+      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes?enHistorialDevoluciones=true`);
+      const devolucionesFiltradas = (res.data || []).filter(pedido =>
+        pedido.clienteNombre === clienteNombre ||
+        pedido.clienteId === clienteNombre ||
+        (pedido.cliente && pedido.cliente === clienteNombre)
+      );
+      setDevolucionesCliente(devolucionesFiltradas);
+    } catch (error) {
+      console.error('Error cargando devoluciones del cliente:', error);
+      setDevolucionesCliente([]);
+    } finally {
+      setCargandoDevoluciones(false);
+    }
+  };
+
   const reutilizarPedido = (pedido, cliente) => {
     // Preparar los datos para reutilizar el pedido
     const datosParaReutilizar = {
@@ -263,6 +283,7 @@ export default function ClientesMantenimiento() {
     setFiltroFecha('');
     setFiltroProducto('');
     cargarPedidosCliente(cliente.nombre);
+    cargarDevolucionesCliente(cliente.nombre);
   };
 
   const handleVer = (cliente) => {
@@ -272,6 +293,7 @@ export default function ClientesMantenimiento() {
     setFiltroFecha('');
     setFiltroProducto('');
     cargarPedidosCliente(cliente.nombre);
+    cargarDevolucionesCliente(cliente.nombre);
   };
 
   const handleEliminar = async (cliente) => {
@@ -1879,7 +1901,7 @@ export default function ClientesMantenimiento() {
               </div>
             </div>
 
-            {/* Historial de pedidos en modo vista */}
+            {/* Historial de devoluciones en modo vista */}
             <div style={{ marginTop: '30px' }}>
               <h4 style={{
                 fontSize: '20px',
@@ -1889,307 +1911,47 @@ export default function ClientesMantenimiento() {
                 borderBottom: '2px solid #ecf0f1',
                 paddingBottom: '10px'
               }}>
-                📋 Historial Completo de Pedidos
+                🔄 Historial de Devoluciones
               </h4>
-              
-              {/* Filtros para pedidos en vista detallada */}
-              <div style={{
-                background: 'linear-gradient(135deg, #e8f4fd, #f8f9fa)',
-                borderRadius: '12px',
-                padding: '20px',
-                marginBottom: '20px',
-                border: '2px solid #e1e8ed'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '15px'
-                }}>
-                  <span style={{
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: '#2c3e50'
-                  }}>
-                    🔍 Filtrar pedidos:
-                  </span>
-                  {(filtroFecha || filtroProducto) && (
-                    <button
-                      onClick={limpiarFiltros}
-                      style={{
-                        background: 'linear-gradient(135deg, #dc3545, #c82333)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      ❌ Limpiar filtros
-                    </button>
-                  )}
+              {cargandoDevoluciones ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#7f8c8d', fontSize: '16px' }}>
+                  🔄 Cargando historial de devoluciones...
                 </div>
-                
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '200px 1fr',
-                  gap: '15px',
-                  alignItems: 'center'
-                }}>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '5px',
-                      fontWeight: '600',
-                      color: '#495057',
-                      fontSize: '14px'
-                    }}>
-                      📅 Por fecha:
-                    </label>
-                    <input
-                      type="date"
-                      value={filtroFecha}
-                      onChange={(e) => setFiltroFecha(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        border: '2px solid #e1e8ed',
-                        fontSize: '14px',
-                        transition: 'all 0.3s ease',
-                        boxSizing: 'border-box'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#667eea';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#e1e8ed';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '5px',
-                      fontWeight: '600',
-                      color: '#495057',
-                      fontSize: '14px'
-                    }}>
-                      🛒 Por producto:
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Buscar por nombre de producto..."
-                      value={filtroProducto}
-                      onChange={(e) => setFiltroProducto(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        border: '2px solid #e1e8ed',
-                        fontSize: '14px',
-                        transition: 'all 0.3s ease',
-                        boxSizing: 'border-box'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#667eea';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#e1e8ed';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                {/* Información de filtros activos */}
-                <div style={{
-                  marginTop: '15px',
-                  padding: '10px',
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  color: '#495057'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>
-                      📊 Mostrando <strong>{pedidosFiltrados.length}</strong> de <strong>{pedidosCliente.length}</strong> pedidos
-                    </span>
-                    {(filtroFecha || filtroProducto) && (
-                      <div style={{ fontSize: '12px', color: '#6c757d' }}>
-                        {filtroFecha && <span>📅 Fecha: {new Date(filtroFecha).toLocaleDateString()} </span>}
-                        {filtroProducto && <span>🛒 Producto: "{filtroProducto}"</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {cargandoPedidos ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '40px',
-                  color: '#7f8c8d',
-                  fontSize: '16px'
-                }}>
-                  🔄 Cargando historial de pedidos...
-                </div>
-              ) : pedidosCliente.length > 0 ? (
-                <div style={{
-                  background: '#f8f9fa',
-                  borderRadius: '10px',
-                  padding: '20px',
-                  maxHeight: '500px',
-                  overflowY: 'auto'                }}>
-                  {pedidosFiltrados.map((pedido, index) => (
-                    <div
-                      key={pedido._id || index}
-                      style={{
-                        background: 'white',
-                        borderRadius: '8px',
-                        padding: '20px',
-                        marginBottom: '15px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        border: '1px solid #e1e8ed'
-                      }}
-                    >
+              ) : devolucionesCliente.length > 0 ? (
+                <div style={{ background: '#f8f9fa', borderRadius: '10px', padding: '20px', maxHeight: '500px', overflowY: 'auto' }}>
+                  {devolucionesCliente.map((pedido, index) => (
+                    <div key={pedido._id || index} style={{ background: 'white', borderRadius: '8px', padding: '20px', marginBottom: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid #e1e8ed' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                         <div>
                           <strong style={{ color: '#2c3e50', fontSize: '18px' }}>
                             📦 Pedido #{pedido.numeroPedido || pedido._id}
                           </strong>
-                          <span style={{
-                            marginLeft: '15px',
-                            padding: '6px 12px',
-                            borderRadius: '15px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            background: pedido.estado === 'entregado' ? '#d4edda' : 
-                                       pedido.estado === 'enviado' ? '#fff3cd' : '#f8d7da',
-                            color: pedido.estado === 'entregado' ? '#155724' : 
-                                   pedido.estado === 'enviado' ? '#856404' : '#721c24'
-                          }}>
-                            {pedido.estado || 'Sin estado'}
+                          <span style={{ marginLeft: '15px', padding: '6px 12px', borderRadius: '15px', fontSize: '14px', fontWeight: '600', background: '#f8d7da', color: '#721c24' }}>
+                            {pedido.estado.replace('_', ' ')}
                           </span>
                         </div>
                         <div style={{ color: '#7f8c8d', fontSize: '14px' }}>
-                          📅 {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : 
-                              pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleDateString() : 'Sin fecha'}
+                          📅 {pedido.devoluciones[0] ? new Date(pedido.devoluciones[0].fecha).toLocaleDateString() : 'Sin fecha'}
                         </div>
                       </div>
-                      
-                      {pedido.lineas && pedido.lineas.length > 0 && (
+                      {pedido.devoluciones && pedido.devoluciones.length > 0 && (
                         <div style={{ fontSize: '14px', color: '#495057' }}>
-                          <strong style={{ marginBottom: '10px', display: 'block' }}>🛒 Productos del pedido:</strong>
-                          <div style={{
-                            background: '#f8f9fa',
-                            borderRadius: '8px',
-                            padding: '15px'
-                          }}>
-                            {pedido.lineas.map((linea, idx) => (
-                              <div key={idx} style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '8px',
-                                padding: '8px',
-                                background: 'white',
-                                borderRadius: '6px',
-                                border: '1px solid #e9ecef'
-                              }}>
-                                <div>
-                                  <strong style={{ color: '#2c3e50' }}>{linea.producto}</strong>
-                                  {linea.comentario && (
-                                    <div style={{ color: '#7f8c8d', fontStyle: 'italic', fontSize: '12px' }}>
-                                      💬 {linea.comentario}
-                                    </div>
-                                  )}
-                                </div>
-                                <div style={{ color: '#495057', fontWeight: '600' }}>
-                                  {linea.cantidad} {linea.formato || 'und'}
-                                </div>
+                          <strong style={{ marginBottom: '10px', display: 'block' }}>📝 Detalles de la devolución:</strong>
+                          <div style={{ background: '#f8f9fa', borderRadius: '8px', padding: '15px' }}>
+                            {pedido.devoluciones.map((devolucion, idx) => (
+                              <div key={idx} style={{ marginBottom: '8px' }}>
+                                <strong style={{ color: '#2c3e50' }}>{devolucion.tipo}</strong> - {devolucion.motivo}
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
-
-                      {pedido.usuarioTramitando && (
-                        <div style={{ marginTop: '10px', fontSize: '12px', color: '#7f8c8d' }}>
-                          👤 Tramitado por: {pedido.usuarioTramitando}
-                        </div>
-                      )}
-
-                      {/* Botón para reutilizar pedido en vista detallada */}
-                      <div style={{ marginTop: '15px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => reutilizarPedido(pedido, clienteEdit)}
-                          style={{
-                            background: 'linear-gradient(135deg, #28a745, #20c997)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '10px',
-                            padding: '12px 20px',
-                            fontSize: '14px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            boxShadow: '0 3px 10px rgba(40, 167, 69, 0.3)',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginLeft: 'auto'
-                          }}
-                          onMouseOver={(e) => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 5px 15px rgba(40, 167, 69, 0.4)';
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 3px 10px rgba(40, 167, 69, 0.3)';
-                          }}
-                        >
-                          🔄 Crear Nuevo Pedido con estos Productos
-                        </button>
-                      </div>
                     </div>
                   ))}
-                  
-                  {/* Mensaje cuando no hay pedidos filtrados en vista detallada */}
-                  {pedidosCliente.length > 0 && pedidosFiltrados.length === 0 && (
-                    <div style={{
-                      textAlign: 'center',
-                      padding: '40px',
-                      color: '#7f8c8d',
-                      fontSize: '16px',
-                      background: 'white',
-                      borderRadius: '10px',
-                      border: '2px dashed #e1e8ed'
-                    }}>
-                      🔍 No se encontraron pedidos que coincidan con los filtros aplicados
-                      <div style={{ marginTop: '10px', fontSize: '14px' }}>
-                        Prueba con otros criterios de búsqueda o limpia los filtros
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '40px',
-                  color: '#7f8c8d',
-                  fontSize: '16px',
-                  background: '#f8f9fa',
-                  borderRadius: '10px'
-                }}>
-                  📋 Este cliente no tiene pedidos registrados
+                <div style={{ textAlign: 'center', padding: '40px', color: '#7f8c8d', fontSize: '16px', background: '#f8f9fa', borderRadius: '10px' }}>
+                  📋 Este cliente no tiene devoluciones registradas
                 </div>
               )}
             </div>
