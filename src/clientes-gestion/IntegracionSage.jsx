@@ -8,6 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 export default function IntegracionSage() {
   const [pedidos, setPedidos] = useState([]);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
+  const [exportedPedidos, setExportedPedidos] = useState(new Set());
 
   useEffect(() => {
     axios.get(`${API_URL}/pedidos-clientes`)
@@ -16,11 +17,25 @@ export default function IntegracionSage() {
   }, []);
 
   const handleSelectPedido = (pedidoId) => {
+    if (exportedPedidos.has(pedidoId)) return;
     setSelectedPedidos(prev =>
       prev.includes(pedidoId)
         ? prev.filter(id => id !== pedidoId)
         : [...prev, pedidoId]
     );
+  };
+
+  const markAsExported = () => {
+    setExportedPedidos(prev => new Set([...prev, ...selectedPedidos]));
+    setSelectedPedidos([]);
+  };
+
+  const resetExported = (pedidoId) => {
+    setExportedPedidos(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(pedidoId);
+      return newSet;
+    });
   };
 
   const getSelectedPedidosData = () => {
@@ -39,6 +54,7 @@ export default function IntegracionSage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
     XLSX.writeFile(wb, 'pedidos_sage.xlsx');
+    markAsExported();
   };
 
   const exportToCSV = () => {
@@ -68,6 +84,7 @@ export default function IntegracionSage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    markAsExported();
   };
 
   const exportToXML = () => {
@@ -108,6 +125,7 @@ export default function IntegracionSage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    markAsExported();
   };
 
   const exportToJSON = () => {
@@ -120,6 +138,7 @@ export default function IntegracionSage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    markAsExported();
   };
 
   return (
@@ -149,11 +168,15 @@ export default function IntegracionSage() {
             {pedidos.map(pedido => (
               <tr key={pedido._id}>
                 <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedPedidos.includes(pedido._id)}
-                    onChange={() => handleSelectPedido(pedido._id)}
-                  />
+                  {exportedPedidos.has(pedido._id) ? (
+                    <button onClick={() => resetExported(pedido._id)}>Habilitar</button>
+                  ) : (
+                    <input
+                      type="checkbox"
+                      checked={selectedPedidos.includes(pedido._id)}
+                      onChange={() => handleSelectPedido(pedido._id)}
+                    />
+                  )}
                 </td>
                 <td>{pedido.numeroPedido}</td>
                 <td>{pedido.clienteNombre}</td>
