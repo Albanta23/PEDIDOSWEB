@@ -61,7 +61,7 @@ function corsOrigin(origin, callback) {
   
   // Log específico para depurar peticiones de gestor de cestas
   if (origin && (origin.includes('gestor-cestas') || origin.includes('debug-cestas'))) {
-    console.log(`[CORS-CESTAS] ⚠️ Petición de Gestor de Cestas detectada: ${origin}`);
+    console.log(`[CORS-CESTAS] [AVISO] Petición de Gestor de Cestas detectada: ${origin}`);
   }
   
   if (!origin) {
@@ -91,83 +91,6 @@ function corsOrigin(origin, callback) {
     matchRender ||
     matchLocalhost ||
     matchGithubDev
-  ) {
-    console.log(`[CORS DEBUG] Origen permitido: ${origin}`);
-    return callback(null, origin); // Refleja el origin válido
-  }
-  
-  console.log(`[CORS DEBUG] Origen rechazado: ${origin}`);
-  return callback(new Error('Not allowed by CORS: ' + origin));
-}`);
-  
-  // Log específico para depurar peticiones de gestor de cestas
-  if (origin && (origin.includes('gestor-cestas') || origin.includes('debug-cestas'))) {
-    console.log(`[CORS-CESTAS] ⚠️ Petición de Gestor de Cestas detectada: ${origin}`);
-  }
-  
-  if (!origin) {
-    console.log('[CORS DEBUG] Petición sin origen, permitida');
-    return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
-  }
-  
-  const originLc = origin.toLowerCase();
-  const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
-  
-  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
-  const matchGithubDev = githubDevRegex.test(originLc);
-  const matchVercel = /\.vercel\.app$/.test(originLc);
-  const matchRender = /\.onrender\.com$/.test(originLc);
-  const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
-  
-  console.log(`[CORS DEBUG] Evaluación: 
-    - En lista: ${allowedOriginsLc.includes(originLc)}
-    - Vercel: ${matchVercel}
-    - Render: ${matchRender}
-    - Localhost: ${matchLocalhost}
-    - GitHub: ${matchGithubDev}`);
-  
-  if (
-    allowedOriginsLc.includes(originLc) ||
-    matchVercel ||
-    matchRender ||
-    matchLocalhost ||
-    matchGithubDev
-  ) {
-    console.log(`[CORS DEBUG] Origen permitido: ${origin}`);
-    return callback(null, origin); // Refleja el origin válido
-  }
-  
-  console.log(`[CORS DEBUG] Origen rechazado: ${origin}`);
-  return callback(new Error('Not allowed by CORS: ' + origin));
-}`);
-  
-  if (!origin) {
-    console.log('[CORS DEBUG] Petición sin origen, permitida');
-    return callback(null, true); // Permitir peticiones sin origen (curl, Postman)
-  }
-  
-  const originLc = origin.toLowerCase();
-  const allowedOriginsLc = allowedOrigins.map(o => o.toLowerCase());
-  
-  const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
-  const matchGithubDev = githubDevRegex.test(originLc);
-  const matchVercel = /\.vercel\.app$/.test(originLc);
-  const matchRender = /\.onrender\.com$/.test(originLc);
-  const matchLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(originLc);
-  
-  console.log(`[CORS DEBUG] Evaluación: 
-    - En lista: ${allowedOriginsLc.includes(originLc)}
-    - Vercel: ${matchVercel}
-    - Render: ${matchRender}
-    - Localhost: ${matchLocalhost}
-    - GitHub: ${matchGithubDev}`);
-  
-  if (
-    allowedOriginsLc.includes(originLc) ||
-    matchVercel ||
-    matchRender ||
-    matchLocalhost ||
-    matchGithubDev // <-- Permitir cualquier subdominio de app.github.dev
   ) {
     console.log(`[CORS DEBUG] Origen permitido: ${origin}`);
     return callback(null, origin); // Refleja el origin válido
@@ -183,7 +106,7 @@ app.use(cors({
 }));
 
 // --- Socket.IO: CORS seguro y compatible con subdominios efímeros ---
-const githubDevRegex = /^https?:\/\/[a-z0-9-]+(-[a-z0-9]+)*(\.[0-9]+)?\.app\.github\.dev$/;
+// Reutilizar la misma expresión regular definida en corsOrigin
 const io = new Server(server, {
   cors: {
     origin: corsOrigin, // Usar la misma función de validación CORS
