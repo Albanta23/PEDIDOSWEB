@@ -68,6 +68,7 @@ module.exports = {
       const { estado, usuarioTramitando, lineas, bultos } = req.body;
       let update = { ...req.body };
       if (bultos) {
+        update.bultos = bultos;
         update.$push = update.$push || {};
         update.$push.historialBultos = { bultos, fecha: new Date(), usuario: usuarioTramitando || req.body.usuario || 'expediciones' };
       }
