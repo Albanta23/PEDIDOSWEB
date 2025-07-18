@@ -441,6 +441,8 @@
   font-weight: bold;
   font-size: 1.05rem;
   margin-bottom: 8px;
+  position: relative; /* Importante para el posicionamiento del datalist */
+  z-index: 10; /* Asegurar que el input esté por encima del datalist */
 }
 .producto-nombre-input.input-error { /* Para PedidoList */
   border-color: #dc3545 !important;
@@ -516,9 +518,11 @@ table .feedback-success, table .feedback-error {
   height: 100%;
   background-color: rgba(0,0,0,0.6);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Alinear en la parte superior */
   justify-content: center;
   z-index: 2000; /* Asegurar que esté por encima de otros elementos */
+  padding-top: 100px; /* Espacio desde la parte superior para no tapar inputs */
+  overflow-y: auto; /* Permitir scroll si el modal es muy alto */
 }
 .modal-content {
   background-color: #fff;
@@ -527,9 +531,10 @@ table .feedback-success, table .feedback-error {
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   width: 90%;
   max-width: 600px;
-  max-height: 80vh;
+  max-height: 70vh; /* Reducido para no ocupar toda la pantalla */
   display: flex;
   flex-direction: column;
+  margin-bottom: 30px; /* Espacio abajo para evitar problemas en pantallas pequeñas */
 }
 .modal-header {
   display: flex;

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Cestas Navideñas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #c62828;
+            border-bottom: 2px solid #c62828;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2e7d32;
+            margin-top: 30px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #1b5e20;
+        }
+        .error {
+            color: #c62828;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .cliente-item {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            width: 23%;
+            text-align: center;
+        }
+        .stat-box h3 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        .stat-box p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+            color: #1b5e20;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎄 Prueba de Cestas Navideñas</h1>
+    
+    <div class="card">
+        <h2>📊 Estadísticas de Cestas</h2>
+        <button id="obtenerEstadisticas">Cargar Estadísticas</button>
+        <div id="estadisticas" style="display: none;">
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Total Clientes</h3>
+                    <p id="totalClientes">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Cestas Navidad</h3>
+                    <p id="clientesCestas">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Clientes Normales</h3>
+                    <p id="clientesNormales">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>% Cestas</h3>
+                    <p id="porcentajeCestas">0%</p>
+                </div>
+            </div>
+        </div>
+        <div id="errorEstadisticas" class="error" style="display: none;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>📝 Marcar Clientes como Cestas</h2>
+        <p>Ingresa los datos de los clientes en formato JSON:</p>
+        <textarea id="clientesJson">
+[
+  {
+    "nombre": "Cliente Prueba Cestas 1",
+    "email": "test1@example.com",
+    "telefono": "666123456",
+    "nif": "12345678A"
+  },
+  {
+    "nombre": "Cliente Prueba Cestas 2",
+    "email": "test2@example.com",
+    "telefono": "677987654",
+    "nif": "87654321B"
+  }
+]
+        </textarea>
+        <button id="marcarClientes">Marcar Clientes como Cestas</button>
+        <div id="resultadoMarcado" style="display: none;">
+            <h3>Resultado:</h3>
+            <p><strong>Marcados:</strong> <span id="clientesMarcados">0</span></p>
+            <p><strong>Creados:</strong> <span id="clientesCreados">0</span></p>
+            <p><strong>Errores:</strong> <span id="clientesErrores">0</span></p>
+            <p><strong>Resumen:</strong> <span id="resumenMarcado"></span></p>
+        </div>
+        <div id="errorMarcado" class="error" style="display: none;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>🔍 Diagnóstico de Conexión</h2>
+        <p>Verifica la configuración de la API:</p>
+        <input type="text" id="apiUrl" value="http://localhost:10001" placeholder="URL de la API">
+        <button id="probarConexion">Probar Conexión</button>
+        <div id="resultadoConexion" style="display: none;"></div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Prueba específica de CORS para /api/clientes/importar</h3>
+            <button id="probarCorsImportar">Probar CORS en /importar</button>
+            <div id="resultadoCorsImportar" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuración
+        let API_URL = 'http://localhost:10001';
+        
+        // Funciones de utilidad
+        function mostrarError(elementoId, mensaje) {
+            const elemento = document.getElementById(elementoId);
+            elemento.textContent = mensaje;
+            elemento.style.display = 'block';
+        }
+        
+        function ocultarError(elementoId) {
+            document.getElementById(elementoId).style.display = 'none';
+        }
+        
+        // Obtener estadísticas
+        document.getElementById('obtenerEstadisticas').addEventListener('click', async () => {
+            ocultarError('errorEstadisticas');
+            API_URL = document.getElementById('apiUrl').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/clientes/estadisticas-cestas`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                document.getElementById('totalClientes').textContent = data.totalClientes;
+                document.getElementById('clientesCestas').textContent = data.clientesCestasNavidad;
+                document.getElementById('clientesNormales').textContent = data.clientesNormales;
+                document.getElementById('porcentajeCestas').textContent = `${data.porcentajeCestas}%`;
+                document.getElementById('estadisticas').style.display = 'block';
+            } catch (error) {
+                mostrarError('errorEstadisticas', `Error al obtener estadísticas: ${error.message}`);
+                document.getElementById('estadisticas').style.display = 'none';
+            }
+        });
+        
+        // Marcar clientes
+        document.getElementById('marcarClientes').addEventListener('click', async () => {
+            ocultarError('errorMarcado');
+            document.getElementById('resultadoMarcado').style.display = 'none';
+            API_URL = document.getElementById('apiUrl').value;
+            
+            try {
+                const clientesJson = document.getElementById('clientesJson').value;
+                let clientes;
+                
+                try {
+                    clientes = JSON.parse(clientesJson);
+                } catch (parseError) {
+                    throw new Error(`Error al parsear JSON: ${parseError.message}`);
+                }
+                
+                const response = await fetch(`${API_URL}/api/clientes/marcar-cestas-navidad`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ clientesCestasNavidad: clientes })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                document.getElementById('clientesMarcados').textContent = data.marcados;
+                document.getElementById('clientesCreados').textContent = data.creados;
+                document.getElementById('clientesErrores').textContent = data.errores?.length || 0;
+                document.getElementById('resumenMarcado').textContent = data.resumen;
+                document.getElementById('resultadoMarcado').style.display = 'block';
+                
+                // Refrescar estadísticas automáticamente
+                document.getElementById('obtenerEstadisticas').click();
+            } catch (error) {
+                mostrarError('errorMarcado', `Error al marcar clientes: ${error.message}`);
+            }
+        });
+        
+        // Probar conexión
+        document.getElementById('probarConexion').addEventListener('click', async () => {
+            const resultadoElement = document.getElementById('resultadoConexion');
+            resultadoElement.innerHTML = '<p>Probando conexión...</p>';
+            resultadoElement.style.display = 'block';
+            
+            API_URL = document.getElementById('apiUrl').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/`);
+                
+                if (response.ok) {
+                    resultadoElement.innerHTML = `
+                        <p class="success">✅ Conexión exitosa al servidor</p>
+                        <p>Código de estado: ${response.status}</p>
+                        <p>Mensaje: ${await response.text()}</p>
+                    `;
+                } else {
+                    resultadoElement.innerHTML = `
+                        <p class="error">❌ Error de conexión</p>
+                        <p>Código de estado: ${response.status}</p>
+                        <p>Mensaje: ${response.statusText}</p>
+                    `;
+                }
+            } catch (error) {
+                resultadoElement.innerHTML = `
+                    <p class="error">❌ Error de conexión</p>
+                    <p>Error: ${error.message}</p>
+                    <p>Posibles causas:</p>
+                    <ul>
+                        <li>El servidor no está en ejecución</li>
+                        <li>La URL de la API es incorrecta</li>
+                        <li>Problemas de CORS</li>
+                        <li>Error de red</li>
+                    </ul>
+                `;
+            }
+        });
+        
+        // Probar CORS específicamente para endpoint importar
+        document.getElementById('probarCorsImportar').addEventListener('click', async () => {
+            const resultadoElement = document.getElementById('resultadoCorsImportar');
+            resultadoElement.innerHTML = '<p>Probando CORS en endpoint /api/clientes/importar...</p>';
+            resultadoElement.style.display = 'block';
+            
+            API_URL = document.getElementById('apiUrl').value;
+            
+            try {
+                // Intentamos una petición preflight OPTIONS primero para ver cabeceras CORS
+                const optionsResponse = await fetch(`${API_URL}/api/clientes/importar`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                let corsInfo = '';
+                
+                if (optionsResponse.status === 204 || optionsResponse.ok) {
+                    const allowOrigin = optionsResponse.headers.get('Access-Control-Allow-Origin');
+                    const allowMethods = optionsResponse.headers.get('Access-Control-Allow-Methods');
+                    const allowHeaders = optionsResponse.headers.get('Access-Control-Allow-Headers');
+                    
+                    corsInfo = `
+                        <p class="success">✅ Preflight OPTIONS exitoso</p>
+                        <p><strong>Access-Control-Allow-Origin:</strong> ${allowOrigin || 'No presente'}</p>
+                        <p><strong>Access-Control-Allow-Methods:</strong> ${allowMethods || 'No presente'}</p>
+                        <p><strong>Access-Control-Allow-Headers:</strong> ${allowHeaders || 'No presente'}</p>
+                    `;
+                } else {
+                    corsInfo = `
+                        <p class="error">❌ Preflight OPTIONS fallido (${optionsResponse.status})</p>
+                    `;
+                }
+                
+                // Luego intentamos una petición POST real (simplificada)
+                try {
+                    const response = await fetch(`${API_URL}/api/clientes/importar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Origin': window.location.origin
+                        },
+                        body: JSON.stringify({ clientes: [] }) // Array vacío para minimizar datos
+                    });
+                    
+                    if (response.ok) {
+                        resultadoElement.innerHTML = corsInfo + `
+                            <p class="success">✅ Petición POST exitosa</p>
+                            <p>Código de estado: ${response.status}</p>
+                            <p>Origen actual: ${window.location.origin}</p>
+                        `;
+                    } else {
+                        resultadoElement.innerHTML = corsInfo + `
+                            <p class="error">❌ Petición POST fallida pero con respuesta del servidor</p>
+                            <p>Código de estado: ${response.status}</p>
+                            <p>Mensaje: ${response.statusText}</p>
+                            <p>Origen actual: ${window.location.origin}</p>
+                            <p><strong>Nota:</strong> Error 400 puede indicar un problema con el formato de datos, no necesariamente CORS</p>
+                        `;
+                    }
+                } catch (postError) {
+                    resultadoElement.innerHTML = corsInfo + `
+                        <p class="error">❌ Error CORS en petición POST</p>
+                        <p>Error: ${postError.message}</p>
+                        <p>Origen actual: ${window.location.origin}</p>
+                        <p><strong>Solución sugerida:</strong> Verifica que el servidor esté configurado para aceptar peticiones desde ${window.location.origin}</p>
+                    `;
+                }
+            } catch (error) {
+                resultadoElement.innerHTML = `
+                    <p class="error">❌ Error al probar CORS</p>
+                    <p>Error: ${error.message}</p>
+                    <p>Origen actual: ${window.location.origin}</p>
+                `;
+            }
+        });
+        
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            // Detectar URL automáticamente
+            const host = window.location.hostname;
+            const protocolo = window.location.protocol;
+            
+            if (host.includes('github.dev') || host.includes('localhost')) {
+                const newUrl = `${protocolo}//${host.replace('3000', '10001')}`;
+                document.getElementById('apiUrl').value = newUrl;
+                API_URL = newUrl;
+                console.log('URL de API detectada:', newUrl);
+            }
+        });
+    </script>
+</body>
+</html>

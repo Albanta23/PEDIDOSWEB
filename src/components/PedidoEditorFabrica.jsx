@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
 import './PedidoEditorFabrica.css'; // Importar el archivo CSS
+import '../styles/datalist-fix.css'; // Importar arreglos para datalist
 
 export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso, onChange, onRecargarPedidos }) {
   const { productos } = useProductos();
@@ -251,7 +252,29 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   list="productos-lista-global"
                   value={linea.producto}
                   onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
-                  placeholder="Nombre del producto"
+                  onKeyDown={e => {
+                    // Si se presiona Enter, buscar producto por referencia exacta
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const valor = e.target.value.trim();
+                      // Buscar producto por referencia exacta
+                      const productoEncontrado = productos.find(p => p.referencia && 
+                        String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+                      if (productoEncontrado) {
+                        actualizarLinea(idx, 'producto', productoEncontrado.nombre);
+                      }
+                    }
+                  }}
+                  onBlur={e => {
+                    // Al perder foco, verificar si es una referencia exacta
+                    const valor = e.target.value.trim();
+                    const productoEncontrado = productos.find(p => p.referencia && 
+                      String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+                    if (productoEncontrado) {
+                      actualizarLinea(idx, 'producto', productoEncontrado.nombre);
+                    }
+                  }}
+                  placeholder="Nombre del producto o referencia"
                   className="producto-nombre-input"
                 />
                 <datalist id="productos-lista-global">

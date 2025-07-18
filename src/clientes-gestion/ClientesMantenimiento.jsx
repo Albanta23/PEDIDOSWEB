@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
+import ImportarClientes from './ImportarClientes'; // Importar el nuevo componente
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
@@ -48,6 +49,9 @@ export default function ClientesMantenimiento() {
   const [mostrarGestionCestas, setMostrarGestionCestas] = useState(false);
   const [filtroTipoCliente, setFiltroTipoCliente] = useState('ninguno'); // 'ninguno', 'todos', 'cestas', 'normales'
   const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false); // Checkbox para mostrar todos independiente del filtro
+  
+  // Estados para importación de clientes
+  const [mostrarImportarClientes, setMostrarImportarClientes] = useState(false);
 
   const cargarClientes = () => {
     axios.get(`${API_URL_CORRECTO}/clientes`)
@@ -276,48 +280,6 @@ export default function ClientesMantenimiento() {
       await axios.delete(`${API_URL_CORRECTO}/clientes/${cliente._id||cliente.id}`);
       cargarClientes();
     } catch {}
-  };
-
-  // Importar clientes desde CSV
-  const handleImportCSV = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const lines = text.split(/\r?\n/).filter(l=>l.trim());
-    if (lines.length < 2) return setMensaje('CSV vacío o sin datos');
-    const headers = lines[0].split(/\t/).map(h=>h.trim());
-    const clientes = lines.slice(1).map(line => {
-      const cols = line.split(/\t/);
-      const obj = {};
-      headers.forEach((h,i)=>{ obj[h]=cols[i]!==undefined?cols[i].trim():''; });
-      return {
-        nombre: obj.RazonSocial || obj.NomComercial || obj.Nombre || '',
-        email: obj.Email || '',
-        telefono: obj.Telefono || '',
-        direccion: [obj.Direccion, obj.CodPostal, obj.Poblacion, obj.Provincia].filter(Boolean).join(', '),
-        cif: obj.CIF || '',
-        activo: obj.Activo === 'true' || obj.Activo === '1',
-        tipoCliente: obj.TipoCliente || '',
-        exentoIVA: obj.ExentoIVA === 'true' || obj.ExentoIVA === '1',
-        formaPago: obj.FormaPago || '',
-        recargoEquiv: obj.RecargoEquiv === 'true' || obj.RecargoEquiv === '1',
-        descuento1: parseFloat(obj.Descuento1)||0,
-        descuento2: parseFloat(obj.Descuento2)||0,
-        descuento3: parseFloat(obj.Descuento3)||0
-      };
-    });
-    // DEBUG: Mostrar los clientes parseados en consola
-    console.log('CLIENTES IMPORTADOS', clientes);
-    if (clientes.length === 0) return setMensaje('No se han detectado clientes en el archivo. Revisa el formato.');
-    try {
-      for (const cli of clientes) {
-        await axios.post(`${API_URL_CORRECTO}/clientes`, cli);
-      }
-      setMensaje('Clientes importados correctamente');
-      cargarClientes();
-    } catch {
-      setMensaje('Error al importar clientes');
-    }
   };
 
   // Importar clientes de cestas de navidad desde CSV
@@ -637,29 +599,26 @@ export default function ClientesMantenimiento() {
                 ➕ Nuevo Cliente
               </button>
               
-              <label style={{
-                background: 'linear-gradient(135deg, #f39c12, #e67e22)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '15px 25px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(243, 156, 18, 0.3)',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                📂 Importar CSV
-                <input 
-                  type="file" 
-                  accept=".csv,.txt" 
-                  onChange={handleImportCSV}
-                  style={{ display: 'none' }}
-                />
-              </label>
+              <button
+                onClick={() => setMostrarImportarClientes(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '15px 25px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(243, 156, 18, 0.3)',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                📂 Importar Clientes
+              </button>
 
               {/* Botón para importar cestas de navidad */}
               <label style={{
@@ -2280,6 +2239,17 @@ export default function ClientesMantenimiento() {
         <PedidosClientesConReutilizacion 
           onPedidoCreado={cerrarEditorPedidos}
           datosReutilizacion={datosReutilizacion}
+        />
+      )}
+
+      {/* Modal para importar clientes */}
+      {mostrarImportarClientes && (
+        <ImportarClientes 
+          onClose={() => {
+            setMostrarImportarClientes(false);
+            cargarClientes(); // Recargar la lista después de importar
+          }}
+          API_URL={API_URL_CORRECTO}
         />
       )}
     </div>

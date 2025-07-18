@@ -679,7 +679,7 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
             { $set: { esCestaNavidad: true } }
           );
           marcados++;
-          console.log(`[CESTAS-NAVIDAD] ✅ Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
+          console.log(`[CESTAS-NAVIDAD] [OK] Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
         } else {
           // CLIENTE NUEVO: Crear como cliente de cestas únicamente
           const nuevoCliente = await Cliente.create({
@@ -692,11 +692,11 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
             esCestaNavidad: true    // SÍ es cliente de cestas
           });
           creados++;
-          console.log(`[CESTAS-NAVIDAD] 🆕 Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
+          console.log(`[CESTAS-NAVIDAD] [NUEVO] Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
         }
       } catch (e) {
         errores.push({ cliente: clienteCesta, error: e.message });
-        console.error(`[CESTAS-NAVIDAD] ❌ Error procesando cliente ${clienteCesta.nombre}:`, e.message);
+        console.error(`[CESTAS-NAVIDAD] [ERROR] Error procesando cliente ${clienteCesta.nombre}:`, e.message);
       }
     }
     
@@ -898,7 +898,7 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
             }
           );
           marcados++;
-          console.log(`[CESTAS-NAVIDAD] ✅ Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
+          console.log(`[CESTAS-NAVIDAD] [OK] Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
         } else {
           // CLIENTE NUEVO: Crear como cliente de cestas únicamente
           const nuevoCliente = new Cliente({
@@ -916,7 +916,7 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
           
           await nuevoCliente.save();
           creados++;
-          console.log(`[CESTAS-NAVIDAD] 🆕 Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
+          console.log(`[CESTAS-NAVIDAD] [NUEVO] Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
         }
       } catch (e) {
         errores.push({ cliente: clienteCesta, error: e.message });

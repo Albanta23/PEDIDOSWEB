@@ -246,5 +246,34 @@ module.exports = {
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
+  },
+  
+  // Nuevo método para asignar cliente a un pedido
+  async asignarCliente(req, res) {
+    try {
+      const { id } = req.params;
+      const { clienteId, verificadoManualmente } = req.body;
+      
+      if (!id || !clienteId) {
+        return res.status(400).json({ error: 'ID de pedido y clienteId son requeridos' });
+      }
+      
+      const pedido = await PedidoCliente.findById(id);
+      if (!pedido) {
+        return res.status(404).json({ error: 'Pedido no encontrado' });
+      }
+      
+      // Actualizar el pedido con la información del cliente
+      pedido.clienteId = clienteId;
+      pedido.verificadoManualmente = verificadoManualmente || false;
+      pedido.clienteExistente = true;
+      pedido.clienteCreado = false;
+      
+      await pedido.save();
+      res.json(pedido);
+    } catch (error) {
+      console.error('Error al asignar cliente a pedido:', error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };

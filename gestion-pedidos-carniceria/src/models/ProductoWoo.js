@@ -19,7 +19,13 @@ const ProductoWooSchema = new mongoose.Schema({
   tipo: String,
   precio: Number,
   peso: Number,
-  atributos: mongoose.Schema.Types.Mixed
+  atributos: mongoose.Schema.Types.Mixed,
+  // Nuevos campos estandarizados
+  tipoIva: { type: Number, default: 10 }, // Porcentaje de IVA (por defecto 10%)
+  formatoEstandar: { type: String, default: 'Unidad' }, // Formato estándar del producto
+  pesoUnidad: { type: Number }, // Peso por unidad en gramos
+  requierePeso: { type: Boolean, default: false }, // Si el producto requiere especificar peso
+  codigoSage: { type: String } // Código del producto en SAGE50
 });
 
 module.exports = mongoose.model('ProductoWoo', ProductoWooSchema);

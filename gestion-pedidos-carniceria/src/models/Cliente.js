@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 const ClienteSchema = new mongoose.Schema({
   codigo: { type: String },
+  codigoSage: { type: String }, // Código SAGE del cliente (ejemplo: 430007506)
   nombre: { type: String, required: true },
   razonSocial: { type: String },
+  razonComercial: { type: String }, // Nueva campo para Razón comercial
   nif: { type: String },
   email: { type: String },
   telefono: { type: String },

@@ -13,7 +13,9 @@ const LineaClienteSchema = new mongoose.Schema({
   precio: Number,
   iva: Number,
   tipoProducto: String, // 'simple' o 'variable'
-  variaciones: mongoose.Schema.Types.Mixed
+  variaciones: mongoose.Schema.Types.Mixed,
+  idWoo: Number, // ID del producto en WooCommerce
+  codigoSage: String // Código del producto en SAGE50
 });
 
 const PedidoClienteSchema = new mongoose.Schema({
@@ -23,6 +25,13 @@ const PedidoClienteSchema = new mongoose.Schema({
   clienteNombre: String,
   nif: String,
   direccion: String,
+  codigoPostal: String, // Nuevo campo para código postal
+  poblacion: String, // Nuevo campo para población
+  provincia: String, // Nuevo campo para provincia
+  pais: String, // Nuevo campo para país
+  email: String, // Nuevo campo para email
+  telefono: String, // Nuevo campo para teléfono
+  codigoCliente: String, // Código de cliente para SAGE50
   estado: { type: String, default: 'en_espera' },
   numeroPedido: Number,
   lineas: [LineaClienteSchema],
@@ -47,7 +56,11 @@ const PedidoClienteSchema = new mongoose.Schema({
   notasCliente: String,
   subtotal: Number,
   totalIva: Number,
-  total: Number
+  total: Number,
+  clienteExistente: Boolean, // Indica si el cliente ya existía en la BD
+  clienteCreado: Boolean, // Indica si se creó un nuevo cliente
+  verificadoManualmente: Boolean, // Indica si el usuario verificó manualmente los datos
+  yaActualizado: { type: Boolean, default: false } // Indica si el pedido ya fue sincronizado (para pedidos de WooCommerce)
 }, { timestamps: true });
 
 PedidoClienteSchema.index({ numeroPedido: 1 }, { unique: true });
