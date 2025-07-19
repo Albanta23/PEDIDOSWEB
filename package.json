@@ -16,7 +16,6 @@
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.300.0",
-    "mailgun-js": "^0.22.0",
     "mongoose": "^6.12.5",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.3",
@@ -27,7 +26,7 @@
     "react-router-dom": "^7.6.2",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
-    "vite": "^4.5.9",
+    "vite": "^7.0.5",
     "web-vitals": "^3.1.0",
     "xlsx": "^0.18.5"
   },
@@ -67,6 +66,6 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.1",
     "jsdom": "^22.1.0",
-    "vitest": "^0.34.6"
+    "vitest": "^3.2.4"
   }
 }
