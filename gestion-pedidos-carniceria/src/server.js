@@ -1,5 +1,5 @@
 // Servidor Express con Socket.io para pedidos en tiempo real
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 // DEBUG: Comprobar carga de MAILJET_API_KEY
 if (process.env.MAILJET_API_KEY) {
   console.log('[DEBUG] MAILJET_API_KEY cargada:', process.env.MAILJET_API_KEY.slice(0, 4) + '...' + process.env.MAILJET_API_KEY.slice(-4));

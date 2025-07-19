@@ -3,6 +3,43 @@ const PedidoCliente = require('./models/PedidoCliente');
 const { registrarBajaStock } = require('./utils/stock');
 
 module.exports = {
+  // Endpoint para obtener un pedido por ID y devolver historial combinado
+  async obtenerPorId(req, res) {
+    try {
+      const { id } = req.params;
+      const pedido = await PedidoCliente.findById(id);
+      if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+      // Combinar historialEstados e historialBultos en un solo array, ordenado por fecha
+      const historialEstados = (pedido.historialEstados || []).map(h => {
+        let obj = (typeof h.toObject === 'function') ? h.toObject() : h;
+        return {
+          ...obj,
+          tipo: 'estado',
+          fecha: obj.fecha || obj.createdAt,
+          accion: obj.estado
+        };
+      });
+      const historialBultos = (pedido.historialBultos || []).map(h => {
+        let obj = (typeof h.toObject === 'function') ? h.toObject() : h;
+        return {
+          ...obj,
+          tipo: 'bultos',
+          fecha: obj.fecha || obj.createdAt,
+          accion: 'Actualización de bultos',
+          bultos: obj.bultos
+        };
+      });
+      const historial = [...historialEstados, ...historialBultos].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+      res.json({
+        ...pedido.toObject(),
+        historial
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
   async listar(req, res) {
     try {
       // Filtros: clienteId, fechaInicio, fechaFin, estado, origen.tipo, enHistorialDevoluciones

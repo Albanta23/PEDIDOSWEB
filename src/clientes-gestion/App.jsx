@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import PedidosClientes from './PedidosClientes';
-import PedidosWoo from './PedidosWoo';
+// import PedidosWoo from './PedidosWoo';
 import IntegracionSage from './IntegracionSage';
 import ClientesMantenimiento from './ClientesMantenimiento';
 import HistorialPedidosClientes from './HistorialPedidosClientes';
@@ -71,7 +71,7 @@ export default function App() {
       <nav style={{display:'flex',gap:16,padding:'16px 32px',background:'#e3eafc',alignItems:'center',boxShadow:'0 2px 8px #1976d211'}}>
         <button onClick={()=>setTab('clientes')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='clientes'?'#1976d2':'#fff',color:tab==='clientes'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Pedidos directos</button>
         <button onClick={()=>setTab('borradores')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='borradores'?'#1976d2':'#fff',color:tab==='borradores'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Pedidos en Borrador</button>
-        <button onClick={()=>setTab('woo')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='woo'?'#1976d2':'#fff',color:tab==='woo'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Pedidos WooCommerce</button>
+        {/* <button onClick={()=>setTab('woo')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='woo'?'#1976d2':'#fff',color:tab==='woo'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Pedidos WooCommerce</button> */}
         <button onClick={()=>setTab('sage')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='sage'?'#1976d2':'#fff',color:tab==='sage'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Integración SAGE 50</button>
         <button onClick={()=>setTab('mantenimiento')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='mantenimiento'?'#1976d2':'#fff',color:tab==='mantenimiento'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Clientes</button>
         <button onClick={()=>setMostrarHistorial(m=>!m)} style={{padding:'8px 18px',border:'none',borderRadius:6,background:mostrarHistorial?'#1976d2':'#fff',color:mostrarHistorial?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Historial pedidos clientes</button>
@@ -120,7 +120,7 @@ export default function App() {
                 <>
                   {tab==='clientes' && <div style={{color:'#888',fontStyle:'italic'}}>Selecciona "Crear pedido" para añadir un nuevo pedido de tienda.</div>}
                   {tab==='borradores' && <PedidosBorrador />}
-                  {tab==='woo' && <PedidosWoo />}
+                  {/* {tab==='woo' && <PedidosWoo />} */}
                   {tab==='sage' && <IntegracionSage />}
                   {tab==='devoluciones' && <HistorialDevoluciones />}
                 </>
