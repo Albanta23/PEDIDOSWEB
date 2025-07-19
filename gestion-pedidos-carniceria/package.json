@@ -15,7 +15,6 @@
     "express": "^5.1.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
-    "mailgun-js": "^0.22.0",
     "mongodb": "^6.16.0",
     "mongoose": "^8.15.1",
     "node-mailjet": "^6.0.8",
