@@ -99,16 +99,22 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (clienteId) params.push(`clienteId=${clienteId}`);
     if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
     if (fechaFin) params.push(`fechaFin=${fechaFin}`);
+
+    // Excluir pedidos en historial de devoluciones
+    params.push('enHistorialDevoluciones=false');
+
     const query = params.length ? '?' + params.join('&') : '';
     axios.get(`${API_URL_CORRECTO}/pedidos-clientes${query}`)
       .then(res => {
         const pedidos = res.data || [];
+        const pedidosFiltrados = pedidos.filter(p => !p.enHistorialDevoluciones);
+
         if (soloPreparados) {
           setPedidosAbiertos([]);
-          setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
+          setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado'));
         } else {
-          setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
-          setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
+          setPedidosAbiertos(pedidosFiltrados.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
+          setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado'));
         }
         setCargando(false);
       })
