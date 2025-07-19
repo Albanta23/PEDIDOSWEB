@@ -3,6 +3,7 @@ import ExpedicionesClientesLogin from './ExpedicionesClientesLogin';
 import { obtenerPedidosClientesExpedicion, borrarPedidoCliente } from './pedidosClientesExpedicionService';
 import ExpedicionClienteEditor from './ExpedicionClienteEditor';
 import HistorialPedidosClientes from '../clientes-gestion/HistorialPedidosClientes';
+import HistorialDevoluciones from '../clientes-gestion/HistorialDevoluciones';
 import { exportExpedicionClientePDF } from './exportExpedicionPDF';
 
 export default function ExpedicionesClientes() {
@@ -12,6 +13,7 @@ export default function ExpedicionesClientes() {
   const [cargando, setCargando] = useState(false);
   const [pedidoEditando, setPedidoEditando] = useState(null);
   const [mostrarHistorialGlobal, setMostrarHistorialGlobal] = useState(false);
+  const [mostrarHistorialDevoluciones, setMostrarHistorialDevoluciones] = useState(false);
 
   useEffect(() => {
     if (logueado) {
@@ -50,9 +52,12 @@ export default function ExpedicionesClientes() {
       <div style={{display:'flex',alignItems:'center',gap:18,marginBottom:24}}>
         <h2 style={{ margin: 0, flex:1 }}>Expediciones de Pedidos de Clientes</h2>
         <button onClick={()=>setMostrarHistorialGlobal(m=>!m)} style={{padding:'10px 22px',border:'none',borderRadius:8,background:mostrarHistorialGlobal?'#1976d2':'#fff',color:mostrarHistorialGlobal?'#fff':'#1976d2',fontWeight:700,fontSize:16,boxShadow:'0 1px 4px #1976d222'}}>Historial pedidos clientes</button>
+        <button onClick={()=>setMostrarHistorialDevoluciones(m=>!m)} style={{padding:'10px 22px',border:'none',borderRadius:8,background:mostrarHistorialDevoluciones?'#1976d2':'#fff',color:mostrarHistorialDevoluciones?'#fff':'#1976d2',fontWeight:700,fontSize:16,boxShadow:'0 1px 4px #1976d222'}}>Historial devoluciones</button>
       </div>
       <div style={{ marginBottom: 18, color: '#1976d2', fontWeight: 600 }}>Usuario: {usuario}</div>
-      {mostrarHistorialGlobal ? (
+      {mostrarHistorialDevoluciones ? (
+        <HistorialDevoluciones />
+      ) : mostrarHistorialGlobal ? (
         <HistorialPedidosClientes soloPreparados />
       ) : cargando ? (
         <div style={{ color: '#888' }}>Cargando pedidos...</div>

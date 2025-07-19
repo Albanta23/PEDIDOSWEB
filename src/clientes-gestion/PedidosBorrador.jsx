@@ -475,7 +475,7 @@ export default function PedidosBorrador() {
         )
       )}
       
-      <style jsx>{`
+      <style>{`
         .pedidos-borrador {
           padding: 20px;
         }

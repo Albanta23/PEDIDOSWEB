@@ -9,6 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales, pedidoId }) {
   const [clientes, setClientes] = useState([]);
+  const [pedidoInicial, setPedidoInicial] = useState(null);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(clienteInicial || null);
   const [busquedaCliente, setBusquedaCliente] = useState(clienteInicial?.nombre || '');
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
@@ -48,7 +49,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       axios.get(`${API_URL}/pedidos-clientes/${pedidoId}`)
         .then(res => {
           const pedido = res.data;
-          
+          setPedidoInicial(pedido); // Guardar el pedido original
           // Buscar el cliente correspondiente
           const cliente = clientes.find(c => c._id === pedido.clienteId || c.id === pedido.clienteId);
           if (cliente) {
@@ -57,7 +58,6 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             setCodigoSage(cliente.codigoCliente || '');
             setNifCliente(cliente.nif || '');
           }
-          
           // Cargar las líneas del pedido
           if (pedido.lineas && pedido.lineas.length > 0) {
             setLineas(pedido.lineas.map(linea => ({
@@ -65,7 +65,11 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
               cantidad: linea.cantidad || 1,
               formato: linea.formato || FORMATOS_PEDIDO[0],
               comentario: linea.comentario || '',
-              esComentario: linea.esComentario || false
+              esComentario: linea.esComentario || false,
+              precioUnitario: linea.precioUnitario || 0,
+              iva: linea.iva || 0,
+              descuento: linea.descuento || 0,
+              subtotal: linea.subtotal || 0
             })));
           }
         })
@@ -495,7 +499,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                 background: '#fff',
                 borderRadius: '12px',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                border: '2px solid #e1e8ed',
+                borderTop: '2px solid #e1e8ed',
+                borderLeft: '2px solid #e1e8ed',
+                borderRight: '2px solid #e1e8ed',
                 maxHeight: '250px',
                 overflowY: 'auto',
                 zIndex: 1000,

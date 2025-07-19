@@ -83,7 +83,7 @@ export default function HistorialDevoluciones() {
                 </tr>
               )}
               {pedidosDevueltos.map(p => (
-                p.devoluciones.map((d, i) => (
+                (p.devoluciones || []).map((d, i) => (
                   <tr key={`${p._id}-${i}`} style={{
                     background: i % 2 === 0 ? '#fff' : '#f8fafc',
                     transition: 'background-color 0.2s ease'

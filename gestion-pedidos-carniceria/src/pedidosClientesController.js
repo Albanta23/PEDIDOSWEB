@@ -5,10 +5,17 @@ const { registrarBajaStock } = require('./utils/stock');
 module.exports = {
   async listar(req, res) {
     try {
-      // Filtros: clienteId, fechaInicio, fechaFin, estado, origen.tipo
-      const { clienteId, fechaInicio, fechaFin, estado, origen } = req.query;
+      // Filtros: clienteId, fechaInicio, fechaFin, estado, origen.tipo, enHistorialDevoluciones
+      const { clienteId, fechaInicio, fechaFin, estado, origen, enHistorialDevoluciones } = req.query;
       let filtro = {};
-      if (clienteId) filtro.clienteId = clienteId;
+      // Refuerzo: buscar por clienteId o clienteNombre para robustez
+      if (clienteId) {
+        filtro.$or = [
+          { clienteId: clienteId },
+          { clienteNombre: clienteId },
+          { cliente: clienteId }
+        ];
+      }
       if (estado) filtro.estado = estado;
       if (origen && origen.tipo) filtro['origen.tipo'] = origen.tipo;
       if (fechaInicio || fechaFin) {
@@ -20,6 +27,14 @@ module.exports = {
           fin.setHours(23,59,59,999);
           filtro.fechaPedido.$lte = fin;
         }
+      }
+      // Refuerzo: por defecto, excluir pedidos devueltos salvo que se pida explícitamente
+      if (typeof enHistorialDevoluciones === 'undefined') {
+        filtro.enHistorialDevoluciones = { $ne: true };
+      } else if (enHistorialDevoluciones === 'true') {
+        filtro.enHistorialDevoluciones = true;
+      } else if (enHistorialDevoluciones === 'false') {
+        filtro.enHistorialDevoluciones = { $ne: true };
       }
       // Si no hay fechaPedido, usar fechaCreacion como fallback
       let pedidos = await PedidoCliente.find(filtro);

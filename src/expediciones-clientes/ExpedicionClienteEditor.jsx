@@ -79,7 +79,28 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     setMensaje('');
     setGuardando(true);
     try {
-      await actualizarPedidoCliente(pedido._id || pedido.id, { lineas, estado: 'preparado', usuarioTramitando: usuario || 'expediciones', bultos });
+      // Enviar todos los datos relevantes del pedido
+      const datosPedido = {
+        clienteId: pedido.clienteId,
+        clienteNombre: pedido.clienteNombre,
+        direccion: pedido.direccion,
+        codigoPostal: pedido.codigoPostal,
+        poblacion: pedido.poblacion,
+        provincia: pedido.provincia,
+        pais: pedido.pais,
+        email: pedido.email,
+        telefono: pedido.telefono,
+        codigoCliente: pedido.codigoCliente,
+        tipo: pedido.tipo,
+        fechaPedido: pedido.fechaPedido,
+        origen: pedido.origen,
+        notasCliente: pedido.notasCliente,
+        lineas,
+        estado: 'preparado',
+        usuarioTramitando: usuario || 'expediciones',
+        bultos
+      };
+      await actualizarPedidoCliente(pedido._id || pedido.id, datosPedido);
       setMensaje('Pedido cerrado y preparado');
       setEstado('preparado');
       setEditado(false);
@@ -88,14 +109,15 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
         setMensaje('');
         onClose();
       }, 1200);
-    } catch {
-      setError('Error al cerrar el pedido');
+    } catch (e) {
+      setError('Error al cerrar el pedido: ' + (e.response?.data?.error || e.message));
     } finally {
       setGuardando(false);
     }
   }
 
   const esPreparado = estado === 'preparado' || estado === 'entregado';
+  const esDevuelto = pedido.enHistorialDevoluciones || estado === 'devuelto_parcial' || estado === 'devuelto_total';
 
   const handleDevolucionParcial = async (devolucion) => {
     setError('');
@@ -105,12 +127,15 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       await registrarDevolucionParcial(pedido._id || pedido.id, devolucion);
       setMensaje('Devolución parcial registrada correctamente');
       if (onActualizado) onActualizado();
-      setTimeout(() => setMensaje(''), 2000);
+      setTimeout(() => {
+        setMensaje('');
+        setShowModalDevolucion(false);
+        if (onClose) onClose(); // Cerrar editor tras devolución
+      }, 1200);
     } catch {
       setError('Error al registrar la devolución parcial');
     } finally {
       setGuardando(false);
-      setShowModalDevolucion(false);
     }
   };
 
@@ -129,7 +154,7 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       if (onActualizado) onActualizado();
       setTimeout(() => {
         setMensaje('');
-        onClose();
+        if (onClose) onClose(); // Cerrar editor tras devolución
       }, 1200);
     } catch {
       setError('Error al registrar la devolución total');
@@ -138,6 +163,25 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     }
   };
 
+  if (esDevuelto) {
+    return (
+      <div className="expedicion-cliente-editor-container">
+        <div className="editor-header">
+          <h3>Pedido Nº {pedido.numeroPedido || pedido.id} (DEVUELTO)</h3>
+          <div className="editor-actions-main">
+            <button className="btn-default" onClick={onClose}>Cerrar ventana</button>
+          </div>
+        </div>
+        <div className="info-pedido">
+          <div><b>Cliente:</b> {pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || '-'}</div>
+          <div><b>Dirección:</b> {pedido.direccion || pedido.direccionEnvio || '-'}</div>
+        </div>
+        <div className="estado-pedido" style={{ color: '#d32f2f', fontWeight: 700 }}>
+          Este pedido ha sido devuelto y solo es visible en el historial de devoluciones.
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <div className="expedicion-cliente-editor-container">
