@@ -114,26 +114,6 @@ module.exports = {
     }
   },
   
-  async buscarCoincidencias(req, res) {
-    try {
-      const { criterios } = req.body;
-      
-      if (!criterios || !Array.isArray(criterios) || criterios.length === 0) {
-        return res.status(400).json({ error: 'Se requieren criterios de búsqueda' });
-      }
-      
-      // Construir consulta con todos los criterios en $or
-      const query = { $or: criterios };
-      
-      const clientesCoincidentes = await Cliente.find(query);
-      
-      res.json(clientesCoincidentes);
-    } catch (error) {
-      console.error('Error al buscar coincidencias de clientes:', error);
-      res.status(500).json({ error: error.message });
-    }
-  },
-
   // Método para importar clientes desde archivo Excel/CSV
   async importarClientes(req, res) {
     try {
@@ -146,42 +126,8 @@ module.exports = {
         });
       }
       
-      console.log(`[IMPORTAR CLIENTES] Recibidos ${clientes.length} registros`);
-      
-      // Los datos ya vienen mapeados desde el frontend con los nombres de campo correctos
-      // Solo verificamos si los campos existen y asignamos valores por defecto si es necesario
-      const clientesMapeados = clientes.map(cliente => {
-        // Crear una copia del objeto para no modificar el original
-        const clienteMapeado = { ...cliente };
-        
-        // Verificar y mapear campos adicionales que podrían venir con nombres originales del Excel
-        // Intentar obtener valores de campos que podrían no haber sido mapeados correctamente
-        if (!clienteMapeado.codigoSage && (cliente['Código'] || cliente['Codigo'] || cliente['codigo'] || cliente['NumCliente'])) {
-          clienteMapeado.codigoSage = cliente['Código'] || cliente['Codigo'] || cliente['codigo'] || cliente['NumCliente'];
-        }
-        
-        if (!clienteMapeado.nif && (cliente['Nif'] || cliente['NIF'] || cliente['CIF'] || cliente['cif'])) {
-          clienteMapeado.nif = cliente['Nif'] || cliente['NIF'] || cliente['CIF'] || cliente['cif'];
-        }
-        
-        if (!clienteMapeado.razonSocial && (cliente['Razón social'] || cliente['Razon social'] || cliente['RazonSocial'])) {
-          clienteMapeado.razonSocial = cliente['Razón social'] || cliente['Razon social'] || cliente['RazonSocial'];
-        }
-        
-        if (!clienteMapeado.razonComercial && (cliente['Razón comercial'] || cliente['Razon comercial'] || cliente['NomComercial'])) {
-          clienteMapeado.razonComercial = cliente['Razón comercial'] || cliente['Razon comercial'] || cliente['NomComercial'];
-        }
-
-        // Si no hay nombre pero hay razón social, usar razón social como nombre
-        if (!clienteMapeado.nombre && clienteMapeado.razonSocial) {
-          clienteMapeado.nombre = clienteMapeado.razonSocial;
-        }
-        
-        return clienteMapeado;
-      });
-      
       const resultado = {
-        total: clientesMapeados.length,
+        total: clientes.length,
         creados: 0,
         actualizados: 0,
         errores: 0,
@@ -189,29 +135,24 @@ module.exports = {
       };
       
       // Procesar cada cliente
-      for (const clienteDatos of clientesMapeados) {
+      for (const clienteDatos of clientes) {
         try {
-          // Si tiene código SAGE, intentar buscar primero por ese código
-          let clienteExistente = null;
-          
-          if (clienteDatos.codigoSage) {
-            clienteExistente = await Cliente.findOne({ codigoSage: clienteDatos.codigoSage });
-          }
-          
-          // Si no se encontró por código SAGE y tiene NIF, buscar por NIF
-          if (!clienteExistente && clienteDatos.nif) {
-            clienteExistente = await Cliente.findOne({ nif: clienteDatos.nif });
-          }
-          
-          // Si no se encontró por NIF y tiene email, buscar por email
-          if (!clienteExistente && clienteDatos.email) {
-            clienteExistente = await Cliente.findOne({ email: clienteDatos.email });
-          }
-          
-          // Registro detallado para depuración
-          console.log(`[IMPORT DEBUG] Procesando cliente: ${clienteDatos.nombre || 'Sin nombre'}`);
-          console.log(`[IMPORT DEBUG] Campos encontrados:`, Object.keys(clienteDatos));
-          
+            // Si tiene código SAGE, intentar buscar primero por ese código
+            let clienteExistente = null;
+            if (clienteDatos.codigoSage) {
+                clienteExistente = await Cliente.findOne({ codigoSage: clienteDatos.codigoSage });
+            }
+
+            // Si no se encontró por código SAGE y tiene NIF, buscar por NIF
+            if (!clienteExistente && clienteDatos.nif) {
+                clienteExistente = await Cliente.findOne({ nif: clienteDatos.nif });
+            }
+
+            // Si no se encontró por NIF y tiene email, buscar por email
+            if (!clienteExistente && clienteDatos.email) {
+                clienteExistente = await Cliente.findOne({ email: clienteDatos.email });
+            }
+
           // Si el cliente existe, actualizar sus datos
           if (clienteExistente) {
             await Cliente.findByIdAndUpdate(clienteExistente._id, clienteDatos);
@@ -239,36 +180,6 @@ module.exports = {
       });
     } catch (error) {
       console.error('Error en importación de clientes:', error);
-      res.status(500).json({ 
-        ok: false, 
-        error: error.message 
-      });
-    }
-  },
-
-  // Método para borrar todos los clientes de la base de datos
-  async borrarTodosLosClientes(req, res) {
-    try {
-      console.log('[BORRAR CLIENTES] Iniciando eliminación de todos los clientes...');
-      
-      // Contar clientes antes del borrado
-      const totalAntes = await Cliente.countDocuments();
-      console.log(`[BORRAR CLIENTES] Clientes encontrados: ${totalAntes}`);
-      
-      // Borrar todos los clientes
-      const resultado = await Cliente.deleteMany({});
-      
-      console.log(`[BORRAR CLIENTES] Clientes eliminados: ${resultado.deletedCount}`);
-      
-      res.json({
-        ok: true,
-        mensaje: `Se han eliminado ${resultado.deletedCount} clientes de la base de datos`,
-        clientesEliminados: resultado.deletedCount,
-        totalAnterior: totalAntes
-      });
-      
-    } catch (error) {
-      console.error('[BORRAR CLIENTES] Error:', error);
       res.status(500).json({ 
         ok: false, 
         error: error.message 
