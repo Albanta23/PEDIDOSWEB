@@ -234,13 +234,11 @@ const ImportarClientes = () => {
       'formapago': 'formaPago',
       'forma pago': 'formaPago',
       'forma de pago': 'formaPago',
-      'payment method': 'formaPago',
       'metodo pago': 'formaPago',
       'método pago': 'formaPago',
       'metodo de pago': 'formaPago',
       'método de pago': 'formaPago',
       'payment': 'formaPago',
-      'payment method': 'formaPago',
       
       // Mapeos para recargo de equivalencia
       'recargoequiv': 'recargoEquiv',
