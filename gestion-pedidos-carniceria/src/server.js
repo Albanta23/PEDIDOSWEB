@@ -459,8 +459,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
     }
     // Si el estado cambió a 'enviadoTienda' y antes no lo estaba, registrar entradas
     if (pedidoActualizado.estado === 'enviadoTienda' && pedidoPrevio.estado !== 'enviadoTienda') {
-      console.log('[DEBUG] Registrando movimientos de stock para pedido', pedidoActualizado.numeroPedido);
-      await registrarEntradasStockPorPedido(pedidoActualizado);
+      console.log('[DEBUG] El estado cambió a enviadoTienda, los movimientos de stock se registran desde el frontend.');
     } else {
       console.log('[DEBUG] No se cumplen condiciones para registrar movimientos de stock');
     }
