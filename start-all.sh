@@ -29,8 +29,11 @@ echo "Iniciando backend..."
 (cd /workspaces/PEDIDOSWEB/gestion-pedidos-carniceria && npm start) &
 BACKEND_PID=$!
 
-# Esperar un par de segundos para que el backend arranque
-sleep 12
+
+# Esperar 15 segundos para que el backend arranque
+echo "Esperando 15 segundos para que el backend arranque..."
+sleep 15
+echo "Arrancando frontend principal."
 
 # Iniciar el frontend principal
 echo "Iniciando frontend principal..."

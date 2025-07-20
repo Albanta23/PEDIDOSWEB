@@ -53,11 +53,20 @@ const allowedOrigins = [
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-5173.app.github.dev',
   'https://pedidosweb-etl1eydr3-albanta23s-projects.vercel.app', // Dominio Vercel producción
   'https://pedidos-backend-0e1s.onrender.com', // Dominio Render backend
+  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3100.app.github.dev', // Dominio frontend actual (añadido)
 ];
 
 // Permitir cualquier subdominio de app.github.dev y dominios válidos
 function corsOrigin(origin, callback) {
   console.log(`[CORS DEBUG] Verificando origen: ${origin}`);
+  if (origin) {
+    try {
+      const url = new URL(origin);
+      console.log(`[CORS DEBUG] Host extraído: ${url.host}`);
+    } catch (e) {
+      console.log(`[CORS DEBUG] No se pudo extraer host de origin: ${origin}`);
+    }
+  }
   
   // Log específico para depurar peticiones de gestor de cestas
   if (origin && (origin.includes('gestor-cestas') || origin.includes('debug-cestas'))) {
@@ -102,6 +111,24 @@ app.use(cors({
   credentials: true
 }));
 
+// Middleware global para preflight requests
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    console.log(`[CORS-GLOBAL] Petición OPTIONS global recibida para ${req.originalUrl}`);
+    console.log(`[CORS-GLOBAL] Origin: ${req.headers.origin}`);
+    
+    // Ampliar la lista de cabeceras permitidas
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, X-Custom-Header');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 // --- Socket.IO: CORS seguro y compatible con subdominios efímeros ---
 // Reutilizar la misma expresión regular definida en corsOrigin
 const io = new Server(server, {
@@ -139,6 +166,15 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // Nueva ruta para health check
 app.get('/', (req, res) => {
   res.status(200).send('Backend service is running');
+});
+
+// Endpoint de health check específico
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    cors: 'enabled'
+  });
 });
 
 // --- ENDPOINTS SEPARADOS ---
@@ -754,17 +790,136 @@ app.post('/api/productos', async (req, res) => {
 
 // --- ENDPOINTS FUNCIONALES ---
 // Rutas de clientes
-app.get('/api/clientes', clientesController.listar);
-// Colocar primero rutas específicas para evitar conflictos con :id
-app.post('/api/clientes/buscar-coincidencias', cors(), clientesController.buscarCoincidencias);
-// Aplicar middleware cors() explícitamente a la ruta problemática
-app.post('/api/clientes/importar', cors(), clientesController.importarClientes); // Nueva ruta para importar clientes desde Excel/CSV
+app.options('/api/clientes', (req, res) => {
+  console.log('[CORS-GET-CLIENTES] Petición OPTIONS recibida para /api/clientes');
+  console.log('[CORS-GET-CLIENTES] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 horas
+  res.sendStatus(200);
+});
 
-// Ruta para borrar todos los clientes
-app.post('/api/clientes/borrar-todos', cors(), clientesController.borrarTodosLosClientes);
+app.get('/api/clientes', (req, res, next) => {
+  console.log('[CORS-GET-CLIENTES] Petición GET recibida para /api/clientes');
+  console.log('[CORS-GET-CLIENTES] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+}, clientesController.listar);
+// Colocar primero rutas específicas para evitar conflictos con :id
+app.options('/api/clientes/buscar-coincidencias', (req, res) => {
+  console.log('[CORS-BUSCAR] Petición OPTIONS recibida para /api/clientes/buscar-coincidencias');
+  console.log('[CORS-BUSCAR] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 horas
+  res.sendStatus(200);
+});
+
+app.post('/api/clientes/buscar-coincidencias', (req, res, next) => {
+  console.log('[CORS-BUSCAR] Petición POST recibida para /api/clientes/buscar-coincidencias');
+  console.log('[CORS-BUSCAR] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'POST');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+}, clientesController.buscarCoincidencias);
+
+// Middleware CORS más permisivo para importar clientes con preflight
+app.options('/api/clientes/importar', (req, res) => {
+  // Log para depuración
+  console.log('[CORS-IMPORT] Petición OPTIONS recibida para /api/clientes/importar');
+  console.log('[CORS-IMPORT] Origin:', req.headers.origin);
+  
+  // Configurar cabeceras CORS manualmente para asegurar compatibilidad total
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 horas
+  res.sendStatus(200);
+});
+
+app.post('/api/clientes/importar', (req, res, next) => {
+  // Log para depuración
+  console.log('[CORS-IMPORT] Petición POST recibida para /api/clientes/importar');
+  console.log('[CORS-IMPORT] Origin:', req.headers.origin);
+  
+  // Configurar cabeceras CORS manualmente para esta ruta específica
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'POST');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+}, clientesController.importarClientes);
+
+// Ruta para borrar todos los clientes con preflight
+app.options('/api/clientes/borrar-todos', (req, res) => {
+  // Log para depuración
+  console.log('[CORS-DELETE] Petición OPTIONS recibida para /api/clientes/borrar-todos');
+  console.log('[CORS-DELETE] Origin:', req.headers.origin);
+  
+  // Configurar cabeceras CORS manualmente para asegurar compatibilidad total
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 horas
+  res.sendStatus(200);
+});
+
+app.post('/api/clientes/borrar-todos', (req, res, next) => {
+  // Log para depuración
+  console.log('[CORS-DELETE] Petición POST recibida para /api/clientes/borrar-todos');
+  console.log('[CORS-DELETE] Origin:', req.headers.origin);
+  
+  // Configurar cabeceras CORS manualmente para esta ruta específica
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'POST');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+}, clientesController.borrarTodosLosClientes);
 
 // Rutas específicas para cestas de navidad (ANTES de las rutas con :id)
-app.get('/api/clientes/cestas-navidad', async (req, res) => {
+app.options('/api/clientes/cestas-navidad', (req, res) => {
+  console.log('[CORS-CESTAS] Petición OPTIONS recibida para /api/clientes/cestas-navidad');
+  console.log('[CORS-CESTAS] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 horas
+  res.sendStatus(200);
+});
+
+app.get('/api/clientes/cestas-navidad', (req, res, next) => {
+  console.log('[CORS-CESTAS] Petición GET recibida para /api/clientes/cestas-navidad');
+  console.log('[CORS-CESTAS] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+}, async (req, res) => {
   try {
     const { activos } = req.query;
     let filtro = { esCestaNavidad: true };
@@ -777,7 +932,29 @@ app.get('/api/clientes/cestas-navidad', async (req, res) => {
 });
 
 // --- ENDPOINT: Obtener estadísticas de cestas de navidad ---
-app.get('/api/clientes/estadisticas-cestas', async (req, res) => {
+app.options('/api/clientes/estadisticas-cestas', (req, res) => {
+  console.log('[CORS-ESTADISTICAS] Petición OPTIONS recibida para /api/clientes/estadisticas-cestas');
+  console.log('[CORS-ESTADISTICAS] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 horas
+  res.sendStatus(200);
+});
+
+app.get('/api/clientes/estadisticas-cestas', (req, res, next) => {
+  console.log('[CORS-ESTADISTICAS] Petición GET recibida para /api/clientes/estadisticas-cestas');
+  console.log('[CORS-ESTADISTICAS] Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+}, async (req, res) => {
   try {
     const totalClientes = await Cliente.countDocuments();
     const clientesCestasNavidad = await Cliente.countDocuments({ esCestaNavidad: true });
