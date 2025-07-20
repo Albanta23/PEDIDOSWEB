@@ -1,10 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
+import { useProductos } from '../components/ProductosContext';
+import { useLotesDisponibles } from '../hooks/useLotesDisponibles';
 import { actualizarPedidoCliente, registrarDevolucionParcial, registrarDevolucionTotal } from './pedidosClientesExpedicionService';
 import './ExpedicionClienteEditor.css';
 import ModalDevolucion from './ModalDevolucion';
 
+function LoteSelector({ productoId, value, onChange }) {
+  const { lotes, loading, error } = useLotesDisponibles(productoId);
+
+  return (
+    <>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        list={`lotes-disponibles-${productoId}`}
+        placeholder="Seleccionar lote"
+      />
+      <datalist id={`lotes-disponibles-${productoId}`}>
+        {loading && <option value="Cargando lotes..." />}
+        {error && <option value={`Error: ${error}`} />}
+        {lotes.map(lote => (
+          <option key={lote._id} value={lote.lote}>
+            {`${lote.lote} (Disp: ${lote.cantidadDisponible} / ${lote.pesoDisponible}kg)`}
+          </option>
+        ))}
+      </datalist>
+    </>
+  );
+}
+
 export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onActualizado }) {
+  const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
   const [estado, setEstado] = useState(pedido.estado || 'pendiente');
   const [mensaje, setMensaje] = useState('');
@@ -274,11 +302,10 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
               </div>
               <div className="form-group">
                 <label>Lote</label>
-                <input
-                  type="text"
+                <LoteSelector
+                  productoId={productos.find(p => p.nombre === l.producto)?._id}
                   value={l.lote === null || l.lote === undefined ? '' : l.lote}
                   onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                  placeholder="Lote"
                 />
               </div>
             </div>

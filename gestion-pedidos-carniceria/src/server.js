@@ -21,6 +21,7 @@ const MovimientoStock = require('./models/MovimientoStock'); // Modelo de movimi
 const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
 const Presupuesto = require('./models/Presupuesto'); // Modelo de presupuestos
 const Proveedor = require('./models/Proveedor'); // Modelo de proveedores
+const Lote = require('./models/Lote'); // Modelo de lotes
 const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimientoStock } = require('./utils/stock');
 
 const pedidosTiendaController = require('./pedidosTiendaController');
@@ -1130,7 +1131,7 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
       proveedorId, // Nuevo
       precioCoste, // Nuevo
       referenciaDocumento, // Nuevo
-      notasEntrada // Nuevo
+      notas // Nuevo
     } = req.body;
 
     // Validación básica
@@ -1152,7 +1153,7 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
       proveedorId,
       precioCoste,
       referenciaDocumento,
-      notasEntrada
+      notas
     });
     res.status(201).json({ ok: true, message: 'Entrada de stock registrada correctamente.' });
   } catch (e) {
@@ -1361,6 +1362,18 @@ app.delete('/api/proveedores/:id', async (req, res) => {
   }
 });
 // --- FIN ENDPOINTS DE PROVEEDORES ---
+
+// --- ENDPOINTS DE LOTES ---
+app.get('/api/lotes/:productoId', async (req, res) => {
+  try {
+    const { productoId } = req.params;
+    const lotes = await Lote.find({ producto: productoId, cantidadDisponible: { $gt: 0 } }).sort({ fechaEntrada: 1 });
+    res.json(lotes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// --- FIN ENDPOINTS DE LOTES ---
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
