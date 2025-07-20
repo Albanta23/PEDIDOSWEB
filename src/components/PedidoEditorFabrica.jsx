@@ -1,8 +1,189 @@
 import React, { useState, useEffect } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from './ProductosContext';
+import { useLotesDisponibles } from '../hooks/useLotesDisponibles';
 import './PedidoEditorFabrica.css'; // Importar el archivo CSS
 import '../styles/datalist-fix.css'; // Importar arreglos para datalist
+
+function LoteSelector({ productoId, value, onChange, lotes, loading, error }) {
+  return (
+    <>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        list={`lotes-disponibles-${productoId}`}
+        placeholder="Seleccionar lote"
+      />
+      <datalist id={`lotes-disponibles-${productoId}`}>
+        {loading && <option value="Cargando lotes..." />}
+        {error && <option value={`Error: ${error}`} />}
+        {lotes.map(lote => (
+          <option key={lote._id} value={lote.lote}>
+            {`${lote.lote} (Disp: ${lote.cantidadDisponible} / ${lote.pesoDisponible}kg)`}
+          </option>
+        ))}
+      </datalist>
+    </>
+  );
+}
+
+function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAbrirModalPeso }) {
+  const producto = productos.find(p => p.nombre === linea.producto);
+  const { lotes, loading, error } = useLotesDisponibles(producto?._id);
+
+  return (
+    linea.esComentario ? (
+      <div key={`comment-${idx}`} className="linea-comentario-card">
+        <h4>📝 COMENTARIO</h4>
+        <div className="form-group">
+          <textarea
+            value={linea.comentario || ''}
+            onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
+            placeholder="Escribe aquí tu comentario..."
+          />
+        </div>
+        <div className="linea-actions">
+          <button className="btn-danger" onClick={() => borrarLinea(idx)} title="Eliminar comentario">🗑 Eliminar</button>
+        </div>
+      </div>
+    ) : (
+      <div key={idx} className="linea-pedido-card">
+        <div className="form-group">
+          <label htmlFor={`producto-${idx}`}>Producto</label>
+          <input
+            id={`producto-${idx}`}
+            list="productos-lista-global"
+            value={linea.producto}
+            onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
+            onKeyDown={e => {
+              // Si se presiona Enter, buscar producto por referencia exacta
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const valor = e.target.value.trim();
+                // Buscar producto por referencia exacta
+                const productoEncontrado = productos.find(p => p.referencia &&
+                  String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+                if (productoEncontrado) {
+                  actualizarLinea(idx, 'producto', productoEncontrado.nombre);
+                }
+              }
+            }}
+            onBlur={e => {
+              // Al perder foco, verificar si es una referencia exacta
+              const valor = e.target.value.trim();
+              const productoEncontrado = productos.find(p => p.referencia &&
+                String(p.referencia).toLowerCase() === String(valor).toLowerCase());
+              if (productoEncontrado) {
+                actualizarLinea(idx, 'producto', productoEncontrado.nombre);
+              }
+            }}
+            placeholder="Nombre del producto o referencia"
+            className="producto-nombre-input"
+          />
+          <datalist id="productos-lista-global">
+            {productos.map(prod => (
+              <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+              </option>
+            ))}
+          </datalist>
+        </div>
+
+        <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor={`cantidad-${idx}`}>Cant. pedida</label>
+            <input
+              id={`cantidad-${idx}`}
+              type="number"
+              min="0"
+              step="any" // Permitir decimales si es necesario
+              value={linea.cantidad === null || linea.cantidad === undefined ? '' : linea.cantidad}
+              onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`peso-${idx}`}>Peso (kg)</label>
+            <div className="peso-input-container">
+              <input
+                id={`peso-${idx}`}
+                type="number"
+                min="0"
+                step="any"
+                value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
+                onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+              />
+              {typeof onAbrirModalPeso === 'function' && !linea.esComentario &&
+                Number(linea.cantidad) >= 2 && Number(linea.cantidad) < 100 && ( // Aumentado el límite para sumar pesos
+                  <button
+                    type="button"
+                    className="btn-add-peso"
+                    title="Sumar pesos individuales"
+                    onClick={() => onAbrirModalPeso(idx, linea.peso, linea.cantidad)}
+                  >
+                    Σ
+                  </button>
+                )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`cantidadEnviada-${idx}`}>Cant. enviada</label>
+            <input
+              id={`cantidadEnviada-${idx}`}
+              type="number"
+              min="0"
+              step="any"
+              value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
+              onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`lote-${idx}`}>Lote</label>
+            <LoteSelector
+              productoId={producto?._id}
+              value={linea.lote === null || linea.lote === undefined ? '' : linea.lote}
+              onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
+              lotes={lotes}
+              loading={loading}
+              error={error}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`formato-${idx}`}>Formato pedido</label>
+            <select
+              id={`formato-${idx}`}
+              value={linea.formato || ''}
+              onChange={e => actualizarLinea(idx, 'formato', e.target.value)}
+            >
+              {FORMATOS_PEDIDO.map(f => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group" style={{ gridColumn: 'span 2' }}> {/* Ocupa dos columnas si es posible */}
+            <label htmlFor={`comentarioLinea-${idx}`}>Comentario de línea</label>
+            <input
+              id={`comentarioLinea-${idx}`}
+              type="text"
+              value={linea.comentario === null || linea.comentario === undefined ? '' : linea.comentario}
+              onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
+              placeholder="Comentario específico para esta línea"
+            />
+          </div>
+        </div>
+
+        <div className="linea-actions">
+          <button className="btn-danger" onClick={() => borrarLinea(idx)} title="Eliminar línea">🗑 Eliminar Línea</button>
+        </div>
+      </div>
+    )
+  );
+}
 
 export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, tiendas, tiendaNombre, onLineaDetalleChange, onEstadoChange, onAbrirModalPeso, onChange, onRecargarPedidos }) {
   const { productos } = useProductos();
@@ -229,153 +410,15 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         )}
 
         {lineas.map((linea, idx) => (
-          linea.esComentario ? (
-            <div key={`comment-${idx}`} className="linea-comentario-card">
-              <h4>📝 COMENTARIO</h4>
-              <div className="form-group">
-                <textarea
-                  value={linea.comentario || ''}
-                  onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                  placeholder="Escribe aquí tu comentario..."
-                />
-              </div>
-              <div className="linea-actions">
-                <button className="btn-danger" onClick={() => borrarLinea(idx)} title="Eliminar comentario">🗑 Eliminar</button>
-              </div>
-            </div>
-          ) : (
-            <div key={idx} className="linea-pedido-card">
-              <div className="form-group">
-                <label htmlFor={`producto-${idx}`}>Producto</label>
-                <input
-                  id={`producto-${idx}`}
-                  list="productos-lista-global"
-                  value={linea.producto}
-                  onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
-                  onKeyDown={e => {
-                    // Si se presiona Enter, buscar producto por referencia exacta
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const valor = e.target.value.trim();
-                      // Buscar producto por referencia exacta
-                      const productoEncontrado = productos.find(p => p.referencia && 
-                        String(p.referencia).toLowerCase() === String(valor).toLowerCase());
-                      if (productoEncontrado) {
-                        actualizarLinea(idx, 'producto', productoEncontrado.nombre);
-                      }
-                    }
-                  }}
-                  onBlur={e => {
-                    // Al perder foco, verificar si es una referencia exacta
-                    const valor = e.target.value.trim();
-                    const productoEncontrado = productos.find(p => p.referencia && 
-                      String(p.referencia).toLowerCase() === String(valor).toLowerCase());
-                    if (productoEncontrado) {
-                      actualizarLinea(idx, 'producto', productoEncontrado.nombre);
-                    }
-                  }}
-                  placeholder="Nombre del producto o referencia"
-                  className="producto-nombre-input"
-                />
-                <datalist id="productos-lista-global">
-                  {productos.map(prod => (
-                    <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                      {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                    </option>
-                  ))}
-                </datalist>
-              </div>
-
-              <div className="form-grid">
-                <div className="form-group">
-                  <label htmlFor={`cantidad-${idx}`}>Cant. pedida</label>
-                  <input
-                    id={`cantidad-${idx}`}
-                    type="number"
-                    min="0"
-                    step="any" // Permitir decimales si es necesario
-                    value={linea.cantidad === null || linea.cantidad === undefined ? '' : linea.cantidad}
-                    onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor={`peso-${idx}`}>Peso (kg)</label>
-                  <div className="peso-input-container">
-                    <input
-                      id={`peso-${idx}`}
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
-                      onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                    />
-                    {typeof onAbrirModalPeso === 'function' && !linea.esComentario &&
-                      Number(linea.cantidad) >= 2 && Number(linea.cantidad) < 100 && ( // Aumentado el límite para sumar pesos
-                        <button
-                          type="button"
-                          className="btn-add-peso"
-                          title="Sumar pesos individuales"
-                          onClick={() => onAbrirModalPeso(idx, linea.peso, linea.cantidad)}
-                        >
-                          Σ
-                        </button>
-                      )}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor={`cantidadEnviada-${idx}`}>Cant. enviada</label>
-                  <input
-                    id={`cantidadEnviada-${idx}`}
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
-                    onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor={`lote-${idx}`}>Lote</label>
-                  <input
-                    id={`lote-${idx}`}
-                    type="text"
-                    value={linea.lote === null || linea.lote === undefined ? '' : linea.lote}
-                    onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor={`formato-${idx}`}>Formato pedido</label>
-                  <select
-                    id={`formato-${idx}`}
-                    value={linea.formato || ''}
-                    onChange={e => actualizarLinea(idx, 'formato', e.target.value)}
-                  >
-                    {FORMATOS_PEDIDO.map(f => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group" style={{ gridColumn: 'span 2' }}> {/* Ocupa dos columnas si es posible */}
-                  <label htmlFor={`comentarioLinea-${idx}`}>Comentario de línea</label>
-                  <input
-                    id={`comentarioLinea-${idx}`}
-                    type="text"
-                    value={linea.comentario === null || linea.comentario === undefined ? '' : linea.comentario}
-                    onChange={e => actualizarLinea(idx, 'comentario', e.target.value)}
-                    placeholder="Comentario específico para esta línea"
-                  />
-                </div>
-              </div>
-
-              <div className="linea-actions">
-                <button className="btn-danger" onClick={() => borrarLinea(idx)} title="Eliminar línea">🗑 Eliminar Línea</button>
-              </div>
-            </div>
-          )
+          <LineaPedido
+            key={idx}
+            linea={linea}
+            idx={idx}
+            productos={productos}
+            actualizarLinea={actualizarLinea}
+            borrarLinea={borrarLinea}
+            onAbrirModalPeso={onAbrirModalPeso}
+          />
         ))}
       </div>
 

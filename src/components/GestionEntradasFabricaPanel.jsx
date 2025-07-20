@@ -105,13 +105,13 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
         await registrarEntradaStock({
           tiendaId: ID_ALMACEN_CENTRAL,
           producto: l.producto,
-          cantidad: l.cantidad || 0,
+          cantidad: Number(l.cantidad) || 0,
           unidad: 'kg', // Puedes ajustar según el producto
           lote: l.lote,
           motivo: 'Entrada técnica albarán/factura',
-          peso: l.peso || 0,
+          peso: Number(l.peso) || 0,
           proveedorId: proveedor.codigo,
-          precioCoste: l.precioCoste,
+          precioCoste: Number(l.precioCoste) || 0,
           fechaEntrada,
           referenciaDocumento,
           notas: l.observaciones
