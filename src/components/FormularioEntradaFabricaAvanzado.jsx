@@ -37,6 +37,7 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
   })();
   const [proveedor, setProveedor] = useState(proveedorGuardado);
   const [busquedaProveedor, setBusquedaProveedor] = useState('');
+  const [proveedorInputTouched, setProveedorInputTouched] = useState(false);
   const [lineas, setLineas] = useState([{ ...lineaVacia }]);
   const [referenciaDocumento, setReferenciaDocumento] = useState('');
   const [fechaEntrada, setFechaEntrada] = useState('');
@@ -76,6 +77,7 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
   const seleccionarProveedor = (p) => {
     setProveedor(p);
     setBusquedaProveedor(p.nombre);
+    setProveedorInputTouched(false);
     try { localStorage.setItem('proveedorSeleccionado', JSON.stringify(p)); } catch {}
   };
 
@@ -120,11 +122,15 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
             <input
               type="text"
               value={busquedaProveedor}
-              onChange={e => setBusquedaProveedor(e.target.value)}
+              onChange={e => {
+                setBusquedaProveedor(e.target.value);
+                setProveedor(null);
+                setProveedorInputTouched(true);
+              }}
               placeholder="Buscar proveedor por código, nombre o razón comercial"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2"
             />
-            {busquedaProveedor && proveedoresFiltrados.length > 0 && (
+            {busquedaProveedor && proveedoresFiltrados.length > 0 && proveedorInputTouched && (
               <ul className="bg-white border border-gray-200 rounded-lg shadow max-h-40 overflow-y-auto">
                 {proveedoresFiltrados.map(p => (
                   <li
@@ -137,6 +143,10 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
                   </li>
                 ))}
               </ul>
+            )}
+            {/* Aviso si no hay coincidencias y el input fue tocado */}
+            {busquedaProveedor && proveedoresFiltrados.length === 0 && proveedorInputTouched && (
+              <div className="text-red-600 text-xs mt-1">No hay proveedores que coincidan con la búsqueda. Debe seleccionar uno de la lista.</div>
             )}
             {proveedor && (
               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
