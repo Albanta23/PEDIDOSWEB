@@ -55,6 +55,9 @@ const allowedOrigins = [
   'https://pedidosweb-etl1eydr3-albanta23s-projects.vercel.app', // Dominio Vercel producción
   'https://pedidos-backend-0e1s.onrender.com', // Dominio Render backend
   'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3100.app.github.dev', // Dominio frontend actual (añadido)
+  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev', // Dominio backend actual (añadido por si se requiere)
+  'https://pedidosweb-kcm9-ojl0f30ri-albanta23s-projects.vercel.app', // Otro dominio Vercel detectado
+  'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev', // Permitir backend para pruebas cruzadas
 ];
 
 // Permitir cualquier subdominio de app.github.dev y dominios válidos
