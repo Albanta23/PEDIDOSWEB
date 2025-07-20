@@ -3,7 +3,6 @@ import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { useProveedores } from './ProveedoresContext';
 import { useProductos } from './ProductosContext'; // <--- Importar contexto de productos
-import { useLotesDisponiblesProducto } from '../hooks/useLotesDisponiblesProducto';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -209,7 +208,7 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
               </thead>
               <tbody>
                 {lineas.map((l, idx) => {
-                  const { lotes } = useLotesDisponiblesProducto(l.producto, fechaEntrada || new Date().toISOString().split('T')[0]);
+                  // NO usar hooks dentro del render loop - esto viola las Reglas de Hooks
                   return (
                     <tr key={l.id} className="bg-white">
                       <td className="px-2 py-2">
@@ -258,18 +257,13 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
                           type="text"
                           value={l.lote}
                           onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                          placeholder="Escribe o selecciona lote"
+                          placeholder="Escribe lote manualmente"
                           className="w-full px-2 py-1 border border-gray-300 rounded mb-1"
                           required
-                          list={`lotes-disponibles-${l.producto}-${idx}`}
                         />
-                        <datalist id={`lotes-disponibles-${l.producto}-${idx}`}>
-                          {lotes.map(loteObj => (
-                            <option key={loteObj.lote} value={loteObj.lote}>
-                              {loteObj.lote} (Stock: {loteObj.cantidad} / {loteObj.peso}kg)
-                            </option>
-                          ))}
-                        </datalist>
+                        <small className="text-xs text-gray-500">
+                          Introduce el lote del producto
+                        </small>
                       </td>
                       <td className="px-2 py-2">
                         <input

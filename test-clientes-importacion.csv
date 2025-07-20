@@ -1,0 +1,4 @@
+Codigo;NomFiscal;NomComercial;CIF;DireccionComercial;CPComercial;PoblacionComercial;ProvinciaComercial;TelefonoComercial;EmailComercial
+43001;EMPRESA TEST 1 SL;Empresa Test 1;B12345678;Calle Mayor 123;28001;Madrid;Madrid;911234567;test1@empresa.com
+43002;CLIENTE PARTICULAR SA;Cliente Particular;A87654321;Avenida Principal 456;08001;Barcelona;Barcelona;934567890;test2@cliente.com
+43003;CESTAS NAVIDAD SL;Cestas Navidad;B11111111;Polígono Industrial 789;46001;Valencia;Valencia;961234567;cestas@navidad.com

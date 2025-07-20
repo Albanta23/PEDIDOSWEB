@@ -3,7 +3,7 @@
  * Proporciona métodos para listar, crear, actualizar, eliminar e importar clientes
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
 
 /**
  * Servicio para gestionar operaciones relacionadas con clientes
