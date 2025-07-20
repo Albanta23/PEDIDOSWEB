@@ -28,14 +28,7 @@ const lineaVacia = {
 const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
   const { proveedores, loading, error: errorProveedores } = useProveedores();
   const { productos } = useProductos();
-  // Recuperar proveedor guardado
-  const proveedorGuardado = (() => {
-    try {
-      const p = localStorage.getItem('proveedorSeleccionado');
-      return p ? JSON.parse(p) : null;
-    } catch { return null; }
-  })();
-  const [proveedor, setProveedor] = useState(proveedorGuardado);
+  const [proveedor, setProveedor] = useState(null);
   const [busquedaProveedor, setBusquedaProveedor] = useState('');
   const [proveedorInputTouched, setProveedorInputTouched] = useState(false);
   const [lineas, setLineas] = useState([{ ...lineaVacia }]);
@@ -78,7 +71,6 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
     setProveedor(p);
     setBusquedaProveedor(p.nombre);
     setProveedorInputTouched(false);
-    try { localStorage.setItem('proveedorSeleccionado', JSON.stringify(p)); } catch {}
   };
 
   // Validación y registro

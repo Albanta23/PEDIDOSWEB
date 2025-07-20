@@ -1,5 +1,7 @@
 // Utilidades para registrar movimientos de stock por pedido de tienda/fábrica
 const MovimientoStock = require('../models/MovimientoStock');
+const Lote = require('../models/Lote');
+const Producto = require('../models/Producto');
 
 /**
  * Registra movimientos de entrada de stock para cada línea de producto de un pedido
@@ -67,16 +69,15 @@ async function registrarEntradasStockPorPedido(pedido) {
  */
 async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {
   if (!tiendaId || !producto || !cantidad) return;
-  await MovimientoStock.create({
+  await registrarMovimientoStock({
     tiendaId,
     producto,
     cantidad,
-    unidad: unidad || 'kg',
-    lote: lote || '',
+    unidad,
+    lote,
     motivo: motivo || 'Baja manual',
     tipo: 'baja',
-    fecha: new Date(),
-    peso: typeof peso !== 'undefined' ? peso : undefined
+    peso
   });
 }
 
@@ -86,10 +87,11 @@ async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, 
  */
 async function registrarMovimientoStock({
   tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha,
-  pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notasEntrada
+  pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notas
 }) {
   if (!tiendaId || !producto || !cantidad || !tipo) return;
-  await MovimientoStock.create({
+
+  const movimiento = await MovimientoStock.create({
     tiendaId,
     producto,
     cantidad,
@@ -104,8 +106,46 @@ async function registrarMovimientoStock({
     proveedorId,
     precioCoste,
     referenciaDocumento,
-    notasEntrada
+    notas
   });
+
+  if (tipo === 'entrada' && lote) {
+    const productoDoc = await Producto.findOne({ nombre: producto });
+    if (productoDoc) {
+      const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
+      if (loteDoc) {
+        loteDoc.cantidadDisponible += cantidad;
+        loteDoc.pesoDisponible += peso || 0;
+        await loteDoc.save();
+      } else {
+        await Lote.create({
+          lote,
+          producto: productoDoc._id,
+          proveedorId,
+          fechaEntrada: fecha ? new Date(fecha) : new Date(),
+          cantidadInicial: cantidad,
+          pesoInicial: peso || 0,
+          cantidadDisponible: cantidad,
+          pesoDisponible: peso || 0,
+          referenciaDocumento,
+          precioCoste,
+          notas
+        });
+      }
+    }
+  } else if ((tipo === 'baja' || tipo === 'transferencia_salida') && lote) {
+    const productoDoc = await Producto.findOne({ nombre: producto });
+    if (productoDoc) {
+      const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
+      if (loteDoc) {
+        loteDoc.cantidadDisponible -= cantidad;
+        loteDoc.pesoDisponible -= peso || 0;
+        await loteDoc.save();
+      }
+    }
+  }
+
+  return movimiento;
 }
 
 module.exports = {
