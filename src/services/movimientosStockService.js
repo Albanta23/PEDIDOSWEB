@@ -46,7 +46,7 @@ export async function registrarEntradaStock({
   const body = {
     tiendaId,
     producto,
-    cantidad: cantidad ? Number(cantidad) : undefined, // Allow undefined if only peso is provided
+    cantidad: Number(cantidad), // Ensure quantity is a number
     unidad,
     lote,
     motivo,
@@ -63,23 +63,16 @@ export async function registrarEntradaStock({
     body.fecha = fechaEntrada;
   }
 
-  console.log('[FRONTEND] Enviando datos de entrada:', JSON.stringify(body, null, 2));
-
   const res = await fetch(`${API_URL}/movimientos-stock/entrada`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ message: 'Error al registrar entrada de stock' }));
-    console.error('[FRONTEND] Error del servidor:', errorData);
-    throw new Error(errorData.message || errorData.error || 'Error al registrar entrada de stock');
+    throw new Error(errorData.message || 'Error al registrar entrada de stock');
  }
-  
-  const result = await res.json();
-  console.log('[FRONTEND] Respuesta exitosa:', result);
-  return result;
+  return await res.json();
 }
 
 export async function registrarDevolucionStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {

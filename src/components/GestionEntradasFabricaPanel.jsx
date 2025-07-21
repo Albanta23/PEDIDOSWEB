@@ -6,7 +6,6 @@ import { useProductos } from './ProductosContext';
 import { Button } from './ui/Button'; // Assuming relative path
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'; // Assuming relative path
 import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
-import './GestionEntradasFabricaPanel.css';
 
 // Define a constant for the central warehouse ID (almacen central)
 const ID_ALMACEN_CENTRAL = 'almacen_central';
@@ -115,11 +114,6 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
         {errorProveedores && <div className="text-red-600 text-sm mt-2">{errorProveedores}</div>}
       </CardHeader>
       <CardContent className="p-6">
-        <div className="section">
-          <h3 className="text-xl font-semibold text-gray-700">Historial de Entradas</h3>
-          <p className="text-gray-500">Consulta las últimas entradas registradas en el sistema.</p>
-        </div>
-
         {/* Sustituir formulario antiguo por el avanzado */}
         {!mostrarFormulario && (
           <Button
@@ -177,6 +171,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Producto</th>
                     <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Cantidad</th>
+                    <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Peso (kg)</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unidad</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Lote</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ref./Motivo</th>
@@ -190,6 +185,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{new Date(mov.fecha).toLocaleDateString()}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium">{getProductName(mov.producto)}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{mov.cantidad}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{mov.peso ? mov.peso.toFixed(2) : '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{mov.unidad}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{mov.lote || '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs" title={mov.referenciaDocumento || mov.motivo}>{mov.referenciaDocumento || mov.motivo || '-'}</td>
