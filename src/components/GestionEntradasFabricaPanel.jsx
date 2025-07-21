@@ -24,7 +24,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const [formKey, setFormKey] = useState(Date.now());
 
   const proveedoresMap = proveedores.reduce((acc, p) => {
-    acc[p.codigo] = p.nombre || p.razonComercial || p.codigo;
+    acc[p._id] = p.nombre || p.razonComercial || p.codigo;
     return acc;
   }, {});
 
@@ -64,8 +64,6 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   };
 
   const getSupplierName = (supplierId) => {
-    console.log('getSupplierName - supplierId:', supplierId);
-    console.log('getSupplierName - proveedoresMap:', proveedoresMap);
     return proveedoresMap[supplierId] || supplierId || '-';
   }
 
