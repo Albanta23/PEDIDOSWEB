@@ -18,7 +18,7 @@ const MovimientoStockSchema = new mongoose.Schema({
   proveedorId: { type: String }, // Podría ser mongoose.Schema.Types.ObjectId si Proveedor es un modelo referenciado
   precioCoste: { type: Number }, // Precio de coste total de la entrada o por unidad, según se defina
   referenciaDocumento: { type: String }, // Nro de albarán o factura de compra
-  notasEntrada: { type: String } // Notas específicas de la entrada
+  notas: { type: String } // Notas específicas de la entrada (anteriormente notasEntrada)
 });
 
 module.exports = mongoose.model('MovimientoStock', MovimientoStockSchema);

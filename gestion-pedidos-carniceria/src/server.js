@@ -1014,27 +1014,37 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
           // CLIENTE EXISTENTE: Marcarlo como cliente normal Y de cestas
           await Cliente.updateOne(
             { _id: clienteEncontrado._id },
-            { $set: { esCestaNavidad: true } }
+            { 
+              $set: { 
+                esCestaNavidad: true,
+                activo: true // También marcarlo como cliente normal
+              } 
+            }
           );
           marcados++;
           console.log(`[CESTAS-NAVIDAD] [OK] Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
         } else {
           // CLIENTE NUEVO: Crear como cliente de cestas únicamente
-          const nuevoCliente = await Cliente.create({
-            nombre: clienteCesta.nombre,
+          const nuevoCliente = new Cliente({
+            nombre: clienteCesta.nombre || 'Cliente sin nombre',
             email: clienteCesta.email || '',
             telefono: clienteCesta.telefono || '',
             nif: clienteCesta.nif || '',
             direccion: clienteCesta.direccion || '',
-            activo: true,
+            codigoPostal: clienteCesta.codigoPostal || '',
+            poblacion: clienteCesta.poblacion || '',
+            provincia: clienteCesta.provincia || '',
+            activo: false,          // NO es cliente normal todavía
             esCestaNavidad: true    // SÍ es cliente de cestas
           });
+          
+          await nuevoCliente.save();
           creados++;
           console.log(`[CESTAS-NAVIDAD] [NUEVO] Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
         }
       } catch (e) {
         errores.push({ cliente: clienteCesta, error: e.message });
-        console.error(`[CESTAS-NAVIDAD] [ERROR] Error procesando cliente ${clienteCesta.nombre}:`, e.message);
+        console.error('[CESTAS-NAVIDAD][ERROR]', clienteCesta, e.message);
       }
     }
     
@@ -1118,6 +1128,8 @@ app.post('/api/movimientos-stock/baja', async (req, res) => {
 // --- ENDPOINT: Registrar ENTRADA de stock manual ---
 app.post('/api/movimientos-stock/entrada', async (req, res) => {
   try {
+    console.log('[ENTRADA-STOCK] Datos recibidos:', JSON.stringify(req.body, null, 2));
+    
     const {
       tiendaId,
       producto,
@@ -1135,14 +1147,54 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
     } = req.body;
 
     // Validación básica
-    if (!tiendaId || !producto || !cantidad) {
-      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios: tiendaId, producto, cantidad.' });
+    if (!tiendaId || !producto) {
+      console.log('[ENTRADA-STOCK] Error de validación: faltan campos obligatorios');
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'Faltan campos obligatorios: tiendaId, producto.',
+        received: { tiendaId, producto, cantidad, peso }
+      });
+    }
+
+    // Validar que se proporcione al menos cantidad o peso
+    if (!cantidad && !peso) {
+      console.log('[ENTRADA-STOCK] Error de validación: debe proporcionar cantidad o peso');
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'Debe proporcionar al menos cantidad o peso.',
+        received: { cantidad, peso }
+      });
+    }
+
+    // Si no se proporciona cantidad, usar peso como cantidad
+    const cantidadFinal = cantidad || peso || 0;
+
+    // Validación adicional para entradas técnicas
+    if (!lote || lote.trim() === '') {
+      console.log('[ENTRADA-STOCK] Error de validación: lote es obligatorio');
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'El lote es obligatorio para entradas de stock.',
+        received: { lote }
+      });
+    }
+
+    console.log('[ENTRADA-STOCK] Iniciando registro con proveedorId:', proveedorId);
+
+    // Validar que el precioCoste sea un número positivo si está presente
+    if (precioCoste !== undefined && precioCoste < 0) {
+      console.log('[ENTRADA-STOCK] Error de validación: precioCoste debe ser positivo');
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'El precioCoste debe ser un número positivo.',
+        received: { precioCoste }
+      });
     }
 
     await registrarMovimientoStock({
       tiendaId,
       producto,
-      cantidad,
+      cantidad: cantidadFinal,
       unidad,
       lote,
       motivo: motivo || 'Entrada manual', // Motivo por defecto si no se especifica
@@ -1155,9 +1207,11 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
       referenciaDocumento,
       notas
     });
+    
+    console.log('[ENTRADA-STOCK] Entrada registrada exitosamente');
     res.status(201).json({ ok: true, message: 'Entrada de stock registrada correctamente.' });
   } catch (e) {
-    console.error('Error al registrar entrada de stock:', e);
+    console.error('[ENTRADA-STOCK] Error al registrar entrada de stock:', e);
     res.status(400).json({ ok: false, error: e.message });
   }
 });

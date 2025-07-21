@@ -6,6 +6,7 @@ import { useProductos } from './ProductosContext';
 import { Button } from './ui/Button'; // Assuming relative path
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'; // Assuming relative path
 import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
+import './GestionEntradasFabricaPanel.css';
 
 // Define a constant for the central warehouse ID (almacen central)
 const ID_ALMACEN_CENTRAL = 'almacen_central';
@@ -114,6 +115,11 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
         {errorProveedores && <div className="text-red-600 text-sm mt-2">{errorProveedores}</div>}
       </CardHeader>
       <CardContent className="p-6">
+        <div className="section">
+          <h3 className="text-xl font-semibold text-gray-700">Historial de Entradas</h3>
+          <p className="text-gray-500">Consulta las últimas entradas registradas en el sistema.</p>
+        </div>
+
         {/* Sustituir formulario antiguo por el avanzado */}
         {!mostrarFormulario && (
           <Button

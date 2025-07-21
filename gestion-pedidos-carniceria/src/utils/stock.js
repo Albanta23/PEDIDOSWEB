@@ -83,13 +83,27 @@ async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, 
 
 /**
  * Registra un movimiento genérico de stock (entrada, baja, transferencia, devolución, etc)
- * @param {Object} params - { tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notasEntrada }
+ * @param {Object} params - { tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha, pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notas }
  */
 async function registrarMovimientoStock({
   tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha,
   pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notas
 }) {
-  if (!tiendaId || !producto || !cantidad || !tipo) return;
+  console.log('[STOCK] Registrando movimiento de stock:', {
+    tiendaId, producto, cantidad, unidad, lote, motivo, tipo, 
+    proveedorId, precioCoste, referenciaDocumento
+  });
+
+  if (!tiendaId || !producto || !tipo) {
+    console.log('[STOCK] Error: faltan campos obligatorios para movimiento de stock');
+    return;
+  }
+
+  // Para entradas, necesitamos al menos cantidad o peso
+  if (tipo === 'entrada' && !cantidad && !peso) {
+    console.log('[STOCK] Error: para entradas se requiere cantidad o peso');
+    throw new Error('Para entradas de stock se requiere cantidad o peso');
+  }
 
   const movimiento = await MovimientoStock.create({
     tiendaId,
@@ -109,16 +123,29 @@ async function registrarMovimientoStock({
     notas
   });
 
+  console.log('[STOCK] Movimiento registrado con ID:', movimiento._id);
+
   if (tipo === 'entrada' && lote) {
+    console.log('[STOCK] Procesando entrada - buscando producto:', producto);
     const productoDoc = await Producto.findOne({ nombre: producto });
     if (productoDoc) {
+      console.log('[STOCK] Producto encontrado:', productoDoc._id, '- Buscando lote:', lote);
       const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
       if (loteDoc) {
+        console.log('[STOCK] Lote existente encontrado - actualizando cantidades');
         loteDoc.cantidadDisponible += cantidad;
         loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
+        console.log('[STOCK] Lote actualizado:', loteDoc._id);
       } else {
-        await Lote.create({
+        console.log('[STOCK] Creando nuevo lote con datos:', {
+          lote, 
+          producto: productoDoc._id, 
+          proveedorId, 
+          cantidadInicial: cantidad, 
+          pesoInicial: peso || 0
+        });
+        const nuevoLote = await Lote.create({
           lote,
           producto: productoDoc._id,
           proveedorId,
@@ -131,7 +158,10 @@ async function registrarMovimientoStock({
           precioCoste,
           notas
         });
+        console.log('[STOCK] Nuevo lote creado:', nuevoLote._id);
       }
+    } else {
+      console.log('[STOCK] Error: Producto no encontrado:', producto);
     }
   } else if ((tipo === 'baja' || tipo === 'transferencia_salida') && lote) {
     const productoDoc = await Producto.findOne({ nombre: producto });
