@@ -24,7 +24,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const [formKey, setFormKey] = useState(Date.now());
 
   const proveedoresMap = proveedores.reduce((acc, p) => {
-    acc[p.codigo] = p.nombre || p.razonComercial || p.codigo;
+    acc[p._id] = p.nombre || p.razonComercial || p.codigo;
     return acc;
   }, {});
 
