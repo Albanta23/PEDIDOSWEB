@@ -166,17 +166,6 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
     setProveedorInputTouched(false);
   };
 
-  // Validar líneas del formulario
-  const validarLineas = () => {
-    for (const [index, linea] of lineas.entries()) {
-      if (!linea.cantidad && !linea.peso) {
-        setError(`La línea ${index + 1} debe tener al menos cantidad o peso.`);
-        return false;
-      }
-    }
-    return true;
-  };
-
   // Validación y registro
   const resetForm = () => {
     setProveedor(null);
@@ -205,7 +194,12 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
     // Validar fecha
     if (!fechaEntrada) return setError('Fecha de entrada obligatoria.');
     // Registrar
-    onRegistrar({ proveedor, lineas, referenciaDocumento, fechaEntrada });
+    onRegistrar({
+      proveedor,
+      lineas,
+      referenciaDocumento,
+      fechaEntrada
+    });
     resetForm();
   };
 
