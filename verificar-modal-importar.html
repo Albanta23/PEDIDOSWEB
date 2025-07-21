@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Verificación Modal Importar Clientes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-left-color: #28a745; background: #f8fff9; }
+        .warning { border-left-color: #ffc107; background: #fffcf0; }
+        .error { border-left-color: #dc3545; background: #fff5f5; }
+        .btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,123,255,0.3); }
+        .code { background: #f1f3f4; padding: 10px; border-radius: 6px; font-family: monospace; }
+        .steps { background: #e3f2fd; padding: 20px; border-radius: 12px; margin: 20px 0; }
+        .step { margin: 10px 0; padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Verificación Modal Importar Clientes</h1>
+            <p>Verificando que el nuevo componente modal premium esté funcionando</p>
+        </div>
+
+        <div class="status-card success">
+            <h3>✅ Cambios Aplicados:</h3>
+            <ul>
+                <li><strong>Componente modal premium:</strong> ImportarClientes.jsx actualizado</li>
+                <li><strong>Props onClose:</strong> Añadida correctamente</li>
+                <li><strong>Interfaz modal:</strong> Fondo oscuro + modal centrado</li>
+                <li><strong>Header elegante:</strong> Gradiente azul + botón X</li>
+                <li><strong>Cache limpio:</strong> Vite reiniciado con --force</li>
+            </ul>
+        </div>
+
+        <div class="status-card warning">
+            <h3>⚠️ Si no ves los cambios:</h3>
+            <div class="steps">
+                <div class="step">1. <strong>Recarga completa:</strong> Ctrl + F5 (Windows) o Cmd + Shift + R (Mac)</div>
+                <div class="step">2. <strong>Limpia cache del navegador:</strong> F12 → Network → Disable cache</div>
+                <div class="step">3. <strong>Verifica la URL correcta:</strong> http://localhost:3100</div>
+                <div class="step">4. <strong>Cierra y reabre el navegador</strong> completamente</div>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <h3>🎯 Pasos para Probar:</h3>
+            <div class="steps">
+                <div class="step">1. Ve a: <code class="code">http://localhost:3100</code></div>
+                <div class="step">2. Login: <code class="code">Amaya/Amaya</code></div>
+                <div class="step">3. Pestaña: <code class="code">Mantenimiento</code></div>
+                <div class="step">4. Botón: <code class="code">Importar Clientes</code></div>
+            </div>
+        </div>
+
+        <div class="status-card success">
+            <h3>🎨 Deberías Ver:</h3>
+            <ul>
+                <li><strong>Modal elegante:</strong> Fondo oscuro semi-transparente</li>
+                <li><strong>Header premium:</strong> Gradiente azul con título "Importar Clientes"</li>
+                <li><strong>Botón X:</strong> En la esquina superior derecha</li>
+                <li><strong>Pasos numerados:</strong> 1, 2, 3 con círculos azules</li>
+                <li><strong>Interfaz moderna:</strong> Cards con sombras y bordes redondeados</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn" onclick="window.open('http://localhost:3100', '_blank')">
+                🚀 Abrir Gestión de Clientes
+            </button>
+            <button class="btn" onclick="window.open('http://localhost:3000', '_blank')">
+                🏠 Abrir Sistema Principal
+            </button>
+        </div>
+
+        <div class="status-card">
+            <h3>🔧 Información Técnica:</h3>
+            <div class="code">
+                Servidor: http://localhost:3000 (Vite con HMR)<br>
+                Gestión Clientes: http://localhost:3100<br>
+                Componente: ImportarClientes.jsx (Modal Premium)<br>
+                Key único: ${Date.now()} para forzar re-render<br>
+                Cache: Limpiado completamente
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-verificación cada 3 segundos
+        let checks = 0;
+        const maxChecks = 10;
+        
+        function checkServers() {
+            checks++;
+            
+            Promise.all([
+                fetch('http://localhost:3000').catch(() => ({ ok: false })),
+                fetch('http://localhost:3100').catch(() => ({ ok: false }))
+            ]).then(responses => {
+                const status1 = responses[0].ok ? '✅' : '❌';
+                const status2 = responses[1].ok ? '✅' : '❌';
+                
+                console.log(`Check ${checks}: Sistema Principal ${status1} | Gestión Clientes ${status2}`);
+                
+                if (checks < maxChecks) {
+                    setTimeout(checkServers, 3000);
+                }
+            });
+        }
+        
+        // Iniciar verificación
+        setTimeout(checkServers, 1000);
+        
+        console.log('🔍 Verificación iniciada. Abre la consola para ver el estado de los servidores.');
+    </script>
+</body>
+</html>
