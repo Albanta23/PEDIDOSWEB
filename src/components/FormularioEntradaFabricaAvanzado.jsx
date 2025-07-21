@@ -221,7 +221,6 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
               value={busquedaProveedor}
               onChange={e => {
                 setBusquedaProveedor(e.target.value);
-                setProveedor(null);
                 setProveedorInputTouched(true);
               }}
               placeholder="Buscar proveedor por código, nombre o razón comercial"
