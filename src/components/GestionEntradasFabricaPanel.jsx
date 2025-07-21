@@ -64,6 +64,8 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   };
 
   const getSupplierName = (supplierId) => {
+    console.log('getSupplierName - supplierId:', supplierId);
+    console.log('getSupplierName - proveedoresMap:', proveedoresMap);
     return proveedoresMap[supplierId] || supplierId || '-';
   }
 
