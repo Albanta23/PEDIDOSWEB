@@ -20,17 +20,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   const [errorHistorial, setErrorHistorial] = useState('');
   const { productos } = useProductos();
-  const proveedoresContext = useProveedores();
-  if (!proveedoresContext) {
-    return (
-      <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg">
-        <AlertTriangle className="inline-block mr-2 h-6 w-6" />
-        Error: El contexto de proveedores no está disponible. Verifica que el componente esté envuelto por 'ProveedoresProvider' en App.jsx.
-      </div>
-    );
-  }
-  const { proveedores, loading: loadingProveedores, error: errorProveedores } = proveedoresContext;
-
+  const { proveedores, loading: loadingProveedores, error: errorProveedores } = useProveedores();
   const [formKey, setFormKey] = useState(Date.now());
 
   const proveedoresMap = proveedores.reduce((acc, p) => {
