@@ -3,9 +3,7 @@
  * Proporciona métodos para listar, crear, actualizar, eliminar e importar clientes
  */
 
-const API_URL_ENV = import.meta.env.VITE_API_URL || 'http://localhost:10001';
-const API_URL = API_URL_ENV.replace(/\/$/, '');
-const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 /**
  * Servicio para gestionar operaciones relacionadas con clientes
@@ -17,7 +15,7 @@ const clientesService = {
    */
   listarClientes: async () => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes`);
+      const response = await fetch(`${API_URL}/api/clientes`);
       if (!response.ok) {
         throw new Error(`Error al obtener clientes: ${response.statusText}`);
       }
@@ -35,7 +33,7 @@ const clientesService = {
    */
   obtenerClientePorId: async (id) => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/${id}`);
+      const response = await fetch(`${API_URL}/api/clientes/${id}`);
       if (!response.ok) {
         throw new Error(`Error al obtener cliente: ${response.statusText}`);
       }
@@ -53,7 +51,7 @@ const clientesService = {
    */
   crearCliente: async (cliente) => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes`, {
+      const response = await fetch(`${API_URL}/api/clientes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +76,7 @@ const clientesService = {
    */
   actualizarCliente: async (id, cliente) => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/${id}`, {
+      const response = await fetch(`${API_URL}/api/clientes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +100,7 @@ const clientesService = {
    */
   eliminarCliente: async (id) => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/${id}`, {
+      const response = await fetch(`${API_URL}/api/clientes/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -122,7 +120,7 @@ const clientesService = {
    */
   buscarClientes: async (criterios) => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/buscar-coincidencias`, {
+      const response = await fetch(`${API_URL}/api/clientes/buscar-coincidencias`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +146,7 @@ const clientesService = {
     try {
       console.log(`[clientesService] Enviando ${clientes.length} clientes al servidor`);
       
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/importar`, {
+      const response = await fetch(`${API_URL}/api/clientes/importar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +175,7 @@ const clientesService = {
    */
   eliminarTodosClientes: async () => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/borrar-todos`, {
+      const response = await fetch(`${API_URL}/api/clientes/borrar-todos`, {
         method: 'POST',
       });
       if (!response.ok) {
@@ -197,7 +195,7 @@ const clientesService = {
    */
   limpiarDuplicados: async (ejecutar = false) => {
     try {
-      const response = await fetch(`${API_URL_CORRECTO}/clientes/limpiar-duplicados`, {
+      const response = await fetch(`${API_URL}/api/clientes/limpiar-duplicados`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

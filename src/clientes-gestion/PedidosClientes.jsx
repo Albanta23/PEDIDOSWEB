@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useClientes } from './ClientesContext';
 import { useProductos } from '../components/ProductosContext';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { formatearDireccionCompleta } from './utils/formatDireccion';
@@ -9,7 +8,7 @@ import { FaUndo, FaExclamationTriangle } from 'react-icons/fa';
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales, pedidoId }) {
-  const { clientes, cargando: cargandoClientes, error: errorClientes, recargar: recargarClientes } = useClientes();
+  const [clientes, setClientes] = useState([]);
   const [pedidoInicial, setPedidoInicial] = useState(null);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(clienteInicial || null);
   const [busquedaCliente, setBusquedaCliente] = useState(clienteInicial?.nombre || '');
@@ -37,6 +36,12 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const [productoValido, setProductoValido] = useState([]);
   const [mensajeError, setMensajeError] = useState([]);
   const [testBackendMsg, setTestBackendMsg] = useState('');
+
+  useEffect(() => {
+    axios.get(`${API_URL}/clientes`)
+      .then(res => setClientes(res.data))
+      .catch(()=>setClientes([]));
+  }, []);
 
   // Efecto para cargar el pedido a editar
   useEffect(() => {
@@ -104,16 +109,19 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     const lineasActualizadas = lineas.map((l, i) => {
       if (i === idx) {
         const lineaActualizada = { ...l, [campo]: valor };
+
         // Si cambia el precio o la cantidad, recalcular el subtotal
         if (campo === 'precioUnitario' || campo === 'cantidad') {
           const precio = campo === 'precioUnitario' ? valor : lineaActualizada.precioUnitario;
           const cantidad = campo === 'cantidad' ? valor : lineaActualizada.cantidad;
           lineaActualizada.subtotal = precio * cantidad;
         }
+
         return lineaActualizada;
       }
       return l;
     });
+
     setLineas(lineasActualizadas);
   };
   const handleAgregarLinea = () => {
@@ -153,6 +161,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       setMensaje('Selecciona un cliente y añade al menos una línea de producto válida.');
       return;
     }
+
     const pedidoData = {
       clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
       clienteNombre: clienteSeleccionado.nombre,
@@ -201,10 +210,13 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         total: 0 // Se calculará después
       }
     };
+
     // Calcular el total final
     pedidoData.totales.total = pedidoData.totales.subtotal + pedidoData.totales.iva - pedidoData.totales.descuento + pedidoData.totales.envio;
+
     try {
       let response;
+
       if (pedidoId) {
         // Actualizar pedido existente
         response = await axios.put(`${API_URL}/pedidos-clientes/${pedidoId}`, pedidoData);
@@ -213,12 +225,14 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         // Crear nuevo pedido
         response = await axios.post(`${API_URL}/pedidos-clientes`, pedidoData);
         setMensaje('✅ Pedido creado correctamente.');
+
         // Limpiar formulario solo para nuevos pedidos
         setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
         setClienteSeleccionado(null);
         setBusquedaCliente('');
         setMostrarSugerencias(false);
       }
+
       setTimeout(()=> {
         setMensaje('');
         if (onPedidoCreado) onPedidoCreado(response.data);
@@ -249,6 +263,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     const valor = e.target.value;
     setBusquedaCliente(valor);
     setMostrarSugerencias(valor.length > 0);
+
     // Si el texto coincide exactamente con un cliente, seleccionarlo
     const clienteExacto = clientes.find(c => c.nombre.toLowerCase() === valor.toLowerCase());
     if (clienteExacto) {

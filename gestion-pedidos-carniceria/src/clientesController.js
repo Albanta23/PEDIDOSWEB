@@ -134,14 +134,14 @@ module.exports = {
     }
   },
 
-  // Método para importar clientes desde archivo Excel/CSV (OPTIMIZADO)
+  // Método para importar clientes desde archivo Excel/CSV
   async importarClientes(req, res) {
     try {
       const { clientes } = req.body;
       
       if (!clientes || !Array.isArray(clientes) || clientes.length === 0) {
         return res.status(400).json({ 
-          success: false, 
+          ok: false,
           error: 'No se recibieron datos de clientes para importar' 
         });
       }
@@ -188,100 +188,59 @@ module.exports = {
         clientesConError: []
       };
       
-      // OPTIMIZACIÓN: Procesar en lotes para evitar timeout
-      const BATCH_SIZE = 100;
-      const lotes = [];
-      for (let i = 0; i < clientesMapeados.length; i += BATCH_SIZE) {
-        lotes.push(clientesMapeados.slice(i, i + BATCH_SIZE));
-      }
-      
-      console.log(`[IMPORTAR CLIENTES] Procesando ${lotes.length} lotes de ${BATCH_SIZE} clientes cada uno`);
-      
-      // Procesar cada lote
-      for (let loteIndex = 0; loteIndex < lotes.length; loteIndex++) {
-        const lote = lotes[loteIndex];
-        console.log(`[IMPORTAR CLIENTES] Procesando lote ${loteIndex + 1}/${lotes.length} con ${lote.length} clientes`);
-        
-        // Obtener todos los códigos SAGE, NIFs y emails del lote para búsqueda optimizada
-        const codigosSage = lote.map(c => c.codigoSage).filter(Boolean);
-        const nifs = lote.map(c => c.nif).filter(Boolean);
-        const emails = lote.map(c => c.email).filter(Boolean);
-        
-        // Buscar clientes existentes en una sola consulta
-        const clientesExistentes = await Cliente.find({
-          $or: [
-            { codigoSage: { $in: codigosSage } },
-            { nif: { $in: nifs } },
-            { email: { $in: emails } }
-          ]
-        });
-        
-        // Crear mapas para búsqueda rápida
-        const existentesPorCodigoSage = new Map();
-        const existentesPorNif = new Map();
-        const existentesPorEmail = new Map();
-        
-        clientesExistentes.forEach(cliente => {
-          if (cliente.codigoSage) existentesPorCodigoSage.set(cliente.codigoSage, cliente);
-          if (cliente.nif) existentesPorNif.set(cliente.nif, cliente);
-          if (cliente.email) existentesPorEmail.set(cliente.email, cliente);
-        });
-        
-        // Procesar cada cliente del lote
-        for (const clienteDatos of lote) {
-          try {
-            // Buscar cliente existente usando los mapas (mucho más rápido)
-            let clienteExistente = null;
-            
-            if (clienteDatos.codigoSage) {
-              clienteExistente = existentesPorCodigoSage.get(clienteDatos.codigoSage);
-            }
-            
-            if (!clienteExistente && clienteDatos.nif) {
-              clienteExistente = existentesPorNif.get(clienteDatos.nif);
-            }
-            
-            if (!clienteExistente && clienteDatos.email) {
-              clienteExistente = existentesPorEmail.get(clienteDatos.email);
-            }
-            
-            // Si el cliente existe, actualizar sus datos
-            if (clienteExistente) {
-              await Cliente.findByIdAndUpdate(clienteExistente._id, clienteDatos);
-              resultado.actualizados++;
-            } else {
-              // Si no existe, crear un nuevo cliente
-              const nuevoCliente = new Cliente(clienteDatos);
-              await nuevoCliente.save();
-              resultado.creados++;
-            }
-          } catch (error) {
-            console.error(`Error procesando cliente ${clienteDatos.nombre}:`, error);
-            resultado.errores++;
-            resultado.clientesConError.push({
-              datos: clienteDatos,
-              error: error.message
-            });
+      // Procesar cada cliente
+      for (const clienteDatos of clientesMapeados) {
+        try {
+          // Si tiene código SAGE, intentar buscar primero por ese código
+          let clienteExistente = null;
+
+          if (clienteDatos.codigoSage) {
+            clienteExistente = await Cliente.findOne({ codigoSage: clienteDatos.codigoSage });
           }
+
+          // Si no se encontró por código SAGE y tiene NIF, buscar por NIF
+          if (!clienteExistente && clienteDatos.nif) {
+            clienteExistente = await Cliente.findOne({ nif: clienteDatos.nif });
+          }
+
+          // Si no se encontró por NIF y tiene email, buscar por email
+          if (!clienteExistente && clienteDatos.email) {
+            clienteExistente = await Cliente.findOne({ email: clienteDatos.email });
+          }
+
+          // Registro detallado para depuración
+          console.log(`[IMPORT DEBUG] Procesando cliente: ${clienteDatos.nombre || 'Sin nombre'}`);
+          console.log(`[IMPORT DEBUG] Campos encontrados:`, Object.keys(clienteDatos));
+
+          // Si el cliente existe, actualizar sus datos
+          if (clienteExistente) {
+            await Cliente.findByIdAndUpdate(clienteExistente._id, clienteDatos);
+            resultado.actualizados++;
+          } else {
+            // Si no existe, crear un nuevo cliente
+            const nuevoCliente = new Cliente(clienteDatos);
+            await nuevoCliente.save();
+            resultado.creados++;
+          }
+        } catch (error) {
+          console.error(`Error procesando cliente ${clienteDatos.nombre}:`, error);
+          resultado.errores++;
+          resultado.clientesConError.push({
+            datos: clienteDatos,
+            error: error.message
+          });
         }
       }
       
-      console.log(`[IMPORTAR CLIENTES] Importación completada: ${resultado.creados} creados, ${resultado.actualizados} actualizados, ${resultado.errores} errores`);
-      
-      // Respuesta compatible con el frontend
       res.json({
-        success: true,
-        message: `Importación completada: ${resultado.creados} creados, ${resultado.actualizados} actualizados, ${resultado.errores} errores`,
-        insertados: resultado.creados,
-        actualizados: resultado.actualizados,
-        errores: resultado.errores,
-        total: resultado.total,
+        ok: true,
+        mensaje: `Importación completada: ${resultado.creados} creados, ${resultado.actualizados} actualizados, ${resultado.errores} errores`,
         resultado
       });
     } catch (error) {
       console.error('Error en importación de clientes:', error);
       res.status(500).json({ 
-        success: false, 
+        ok: false,
         error: error.message 
       });
     }

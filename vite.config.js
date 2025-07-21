@@ -5,12 +5,7 @@ import { resolve } from 'path';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ["jspdf", "socket.io-client"],
-    exclude: [], // No excluir socket.io-client
-    force: true // Forzar re-optimización
-  },
-  define: {
-    global: 'globalThis',
+    include: ["jspdf", "socket.io-client"]
   },
   publicDir: 'public',
   resolve: {
@@ -31,29 +26,23 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     strictPort: true,
+    hmr: false, // Desactivar HMR completamente
     watch: {
       usePolling: false,
       interval: 1000,
       ignored: ['**/node_modules/**', '**/.git/**'] // Ignorar directorios que pueden causar reinicios
-    },
-    // Configuración específica para GitHub Codespaces
-    fs: {
-      strict: false,
-      allow: ['..']
     },
     proxy: {
       '/api': {
         target: 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev',
         changeOrigin: true,
         secure: false,
-        timeout: 60000
       },
       '/socket.io': {
         target: 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev',
         ws: true,
         changeOrigin: true,
         secure: false,
-        timeout: 60000
       }
     }
   },

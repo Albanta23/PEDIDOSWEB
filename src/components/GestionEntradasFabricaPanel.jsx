@@ -89,7 +89,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
           lote: l.lote,
           motivo: 'Entrada técnica albarán/factura',
           peso: Number(l.peso) || 0,
-          proveedorId: proveedor.codigo,
+          proveedorId: proveedor._id,
           precioCoste: Number(l.precioCoste) || 0,
           fechaEntrada,
           referenciaDocumento,

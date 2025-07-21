@@ -4,14 +4,12 @@ import { FaUpload, FaArrowLeft, FaArrowRight, FaCheck, FaSpinner, FaFileExcel, F
 import * as XLSX from 'xlsx';
 import clientesService from '../services/clientesService';
 import { toast } from 'react-toastify';
-import { useClientes } from './ClientesContext';
 
 /**
  * Componente para importar clientes desde diferentes formatos de archivo
  */
-const ImportarClientes = ({ onClose, API_URL }) => {
+const ImportarClientes = () => {
   const navigate = useNavigate();
-  const { recargar: recargarClientes } = useClientes(); // Añadir contexto de clientes
   
   // Estados para manejar el proceso de importación
   const [file, setFile] = useState(null);
@@ -765,10 +763,6 @@ const ImportarClientes = ({ onClose, API_URL }) => {
       if (response.success) {
         setImportResults(response);
         setStep(3);
-        
-        // Recargar el contexto de clientes para que se actualice automáticamente
-        await recargarClientes();
-        
         toast.success(`Importación completada con éxito. ${response.insertados} clientes añadidos, ${response.actualizados} actualizados.`);
       } else {
         throw new Error(response.message || 'Error desconocido al importar clientes');
@@ -786,55 +780,38 @@ const ImportarClientes = ({ onClose, API_URL }) => {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
-    } else if (onClose) {
-      onClose();
     } else {
       navigate('/clientes');
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4">
-        {/* Header del modal */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200 rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">Importar Clientes</h1>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              title="Cerrar"
-            >
-              ×
-            </button>
+    <div className="container mx-auto py-6 px-4">
+      <h1 className="text-2xl font-bold mb-6">Importar Clientes</h1>
+
+      {/* Pasos de importación */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`flex-1 text-center ${step >= 1 ? 'text-blue-600 font-semibold' : ''}`}>
+            <div className={`rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
+              1
+            </div>
+            <p>Seleccionar archivo</p>
+          </div>
+          <div className={`flex-1 text-center ${step >= 2 ? 'text-blue-600 font-semibold' : ''}`}>
+            <div className={`rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
+              2
+            </div>
+            <p>Mapear columnas</p>
+          </div>
+          <div className={`flex-1 text-center ${step >= 3 ? 'text-blue-600 font-semibold' : ''}`}>
+            <div className={`rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
+              3
+            </div>
+            <p>Resultados</p>
           </div>
         </div>
-        
-        {/* Contenido del modal */}
-        <div className="p-6">
-          {/* Pasos de importación */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`flex-1 text-center ${step >= 1 ? 'text-blue-600 font-semibold' : ''}`}>
-                <div className={`rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
-                  1
-                </div>
-                <p>Seleccionar archivo</p>
-              </div>
-              <div className={`flex-1 text-center ${step >= 2 ? 'text-blue-600 font-semibold' : ''}`}>
-                <div className={`rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
-                  2
-                </div>
-                <p>Mapear columnas</p>
-              </div>
-              <div className={`flex-1 text-center ${step >= 3 ? 'text-blue-600 font-semibold' : ''}`}>
-                <div className={`rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>
-                  3
-                </div>
-                <p>Resultados</p>
-              </div>
-            </div>
-          </div>
+      </div>
       
       {/* Mensaje de error */}
       {errorMessage && (
@@ -1067,8 +1044,6 @@ const ImportarClientes = ({ onClose, API_URL }) => {
           </div>
         </div>
       )}
-        </div>
-      </div>
     </div>
   );
 };

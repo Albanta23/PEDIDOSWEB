@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useClientes } from './ClientesContext';
 import PedidosClientes from './PedidosClientes';
-import ImportarClientes from './ImportarClientes'; // Importar el nuevo componente MODAL
+import ImportarClientes from './ImportarClientes'; // Importar el nuevo componente
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
@@ -29,7 +28,7 @@ function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion })
 }
 
 export default function ClientesMantenimiento() {
-  const { clientes, cargando, error, recargar: recargarClientes, setClientes } = useClientes();
+  const [clientes, setClientes] = useState([]);
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [modo, setModo] = useState('lista'); // 'lista', 'crear', 'editar', 'ver'
@@ -56,13 +55,18 @@ export default function ClientesMantenimiento() {
   // Estados para importación de clientes
   const [mostrarImportarClientes, setMostrarImportarClientes] = useState(false);
 
-  // El listado de clientes se gestiona por el contexto global
-  // Cuando cambian los clientes globales, aplicar filtros
-  useEffect(() => {
-    setClientesFiltrados(clientes);
-    aplicarFiltros(clientes, filtroBusqueda, filtroTipoCliente, mostrarTodosClientes);
-    // eslint-disable-next-line
-  }, [clientes]);
+  const cargarClientes = () => {
+    axios.get(`${API_URL_CORRECTO}/clientes`)
+      .then(res => {
+        setClientes(res.data);
+        setClientesFiltrados(res.data);
+        aplicarFiltros(res.data, filtroBusqueda, filtroTipoCliente, mostrarTodosClientes);
+      })
+      .catch(() => {
+        setClientes([]);
+        setClientesFiltrados([]);
+      });
+  };
 
   // Cargar estadísticas de cestas de navidad
   const cargarEstadisticasCestas = async () => {
@@ -244,6 +248,7 @@ export default function ClientesMantenimiento() {
   };
 
   useEffect(() => { 
+    cargarClientes();
     cargarEstadisticasCestas();
   }, []);
 
@@ -259,7 +264,7 @@ export default function ClientesMantenimiento() {
       }
       setForm({ nombre: '', email: '', telefono: '', direccion: '' });
       setModo('lista');
-      recargarClientes();
+      cargarClientes();
     } catch {
       setMensaje('Error al guardar');
     }
@@ -295,7 +300,7 @@ export default function ClientesMantenimiento() {
     if (!window.confirm('¿Eliminar cliente?')) return;
     try {
       await axios.delete(`${API_URL_CORRECTO}/clientes/${cliente._id||cliente.id}`);
-      recargarClientes();
+      cargarClientes();
     } catch {}
   };
 
@@ -395,7 +400,7 @@ export default function ClientesMantenimiento() {
           mensaje += `• ${errores.length} errores encontrados`;
         }
         setMensaje(mensaje);
-        recargarClientes();
+        cargarClientes();
         cargarEstadisticasCestas();
       } else {
         setMensaje('Error procesando cestas de navidad: ' + response.data.error);
@@ -422,7 +427,7 @@ export default function ClientesMantenimiento() {
       });
       
       setMensaje(`Cliente ${nuevoEstado ? 'marcado como' : 'desmarcado de'} cesta de navidad`);
-      recargarClientes();
+      cargarClientes();
       cargarEstadisticasCestas();
     } catch (error) {
       setMensaje('Error actualizando cliente');
@@ -439,7 +444,7 @@ export default function ClientesMantenimiento() {
       const response = await axios.post(`${API_URL_CORRECTO}/clientes/limpiar-cestas-navidad`);
       if (response.data.ok) {
         setMensaje(`✅ ${response.data.desmarcados} clientes desmarcados como cestas de navidad`);
-        recargarClientes();
+        cargarClientes();
         cargarEstadisticasCestas();
       }
     } catch (error) {
@@ -1999,13 +2004,12 @@ export default function ClientesMantenimiento() {
         />
       )}
 
-      {/* Modal para importar clientes - COMPONENTE MODAL PREMIUM */}
+      {/* Modal para importar clientes */}
       {mostrarImportarClientes && (
         <ImportarClientes 
-          key={`importar-${Date.now()}`} // Forzar re-render
           onClose={() => {
             setMostrarImportarClientes(false);
-            recargarClientes(); // Recargar la lista después de importar
+            cargarClientes(); // Recargar la lista después de importar
           }}
           API_URL={API_URL_CORRECTO}
         />
