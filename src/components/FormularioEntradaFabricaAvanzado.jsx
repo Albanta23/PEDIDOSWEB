@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
  * Al enviar, se llama a onRegistrar con todos los datos para su registro en el sistema y disponibilidad en los paneles de ventas y expediciones.
  */
 
+// Línea vacía para nuevos productos
 const lineaVacia = {
   id: uuidv4(),
   producto: '',
@@ -24,7 +25,108 @@ const lineaVacia = {
   observaciones: ''
 };
 
-const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
+// Componente para una línea de producto, usando hook personalizado de lotes
+function LineaProducto({ linea, idx, actualizarLinea, eliminarLinea, productosFiltrados, filtroFamilia, fechaEntrada, showDeleteButton }) {
+  const { lotes } = useLotesDisponiblesProducto(linea.producto, fechaEntrada || new Date().toISOString().split('T')[0]);
+
+  return (
+    <tr className="bg-white">
+      <td className="px-2 py-2">
+        <input
+          type="text"
+          value={linea.producto}
+          onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
+          placeholder="Buscar por nombre o referencia"
+          className="w-full px-2 py-1 border border-gray-300 rounded"
+          required
+          list={`productos-catalogo-${filtroFamilia || 'todas'}`}
+        />
+        <datalist id={`productos-catalogo-${filtroFamilia || 'todas'}`}>
+          {productosFiltrados.map(prod => (
+            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''} {prod.familia ? `- ${prod.familia}` : ''}
+            </option>
+          ))}
+        </datalist>
+      </td>
+      <td className="px-2 py-2">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={linea.cantidad}
+          onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
+          placeholder="Unidades"
+          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
+        />
+      </td>
+      <td className="px-2 py-2">
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={linea.peso}
+          onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
+          placeholder="Peso (kg)"
+          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
+        />
+      </td>
+      <td className="px-2 py-2">
+        <label className="block text-xs text-gray-600 mb-1">Lote</label>
+        <input
+          type="text"
+          value={linea.lote}
+          onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
+          placeholder="Escribe o selecciona lote"
+          className="w-full px-2 py-1 border border-gray-300 rounded mb-1"
+          required
+          list={`lotes-disponibles-${linea.producto}-${idx}`}
+        />
+        <datalist id={`lotes-disponibles-${linea.producto}-${idx}`}>
+          {lotes.map(loteObj => (
+            <option key={loteObj.lote} value={loteObj.lote}>
+              {loteObj.lote} (Stock: {loteObj.cantidad} / {loteObj.peso}kg)
+            </option>
+          ))}
+        </datalist>
+      </td>
+      <td className="px-2 py-2">
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={linea.precioCoste}
+          onChange={e => actualizarLinea(idx, 'precioCoste', e.target.value)}
+          placeholder="Precio"
+          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
+        />
+      </td>
+      <td className="px-2 py-2">
+        <input
+          type="text"
+          value={linea.observaciones}
+          onChange={e => actualizarLinea(idx, 'observaciones', e.target.value)}
+          placeholder="Observaciones"
+          className="w-full px-2 py-1 border border-gray-300 rounded"
+        />
+      </td>
+      <td className="px-2 py-2">
+        {showDeleteButton && (
+          <Button type="button" variant="outline" size="icon" onClick={() => eliminarLinea(idx)} title="Eliminar línea">🗑️</Button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+// Hook personalizado para obtener lotes disponibles (debes implementarlo)
+function useLotesDisponiblesProducto(producto, fecha) {
+  // Aquí debería ir la lógica de obtención de lotes, este es un ejemplo básico para que compile
+  // En producción, implementa la lógica real o importa el hook real desde tu código
+  return { lotes: [] };
+}
+
+const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
   const { proveedores, loading, error: errorProveedores } = useProveedores();
   const { productos } = useProductos();
   const [proveedor, setProveedor] = useState(null);
@@ -73,6 +175,17 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
   };
 
   // Validación y registro
+  const resetForm = () => {
+    setProveedor(null);
+    setBusquedaProveedor('');
+    setProveedorInputTouched(false);
+    setLineas([{ ...lineaVacia }]);
+    setReferenciaDocumento('');
+    setFechaEntrada('');
+    setError('');
+    setFiltroFamilia('');
+  };
+
   const handleSubmit = e => {
     e.preventDefault();
     setError('');
@@ -95,6 +208,7 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
       referenciaDocumento,
       fechaEntrada
     });
+    resetForm();
   };
 
   return (
@@ -115,7 +229,6 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
               value={busquedaProveedor}
               onChange={e => {
                 setBusquedaProveedor(e.target.value);
-                setProveedor(null);
                 setProveedorInputTouched(true);
               }}
               placeholder="Buscar proveedor por código, nombre o razón comercial"
@@ -199,92 +312,19 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
                 </tr>
               </thead>
               <tbody>
-                {lineas.map((l, idx) => {
-                  // NO usar hooks dentro del render loop - esto viola las Reglas de Hooks
-                  return (
-                    <tr key={l.id} className="bg-white">
-                      <td className="px-2 py-2">
-                        <input
-                          type="text"
-                          value={l.producto}
-                          onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
-                          placeholder="Buscar por nombre o referencia"
-                          className="w-full px-2 py-1 border border-gray-300 rounded"
-                          required
-                          list={`productos-catalogo-${filtroFamilia || 'todas'}`}
-                        />
-                        <datalist id={`productos-catalogo-${filtroFamilia || 'todas'}`}>
-                          {productosFiltrados.map(prod => (
-                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''} {prod.familia ? `- ${prod.familia}` : ''}
-                            </option>
-                          ))}
-                        </datalist>
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={l.cantidad}
-                          onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                          placeholder="Unidades"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={l.peso}
-                          onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
-                          placeholder="Peso (kg)"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <label className="block text-xs text-gray-600 mb-1">Lote</label>
-                        <input
-                          type="text"
-                          value={l.lote}
-                          onChange={e => actualizarLinea(idx, 'lote', e.target.value)}
-                          placeholder="Escribe lote manualmente"
-                          className="w-full px-2 py-1 border border-gray-300 rounded mb-1"
-                          required
-                        />
-                        <small className="text-xs text-gray-500">
-                          Introduce el lote del producto
-                        </small>
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={l.precioCoste}
-                          onChange={e => actualizarLinea(idx, 'precioCoste', e.target.value)}
-                          placeholder="Precio"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          type="text"
-                          value={l.observaciones}
-                          onChange={e => actualizarLinea(idx, 'observaciones', e.target.value)}
-                          placeholder="Observaciones"
-                          className="w-full px-2 py-1 border border-gray-300 rounded"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        {lineas.length > 1 && (
-                          <Button type="button" variant="outline" size="icon" onClick={() => eliminarLinea(idx)} title="Eliminar línea">🗑️</Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {lineas.map((l, idx) => (
+                  <LineaProducto
+                    key={l.id}
+                    linea={l}
+                    idx={idx}
+                    actualizarLinea={actualizarLinea}
+                    eliminarLinea={eliminarLinea}
+                    productosFiltrados={productosFiltrados}
+                    filtroFamilia={filtroFamilia}
+                    fechaEntrada={fechaEntrada}
+                    showDeleteButton={lineas.length > 1}
+                  />
+                ))}
               </tbody>
             </table>
             <div className="mt-2">
@@ -296,7 +336,8 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mt-4">{error}</div>
           )}
           {/* Botón de registro */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex justify-end gap-4">
+            <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
             <Button type="submit" className="px-6 py-3 text-lg font-semibold">Registrar entrada</Button>
           </div>
         </form>
