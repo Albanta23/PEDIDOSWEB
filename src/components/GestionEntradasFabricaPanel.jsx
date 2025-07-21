@@ -76,7 +76,6 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
    * 4. Las entradas quedan disponibles para consumo en ventas y expediciones.
    */
   const handleRegistrarEntradaAvanzada = async ({ proveedor, lineas, referenciaDocumento, fechaEntrada }) => {
-    console.log('Registrando entrada con proveedor:', proveedor);
     setCargandoHistorial(true);
     setErrorHistorial('');
     try {
@@ -89,7 +88,7 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
           lote: l.lote,
           motivo: 'Entrada técnica albarán/factura',
           peso: Number(l.peso) || 0,
-          proveedorId: proveedor.codigo,
+          proveedorId: proveedor._id,
           precioCoste: Number(l.precioCoste) || 0,
           fechaEntrada,
           referenciaDocumento,
@@ -100,7 +99,6 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
       setMostrarFormulario(false);
       setFormKey(Date.now()); // Reset the form by changing the key
     } catch (err) {
-      console.error('Error al registrar la entrada:', err);
       setErrorHistorial(`Error al registrar la entrada: ${err.message}`);
     } finally {
       setCargandoHistorial(false);

@@ -161,7 +161,6 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
 
   // Al seleccionar proveedor, guardar en localStorage
   const seleccionarProveedor = (p) => {
-    console.log('Proveedor seleccionado:', p);
     setProveedor(p);
     setBusquedaProveedor(p.nombre);
     setProveedorInputTouched(false);
@@ -181,7 +180,6 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    console.log('Enviando formulario con proveedor:', proveedor);
     setError('');
     // Validar proveedor
     if (!proveedor) return setError('Seleccione un proveedor.');

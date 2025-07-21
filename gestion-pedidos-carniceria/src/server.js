@@ -1117,7 +1117,6 @@ app.post('/api/movimientos-stock/baja', async (req, res) => {
 
 // --- ENDPOINT: Registrar ENTRADA de stock manual ---
 app.post('/api/movimientos-stock/entrada', async (req, res) => {
-  console.log('Recibida petición para registrar entrada de stock:', req.body);
   try {
     const {
       tiendaId,
