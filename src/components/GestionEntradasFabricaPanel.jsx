@@ -119,8 +119,9 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
       }
       cargarHistorialEntradas();
       setMostrarFormulario(false);
+      setFormKey(Date.now()); // Reset the form by changing the key
     } catch (err) {
-      setErrorHistorial('Error al registrar la entrada: ' + (err.message || 'Error desconocido'));
+      setErrorHistorial(`Error al registrar la entrada: ${err.message}`);
     } finally {
       setCargandoHistorial(false);
     }
@@ -149,7 +150,9 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
 
         {mostrarFormulario && (
           <FormularioEntradaFabricaAvanzado
+            key={formKey}
             onRegistrar={handleRegistrarEntradaAvanzada}
+            onCancel={() => setMostrarFormulario(false)}
           />
         )}
 
