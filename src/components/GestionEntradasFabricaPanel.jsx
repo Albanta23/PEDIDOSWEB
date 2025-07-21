@@ -31,25 +31,13 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   }
   const { proveedores, loading: loadingProveedores, error: errorProveedores } = proveedoresContext;
 
-  // Crear el mapa de proveedores por código
+  const [formKey, setFormKey] = useState(Date.now());
+
   const proveedoresMap = proveedores.reduce((acc, p) => {
     acc[p.codigo] = p.nombre || p.razonComercial || p.codigo;
     return acc;
   }, {});
 
-  // Estado para búsqueda y selección de proveedor
-  const [busquedaProveedor, setBusquedaProveedor] = useState('');
-  const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
-
-  // Filtrado de proveedores por código o texto
-  const proveedoresFiltrados = proveedores.filter(p => {
-    const texto = busquedaProveedor.trim().toLowerCase();
-    return (
-      p.codigo?.includes(texto) ||
-      p.nombre?.toLowerCase().includes(texto) ||
-      (p.razonComercial && p.razonComercial.toLowerCase().includes(texto))
-    );
-  });
 
   // Permisos basados en el rol - Ahora todos tienen acceso completo
   const esAdministrador = userRole === 'administrador';
