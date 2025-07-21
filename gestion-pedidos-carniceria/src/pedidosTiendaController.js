@@ -1,6 +1,6 @@
 // Controlador para pedidos de tienda/fábrica
 const Pedido = require('./models/Pedido');
-const { registrarEntradasStockPorPedido } = require('./utils/stock');
+const { registrarBajaStock } = require('./utils/stock');
 
 module.exports = {
   async listar(req, res) {
@@ -38,7 +38,19 @@ module.exports = {
       const pedidoActualizado = await Pedido.findByIdAndUpdate(id, req.body, { new: true });
       // Registrar movimientos de stock si el estado cambió a 'enviadoTienda'
       if (pedidoActualizado && pedidoPrevio.estado !== 'enviadoTienda' && pedidoActualizado.estado === 'enviadoTienda') {
-        await registrarEntradasStockPorPedido(pedidoActualizado);
+        for (const linea of pedidoActualizado.lineas) {
+          if (linea.esComentario) continue;
+          if (!linea.producto || !linea.cantidadEnviada) continue;
+          await registrarBajaStock({
+            tiendaId: 'almacen_central',
+            producto: linea.producto,
+            cantidad: linea.cantidadEnviada,
+            unidad: linea.formato || 'kg',
+            lote: linea.lote || '',
+            motivo: `Salida a tienda (${pedidoActualizado.tiendaId}) por pedido`,
+            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+          });
+        }
       }
       res.json(pedidoActualizado);
     } catch (err) {
