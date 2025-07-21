@@ -31,12 +31,6 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     strictPort: true,
-    hmr: {
-      port: 3001, // Puerto específico para HMR
-      host: 'localhost',
-      clientPort: 3001,
-      protocol: 'ws' // Usar WebSocket normal, no WSS
-    },
     watch: {
       usePolling: false,
       interval: 1000,

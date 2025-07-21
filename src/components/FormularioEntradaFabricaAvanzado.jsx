@@ -72,6 +72,17 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
     setProveedorInputTouched(false);
   };
 
+  // Validar líneas del formulario
+  const validarLineas = () => {
+    for (const [index, linea] of lineas.entries()) {
+      if (!linea.cantidad && !linea.peso) {
+        setError(`La línea ${index + 1} debe tener al menos cantidad o peso.`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   // Validación y registro
   const handleSubmit = e => {
     e.preventDefault();
@@ -79,22 +90,10 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar }) => {
     // Validar proveedor
     if (!proveedor) return setError('Seleccione un proveedor.');
     // Validar líneas
-    for (const [i, l] of lineas.entries()) {
-      if (!l.producto) return setError(`Producto obligatorio en línea ${i + 1}`);
-      if (!l.lote) return setError(`Lote obligatorio en línea ${i + 1}`);
-      if (!l.cantidad && !l.peso) return setError(`Debe indicar cantidad o peso en línea ${i + 1}`);
-    }
-    // Validar referencia documento
-    if (!referenciaDocumento) return setError('Referencia de albarán/factura obligatoria.');
-    // Validar fecha
-    if (!fechaEntrada) return setError('Fecha de entrada obligatoria.');
-    // Registrar
-    onRegistrar({
-      proveedor,
-      lineas,
-      referenciaDocumento,
-      fechaEntrada
-    });
+    if (!validarLineas()) return;
+    
+    // Si todo es válido, registrar
+    onRegistrar({ proveedor, lineas, referenciaDocumento, fechaEntrada });
   };
 
   return (

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Entradas de Fábrica</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #0d47a1;
+            border-bottom: 3px solid #0d47a1;
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            color: #007bff;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="number"] {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+        }
+
+        .form-group input[type="number"]:focus {
+            outline: none;
+            border-color: #42a5f5;
+            box-shadow: 0 0 5px rgba(66, 165, 245, 0.5);
+        }
+
+        .form-group input[type="text"] {
+            background-color: #f3e5f5;
+            border: 1px solid #ce93d8;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #ab47bc;
+            box-shadow: 0 0 5px rgba(171, 71, 188, 0.5);
+        }
+
+        .form-group textarea {
+            background-color: #e8f5e9;
+            border: 1px solid #a5d6a7;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #66bb6a;
+            box-shadow: 0 0 5px rgba(102, 187, 106, 0.5);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table th, .table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug - Entradas de Fábrica</h1>
+        <p>Esta página te permite depurar el sistema de entradas de fábrica y verificar qué datos se están enviando.</p>
+
+        <!-- Sección 1: Consultar Proveedores -->
+        <div class="section">
+            <h3>1. Consultar Proveedores</h3>
+            <button onclick="cargarProveedores()">Cargar Proveedores</button>
+            <div id="proveedores-info"></div>
+        </div>
+
+        <!-- Sección 2: Simular Entrada -->
+        <div class="section">
+            <h3>2. Simular Registro de Entrada</h3>
+            <div class="form-group">
+                <label>Proveedor ID:</label>
+                <input type="text" id="proveedorId" placeholder="Ejemplo: 400009075" value="">
+            </div>
+            <div class="form-group">
+                <label>Producto:</label>
+                <input type="text" id="producto" placeholder="Ejemplo: Chorizo dulce" value="Chorizo dulce">
+            </div>
+            <div class="form-group">
+                <label>Cantidad:</label>
+                <input type="number" id="cantidad" placeholder="Ejemplo: 10" value="10">
+            </div>
+            <div class="form-group">
+                <label>Peso (kg):</label>
+                <input type="number" step="0.01" id="peso" placeholder="Ejemplo: 5.5" value="5.5">
+            </div>
+            <div class="form-group">
+                <label>Lote:</label>
+                <input type="text" id="lote" placeholder="Ejemplo: L2025001" value="L2025001">
+            </div>
+            <div class="form-group">
+                <label>Referencia Documento:</label>
+                <input type="text" id="referencia" placeholder="Ejemplo: ALB-2025-001" value="ALB-2025-001">
+            </div>
+            <div class="form-group">
+                <label>Fecha Entrada:</label>
+                <input type="date" id="fechaEntrada" value="">
+            </div>
+            <div class="form-group">
+                <label>Precio Coste:</label>
+                <input type="number" step="0.01" id="precioCoste" placeholder="Ejemplo: 15.50" value="15.50">
+            </div>
+            <div class="form-group">
+                <label>Observaciones:</label>
+                <textarea id="notas" placeholder="Observaciones opcionales..."></textarea>
+            </div>
+            <button onclick="simularEntrada()">Simular Entrada</button>
+            <button onclick="limpiarFormulario()" class="btn-danger">Limpiar</button>
+        </div>
+
+        <!-- Sección 3: Consultar Historial -->
+        <div class="section">
+            <h3>3. Consultar Historial de Entradas</h3>
+            <button onclick="consultarHistorial()">Consultar Últimas Entradas</button>
+            <div id="historial-info"></div>
+        </div>
+
+        <!-- Logs -->
+        <div class="debug-info">
+            <h3>Debug Log</h3>
+            <div id="debug-log" class="log"></div>
+            <button onclick="limpiarLog()">Limpiar Log</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://pedidos-backend-0e1s.onrender.com/api';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('debug-log');
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        function limpiarLog() {
+            document.getElementById('debug-log').textContent = '';
+        }
+
+        function showError(element, message) {
+            element.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        function showSuccess(element, message) {
+            element.innerHTML = `<div class="success">✅ ${message}</div>`;
+        }
+
+        // Establecer fecha actual
+        document.getElementById('fechaEntrada').value = new Date().toISOString().split('T')[0];
+
+        async function cargarProveedores() {
+            const infoElement = document.getElementById('proveedores-info');
+            log('Cargando proveedores...');
+            
+            try {
+                const response = await fetch(`${API_URL}/proveedores`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                log(`✅ Proveedores cargados: ${data.length} encontrados`);
+                
+                let html = `<div class="success">✅ Cargados ${data.length} proveedores</div>`;
+                html += '<h4>Primeros 10 proveedores:</h4><ul>';
+                
+                data.slice(0, 10).forEach(p => {
+                    html += `<li><strong>${p.codigo}</strong> - ${p.nombre}</li>`;
+                });
+                html += '</ul>';
+                
+                // Buscar ZENER específicamente
+                const zener = data.find(p => p.nombre && p.nombre.toUpperCase().includes('ZENER'));
+                if (zener) {
+                    html += `<h4>🔍 ZENER encontrado:</h4>`;
+                    html += `<ul><li><strong>${zener.codigo}</strong> - ${zener.nombre}</li></ul>`;
+                    
+                    // Auto-completar el campo de proveedor ID
+                    document.getElementById('proveedorId').value = zener.codigo;
+                    log(`📝 Auto-completado proveedorId con ZENER: ${zener.codigo}`);
+                }
+                
+                infoElement.innerHTML = html;
+                
+            } catch (error) {
+                log(`❌ Error al cargar proveedores: ${error.message}`);
+                showError(infoElement, `Error al cargar proveedores: ${error.message}`);
+            }
+        }
+
+        async function simularEntrada() {
+            log('=== SIMULANDO ENTRADA DE STOCK ===');
+            
+            const datos = {
+                tiendaId: 'almacen_central',
+                producto: document.getElementById('producto').value,
+                cantidad: parseFloat(document.getElementById('cantidad').value) || undefined,
+                unidad: 'kg',
+                lote: document.getElementById('lote').value,
+                motivo: 'Entrada técnica albarán/factura - DEBUG',
+                peso: parseFloat(document.getElementById('peso').value) || undefined,
+                proveedorId: document.getElementById('proveedorId').value,
+                precioCoste: parseFloat(document.getElementById('precioCoste').value) || undefined,
+                fechaEntrada: document.getElementById('fechaEntrada').value,
+                referenciaDocumento: document.getElementById('referencia').value,
+                notas: document.getElementById('notas').value
+            };
+
+            // Si fechaEntrada está definida, usar como fecha
+            if (datos.fechaEntrada) {
+                datos.fecha = datos.fechaEntrada;
+                delete datos.fechaEntrada;
+            }
+
+            log('📤 Datos a enviar:');
+            log(JSON.stringify(datos, null, 2));
+
+            // Validación adicional: proveedorId no debe estar vacío
+            if (!datos.proveedorId || datos.proveedorId.trim() === '') {
+                log('❌ Error: El campo proveedorId es obligatorio y no puede estar vacío.');
+                showError(document.getElementById('proveedores-info'), 'El campo proveedorId es obligatorio y no puede estar vacío.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/movimientos-stock/entrada`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const responseData = await response.json();
+                
+                log(`📥 Respuesta del servidor (${response.status}):`);
+                log(JSON.stringify(responseData, null, 2));
+
+                if (response.ok) {
+                    log('✅ ENTRADA REGISTRADA EXITOSAMENTE');
+                    alert('✅ Entrada registrada exitosamente! Revisa el log para más detalles.');
+                } else {
+                    log(`❌ ERROR DEL SERVIDOR: ${responseData.error || responseData.message}`);
+                    alert(`❌ Error: ${responseData.error || responseData.message}`);
+                }
+
+            } catch (error) {
+                log(`❌ ERROR DE RED: ${error.message}`);
+                alert(`❌ Error de red: ${error.message}`);
+            }
+        }
+
+        async function consultarHistorial() {
+            const infoElement = document.getElementById('historial-info');
+            log('Consultando historial de entradas...');
+            
+            try {
+                const response = await fetch(`${API_URL}/movimientos-stock?tiendaId=almacen_central`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                const entradas = data.filter(m => m.tipo === 'entrada')
+                    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                    .slice(0, 10);
+                
+                log(`✅ Historial consultado: ${entradas.length} entradas recientes`);
+                
+                let html = `<div class="success">✅ Últimas ${entradas.length} entradas:</div>`;
+                html += '<table class="table">';
+                html += '<tr>';
+                html += '<th>Fecha</th>';
+                html += '<th>Producto</th>';
+                html += '<th>Cantidad</th>';
+                html += '<th>Lote</th>';
+                html += '<th>Peso (kg)</th>';
+                html += '<th>Referencia</th>';
+                html += '<th>Proveedor</th>';
+                html += '<th>Precio Coste</th>';
+                html += '</tr>';
+                
+                entradas.forEach(e => {
+                    const fecha = new Date(e.fecha).toLocaleDateString();
+                    html += '<tr>';
+                    html += `<td>${fecha}</td>`;
+                    html += `<td>${e.producto}</td>`;
+                    html += `<td>${e.cantidad} ${e.unidad}</td>`;
+                    html += `<td>${e.lote || '-'}</td>`;
+                    html += `<td>${e.peso || '-'}</td>`;
+                    html += `<td>${e.referenciaDocumento || '-'}</td>`;
+                    html += `<td>${e.proveedorId || '-'}</td>`;
+                    html += `<td>${e.precioCoste || '-'}</td>`;
+                    html += '</tr>';
+                });
+                html += '</table>';
+                
+                infoElement.innerHTML = html;
+                
+            } catch (error) {
+                log(`❌ Error al consultar historial: ${error.message}`);
+                showError(infoElement, `Error al consultar historial: ${error.message}`);
+            }
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('proveedorId').value = '';
+            document.getElementById('producto').value = 'Chorizo dulce';
+            document.getElementById('cantidad').value = '10';
+            document.getElementById('peso').value = '5.5';
+            document.getElementById('lote').value = 'L2025001';
+            document.getElementById('referencia').value = 'ALB-2025-001';
+            document.getElementById('fechaEntrada').value = new Date().toISOString().split('T')[0];
+            document.getElementById('precioCoste').value = '15.50';
+            document.getElementById('notas').value = '';
+            log('🧹 Formulario limpiado');
+        }
+
+        // Auto-cargar proveedores al cargar la página
+        window.addEventListener('load', () => {
+            log('🚀 Página de debug cargada');
+            cargarProveedores();
+        });
+    </script>
+</body>
+</html>
