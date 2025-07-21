@@ -21,36 +21,14 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   const [errorHistorial, setErrorHistorial] = useState('');
   const { productos } = useProductos();
-  const proveedoresContext = useProveedores();
-  if (!proveedoresContext) {
-    return (
-      <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg">
-        <AlertTriangle className="inline-block mr-2 h-6 w-6" />
-        Error: El contexto de proveedores no está disponible. Verifica que el componente esté envuelto por 'ProveedoresProvider' en App.jsx.
-      </div>
-    );
-  }
-  const { proveedores, loading: loadingProveedores, error: errorProveedores } = proveedoresContext;
+  const { proveedores, loading: loadingProveedores, error: errorProveedores } = useProveedores();
+  const [formKey, setFormKey] = useState(Date.now());
 
-  // Crear el mapa de proveedores por código
   const proveedoresMap = proveedores.reduce((acc, p) => {
     acc[p.codigo] = p.nombre || p.razonComercial || p.codigo;
     return acc;
   }, {});
 
-  // Estado para búsqueda y selección de proveedor
-  const [busquedaProveedor, setBusquedaProveedor] = useState('');
-  const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
-
-  // Filtrado de proveedores por código o texto
-  const proveedoresFiltrados = proveedores.filter(p => {
-    const texto = busquedaProveedor.trim().toLowerCase();
-    return (
-      p.codigo?.includes(texto) ||
-      p.nombre?.toLowerCase().includes(texto) ||
-      (p.razonComercial && p.razonComercial.toLowerCase().includes(texto))
-    );
-  });
 
   // Permisos basados en el rol - Ahora todos tienen acceso completo
   const esAdministrador = userRole === 'administrador';
@@ -120,8 +98,9 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
       }
       cargarHistorialEntradas();
       setMostrarFormulario(false);
+      setFormKey(Date.now()); // Reset the form by changing the key
     } catch (err) {
-      setErrorHistorial('Error al registrar la entrada: ' + (err.message || 'Error desconocido'));
+      setErrorHistorial(`Error al registrar la entrada: ${err.message}`);
     } finally {
       setCargandoHistorial(false);
     }
@@ -155,7 +134,9 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
 
         {mostrarFormulario && (
           <FormularioEntradaFabricaAvanzado
+            key={formKey}
             onRegistrar={handleRegistrarEntradaAvanzada}
+            onCancel={() => setMostrarFormulario(false)}
           />
         )}
 
