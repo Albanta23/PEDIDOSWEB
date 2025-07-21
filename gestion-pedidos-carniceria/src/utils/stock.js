@@ -89,6 +89,7 @@ async function registrarMovimientoStock({
   tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha,
   pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notas
 }) {
+  console.log('Registrando movimiento de stock con proveedorId:', proveedorId);
   if (!tiendaId || !producto || !cantidad || !tipo) return;
 
   const movimiento = await MovimientoStock.create({
@@ -109,6 +110,8 @@ async function registrarMovimientoStock({
     notas
   });
 
+  console.log('Movimiento de stock registrado:', movimiento);
+
   if (tipo === 'entrada' && lote) {
     const productoDoc = await Producto.findOne({ nombre: producto });
     if (productoDoc) {
@@ -117,8 +120,9 @@ async function registrarMovimientoStock({
         loteDoc.cantidadDisponible += cantidad;
         loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
+        console.log('Lote actualizado:', loteDoc);
       } else {
-        await Lote.create({
+        const nuevoLote = await Lote.create({
           lote,
           producto: productoDoc._id,
           proveedorId,
@@ -131,6 +135,7 @@ async function registrarMovimientoStock({
           precioCoste,
           notas
         });
+        console.log('Nuevo lote creado:', nuevoLote);
       }
     }
   } else if ((tipo === 'baja' || tipo === 'transferencia_salida') && lote) {
@@ -141,6 +146,7 @@ async function registrarMovimientoStock({
         loteDoc.cantidadDisponible -= cantidad;
         loteDoc.pesoDisponible -= peso || 0;
         await loteDoc.save();
+        console.log('Lote actualizado:', loteDoc);
       }
     }
   }

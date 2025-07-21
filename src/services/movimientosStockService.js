@@ -58,6 +58,8 @@ export async function registrarEntradaStock({
     notas
   };
 
+  console.log('Enviando datos de entrada de stock:', body);
+
   // If fechaEntrada is provided by form, use it for the 'fecha' field of MovimientoStock model
   if (fechaEntrada) {
     body.fecha = fechaEntrada;
