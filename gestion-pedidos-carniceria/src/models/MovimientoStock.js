@@ -11,7 +11,7 @@ const MovimientoStockSchema = new mongoose.Schema({
   tipo: { type: String, enum: ['entrada', 'baja', 'transferencia_salida', 'transferencia_entrada', 'devolucion_salida', 'devolucion_entrada'], required: true }, // entrada: pedido recibido, baja: caducidad/deterioro
   motivo: { type: String }, // Ej: "Pedido fábrica", "Caducidad", "Deterioro"
   pedidoId: { type: String }, // Si viene de un pedido
-  peso: { type: Number, min: 0 }, // Peso en kg (opcional)
+  peso: { type: Number }, // Peso en kg (opcional)
   tiendaDestino: { type: String }, // Para traspasos y devoluciones, almacena el destino
   transferenciaId: { type: String }, // Para enlazar con la transferencia
   // Campos adicionales para entradas de stock
