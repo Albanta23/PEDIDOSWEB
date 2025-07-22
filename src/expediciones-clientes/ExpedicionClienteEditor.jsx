@@ -3,6 +3,7 @@ import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from '../components/ProductosContext';
 import { useLotesDisponibles } from '../hooks/useLotesDisponibles';
 import { actualizarPedidoCliente, registrarDevolucionParcial, registrarDevolucionTotal } from './pedidosClientesExpedicionService';
+import { generarTicket } from '../utils/ticketGenerator';
 import './ExpedicionClienteEditor.css';
 import ModalDevolucion from './ModalDevolucion';
 
@@ -210,7 +211,14 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
         usuarioTramitando: usuario || 'expediciones',
         bultos
       };
-      await actualizarPedidoCliente(pedido._id || pedido.id, datosPedido);
+      const pedidoActualizado = await actualizarPedidoCliente(pedido._id || pedido.id, datosPedido);
+
+      const ticket = generarTicket(pedidoActualizado);
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`<pre>${ticket}</pre>`);
+      printWindow.document.close();
+      printWindow.print();
+
       setMensaje('Pedido cerrado y preparado');
       setEstado('preparado');
       setEditado(false);
