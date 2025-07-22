@@ -112,13 +112,13 @@ async function registrarMovimientoStock({
   if (tipo === 'entrada' && lote) {
     const productoDoc = await Producto.findOne({ nombre: producto });
     if (productoDoc) {
-      const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
+      let loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
       if (loteDoc) {
         loteDoc.cantidadDisponible += cantidad;
         loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
       } else {
-        await Lote.create({
+        loteDoc = await Lote.create({
           lote,
           producto: productoDoc._id,
           proveedorId,
@@ -138,8 +138,8 @@ async function registrarMovimientoStock({
     if (productoDoc) {
       const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
       if (loteDoc) {
-        loteDoc.cantidadDisponible -= cantidad;
-        loteDoc.pesoDisponible -= peso || 0;
+        loteDoc.cantidadDisponible += cantidad;
+        loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
       }
     }

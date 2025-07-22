@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ExpedicionesClientesLogin from './ExpedicionesClientesLogin';
 import { obtenerPedidosClientesExpedicion, borrarPedidoCliente } from './pedidosClientesExpedicionService';
 import ExpedicionClienteEditor from './ExpedicionClienteEditor';
+import { ProductosProvider } from '../components/ProductosContext';
 import HistorialPedidosClientes from '../clientes-gestion/HistorialPedidosClientes';
 import HistorialDevoluciones from '../clientes-gestion/HistorialDevoluciones';
 import { exportExpedicionClientePDF } from './exportExpedicionPDF';
@@ -106,7 +107,9 @@ export default function ExpedicionesClientes() {
         </table>
       )}
       {pedidoEditando && (
-        <ExpedicionClienteEditor pedido={pedidoEditando} usuario={usuario} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
+        <ProductosProvider>
+          <ExpedicionClienteEditor pedido={pedidoEditando} usuario={usuario} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
+        </ProductosProvider>
       )}
       <div style={{ color: '#888', fontStyle: 'italic' }}>
         (En desarrollo) Aquí aparecerán los pedidos de clientes para tramitar, editar y su historial.
