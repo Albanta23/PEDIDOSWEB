@@ -68,6 +68,7 @@ async function registrarEntradasStockPorPedido(pedido) {
  * @param {Object} params - { tiendaId, producto, cantidad, unidad, lote, motivo, peso }
  */
 async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {
+  console.log('Registrando baja de stock:', { tiendaId, producto, cantidad, unidad, lote, motivo, peso });
   if (!tiendaId || !producto || !cantidad) return;
   await registrarMovimientoStock({
     tiendaId,
@@ -89,6 +90,7 @@ async function registrarMovimientoStock({
   tiendaId, producto, cantidad, unidad, lote, motivo, tipo, fecha,
   pedidoId, transferenciaId, peso, proveedorId, precioCoste, referenciaDocumento, notas
 }) {
+  console.log('Registrando movimiento de stock:', { tiendaId, producto, cantidad, unidad, lote, motivo, tipo, peso, proveedorId });
   if (!tiendaId || !producto || !cantidad || !tipo) return;
 
   const movimiento = await MovimientoStock.create({
@@ -112,13 +114,15 @@ async function registrarMovimientoStock({
   if (tipo === 'entrada' && lote) {
     const productoDoc = await Producto.findOne({ nombre: producto });
     if (productoDoc) {
-      const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
+      let loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
       if (loteDoc) {
+        console.log('Lote existente encontrado:', loteDoc);
         loteDoc.cantidadDisponible += cantidad;
         loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
+        console.log('Lote actualizado:', loteDoc);
       } else {
-        await Lote.create({
+        loteDoc = await Lote.create({
           lote,
           producto: productoDoc._id,
           proveedorId,
@@ -131,6 +135,7 @@ async function registrarMovimientoStock({
           precioCoste,
           notas
         });
+        console.log('Nuevo lote creado:', loteDoc);
       }
     }
   } else if ((tipo === 'baja' || tipo === 'transferencia_salida') && lote) {
@@ -138,9 +143,11 @@ async function registrarMovimientoStock({
     if (productoDoc) {
       const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
       if (loteDoc) {
-        loteDoc.cantidadDisponible -= cantidad;
-        loteDoc.pesoDisponible -= peso || 0;
+        console.log('Lote existente encontrado:', loteDoc);
+        loteDoc.cantidadDisponible -= Math.abs(cantidad);
+        loteDoc.pesoDisponible -= Math.abs(peso || 0);
         await loteDoc.save();
+        console.log('Lote actualizado:', loteDoc);
       }
     }
   }
