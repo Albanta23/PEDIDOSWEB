@@ -196,7 +196,7 @@ const PedidoForm = ({ onAdd }) => {
             />
             <input
               type="number"
-              min="0"
+
               step="0.01"
               placeholder="Peso (kg)"
               value={linea.peso || ''}

@@ -20,12 +20,20 @@ function LoteSelector({ productoId, value, onChange, lotes, loading, error }) {
       <datalist id={`lotes-disponibles-${productoId}`}>
         {loading && <option value="Cargando lotes..." />}
         {error && <option value={`Error: ${error}`} />}
+        {!loading && !error && lotes.length === 0 && (
+          <option value="No hay lotes disponibles">No hay lotes disponibles</option>
+        )}
         {lotes.map(lote => (
           <option key={lote._id} value={lote.lote}>
             {`${lote.lote} (Disp: ${lote.cantidadDisponible} / ${lote.pesoDisponible}kg)`}
           </option>
         ))}
       </datalist>
+      {!loading && !error && lotes.length === 0 && (
+        <div style={{ color: '#f57c00', fontSize: '12px', marginTop: '4px' }}>
+          ⚠️ No hay lotes disponibles para este producto
+        </div>
+      )}
     </>
   );
 }

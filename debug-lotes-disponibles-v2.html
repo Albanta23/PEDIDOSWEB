@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depurador de Lotes Disponibles v2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        .lotes-container {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background-color: #f8d7da;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #28a745;
+            padding: 10px;
+            background-color: #d4edda;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .log-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-item {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .debug-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+        }
+        .tab.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Depurador de Lotes Disponibles v2</h1>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="test-api">Prueba API Lotes</div>
+        <div class="tab" data-tab="test-components">Simulación Componentes</div>
+        <div class="tab" data-tab="diagnostico">Diagnóstico</div>
+    </div>
+    
+    <div class="tab-content active" id="test-api">
+        <div class="card">
+            <h2>Seleccionar Producto</h2>
+            <div class="form-group">
+                <label for="producto-select">Producto:</label>
+                <select id="producto-select">
+                    <option value="">Cargando productos...</option>
+                </select>
+            </div>
+            <button id="cargar-lotes">Cargar Lotes Disponibles</button>
+        </div>
+        
+        <div class="card">
+            <h2>Resultado API Lotes</h2>
+            <div class="form-group">
+                <label for="lote-select">Seleccionar Lote:</label>
+                <select id="lote-select">
+                    <option value="">Seleccione un producto primero</option>
+                </select>
+            </div>
+            <div class="lotes-container" id="lotes-container">
+                <p>Los lotes se mostrarán aquí...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="test-components">
+        <div class="card">
+            <h2>Simulación Selector de Lotes</h2>
+            <div class="form-group">
+                <label for="producto-input">Producto:</label>
+                <select id="producto-simulacion">
+                    <option value="">Cargando productos...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="lote-input">Lote (simulación datalist):</label>
+                <input list="lotes-datalist" id="lote-input" placeholder="Seleccione un lote">
+                <datalist id="lotes-datalist"></datalist>
+            </div>
+            <div id="lote-info" class="debug-info">
+                Información del lote seleccionado se mostrará aquí...
+            </div>
+            <div class="form-group">
+                <label>Ejemplo de código React para este componente:</label>
+                <pre id="component-code" style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;"></pre>
+            </div>
+            <button id="probar-lotes-endpoint">Probar endpoint con fetch directo</button>
+            <div id="resultado-fetch" class="debug-info">
+                Los resultados del fetch se mostrarán aquí...
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="diagnostico">
+        <div class="card">
+            <h2>Diagnóstico de la API</h2>
+            <div class="form-group">
+                <label>URL del endpoint de lotes:</label>
+                <input type="text" id="endpoint-url" value="/api/lotes/" readonly>
+            </div>
+            <div class="form-group">
+                <label>Parámetros de consulta adicionales (opcional):</label>
+                <input type="text" id="query-params" placeholder="Ejemplo: ?soloConStock=true">
+            </div>
+            <button id="test-endpoint">Probar Endpoint</button>
+            <div id="endpoint-result" class="debug-info">
+                Los resultados se mostrarán aquí...
+            </div>
+        </div>
+        <div class="card">
+            <h2>Inspección de Base de Datos</h2>
+            <p>Para ejecutar el script de diagnóstico de lotes:</p>
+            <pre>node diagnostico-lotes-disponibles.js</pre>
+            <p>Para regenerar lotes de prueba:</p>
+            <pre>node regenerar-lotes-prueba.js</pre>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Logs de Depuración</h2>
+        <div class="log-container" id="log-container"></div>
+        <button id="limpiar-logs">Limpiar Logs</button>
+    </div>
+    
+    <script>
+        // Funciones de utilidad
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const logItem = document.createElement('div');
+            logItem.className = `log-item log-${type}`;
+            logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logItem);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Cargar productos
+        async function cargarProductos() {
+            try {
+                log('Cargando lista de productos...');
+                const response = await fetch('/api/productos');
+                if (!response.ok) {
+                    throw new Error(`Error al cargar productos: ${response.statusText}`);
+                }
+                const productos = await response.json();
+                log(`Cargados ${productos.length} productos correctamente`);
+                
+                // Actualizar todos los selectores de productos
+                actualizarSelectoresProductos(productos);
+                
+                // Código de ejemplo para el componente
+                actualizarCodigoComponente();
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function actualizarSelectoresProductos(productos) {
+            const selectores = ['producto-select', 'producto-simulacion'];
+            
+            selectores.forEach(selectorId => {
+                const select = document.getElementById(selectorId);
+                if (!select) return;
+                
+                select.innerHTML = '';
+                
+                if (productos.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No hay productos disponibles';
+                    select.appendChild(option);
+                    return;
+                }
+                
+                // Opción por defecto
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Seleccione un producto';
+                select.appendChild(defaultOption);
+                
+                // Añadir productos
+                productos.forEach(producto => {
+                    const option = document.createElement('option');
+                    option.value = producto._id;
+                    option.textContent = producto.nombre;
+                    select.appendChild(option);
+                });
+            });
+        }
+        
+        function actualizarCodigoComponente() {
+            const code = `// Componente de ejemplo para selección de lotes
+import React, { useState, useEffect } from 'react';
+
+// Hook personalizado para cargar lotes disponibles
+function useLotesDisponibles(productoId) {
+  const [lotes, setLotes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    if (!productoId) {
+      setLotes([]);
+      return;
+    }
+    
+    async function fetchLotes() {
+      setLoading(true);
+      try {
+        const response = await fetch(\`/api/lotes/\${productoId}\`);
+        if (!response.ok) {
+          throw new Error(\`Error \${response.status}: \${response.statusText}\`);
+        }
+        const data = await response.json();
+        setLotes(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error al cargar lotes:', err);
+        setError(err.message);
+        setLotes([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchLotes();
+  }, [productoId]);
+  
+  return { lotes, loading, error };
+}
+
+// Componente Selector de Lotes
+function LoteSelector({ productoId, onChange, value }) {
+  const { lotes, loading, error } = useLotesDisponibles(productoId);
+  
+  return (
+    <div className="lote-selector">
+      {loading && <p>Cargando lotes...</p>}
+      {error && <p className="error">Error: {error}</p>}
+      
+      <input
+        list="lotes-list"
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Seleccione un lote"
+        disabled={!productoId || loading}
+      />
+      
+      <datalist id="lotes-list">
+        {lotes.length > 0 ? (
+          lotes.map(lote => (
+            <option key={lote._id} value={lote.lote} />
+          ))
+        ) : (
+          // Esta opción no se muestra pero sirve para debugging
+          <option value="">No hay lotes disponibles</option>
+        )}
+      </datalist>
+      
+      {lotes.length === 0 && !loading && productoId && (
+        <p className="warning">No hay lotes disponibles para este producto</p>
+      )}
+    </div>
+  );
+}
+
+export default LoteSelector;`;
+            
+            document.getElementById('component-code').textContent = code;
+        }
+        
+        // Cargar lotes disponibles
+        async function cargarLotesDisponibles() {
+            try {
+                const productoId = document.getElementById('producto-select').value;
+                
+                if (!productoId) {
+                    log('Por favor, seleccione un producto primero', 'error');
+                    return;
+                }
+                
+                log(`Cargando lotes para producto ID: ${productoId}`);
+                const response = await fetch(`/api/lotes/${productoId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error al cargar lotes: ${response.statusText}`);
+                }
+                
+                const lotes = await response.json();
+                log(`Cargados ${lotes.length} lotes correctamente`);
+                
+                // Mostrar lotes en tabla
+                const lotesContainer = document.getElementById('lotes-container');
+                if (lotes.length === 0) {
+                    lotesContainer.innerHTML = '<div class="error">No hay lotes disponibles para este producto</div>';
+                    return;
+                }
+                
+                // Crear tabla
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Lote</th>
+                                <th>Cantidad</th>
+                                <th>Peso (kg)</th>
+                                <th>Fecha Entrada</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                lotes.forEach(lote => {
+                    html += `
+                        <tr>
+                            <td>${lote.lote}</td>
+                            <td>${lote.cantidadDisponible || 0}</td>
+                            <td>${lote.pesoDisponible || 0}</td>
+                            <td>${new Date(lote.fechaEntrada).toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                lotesContainer.innerHTML = html;
+                
+                // Actualizar selector de lotes
+                const loteSelect = document.getElementById('lote-select');
+                loteSelect.innerHTML = '';
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Seleccione un lote';
+                loteSelect.appendChild(defaultOption);
+                
+                lotes.forEach(lote => {
+                    const option = document.createElement('option');
+                    option.value = lote.lote;
+                    option.textContent = `Lote ${lote.lote} - Cantidad: ${lote.cantidadDisponible || 0}, Peso: ${lote.pesoDisponible || 0}kg`;
+                    loteSelect.appendChild(option);
+                });
+                
+                log('Lotes cargados y mostrados correctamente');
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Cargar lotes para simulación
+        async function cargarLotesSimulacion() {
+            try {
+                const productoId = document.getElementById('producto-simulacion').value;
+                
+                if (!productoId) {
+                    document.getElementById('lotes-datalist').innerHTML = '';
+                    document.getElementById('lote-input').value = '';
+                    document.getElementById('lote-info').textContent = 'Información del lote seleccionado se mostrará aquí...';
+                    return;
+                }
+                
+                log(`Simulación: Cargando lotes para producto ID: ${productoId}`);
+                const response = await fetch(`/api/lotes/${productoId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error al cargar lotes: ${response.statusText}`);
+                }
+                
+                const lotes = await response.json();
+                log(`Simulación: Cargados ${lotes.length} lotes correctamente`);
+                
+                // Actualizar datalist
+                const lotesDatalist = document.getElementById('lotes-datalist');
+                lotesDatalist.innerHTML = '';
+                
+                if (lotes.length === 0) {
+                    log('No hay lotes disponibles para este producto', 'warning');
+                }
+                
+                lotes.forEach(lote => {
+                    const option = document.createElement('option');
+                    option.value = lote.lote;
+                    option.dataset.info = JSON.stringify(lote);
+                    lotesDatalist.appendChild(option);
+                });
+                
+                // Limpiar input
+                document.getElementById('lote-input').value = '';
+                document.getElementById('lote-info').textContent = 'Información del lote seleccionado se mostrará aquí...';
+            } catch (error) {
+                log(`Error en simulación: ${error.message}`, 'error');
+            }
+        }
+        
+        // Probar endpoint directamente
+        async function probarEndpointLotes() {
+            try {
+                const productoId = document.getElementById('producto-simulacion').value;
+                
+                if (!productoId) {
+                    log('Seleccione un producto para probar el endpoint', 'error');
+                    return;
+                }
+                
+                log(`Probando endpoint directo para producto ID: ${productoId}`);
+                const response = await fetch(`/api/lotes/${productoId}`);
+                
+                const resultado = document.getElementById('resultado-fetch');
+                
+                if (!response.ok) {
+                    resultado.innerHTML = `<div class="error">Error ${response.status}: ${response.statusText}</div>`;
+                    throw new Error(`Error al probar endpoint: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Mostrar resultado del fetch
+                resultado.innerHTML = `
+                    <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                    <strong>Lotes encontrados:</strong> ${data.length}<br>
+                    <strong>URL completa:</strong> ${response.url}<br>
+                    <strong>Contenido:</strong><br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                log(`Endpoint devolvió ${data.length} lotes`);
+            } catch (error) {
+                log(`Error en prueba de endpoint: ${error.message}`, 'error');
+            }
+        }
+        
+        // Probar endpoint personalizado
+        async function probarEndpointPersonalizado() {
+            try {
+                const baseUrl = document.getElementById('endpoint-url').value;
+                const queryParams = document.getElementById('query-params').value;
+                const url = baseUrl + queryParams;
+                
+                log(`Probando endpoint personalizado: ${url}`);
+                const response = await fetch(url);
+                
+                const resultado = document.getElementById('endpoint-result');
+                
+                if (!response.ok) {
+                    resultado.innerHTML = `<div class="error">Error ${response.status}: ${response.statusText}</div>`;
+                    throw new Error(`Error al probar endpoint: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Mostrar resultado del fetch
+                resultado.innerHTML = `
+                    <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                    <strong>Resultados encontrados:</strong> ${Array.isArray(data) ? data.length : 'N/A'}<br>
+                    <strong>URL completa:</strong> ${response.url}<br>
+                    <strong>Contenido:</strong><br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                log(`Endpoint personalizado ejecutado correctamente`);
+            } catch (error) {
+                log(`Error en prueba de endpoint personalizado: ${error.message}`, 'error');
+            }
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Desactivar todas las tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Activar la tab actual
+                    tab.classList.add('active');
+                    
+                    // Ocultar todos los contenidos
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Mostrar el contenido correspondiente
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Cargar productos al inicio
+            cargarProductos();
+            
+            // Botón para cargar lotes
+            document.getElementById('cargar-lotes').addEventListener('click', cargarLotesDisponibles);
+            
+            // Cambio de producto en simulación
+            document.getElementById('producto-simulacion').addEventListener('change', cargarLotesSimulacion);
+            
+            // Limpieza de logs
+            document.getElementById('limpiar-logs').addEventListener('click', () => {
+                document.getElementById('log-container').innerHTML = '';
+                log('Logs limpiados');
+            });
+            
+            // Probar endpoint directamente
+            document.getElementById('probar-lotes-endpoint').addEventListener('click', probarEndpointLotes);
+            
+            // Probar endpoint personalizado
+            document.getElementById('test-endpoint').addEventListener('click', probarEndpointPersonalizado);
+            
+            // Mostrar información del lote seleccionado en el input
+            document.getElementById('lote-input').addEventListener('input', (event) => {
+                const loteValue = event.target.value;
+                const options = document.getElementById('lotes-datalist').options;
+                let loteInfo = null;
+                
+                // Buscar la información del lote
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value === loteValue) {
+                        try {
+                            loteInfo = JSON.parse(options[i].dataset.info);
+                            break;
+                        } catch (error) {
+                            log(`Error al parsear información del lote: ${error.message}`, 'error');
+                        }
+                    }
+                }
+                
+                // Mostrar información
+                const loteInfoElement = document.getElementById('lote-info');
+                if (loteInfo) {
+                    loteInfoElement.innerHTML = `
+                        <strong>Lote:</strong> ${loteInfo.lote}<br>
+                        <strong>Cantidad disponible:</strong> ${loteInfo.cantidadDisponible || 0}<br>
+                        <strong>Peso disponible:</strong> ${loteInfo.pesoDisponible || 0}kg<br>
+                        <strong>Fecha entrada:</strong> ${new Date(loteInfo.fechaEntrada).toLocaleDateString()}<br>
+                        <strong>ID:</strong> ${loteInfo._id}
+                    `;
+                    log(`Lote seleccionado: ${loteInfo.lote}`);
+                } else {
+                    loteInfoElement.textContent = 'Información del lote seleccionado se mostrará aquí...';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

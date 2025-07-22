@@ -1367,9 +1367,26 @@ app.delete('/api/proveedores/:id', async (req, res) => {
 app.get('/api/lotes/:productoId', async (req, res) => {
   try {
     const { productoId } = req.params;
-    const lotes = await Lote.find({ producto: productoId, cantidadDisponible: { $gt: 0 } }).sort({ fechaEntrada: 1 });
+    console.log(`[LOTES] Consultando lotes para producto: ${productoId}`);
+    
+    // Modificamos la consulta para mostrar todos los lotes que tengan disponibilidad
+    // positiva en cantidad O en peso
+    const lotes = await Lote.find({ 
+      producto: productoId,
+      $or: [
+        { cantidadDisponible: { $gt: 0 } },
+        { pesoDisponible: { $gt: 0 } }
+      ]
+    }).sort({ fechaEntrada: 1 });
+    
+    console.log(`[LOTES] Encontrados ${lotes.length} lotes para producto ${productoId}`);
+    lotes.forEach(lote => {
+      console.log(`  - Lote: ${lote.lote}, Cantidad: ${lote.cantidadDisponible}, Peso: ${lote.pesoDisponible}`);
+    });
+    
     res.json(lotes);
   } catch (err) {
+    console.error(`[ERROR] Error al consultar lotes: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 });

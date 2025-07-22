@@ -69,15 +69,25 @@ async function registrarEntradasStockPorPedido(pedido) {
  */
 async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {
   if (!tiendaId || !producto || !cantidad) return;
+  
+  console.log(`[STOCK] Registrando baja stock:`, { tiendaId, producto, cantidad, unidad, lote, motivo, peso });
+  
+  // Para bajas de stock, aseguramos que la cantidad sea negativa pero el peso sea positivo
+  // La cantidad negativa indica salida, el peso positivo cumple con la restricción del modelo
+  const cantidadAjustada = cantidad <= 0 ? cantidad : -Math.abs(cantidad);
+  const pesoAjustado = typeof peso !== 'undefined' ? Math.abs(peso) : undefined;
+  
+  console.log(`[STOCK] Valores ajustados: cantidad=${cantidadAjustada}, peso=${pesoAjustado}`);
+  
   await registrarMovimientoStock({
     tiendaId,
     producto,
-    cantidad,
+    cantidad: cantidadAjustada,
     unidad,
     lote,
     motivo: motivo || 'Baja manual',
     tipo: 'baja',
-    peso
+    peso: pesoAjustado
   });
 }
 
@@ -91,6 +101,14 @@ async function registrarMovimientoStock({
 }) {
   if (!tiendaId || !producto || !cantidad || !tipo) return;
 
+  // Validaciones adicionales para el campo peso
+  let pesoValidado = undefined;
+  if (typeof peso !== 'undefined') {
+    // Para cualquier tipo de movimiento, el peso en la BD debe ser positivo
+    pesoValidado = Math.abs(peso);
+    console.log(`[INFO] Registrando movimiento stock. Tipo: ${tipo}, Producto: ${producto}, Peso original: ${peso}, Peso validado: ${pesoValidado}`);
+  }
+
   const movimiento = await MovimientoStock.create({
     tiendaId,
     producto,
@@ -102,7 +120,7 @@ async function registrarMovimientoStock({
     fecha: fecha ? new Date(fecha) : new Date(),
     pedidoId,
     transferenciaId,
-    peso: typeof peso !== 'undefined' ? peso : undefined,
+    peso: pesoValidado, // Usamos el peso validado (positivo)
     proveedorId,
     precioCoste,
     referenciaDocumento,
@@ -138,8 +156,28 @@ async function registrarMovimientoStock({
     if (productoDoc) {
       const loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
       if (loteDoc) {
-        loteDoc.cantidadDisponible += cantidad;
-        loteDoc.pesoDisponible += peso || 0;
+        console.log(`[LOTES] Actualizando lote ${lote} para producto ${producto}:`);
+        console.log(`  - Cantidad antes: ${loteDoc.cantidadDisponible}, Peso antes: ${loteDoc.pesoDisponible}`);
+        console.log(`  - Cantidad movimiento: ${cantidad}, Peso movimiento: ${pesoValidado || 0}`);
+        
+        // Para bajas y transferencias, la cantidad siempre debe ser negativa
+        // Si por alguna razón viene positiva, convertirla
+        const cantidadAjuste = cantidad <= 0 ? cantidad : -Math.abs(cantidad);
+        
+        // Actualizamos la cantidad disponible
+        loteDoc.cantidadDisponible += cantidadAjuste;
+        
+        // Si hay peso, siempre lo restamos del disponible
+        if (typeof pesoValidado !== 'undefined' && pesoValidado > 0) {
+          loteDoc.pesoDisponible -= pesoValidado;
+        }
+        
+        // Nos aseguramos de que nunca queden valores negativos, ya que eso haría que
+        // el lote desaparezca del selector
+        if (loteDoc.cantidadDisponible < 0) loteDoc.cantidadDisponible = 0;
+        if (loteDoc.pesoDisponible < 0) loteDoc.pesoDisponible = 0;
+        
+        console.log(`  - Cantidad después: ${loteDoc.cantidadDisponible}, Peso después: ${loteDoc.pesoDisponible}`);
         await loteDoc.save();
       }
     }

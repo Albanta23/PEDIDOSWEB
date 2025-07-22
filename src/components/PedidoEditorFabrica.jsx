@@ -18,12 +18,20 @@ function LoteSelector({ productoId, value, onChange, lotes, loading, error }) {
       <datalist id={`lotes-disponibles-${productoId}`}>
         {loading && <option value="Cargando lotes..." />}
         {error && <option value={`Error: ${error}`} />}
+        {!loading && !error && lotes.length === 0 && (
+          <option value="No hay lotes disponibles">No hay lotes disponibles</option>
+        )}
         {lotes.map(lote => (
           <option key={lote._id} value={lote.lote}>
             {`${lote.lote} (Disp: ${lote.cantidadDisponible} / ${lote.pesoDisponible}kg)`}
           </option>
         ))}
       </datalist>
+      {!loading && !error && lotes.length === 0 && (
+        <div style={{ color: '#f57c00', fontSize: '12px', marginTop: '4px' }}>
+          ⚠️ No hay lotes disponibles para este producto
+        </div>
+      )}
     </>
   );
 }
@@ -96,7 +104,7 @@ function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAb
             <input
               id={`cantidad-${idx}`}
               type="number"
-              min="0"
+              
               step="any" // Permitir decimales si es necesario
               value={linea.cantidad === null || linea.cantidad === undefined ? '' : linea.cantidad}
               onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
@@ -109,7 +117,7 @@ function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAb
               <input
                 id={`peso-${idx}`}
                 type="number"
-                min="0"
+                
                 step="any"
                 value={linea.peso === null || linea.peso === undefined ? '' : linea.peso}
                 onChange={e => actualizarLinea(idx, 'peso', e.target.value)}
@@ -133,7 +141,7 @@ function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAb
             <input
               id={`cantidadEnviada-${idx}`}
               type="number"
-              min="0"
+              
               step="any"
               value={linea.cantidadEnviada === null || linea.cantidadEnviada === undefined ? '' : linea.cantidadEnviada}
               onChange={e => actualizarLinea(idx, 'cantidadEnviada', e.target.value)}
@@ -305,7 +313,69 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     return nuevas;
   });
 
-  const getLineasNormalizadas = () => lineas.filter(l => l.esComentario || (l.producto && l.cantidad !== undefined && l.cantidad !== null)).map(l => l.esComentario ? { esComentario: true, comentario: l.comentario || '' } : { ...l, preparada: !!l.preparada, peso: (l.peso === undefined || l.peso === null || l.peso === '' || isNaN(parseFloat(l.peso))) ? null : parseFloat(l.peso), cantidadEnviada: (l.cantidadEnviada === undefined || l.cantidadEnviada === null || l.cantidadEnviada === '' || isNaN(parseFloat(l.cantidadEnviada))) ? null : parseFloat(l.cantidadEnviada), cantidad: Number(l.cantidad) });
+  // Versión normalizadora mejorada para compatibilidad con el backend
+  // Normaliza las líneas para enviar solo los campos permitidos y sin valores vacíos
+  // Asegura que los tipos de datos sean compatibles con lo que espera el modelo de Mongoose
+  const CAMPOS_LINEA_PERMITIDOS = [
+    'producto', 'cantidad', 'formato', 'comentario', 'peso', 'cantidadEnviada', 'lote', 'preparada', 'esComentario'
+  ];
+  const getLineasNormalizadas = () => {
+    // Primero filtramos líneas inválidas o vacías
+    const lineasFiltradas = lineas.map(l => {
+      if (l.esComentario) {
+        return { esComentario: true, comentario: l.comentario || '' };
+      }
+
+      // Validación básica: producto obligatorio
+      const tieneProducto = typeof l.producto === 'string' && l.producto.trim() !== '';
+      if (!tieneProducto) return null;
+
+      // Para líneas normales, lote puede ser opcional si no está en estado preparado
+      const tieneLote = typeof l.lote === 'string' && l.lote.trim() !== '';
+      const cantidadValida = l.cantidad !== undefined && l.cantidad !== null && l.cantidad !== '' && !isNaN(Number(l.cantidad));
+      const pesoValido = l.peso !== undefined && l.peso !== null && l.peso !== '' && !isNaN(Number(l.peso));
+      
+      // Si no tiene cantidad ni peso, o si está preparada pero no tiene lote, es inválida
+      if ((!cantidadValida && !pesoValido) || (l.preparada && !tieneLote)) {
+        return null;
+      }
+      
+      // Crear objeto normalizado con tipos correctos
+      const nueva = {};
+      for (const campo of CAMPOS_LINEA_PERMITIDOS) {
+        let valor = l[campo];
+        
+        // Normalizar campos numéricos
+        if (["cantidad", "peso", "cantidadEnviada"].includes(campo)) {
+          if (valor === undefined || valor === null || valor === '' || isNaN(Number(valor))) continue;
+          valor = Number(valor);
+          // No permitir ceros negativos o valores muy pequeños que pueden ser errores de redondeo
+          if (Math.abs(valor) < 0.001) continue;
+        }
+        
+        // Normalizar booleanos
+        if (campo === "preparada" || campo === "esComentario") {
+          valor = !!valor; // Convertir a booleano explícito
+        }
+        
+        // No incluir strings vacíos
+        if (typeof valor === 'string' && valor.trim() === '') continue;
+        
+        // No incluir undefined/null
+        if (valor === undefined || valor === null) continue;
+        
+        nueva[campo] = valor;
+      }
+      
+      // Asegurar que los campos obligatorios estén presentes
+      if (!nueva.esComentario && !nueva.producto) return null;
+      
+      return nueva;
+    }).filter(l => l !== null);
+    
+    console.log('Líneas normalizadas para enviar:', lineasFiltradas);
+    return lineasFiltradas;
+  };
 
   const handleGuardar = async () => {
     setError('');
@@ -316,8 +386,18 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         setLoading(false);
         return;
       }
+      
       const lineasNormalizadas = getLineasNormalizadas();
+      
+      // Log detallado para diagnosticar el problema
+      console.log('=============== GUARDANDO PEDIDO ===============');
+      console.log('ID del pedido:', pedido._id || pedido.id);
+      console.log('Número de líneas normalizadas:', lineasNormalizadas.length);
+      console.log('Líneas que se enviarán al backend:', JSON.stringify(lineasNormalizadas, null, 2));
+      
       await onLineaDetalleChange(pedido._id || pedido.id, null, lineasNormalizadas);
+      
+      console.log('✅ Pedido actualizado correctamente');
       setGuardado(true);
       setMensajeGuardadoExitoso('¡Guardado correctamente!');
       setTimeout(() => setMensajeGuardadoExitoso(''), 3000);
@@ -326,8 +406,12 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
         await onRecargarPedidos();
       }
     } catch (e) {
-      setError('Error al guardar el pedido. Intenta de nuevo.');
-      setTimeout(() => setError(''), 3000);
+      console.error('❌ Error al guardar el pedido:', e);
+      if (e.response) {
+        console.error('Respuesta del servidor:', e.response.status, e.response.data);
+      }
+      setError(`Error al guardar el pedido: ${e.message || 'Verifique los datos e intente de nuevo.'}`);
+      setTimeout(() => setError(''), 5000); // Mostrar error por más tiempo
     } finally {
       setLoading(false);
     }
