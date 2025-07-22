@@ -43,17 +43,73 @@ export default function IntegracionSage() {
   };
 
   const exportToExcel = () => {
-    const data = getSelectedPedidosData().map(p => ({
+    // Creamos la hoja principal de pedidos con información detallada
+    const pedidosData = getSelectedPedidosData().map(p => ({
       NumeroPedido: p.numeroPedido,
-      Cliente: p.clienteNombre,
-      Fecha: new Date(p.fechaPedido).toLocaleDateString(),
+      Cliente_ID: p.clienteId,
+      Cliente_Nombre: p.clienteNombre,
+      Fecha: new Date(p.fechaPedido).toLocaleDateString('es-ES'),
+      FechaCreacion: new Date(p.fechaCreacion || p.fechaPedido).toLocaleDateString('es-ES'),
       Estado: p.estado,
-      Lineas: p.lineas.map(l => `${l.producto} (x${l.cantidad})`).join(', ')
+      Subtotal: p.subtotal || 0,
+      IVA_Total: p.totalIva || 0,
+      Total: p.total || 0,
+      FormaPago: p.formaPago || '',
+      Observaciones: p.observaciones || '',
+      DireccionEntrega: p.direccionEntrega || '',
+      EmailCliente: p.emailCliente || '',
+      TelefonoCliente: p.telefonoCliente || '',
+      EnvioNacional: p.envioNacional ? 'Sí' : 'No',
+      TipoCliente: p.tipoCliente || '',
+      NumLineas: p.lineas ? p.lineas.length : 0,
+      FechaEntrega: p.fechaEntrega ? new Date(p.fechaEntrega).toLocaleDateString('es-ES') : '',
+      FechaUltimaModificacion: p.fechaUltimaModificacion ? new Date(p.fechaUltimaModificacion).toLocaleDateString('es-ES') : '',
+      UsuarioCreacion: p.usuarioCreacion || '',
+      Origen: p.origen || 'Manual'
     }));
-    const ws = XLSX.utils.json_to_sheet(data);
+    
+    // Creamos una hoja para las líneas de pedido detalladas
+    const lineasData = [];
+    getSelectedPedidosData().forEach(p => {
+      p.lineas && p.lineas.forEach((l, index) => {
+        lineasData.push({
+          NumeroPedido: p.numeroPedido,
+          Cliente: p.clienteNombre,
+          LineaNum: index + 1,
+          Producto: l.producto || '',
+          Cantidad: l.cantidad || 0,
+          Precio: l.precio || 0,
+          Subtotal: (l.cantidad * l.precio) || 0,
+          IVA_Porcentaje: l.iva || 0,
+          IVA_Importe: ((l.cantidad * l.precio) * (l.iva / 100)) || 0,
+          Total: ((l.cantidad * l.precio) * (1 + (l.iva / 100))) || 0,
+          Lote: l.lote || '',
+          FechaCaducidad: l.fechaCaducidad ? new Date(l.fechaCaducidad).toLocaleDateString('es-ES') : '',
+          UnidadMedida: l.unidadMedida || '',
+          Descuento: l.descuento || 0,
+          Comentario: l.esComentario ? 'Sí' : 'No',
+          CodigoProducto: l.codigoProducto || '',
+          Familia: l.familia || '',
+          SKU: l.sku || '',
+          Peso: l.peso || 0,
+          TipoIVA: l.tipoIVA || ''
+        });
+      });
+    });
+
+    // Creamos un libro de Excel con múltiples hojas
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
-    XLSX.writeFile(wb, 'pedidos_sage.xlsx');
+    
+    // Añadimos la hoja de pedidos
+    const wsPedidos = XLSX.utils.json_to_sheet(pedidosData);
+    XLSX.utils.book_append_sheet(wb, wsPedidos, 'Pedidos');
+    
+    // Añadimos la hoja de líneas de pedido
+    const wsLineas = XLSX.utils.json_to_sheet(lineasData);
+    XLSX.utils.book_append_sheet(wb, wsLineas, 'Lineas');
+    
+    // Guardamos el archivo
+    XLSX.writeFile(wb, 'pedidos_sage50.xlsx');
     markAsExported();
   };
 
