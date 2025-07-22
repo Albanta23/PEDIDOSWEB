@@ -1,0 +1,21 @@
+.lote-selector-container {
+  position: relative;
+  width: 100%;
+}
+
+.lote-input-container {
+  display: flex;
+  align-items: center;
+}
+
+.lote-input-container input {
+  flex: 1;
+}
+
+.lote-input-container button {
+  transition: background-color 0.2s;
+}
+
+.lote-input-container button:hover {
+  background-color: #d1e8ff !important;
+}

@@ -4,35 +4,85 @@ import { useProductos } from './ProductosContext';
 import { useLotesDisponibles } from '../hooks/useLotesDisponibles';
 import './PedidoEditorFabrica.css'; // Importar el archivo CSS
 import '../styles/datalist-fix.css'; // Importar arreglos para datalist
+import '../styles/lote-selector.css'; // Importar estilos para el selector de lotes
 
 function LoteSelector({ productoId, value, onChange, lotes, loading, error }) {
+  const [isManual, setIsManual] = useState(false);
+  const [inputValue, setInputValue] = useState(value || '');
+
+  // Actualizar el valor cuando cambia el prop value
+  useEffect(() => {
+    setInputValue(value || '');
+  }, [value]);
+
+  // Manejar cambios en el input
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+    onChange(e);
+  };
+
+  // Alternar entre selección de lista y entrada manual
+  const toggleManualMode = () => {
+    setIsManual(!isManual);
+  };
+
   return (
-    <>
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        list={`lotes-disponibles-${productoId}`}
-        placeholder="Seleccionar lote"
-      />
-      <datalist id={`lotes-disponibles-${productoId}`}>
-        {loading && <option value="Cargando lotes..." />}
-        {error && <option value={`Error: ${error}`} />}
-        {!loading && !error && lotes.length === 0 && (
-          <option value="No hay lotes disponibles">No hay lotes disponibles</option>
-        )}
-        {lotes.map(lote => (
-          <option key={lote._id} value={lote.lote}>
-            {`${lote.lote} (Disp: ${lote.cantidadDisponible} / ${lote.pesoDisponible}kg)`}
-          </option>
-        ))}
-      </datalist>
-      {!loading && !error && lotes.length === 0 && (
+    <div className="lote-selector-container">
+      <div className="lote-input-container">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          list={isManual ? undefined : `lotes-disponibles-${productoId}`}
+          placeholder={isManual ? "Ingrese lote manualmente" : "Seleccionar lote"}
+          style={{ width: "calc(100% - 30px)" }}
+        />
+        <button 
+          type="button" 
+          onClick={toggleManualMode} 
+          title={isManual ? "Cambiar a selección de lotes disponibles" : "Cambiar a entrada manual de lote"}
+          style={{
+            width: "26px",
+            height: "26px",
+            padding: "2px",
+            marginLeft: "4px",
+            background: isManual ? "#e1f5fe" : "#f5f5f5",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
+        >
+          {isManual ? "📋" : "✏️"}
+        </button>
+      </div>
+      
+      {!isManual && (
+        <datalist id={`lotes-disponibles-${productoId}`}>
+          {loading && <option value="Cargando lotes..." />}
+          {error && <option value={`Error: ${error}`} />}
+          {!loading && !error && lotes.length === 0 && (
+            <option value="No hay lotes disponibles">No hay lotes disponibles</option>
+          )}
+          {lotes.map(lote => (
+            <option key={lote._id} value={lote.lote}>
+              {`${lote.lote} (Disp: ${lote.cantidadDisponible} / ${lote.pesoDisponible}kg)`}
+            </option>
+          ))}
+        </datalist>
+      )}
+      
+      {!isManual && !loading && !error && lotes.length === 0 && (
         <div style={{ color: '#f57c00', fontSize: '12px', marginTop: '4px' }}>
           ⚠️ No hay lotes disponibles para este producto
         </div>
       )}
-    </>
+      
+      {isManual && (
+        <div style={{ color: '#2196f3', fontSize: '12px', marginTop: '4px' }}>
+          ℹ️ Modo manual: Ingrese cualquier número de lote
+        </div>
+      )}
+    </div>
   );
 }
 
