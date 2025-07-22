@@ -1367,7 +1367,7 @@ app.delete('/api/proveedores/:id', async (req, res) => {
 app.get('/api/lotes/:productoId', async (req, res) => {
   try {
     const { productoId } = req.params;
-    const lotes = await Lote.find({ producto: productoId, pesoDisponible: { $gt: 0 } }).sort({ fechaEntrada: 1 });
+    const lotes = await Lote.find({ producto: productoId, cantidadDisponible: { $gt: 0 } }).sort({ fechaEntrada: 1 });
     res.json(lotes);
   } catch (err) {
     res.status(500).json({ error: err.message });
