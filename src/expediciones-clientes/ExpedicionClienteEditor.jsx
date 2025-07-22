@@ -221,11 +221,107 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       };
       const pedidoActualizado = await actualizarPedidoCliente(pedido._id || pedido.id, datosPedido);
 
+      // Generamos el ticket
       const ticket = generarTicket(pedidoActualizado);
+      
+      // Creamos una ventana nueva para imprimir
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(`<pre>${ticket}</pre>`);
-      printWindow.document.close();
-      printWindow.print();
+      
+      // Cargamos el logo
+      fetch('/logo1.png')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('No se pudo cargar el logo');
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = function() {
+            // Construimos el HTML para la impresión incluyendo el logo
+            printWindow.document.write(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>Ticket de Expedición</title>
+                <style>
+                  body {
+                    font-family: monospace;
+                    padding: 20px;
+                    max-width: 400px;
+                    margin: 0 auto;
+                  }
+                  .logo {
+                    max-width: 100px;
+                    display: block;
+                    margin: 0 auto 10px;
+                  }
+                  pre {
+                    white-space: pre-wrap;
+                    font-size: 12px;
+                    line-height: 1.2;
+                  }
+                  @media print {
+                    .no-print {
+                      display: none;
+                    }
+                  }
+                </style>
+              </head>
+              <body>
+                <img src="${reader.result}" class="logo" alt="Logo">
+                <pre>${ticket}</pre>
+                <div class="no-print">
+                  <button onclick="window.print()">Imprimir</button>
+                  <button onclick="window.close()">Cerrar</button>
+                </div>
+              </body>
+              </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(error => {
+          console.error("Error al cargar el logo:", error);
+          // Si hay error al cargar el logo, imprimimos sin él
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Ticket de Expedición</title>
+              <style>
+                body {
+                  font-family: monospace;
+                  padding: 20px;
+                  max-width: 400px;
+                  margin: 0 auto;
+                }
+                pre {
+                  white-space: pre-wrap;
+                  font-size: 12px;
+                  line-height: 1.2;
+                }
+                @media print {
+                  .no-print {
+                    display: none;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <pre>${ticket}</pre>
+              <div class="no-print">
+                <button onclick="window.print()">Imprimir</button>
+                <button onclick="window.close()">Cerrar</button>
+              </div>
+            </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.print();
+        });
 
       setMensaje('Pedido cerrado y preparado');
       setEstado('preparado');
