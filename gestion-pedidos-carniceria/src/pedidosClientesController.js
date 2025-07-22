@@ -144,11 +144,11 @@ module.exports = {
           await registrarBajaStock({
             tiendaId: 'almacen_central',
             producto: linea.producto,
-            cantidad: linea.cantidad,
+            cantidad: -Math.abs(linea.cantidad),
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Expedición cliente (${pedidoPrevio.clienteNombre})`,
-            peso: typeof linea.peso !== 'undefined' ? linea.peso : undefined
+            peso: typeof linea.peso !== 'undefined' ? -Math.abs(linea.peso) : undefined
           });
         }
       }
