@@ -6,16 +6,39 @@ if (!API_URL.endsWith('/api')) {
   API_URL = API_URL.replace(/\/?$/, '/api');
 }
 
-export async function getMovimientosStock({ tiendaId, producto, lote, desde, hasta }) {
+export async function getMovimientosStock({ tiendaId, producto, lote, desde, hasta, fechaInicio, fechaFin }) {
   const params = new URLSearchParams();
+  
+  // Parámetro tiendaId (obligatorio para seguridad)
   if (tiendaId) params.append('tiendaId', tiendaId);
+  
+  // Parámetros opcionales
   if (producto) params.append('producto', producto);
   if (lote) params.append('lote', lote);
-  if (desde) params.append('desde', desde);
-  if (hasta) params.append('hasta', hasta);
-  const res = await fetch(`${API_URL}/movimientos-stock?${params.toString()}`);
-  if (!res.ok) throw new Error('Error al consultar movimientos de stock');
-  return await res.json();
+  
+  // Fechas (mantenemos compatibilidad con ambos nombres de parámetros)
+  if (desde || fechaInicio) params.append('fechaInicio', desde || fechaInicio);
+  if (hasta || fechaFin) params.append('fechaFin', hasta || fechaFin);
+  
+  console.log(`[DEBUG] Consultando movimientos de stock: ${API_URL}/movimientos-stock?${params.toString()}`);
+  
+  try {
+    const res = await fetch(`${API_URL}/movimientos-stock?${params.toString()}`);
+    
+    if (!res.ok) {
+      console.error(`[ERROR] Error al consultar movimientos de stock: ${res.status} ${res.statusText}`);
+      const errorText = await res.text();
+      console.error(`[ERROR] Detalles: ${errorText}`);
+      throw new Error(`Error al consultar movimientos de stock: ${res.status} ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    console.log(`[DEBUG] Recibidos ${data.length} movimientos de stock`);
+    return data;
+  } catch (error) {
+    console.error(`[ERROR] Error en getMovimientosStock: ${error.message}`);
+    throw error;
+  }
 }
 
 export async function registrarBajaStock({ tiendaId, producto, cantidad, unidad, lote, motivo, peso }) {

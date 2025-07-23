@@ -1165,22 +1165,60 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
 // --- ENDPOINT: Listar movimientos de stock por tienda o filtro ---
 app.get('/api/movimientos-stock', async (req, res) => {
   try {
-    const { tiendaId, producto, fechaInicio, fechaFin } = req.query;
+    const { tiendaId, producto, lote, fechaInicio, fechaFin, desde, hasta } = req.query;
+    
+    console.log(`[STOCK] Consultando movimientos para tienda: ${tiendaId || 'todas'}, producto: ${producto || 'todos'}, lote: ${lote || 'todos'}`);
+    
     let filtro = {};
-    if (tiendaId) filtro.tiendaId = tiendaId;
-    if (producto) filtro.producto = producto;
-    if (fechaInicio || fechaFin) {
+    
+    // Filtro por tienda (obligatorio para seguridad)
+    if (tiendaId) {
+      filtro.tiendaId = tiendaId;
+      console.log(`[STOCK] Filtrando por tiendaId: ${tiendaId}`);
+    }
+    
+    // Filtro por producto
+    if (producto) {
+      filtro.producto = producto;
+      console.log(`[STOCK] Filtrando por producto: ${producto}`);
+    }
+    
+    // Filtro por lote
+    if (lote) {
+      filtro.lote = lote;
+      console.log(`[STOCK] Filtrando por lote: ${lote}`);
+    }
+    
+    // Filtro por fecha (compatibilidad con nombres de parámetros)
+    // Acepta tanto fechaInicio/fechaFin como desde/hasta
+    const fechaDesde = fechaInicio || desde;
+    const fechaHasta = fechaFin || hasta;
+    
+    if (fechaDesde || fechaHasta) {
       filtro.fecha = {};
-      if (fechaInicio) filtro.fecha.$gte = new Date(fechaInicio);
-      if (fechaFin) {
-        const fin = new Date(fechaFin);
-        fin.setHours(23,59,59,999);
+      
+      if (fechaDesde) {
+        const inicio = new Date(fechaDesde);
+        filtro.fecha.$gte = inicio;
+        console.log(`[STOCK] Filtrando desde: ${inicio.toISOString()}`);
+      }
+      
+      if (fechaHasta) {
+        const fin = new Date(fechaHasta);
+        fin.setHours(23, 59, 59, 999); // Final del día
         filtro.fecha.$lte = fin;
+        console.log(`[STOCK] Filtrando hasta: ${fin.toISOString()}`);
       }
     }
+    
+    console.log(`[STOCK] Filtro completo:`, JSON.stringify(filtro));
+    
     const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
+    console.log(`[STOCK] Encontrados ${movimientos.length} movimientos`);
+    
     res.json(movimientos);
   } catch (e) {
+    console.error(`[ERROR] Error al consultar movimientos de stock: ${e.message}`);
     res.status(500).json({ error: e.message });
   }
 });
@@ -1367,21 +1405,43 @@ app.delete('/api/proveedores/:id', async (req, res) => {
 app.get('/api/lotes/:productoId', async (req, res) => {
   try {
     const { productoId } = req.params;
-    console.log(`[LOTES] Consultando lotes para producto: ${productoId}`);
+    const { fecha } = req.query; // Opcional, para filtrado por fecha
+    
+    console.log(`[LOTES] Consultando lotes para producto: ${productoId}, fecha: ${fecha || 'no especificada'}`);
+    
+    let fechaConsulta = null;
+    if (fecha) {
+      fechaConsulta = new Date(fecha);
+      // Si la fecha es inválida, ignoramos el filtro
+      if (isNaN(fechaConsulta.getTime())) {
+        fechaConsulta = null;
+        console.log(`[LOTES] Fecha proporcionada inválida: ${fecha}, ignorando filtro`);
+      }
+    }
+    
+    // Construimos el filtro base para el producto
+    let filtro = { producto: productoId };
+    
+    // Si hay fecha, añadimos condición
+    if (fechaConsulta) {
+      // Mostramos lotes con fecha de entrada anterior o igual a la fecha de consulta
+      filtro.fechaEntrada = { $lte: fechaConsulta };
+    }
     
     // Modificamos la consulta para mostrar todos los lotes que tengan disponibilidad
     // positiva en cantidad O en peso
-    const lotes = await Lote.find({ 
-      producto: productoId,
-      $or: [
-        { cantidadDisponible: { $gt: 0 } },
-        { pesoDisponible: { $gt: 0 } }
-      ]
-    }).sort({ fechaEntrada: 1 });
+    filtro.$or = [
+      { cantidadDisponible: { $gt: 0 } },
+      { pesoDisponible: { $gt: 0 } }
+    ];
+    
+    console.log(`[LOTES] Filtro aplicado:`, JSON.stringify(filtro));
+    
+    const lotes = await Lote.find(filtro).sort({ fechaEntrada: 1 });
     
     console.log(`[LOTES] Encontrados ${lotes.length} lotes para producto ${productoId}`);
     lotes.forEach(lote => {
-      console.log(`  - Lote: ${lote.lote}, Cantidad: ${lote.cantidadDisponible}, Peso: ${lote.pesoDisponible}`);
+      console.log(`  - Lote: ${lote.lote}, Cantidad: ${lote.cantidadDisponible}, Peso: ${lote.pesoDisponible}, Fecha: ${lote.fechaEntrada}`);
     });
     
     res.json(lotes);
