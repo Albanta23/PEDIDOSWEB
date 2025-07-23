@@ -1,6 +1,6 @@
 // Controlador para pedidos de tienda/fábrica
 const Pedido = require('./models/Pedido');
-const { registrarBajaStock } = require('./utils/stock');
+const { registrarBajaStock, registrarMovimientoStock } = require('./utils/stock');
 
 module.exports = {
   async listar(req, res) {
@@ -88,6 +88,18 @@ module.exports = {
             unidad: linea.formato || 'kg',
             lote: linea.lote || '',
             motivo: `Salida a tienda (${pedidoActualizado.tiendaId}) por pedido`,
+            peso: typeof linea.peso !== 'undefined' ? Math.abs(linea.peso) : undefined // Peso POSITIVO
+          });
+          
+          // Registrar entrada de stock en la tienda destino
+          await registrarMovimientoStock({
+            tiendaId: pedidoActualizado.tiendaId,
+            producto: linea.producto,
+            cantidad: Math.abs(linea.cantidadEnviada), // Cantidad positiva para indicar entrada
+            unidad: linea.formato || 'kg',
+            tipo: 'entrada',
+            lote: linea.lote || '',
+            motivo: 'Entrada por envío desde fábrica',
             peso: typeof linea.peso !== 'undefined' ? Math.abs(linea.peso) : undefined // Peso POSITIVO
           });
         }
