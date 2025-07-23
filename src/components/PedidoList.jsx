@@ -170,6 +170,21 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     // La lógica de guardar en localStorage ya está en el useEffect de lineasEdit
     mostrarFeedback('Borrador guardado localmente.', 'success');
   };
+  
+  const handleGuardarYCerrar = () => {
+    if (lineasEdit.length === 0) {
+      mostrarFeedback('No hay líneas para guardar como borrador.', 'error');
+      return;
+    }
+    const lineasParaGuardar = lineasEdit.filter(l => (l.esComentario && typeof l.comentario === 'string') || (!l.esComentario && l.producto && l.cantidad > 0));
+    if (lineasParaGuardar.length === 0) {
+      mostrarFeedback('No hay líneas válidas para guardar.', 'error');
+      return;
+    }
+    // La lógica de guardar en localStorage ya está en el useEffect de lineasEdit
+    mostrarFeedback('Borrador guardado localmente y editor cerrado.', 'success');
+    setCreandoNuevo(false);
+  };
 
   const handleConfirmarYEnviarPedido = async () => {
     const lineasParaEnviar = lineasEdit.filter(l => (l.esComentario && typeof l.comentario === 'string') || (!l.esComentario && l.producto && l.cantidad > 0));
@@ -414,6 +429,9 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
             <div className="editor-actions-main">
               <button onClick={handleGuardarLineas} className="btn-success">
                 💾 Guardar Borrador
+              </button>
+              <button onClick={handleGuardarYCerrar} className="btn-info">
+                💾 Guardar y Cerrar
               </button>
               <button onClick={handleConfirmarYEnviarPedido} className="btn-premium">
                 🚀 Enviar a Fábrica
