@@ -1198,22 +1198,45 @@ app.get('/api/movimientos-stock', async (req, res) => {
       filtro.fecha = {};
       
       if (fechaDesde) {
-        const inicio = new Date(fechaDesde);
-        filtro.fecha.$gte = inicio;
-        console.log(`[STOCK] Filtrando desde: ${inicio.toISOString()}`);
+        try {
+          const inicio = new Date(fechaDesde);
+          // Verificar que la fecha sea válida
+          if (!isNaN(inicio.getTime())) {
+            filtro.fecha.$gte = inicio;
+            console.log(`[STOCK] Filtrando desde: ${inicio.toISOString()}`);
+          } else {
+            console.log(`[STOCK] Fecha inicio inválida: ${fechaDesde}, ignorando`);
+          }
+        } catch (err) {
+          console.log(`[STOCK] Error al parsear fecha inicio: ${err.message}`);
+        }
       }
       
       if (fechaHasta) {
-        const fin = new Date(fechaHasta);
-        fin.setHours(23, 59, 59, 999); // Final del día
-        filtro.fecha.$lte = fin;
-        console.log(`[STOCK] Filtrando hasta: ${fin.toISOString()}`);
+        try {
+          const fin = new Date(fechaHasta);
+          // Verificar que la fecha sea válida
+          if (!isNaN(fin.getTime())) {
+            fin.setHours(23, 59, 59, 999); // Final del día
+            filtro.fecha.$lte = fin;
+            console.log(`[STOCK] Filtrando hasta: ${fin.toISOString()}`);
+          } else {
+            console.log(`[STOCK] Fecha fin inválida: ${fechaHasta}, ignorando`);
+          }
+        } catch (err) {
+          console.log(`[STOCK] Error al parsear fecha fin: ${err.message}`);
+        }
+      }
+      
+      // Si no se pudo aplicar ningún filtro de fecha válido, eliminar el objeto fecha
+      if (Object.keys(filtro.fecha).length === 0) {
+        delete filtro.fecha;
       }
     }
     
     console.log(`[STOCK] Filtro completo:`, JSON.stringify(filtro));
     
-    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 });
+    const movimientos = await MovimientoStock.find(filtro).sort({ fecha: -1 }).limit(1000);
     console.log(`[STOCK] Encontrados ${movimientos.length} movimientos`);
     
     res.json(movimientos);
@@ -1411,11 +1434,15 @@ app.get('/api/lotes/:productoId', async (req, res) => {
     
     let fechaConsulta = null;
     if (fecha) {
-      fechaConsulta = new Date(fecha);
-      // Si la fecha es inválida, ignoramos el filtro
-      if (isNaN(fechaConsulta.getTime())) {
-        fechaConsulta = null;
-        console.log(`[LOTES] Fecha proporcionada inválida: ${fecha}, ignorando filtro`);
+      try {
+        fechaConsulta = new Date(fecha);
+        // Si la fecha es inválida, ignoramos el filtro
+        if (isNaN(fechaConsulta.getTime())) {
+          fechaConsulta = null;
+          console.log(`[LOTES] Fecha proporcionada inválida: ${fecha}, ignorando filtro`);
+        }
+      } catch (err) {
+        console.log(`[LOTES] Error al parsear fecha: ${err.message}`);
       }
     }
     
@@ -1440,9 +1467,13 @@ app.get('/api/lotes/:productoId', async (req, res) => {
     const lotes = await Lote.find(filtro).sort({ fechaEntrada: 1 });
     
     console.log(`[LOTES] Encontrados ${lotes.length} lotes para producto ${productoId}`);
-    lotes.forEach(lote => {
-      console.log(`  - Lote: ${lote.lote}, Cantidad: ${lote.cantidadDisponible}, Peso: ${lote.pesoDisponible}, Fecha: ${lote.fechaEntrada}`);
-    });
+    if (lotes.length > 0) {
+      lotes.forEach(lote => {
+        console.log(`  - Lote: ${lote.lote}, Cantidad: ${lote.cantidadDisponible}, Peso: ${lote.pesoDisponible}, Fecha: ${lote.fechaEntrada}`);
+      });
+    } else {
+      console.log(`  - No se encontraron lotes con stock disponible`);
+    }
     
     res.json(lotes);
   } catch (err) {
