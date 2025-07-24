@@ -1,161 +1,149 @@
-// Script para verificar la corrección de la visualización de pedidos en la ficha de cliente
-// Específicamente para el caso de Pascual Fernandez Fernandez
+// Script para verificar que la solución funciona correctamente
 const axios = require('axios');
 require('dotenv').config();
 
-// Usando la misma URL que se usa en la aplicación
-const API_URL_BASE = process.env.VITE_API_URL || 'http://localhost:10001';
+// Configuración de la API
+const API_URL_BASE = process.env.VITE_API_URL || 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev/api';
 const API_URL = API_URL_BASE.endsWith('/api') ? API_URL_BASE : `${API_URL_BASE}/api`;
 
-console.log("Verificación de corrección para visualización de pedidos en ficha de cliente");
-console.log("API URL:", API_URL);
+console.log('=== VERIFICACIÓN DE SOLUCIÓN PARA PEDIDOS DE CLIENTE ===');
+console.log(`API URL: ${API_URL}`);
 
-async function verificarCorreccion() {
-    try {
-        // Datos del cliente Pascual Fernandez Fernandez
-        const clienteNombre = "Pascual Fernandez Fernandez";
-        
-        // 1. Obtener el cliente por nombre para conseguir su ID
-        console.log(`\n1. Buscando cliente: ${clienteNombre}`);
-        const clientesRes = await axios.get(`${API_URL}/clientes`);
-        const cliente = clientesRes.data.find(c => 
-            c.nombre && c.nombre.toLowerCase().includes(clienteNombre.toLowerCase())
-        );
-        
-        if (!cliente) {
-            console.error(`No se encontró el cliente: ${clienteNombre}`);
-            return;
+// Función para verificar pedidos de un cliente específico
+async function verificarPedidosCliente(nombreCliente, clienteId) {
+  console.log(`\nVerificando pedidos para cliente: "${nombreCliente}" (ID: ${clienteId || 'No proporcionado'})`);
+  
+  try {
+    // Obtener pedidos usando nombre exacto
+    console.log('1. Consultando pedidos con nombre exacto...');
+    const resNombreExacto = await axios.get(`${API_URL}/pedidos-clientes`, {
+      params: {
+        nombreCliente,
+        enHistorialDevoluciones: false
+      }
+    });
+    console.log(`   ✅ Pedidos encontrados con nombre exacto: ${resNombreExacto.data.length}`);
+    
+    // Obtener pedidos usando ID de cliente
+    let resId = null;
+    if (clienteId) {
+      console.log('2. Consultando pedidos con ID de cliente...');
+      resId = await axios.get(`${API_URL}/pedidos-clientes`, {
+        params: {
+          clienteId,
+          enHistorialDevoluciones: false
         }
-        
-        console.log(`Cliente encontrado: ID=${cliente._id}, Nombre=${cliente.nombre}`);
-        
-        // 2. Verificar pedidos con el endpoint mejorado (utilizando clienteId y nombreCliente)
-        console.log("\n2. Verificando pedidos con el endpoint mejorado:");
-        const pedidosRes = await axios.get(`${API_URL}/pedidos-clientes`, {
-            params: {
-                clienteId: cliente._id,
-                nombreCliente: cliente.nombre,
-                enHistorialDevoluciones: false
-            }
-        });
-        
-        console.log(`Se encontraron ${pedidosRes.data.length} pedidos`);
-        
-        if (pedidosRes.data.length > 0) {
-            console.log("\nDetalle de los primeros 5 pedidos:");
-            pedidosRes.data.slice(0, 5).forEach(pedido => {
-                console.log(`- Número: ${pedido.numeroPedido}, Estado: ${pedido.estado}, Cliente: ${pedido.clienteNombre || pedido.cliente}`);
-                // Verificar que el pedido realmente pertenece al cliente
-                const pertenece = verificarPedidoPerteneciente(pedido, cliente);
-                console.log(`  ¿Pertenece al cliente? ${pertenece ? 'SÍ ✓' : 'NO ✗'}`);
-            });
-        }
-        
-        // 3. Verificar devoluciones
-        console.log("\n3. Verificando devoluciones:");
-        const devolucionesRes = await axios.get(`${API_URL}/pedidos-clientes`, {
-            params: {
-                clienteId: cliente._id,
-                nombreCliente: cliente.nombre,
-                enHistorialDevoluciones: true
-            }
-        });
-        
-        console.log(`Se encontraron ${devolucionesRes.data.length} devoluciones`);
-        
-        if (devolucionesRes.data.length > 0) {
-            console.log("\nDetalle de las primeras 5 devoluciones:");
-            devolucionesRes.data.slice(0, 5).forEach(devolucion => {
-                console.log(`- Número: ${devolucion.numeroPedido}, Estado: ${devolucion.estado}, Cliente: ${devolucion.clienteNombre || devolucion.cliente}`);
-                // Verificar que la devolución realmente pertenece al cliente
-                const pertenece = verificarPedidoPerteneciente(devolucion, cliente);
-                console.log(`  ¿Pertenece al cliente? ${pertenece ? 'SÍ ✓' : 'NO ✗'}`);
-            });
-        }
-        
-        // 4. Verificar falsos positivos (comprobar si otros clientes con nombres similares)
-        console.log("\n4. Verificando posibles falsos positivos:");
-        
-        const clientesSimilares = clientesRes.data.filter(c => 
-            c.nombre && 
-            c.nombre.toLowerCase().includes("pascual") && 
-            c._id !== cliente._id
-        );
-        
-        if (clientesSimilares.length > 0) {
-            console.log(`Se encontraron ${clientesSimilares.length} clientes con nombres similares:`);
-            clientesSimilares.forEach(c => console.log(`- ${c.nombre} (ID: ${c._id})`));
-            
-            // Verificar si algún pedido de Pascual Fernandez Fernandez se muestra para clientes similares
-            for (const clienteSimilar of clientesSimilares) {
-                console.log(`\nComprobando pedidos para cliente similar: ${clienteSimilar.nombre}`);
-                
-                const pedidosSimilarRes = await axios.get(`${API_URL}/pedidos-clientes`, {
-                    params: {
-                        clienteId: clienteSimilar._id,
-                        nombreCliente: clienteSimilar.nombre,
-                        enHistorialDevoluciones: false
-                    }
-                });
-                
-                console.log(`Se encontraron ${pedidosSimilarRes.data.length} pedidos`);
-                
-                // Verificar si alguno pertenece realmente a Pascual Fernandez Fernandez
-                const pedidosIncorrectos = pedidosSimilarRes.data.filter(pedido => 
-                    verificarPedidoPerteneciente(pedido, cliente)
-                );
-                
-                if (pedidosIncorrectos.length > 0) {
-                    console.log(`⚠️ ADVERTENCIA: Se encontraron ${pedidosIncorrectos.length} pedidos de ${cliente.nombre} mostrados para ${clienteSimilar.nombre}`);
-                } else {
-                    console.log(`✓ Correcto: No se muestran pedidos de ${cliente.nombre} para ${clienteSimilar.nombre}`);
-                }
-            }
-        } else {
-            console.log("No se encontraron clientes con nombres similares para verificar falsos positivos");
-        }
-        
-        console.log("\n=== RESUMEN DE VERIFICACIÓN ===");
-        console.log(`✓ Se encontraron ${pedidosRes.data.length} pedidos para ${cliente.nombre}`);
-        console.log(`✓ Se encontraron ${devolucionesRes.data.length} devoluciones para ${cliente.nombre}`);
-        console.log("✓ La filtración por cliente se está realizando correctamente en el backend");
-        console.log("✓ La separación entre pedidos y devoluciones funciona correctamente");
-        
-        if (pedidosRes.data.length === 0 && devolucionesRes.data.length === 0) {
-            console.log("\n⚠️ NOTA: El cliente no tiene pedidos ni devoluciones registradas");
-        }
-        
-    } catch (error) {
-        console.error("Error en la verificación:", error.message);
-        if (error.response) {
-            console.error("Datos del error:", error.response.data);
-        }
+      });
+      console.log(`   ✅ Pedidos encontrados con ID de cliente: ${resId.data.length}`);
+      
+      // Comparar resultados
+      if (resNombreExacto.data.length !== resId.data.length) {
+        console.log(`   ⚠️ Discrepancia: ${resNombreExacto.data.length} pedidos por nombre vs ${resId.data.length} pedidos por ID`);
+      } else {
+        console.log(`   ✅ Consistencia: Mismo número de pedidos encontrados por nombre e ID`);
+      }
     }
+    
+    // Obtener pedidos usando nombre parcial (simulando el bug anterior)
+    console.log('3. Probando consulta con nombre parcial (debería devolver solo coincidencias exactas)...');
+    // Tomar solo la primera palabra del nombre
+    const nombreParcial = nombreCliente.split(' ')[0];
+    const resNombreParcial = await axios.get(`${API_URL}/pedidos-clientes`, {
+      params: {
+        nombreCliente: nombreParcial,
+        enHistorialDevoluciones: false
+      }
+    });
+    
+    // Verificar si hay pedidos que no corresponden al cliente exacto
+    const pedidosIncorrectos = resNombreParcial.data.filter(pedido => {
+      const pedidoClienteNombre = pedido.clienteNombre || 
+                                (pedido.cliente && typeof pedido.cliente === 'object' ? pedido.cliente.nombre : 
+                                typeof pedido.cliente === 'string' ? pedido.cliente : '');
+      return pedidoClienteNombre !== nombreCliente;
+    });
+    
+    if (pedidosIncorrectos.length > 0) {
+      console.log(`   ❌ Encontrados ${pedidosIncorrectos.length} pedidos que no corresponden exactamente al cliente`);
+      console.log('   Primeros 3 nombres incorrectos:');
+      pedidosIncorrectos.slice(0, 3).forEach(pedido => {
+        const pedidoClienteNombre = pedido.clienteNombre || 
+                                  (pedido.cliente && typeof pedido.cliente === 'object' ? pedido.cliente.nombre : 
+                                  typeof pedido.cliente === 'string' ? pedido.cliente : '');
+        console.log(`   - ${pedidoClienteNombre} (ID pedido: ${pedido._id})`);
+      });
+    } else {
+      console.log(`   ✅ Correcto: La búsqueda por nombre parcial "${nombreParcial}" no devuelve pedidos incorrectos`);
+    }
+    
+    return {
+      clienteNombre: nombreCliente,
+      clienteId,
+      pedidosPorNombre: resNombreExacto.data.length,
+      pedidosPorId: resId ? resId.data.length : null,
+      pedidosPorNombreParcial: resNombreParcial.data.length,
+      pedidosIncorrectos: pedidosIncorrectos.length
+    };
+  } catch (error) {
+    console.error('❌ Error verificando pedidos:', error.message);
+    return {
+      clienteNombre: nombreCliente,
+      clienteId,
+      error: error.message
+    };
+  }
 }
 
-// Función auxiliar para verificar si un pedido pertenece realmente al cliente
-function verificarPedidoPerteneciente(pedido, cliente) {
-    const clienteId = cliente._id.toString();
-    const clienteNombre = cliente.nombre.toLowerCase();
+// Función principal
+async function ejecutarVerificacion() {
+  try {
+    // Lista de clientes a verificar (añadir el cliente problemático y otros para comparar)
+    const clientesAVerificar = [
+      { nombre: 'PASCUAL FERNANDEZ FERNANDEZ', id: null },
+      { nombre: 'RICARDO PEREZ PASCUAL', id: '687deb7496a8842b040ca378' },
+      { nombre: 'ROSA MARIA PASCUAL SEISDEDOS', id: '687deb8496a8842b040ca444' },
+      { nombre: 'PASCUAL', id: '687deb9d96a8842b040ca590' },
+      { nombre: 'TOMAS ELVIRA PASCUAL', id: '687debcc96a8842b040ca7db' }
+    ];
     
-    // Verificar clienteId
-    if (pedido.clienteId && pedido.clienteId.toString() === clienteId) return true;
+    console.log('\nIniciando verificación para múltiples clientes...');
+    const resultados = [];
     
-    // Verificar cliente._id
-    if (pedido.cliente && pedido.cliente._id && pedido.cliente._id.toString() === clienteId) return true;
+    for (const cliente of clientesAVerificar) {
+      const resultado = await verificarPedidosCliente(cliente.nombre, cliente.id);
+      resultados.push(resultado);
+    }
     
-    // Verificar clienteNombre (exacto)
-    if (pedido.clienteNombre && pedido.clienteNombre.toLowerCase() === clienteNombre) return true;
+    console.log('\n=== RESUMEN DE RESULTADOS ===');
+    console.log('Cliente | Pedidos por Nombre | Pedidos por ID | Pedidos Incorrectos');
+    console.log('--------|-------------------|---------------|-------------------');
+    resultados.forEach(r => {
+      if (r.error) {
+        console.log(`${r.clienteNombre} | ERROR: ${r.error}`);
+      } else {
+        console.log(`${r.clienteNombre} | ${r.pedidosPorNombre} | ${r.pedidosPorId || 'N/A'} | ${r.pedidosIncorrectos}`);
+      }
+    });
     
-    // Verificar cliente.nombre (exacto)
-    if (pedido.cliente && pedido.cliente.nombre && pedido.cliente.nombre.toLowerCase() === clienteNombre) return true;
+    // Evaluar resultados
+    const hayProblemas = resultados.some(r => r.error || (r.pedidosIncorrectos && r.pedidosIncorrectos > 0) || 
+                                        (r.pedidosPorId !== null && r.pedidosPorNombre !== r.pedidosPorId));
     
-    // Verificar cliente como string (exacto)
-    if (typeof pedido.cliente === 'string' && pedido.cliente.toLowerCase() === clienteNombre) return true;
+    if (hayProblemas) {
+      console.log('\n⚠️ Se detectaron problemas en la verificación. Revise los resultados detallados.');
+    } else {
+      console.log('\n✅ Verificación completada correctamente. El filtrado de pedidos por cliente funciona como se espera.');
+    }
     
-    // No coincide exactamente
-    return false;
+    // Sugerencias de mejora
+    console.log('\nRecomendaciones futuras:');
+    console.log('1. Considerar normalizar los nombres de cliente en la base de datos para evitar problemas de coincidencia');
+    console.log('2. Utilizar siempre el ID del cliente como referencia principal, no el nombre');
+    console.log('3. Implementar un sistema de alertas para detectar inconsistencias de datos');
+  } catch (error) {
+    console.error('Error general durante la verificación:', error);
+  }
 }
 
 // Ejecutar la verificación
-verificarCorreccion();
+ejecutarVerificacion();
