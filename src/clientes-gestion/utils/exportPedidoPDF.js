@@ -248,54 +248,61 @@ export async function exportPedidoClientePDF(pedido) {
   
   y += 15;
   
-  // Historial de estados si existe
-  if (pedido.historialEstados && pedido.historialEstados.length > 0) {
+  // Historial de eventos (estados y bultos)
+  const historial = (pedido.historial || []).length > 0 ? pedido.historial : pedido.historialEstados;
+
+  if (historial && historial.length > 0) {
     y += 5;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(40, 40, 40);
-    doc.text('HISTORIAL DE ESTADOS', 15, y);
+    doc.text('HISTORIAL DEL PEDIDO', 15, y);
     y += 10;
-    
+
     // Cabecera del historial
     doc.setFillColor(168, 237, 234);
     doc.rect(15, y - 2, 180, 10, 'F');
-    
+
     doc.setTextColor(40, 40, 40);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('ESTADO', 18, y + 5);
-    doc.text('USUARIO', 68, y + 5);
-    doc.text('FECHA Y HORA', 118, y + 5);
+    doc.text('EVENTO', 18, y + 5);
+    doc.text('DETALLE', 68, y + 5);
+    doc.text('USUARIO', 118, y + 5);
+    doc.text('FECHA Y HORA', 158, y + 5);
     y += 12;
-    
+
     // Líneas del historial
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    
-    pedido.historialEstados.forEach((h, index) => {
+
+    historial.forEach((h, index) => {
+      if (y > 250) {
+        doc.addPage();
+        y = 20; // Reset Y for new page
+      }
+
       if (index % 2 === 0) {
         doc.setFillColor(248, 250, 252);
         doc.rect(15, y - 2, 180, 8, 'F');
       }
       
-      doc.text((h.estado || '').replace('_', ' ').toUpperCase(), 18, y + 4);
-      doc.text(h.usuario || '-', 68, y + 4);
-      doc.text(h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '-', 118, y + 4);
-      y += 10;
-      
-      if (y > 250) {
-        doc.addPage();
-        // Cabecera simplificada para páginas adicionales
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(40, 40, 40);
-        doc.text(DATOS_EMPRESA.nombre, 15, 20);
-        doc.setLineWidth(0.5);
-        doc.setDrawColor(102, 126, 234);
-        doc.line(15, 25, 195, 25);
-        y = 35;
+      let evento = '';
+      let detalle = '';
+
+      if (h.tipo === 'bultos') {
+        evento = 'ACTUALIZACIÓN DE BULTOS';
+        detalle = `Bultos: ${h.bultos}`;
+      } else { // 'estado' or default
+        evento = 'CAMBIO DE ESTADO';
+        detalle = (h.estado || h.accion || '').replace(/_/g, ' ').toUpperCase();
       }
+
+      doc.text(evento, 18, y + 4);
+      doc.text(detalle, 68, y + 4);
+      doc.text(h.usuario || '-', 118, y + 4);
+      doc.text(h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '-', 158, y + 4);
+      y += 10;
     });
   }
 
