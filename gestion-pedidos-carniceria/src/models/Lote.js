@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const LoteSchema = new mongoose.Schema({
   lote: { type: String, required: true, unique: true },
   producto: { type: mongoose.Schema.Types.ObjectId, ref: 'Producto', required: true },
-  proveedorId: { type: String, required: true },
+  proveedorId: { type: String, required: false },
   fechaEntrada: { type: Date, default: Date.now },
   cantidadInicial: { type: Number, required: true },
   pesoInicial: { type: Number, required: true },
