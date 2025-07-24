@@ -52,15 +52,33 @@ module.exports = {
           }
           
           // Para líneas normales, producto es obligatorio
-          if (!linea.producto || typeof linea.producto !== 'string' || !linea.producto.trim()) {
+          if (linea.producto === null || linea.producto === undefined || (typeof linea.producto === 'string' && !linea.producto.trim())) {
             console.log('Línea inválida - producto requerido:', linea);
             return null;
           }
           
           // Normalizar campos numéricos
-          if (linea.cantidad !== undefined) linea.cantidad = Number(linea.cantidad);
-          if (linea.peso !== undefined) linea.peso = Number(linea.peso);
-          if (linea.cantidadEnviada !== undefined) linea.cantidadEnviada = Number(linea.cantidadEnviada);
+          // Normalizar campos numéricos con validación robusta
+          if (linea.cantidad !== undefined && linea.cantidad !== null && linea.cantidad !== '') {
+            const numCantidad = Number(linea.cantidad);
+            linea.cantidad = isNaN(numCantidad) ? 0 : numCantidad;
+          } else if (linea.cantidad === '') {
+            linea.cantidad = 0;
+          }
+          
+          if (linea.peso !== undefined && linea.peso !== null && linea.peso !== '') {
+            const numPeso = Number(linea.peso);
+            linea.peso = isNaN(numPeso) ? null : numPeso;
+          } else if (linea.peso === '') {
+            linea.peso = null;
+          }
+          
+          if (linea.cantidadEnviada !== undefined && linea.cantidadEnviada !== null && linea.cantidadEnviada !== '') {
+            const numCantidadEnviada = Number(linea.cantidadEnviada);
+            linea.cantidadEnviada = isNaN(numCantidadEnviada) ? 0 : numCantidadEnviada;
+          } else if (linea.cantidadEnviada === '') {
+            linea.cantidadEnviada = 0;
+          }
           
           // Normalizar valores boolean
           if (linea.preparada !== undefined) linea.preparada = Boolean(linea.preparada);
@@ -80,7 +98,19 @@ module.exports = {
           if (!linea.producto || !linea.cantidadEnviada) continue;
           
           // Para el registro de stock, usamos cantidades positivas para peso
-          // El tipo 'baja' ya indica que es una salida
+        // Log extra para depuración antes de actualizar
+        try {
+          const testUpdate = await Pedido.findByIdAndUpdate(id, datos, { new: false, runValidators: true });
+        } catch (validationErr) {
+          console.error('[VALIDATION ERROR] Error de validación al actualizar pedido:', {
+            error: validationErr.message,
+            stack: validationErr.stack,
+            datos: JSON.stringify(datos, null, 2)
+          });
+          return res.status(400).json({ error: 'Error de validación: ' + validationErr.message });
+        }
+
+        const pedidoActualizado = await Pedido.findByIdAndUpdate(id, datos, { new: true });
           await registrarBajaStock({
             tiendaId: 'almacen_central',
             producto: linea.producto,
@@ -107,7 +137,11 @@ module.exports = {
       
       res.json(pedidoActualizado);
     } catch (err) {
-      console.error('[ERROR] Error al actualizar pedido:', err);
+      console.error('[ERROR] Error al actualizar pedido:', {
+      error: err.message, 
+      stack: err.stack,
+      datos: JSON.stringify(datos, null, 2)
+    });
       res.status(400).json({ error: err.message });
     }
   },
