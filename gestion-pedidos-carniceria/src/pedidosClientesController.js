@@ -50,18 +50,22 @@ module.exports = {
       if (clienteId || nombreCliente) {
         filtro.$or = [];
         
-        // Si tenemos ID del cliente
+        // Si tenemos ID del cliente - búsqueda exacta
         if (clienteId) {
           filtro.$or.push({ clienteId: clienteId });
           filtro.$or.push({ "cliente._id": clienteId });
+          filtro.$or.push({ cliente: clienteId });
         }
         
-        // Si tenemos nombre del cliente
+        // Si tenemos nombre del cliente - búsqueda exacta para evitar confusiones
         if (nombreCliente) {
-          const nombreRegex = new RegExp(nombreCliente, 'i');
-          filtro.$or.push({ clienteNombre: nombreRegex });
-          filtro.$or.push({ cliente: nombreRegex });
-          filtro.$or.push({ "cliente.nombre": nombreRegex });
+          // Usar una expresión regular que coincida exactamente con el nombre, no parcialmente
+          const nombreRegexExacto = new RegExp('^' + nombreCliente.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i');
+          filtro.$or.push({ clienteNombre: nombreRegexExacto });
+          filtro.$or.push({ "cliente.nombre": nombreRegexExacto });
+          
+          // Para el campo cliente como string, necesitamos una comparación exacta
+          filtro.$or.push({ cliente: nombreRegexExacto });
         }
       }
       

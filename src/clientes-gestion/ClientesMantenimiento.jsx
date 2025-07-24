@@ -147,6 +147,16 @@ export default function ClientesMantenimiento() {
   const cargarPedidosCliente = async (cliente) => {
     setCargandoPedidos(true);
     try {
+      // Validar que cliente sea un objeto válido
+      if (!cliente || typeof cliente !== 'object') {
+        console.error('Error: cliente no es un objeto válido', cliente);
+        setPedidosCliente([]);
+        setCargandoPedidos(false);
+        return;
+      }
+      
+      console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
+      
       // Llamar a la API con los parámetros correctos para filtrar en el backend
       const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
         params: {
@@ -156,10 +166,19 @@ export default function ClientesMantenimiento() {
         }
       });
       
-      console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
       console.log('Total pedidos recibidos:', res.data?.length || 0);
       
-      setPedidosCliente(res.data || []);
+      // Verificar y transformar los datos si es necesario
+      const pedidosNormalizados = (res.data || []).map(pedido => {
+        // Asegurarse de que tenga todas las propiedades necesarias
+        return {
+          ...pedido,
+          // Si falta clienteId pero tiene cliente como string, usarlo como clienteId
+          clienteId: pedido.clienteId || (typeof pedido.cliente === 'string' ? pedido.cliente : undefined)
+        };
+      });
+      
+      setPedidosCliente(pedidosNormalizados);
     } catch (error) {
       console.error('Error cargando pedidos del cliente:', error);
       setPedidosCliente([]);

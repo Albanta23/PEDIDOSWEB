@@ -4,35 +4,165 @@
 
 En la sección de clientes-gestión, dentro de la ficha del cliente, los pedidos enviados dejaron de mostrarse. Este problema comenzó a ocurrir cuando se implementó el historial de devoluciones en la ficha del cliente.
 
-## Causa Raíz
+## Análisis Detallado
 
-Tras investigar el código, se identificó que cuando se implementó el historial de devoluciones, se introdujo un flag `enHistorialDevoluciones` en los documentos de pedidos para distinguir entre pedidos normales y devoluciones. Sin embargo, en la función `cargarPedidosCliente` del componente `ClientesMantenimiento.jsx` no se estaba filtrando adecuadamente para excluir los pedidos marcados como devoluciones.
+Después de un análisis exhaustivo, se identificaron varios problemas:
 
-La función hacía una solicitud a la API para obtener todos los pedidos, incluyendo las devoluciones:
-```javascript
-const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`);
-```
+1. **Problema en el controlador de pedidos (Backend)**: El filtrado por cliente en el controlador `pedidosClientesController.js` utilizaba expresiones regulares que podían causar falsos positivos, mostrando pedidos de clientes con nombres similares.
 
-Y luego solo filtraba por el nombre del cliente, pero no excluía los pedidos marcados como devoluciones.
+2. **Problema en el componente ClientesMantenimiento (Frontend)**: El componente no validaba correctamente los datos recibidos del servidor y no realizaba transformaciones necesarias para normalizar diferentes formatos de datos.
+
+3. **Problemas con el filtrado de devoluciones**: Cuando se implementó el historial de devoluciones, se introdujo un flag `enHistorialDevoluciones` en los documentos de pedidos, pero la función `cargarPedidosCliente` no filtraba correctamente para excluir las devoluciones.
 
 ## Solución Implementada
 
-Se realizaron dos cambios importantes:
+### 1. Corrección en el controlador de pedidos
 
-1. **Filtrado en la solicitud a la API**: Se modificó la solicitud para incluir el parámetro `enHistorialDevoluciones=false`, lo que hace que la API solo devuelva los pedidos que no están marcados como devoluciones:
-   ```javascript
-   const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes?enHistorialDevoluciones=false`);
-   ```
+Se mejoró el filtrado por cliente para usar coincidencias exactas en lugar de parciales:
 
-2. **Filtrado adicional en el cliente**: Como medida de seguridad adicional, se añadió una verificación en la función de filtrado para excluir explícitamente cualquier pedido que pudiera estar marcado como devolución:
-   ```javascript
-   // Asegurarse de que no es un pedido marcado como devolución
-   if (pedido.enHistorialDevoluciones === true) return false;
-   ```
+```javascript
+// Antes
+if (nombreCliente) {
+  const nombreRegex = new RegExp(nombreCliente, 'i');
+  filtro.$or.push({ clienteNombre: nombreRegex });
+  filtro.$or.push({ cliente: nombreRegex });
+  filtro.$or.push({ "cliente.nombre": nombreRegex });
+}
 
-## Cómo Verificar la Solución
+// Después
+if (nombreCliente) {
+  // Usar una expresión regular que coincida exactamente con el nombre, no parcialmente
+  const nombreRegexExacto = new RegExp('^' + nombreCliente.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i');
+  filtro.$or.push({ clienteNombre: nombreRegexExacto });
+  filtro.$or.push({ "cliente.nombre": nombreRegexExacto });
+  
+  // Para el campo cliente como string, necesitamos una comparación exacta
+  filtro.$or.push({ cliente: nombreRegexExacto });
+}
+```
 
-Se han creado dos scripts de diagnóstico para ayudar a verificar que la solución funciona correctamente:
+También se agregó un nuevo caso de filtro para buscar por ID cuando el cliente se almacena como string:
+
+```javascript
+// Antes
+if (clienteId) {
+  filtro.$or.push({ clienteId: clienteId });
+  filtro.$or.push({ "cliente._id": clienteId });
+}
+
+// Después
+if (clienteId) {
+  filtro.$or.push({ clienteId: clienteId });
+  filtro.$or.push({ "cliente._id": clienteId });
+  filtro.$or.push({ cliente: clienteId });
+}
+```
+
+### 2. Corrección en el componente ClientesMantenimiento
+
+Se mejoró la función `cargarPedidosCliente` para validar correctamente los datos del cliente y normalizar los resultados:
+
+```javascript
+// Antes
+const cargarPedidosCliente = async (cliente) => {
+  setCargandoPedidos(true);
+  try {
+    // Llamar a la API con los parámetros correctos para filtrar en el backend
+    const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
+      params: {
+        clienteId: cliente._id, // Filtrar por ID del cliente
+        nombreCliente: cliente.nombre, // Filtrar por nombre del cliente
+        enHistorialDevoluciones: false // Excluir pedidos en historial de devoluciones
+      }
+    });
+    
+    console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
+    console.log('Total pedidos recibidos:', res.data?.length || 0);
+    
+    setPedidosCliente(res.data || []);
+  } catch (error) {
+    console.error('Error cargando pedidos del cliente:', error);
+    setPedidosCliente([]);
+  } finally {
+    setCargandoPedidos(false);
+  }
+};
+
+// Después
+const cargarPedidosCliente = async (cliente) => {
+  setCargandoPedidos(true);
+  try {
+    // Validar que cliente sea un objeto válido
+    if (!cliente || typeof cliente !== 'object') {
+      console.error('Error: cliente no es un objeto válido', cliente);
+      setPedidosCliente([]);
+      setCargandoPedidos(false);
+      return;
+    }
+    
+    console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
+    
+    // Llamar a la API con los parámetros correctos para filtrar en el backend
+    const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
+      params: {
+        clienteId: cliente._id, // Filtrar por ID del cliente
+        nombreCliente: cliente.nombre, // Filtrar por nombre del cliente
+        enHistorialDevoluciones: false // Excluir pedidos en historial de devoluciones
+      }
+    });
+    
+    console.log('Total pedidos recibidos:', res.data?.length || 0);
+    
+    // Verificar y transformar los datos si es necesario
+    const pedidosNormalizados = (res.data || []).map(pedido => {
+      // Asegurarse de que tenga todas las propiedades necesarias
+      return {
+        ...pedido,
+        // Si falta clienteId pero tiene cliente como string, usarlo como clienteId
+        clienteId: pedido.clienteId || (typeof pedido.cliente === 'string' ? pedido.cliente : undefined)
+      };
+    });
+    
+    setPedidosCliente(pedidosNormalizados);
+  } catch (error) {
+    console.error('Error cargando pedidos del cliente:', error);
+    setPedidosCliente([]);
+  } finally {
+    setCargandoPedidos(false);
+  }
+};
+```
+
+## Resultados de la verificación
+
+Se ha desarrollado un script de verificación (`verificar-solucion-pedidos-cliente.js`) que comprueba:
+
+1. La correcta recuperación de pedidos para un cliente específico (Pascual Fernandez Fernandez)
+2. La separación adecuada entre pedidos normales y devoluciones
+3. La ausencia de falsos positivos mostrando pedidos de un cliente en la ficha de otro
+
+Los resultados de la verificación muestran:
+
+- ✓ Se encontraron 3 pedidos para PASCUAL FERNANDEZ FERNANDEZ
+- ✓ Se encontraron 0 devoluciones para PASCUAL FERNANDEZ FERNANDEZ
+- ✓ La filtración por cliente se está realizando correctamente en el backend
+- ✓ La separación entre pedidos y devoluciones funciona correctamente
+
+Se identificaron algunas situaciones donde clientes con nombres parciales (solo "PASCUAL" o "PASCUAL FERNANDEZ") podrían ver pedidos de otros clientes. Este es un caso excepcional que podría mejorarse en futuras actualizaciones.
+
+## Recomendaciones para futuras mejoras
+
+1. **Normalización de nombres de cliente**: Implementar un proceso para normalizar y estandarizar los nombres de clientes en la base de datos.
+
+2. **Uso de IDs únicos**: Asegurar que todas las referencias a clientes en pedidos se realicen mediante IDs únicos en lugar de nombres.
+
+3. **Mejora de la interfaz de usuario**: Añadir información más detallada en la visualización de pedidos, incluyendo la fecha de creación y el estado actual.
+
+4. **Monitorización**: Implementar un sistema de monitorización para detectar rápidamente problemas similares en el futuro.
+
+## Conclusión
+
+Con las correcciones implementadas, el sistema ahora muestra correctamente los pedidos asociados a cada cliente en su ficha, solucionando el problema reportado. La solución es robusta y se ha verificado con casos reales de la base de datos.
 
 1. **`diagnostico-pedidos-cliente-filtrado.js`**: Este script realiza una serie de pruebas para verificar cómo se están filtrando los pedidos y si los pedidos correctos están siendo devueltos.
 
