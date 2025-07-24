@@ -42,19 +42,34 @@ module.exports = {
   },
   async listar(req, res) {
     try {
-      // Filtros: clienteId, fechaInicio, fechaFin, estado, origen.tipo, enHistorialDevoluciones
-      const { clienteId, fechaInicio, fechaFin, estado, origen, enHistorialDevoluciones } = req.query;
+      // Filtros: clienteId, nombreCliente, fechaInicio, fechaFin, estado, origen.tipo, enHistorialDevoluciones
+      const { clienteId, nombreCliente, fechaInicio, fechaFin, estado, origen, enHistorialDevoluciones } = req.query;
       let filtro = {};
-      // Refuerzo: buscar por clienteId o clienteNombre para robustez
-      if (clienteId) {
-        filtro.$or = [
-          { clienteId: clienteId },
-          { clienteNombre: clienteId },
-          { cliente: clienteId }
-        ];
+      
+      // Búsqueda por cliente - combinando ID y nombre
+      if (clienteId || nombreCliente) {
+        filtro.$or = [];
+        
+        // Si tenemos ID del cliente
+        if (clienteId) {
+          filtro.$or.push({ clienteId: clienteId });
+          filtro.$or.push({ "cliente._id": clienteId });
+        }
+        
+        // Si tenemos nombre del cliente
+        if (nombreCliente) {
+          const nombreRegex = new RegExp(nombreCliente, 'i');
+          filtro.$or.push({ clienteNombre: nombreRegex });
+          filtro.$or.push({ cliente: nombreRegex });
+          filtro.$or.push({ "cliente.nombre": nombreRegex });
+        }
       }
+      
+      // Otros filtros
       if (estado) filtro.estado = estado;
       if (origen && origen.tipo) filtro['origen.tipo'] = origen.tipo;
+      
+      // Filtro por fecha
       if (fechaInicio || fechaFin) {
         filtro.fechaPedido = {};
         if (fechaInicio) filtro.fechaPedido.$gte = new Date(fechaInicio);
@@ -65,7 +80,8 @@ module.exports = {
           filtro.fechaPedido.$lte = fin;
         }
       }
-      // Refuerzo: por defecto, excluir pedidos devueltos salvo que se pida explícitamente
+      
+      // Filtro por estado de devolución
       if (typeof enHistorialDevoluciones === 'undefined') {
         filtro.enHistorialDevoluciones = { $ne: true };
       } else if (enHistorialDevoluciones === 'true') {
@@ -73,8 +89,10 @@ module.exports = {
       } else if (enHistorialDevoluciones === 'false') {
         filtro.enHistorialDevoluciones = { $ne: true };
       }
-      // Si no hay fechaPedido, usar fechaCreacion como fallback
+      
+      // Buscar pedidos
       let pedidos = await PedidoCliente.find(filtro);
+      
       // Si no hay filtro de fecha y los pedidos no tienen fechaPedido, filtrar por fechaCreacion
       if ((fechaInicio || fechaFin) && pedidos.length === 0) {
         let filtroCreacion = { ...filtro };
@@ -88,6 +106,7 @@ module.exports = {
         }
         pedidos = await PedidoCliente.find(filtroCreacion);
       }
+      
       res.json(pedidos);
     } catch (err) {
       res.status(500).json({ error: err.message });

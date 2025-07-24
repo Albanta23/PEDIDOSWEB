@@ -143,17 +143,23 @@ export default function ClientesMantenimiento() {
     aplicarFiltros(clientes, filtroBusqueda, filtroTipoCliente, checked);
   };
 
-  const cargarPedidosCliente = async (clienteNombre) => {
+  // Función para filtrar pedidos por cliente
+  const cargarPedidosCliente = async (cliente) => {
     setCargandoPedidos(true);
     try {
-      // Buscar primero todos los pedidos y filtrar por clienteNombre
-      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`);
-      const pedidosFiltrados = (res.data || []).filter(pedido => 
-        pedido.clienteNombre === clienteNombre || 
-        pedido.clienteId === clienteNombre ||
-        (pedido.cliente && pedido.cliente === clienteNombre)
-      );
-      setPedidosCliente(pedidosFiltrados);
+      // Llamar a la API con los parámetros correctos para filtrar en el backend
+      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
+        params: {
+          clienteId: cliente._id, // Filtrar por ID del cliente
+          nombreCliente: cliente.nombre, // Filtrar por nombre del cliente
+          enHistorialDevoluciones: false // Excluir pedidos en historial de devoluciones
+        }
+      });
+      
+      console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
+      console.log('Total pedidos recibidos:', res.data?.length || 0);
+      
+      setPedidosCliente(res.data || []);
     } catch (error) {
       console.error('Error cargando pedidos del cliente:', error);
       setPedidosCliente([]);
@@ -162,16 +168,22 @@ export default function ClientesMantenimiento() {
     }
   };
 
-  const cargarDevolucionesCliente = async (clienteNombre) => {
+  const cargarDevolucionesCliente = async (cliente) => {
     setCargandoDevoluciones(true);
     try {
-      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes?enHistorialDevoluciones=true`);
-      const devolucionesFiltradas = (res.data || []).filter(pedido =>
-        pedido.clienteNombre === clienteNombre ||
-        pedido.clienteId === clienteNombre ||
-        (pedido.cliente && pedido.cliente === clienteNombre)
-      );
-      setDevolucionesCliente(devolucionesFiltradas);
+      // Llamar a la API con los parámetros correctos para filtrar en el backend
+      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
+        params: {
+          clienteId: cliente._id, // Filtrar por ID del cliente
+          nombreCliente: cliente.nombre, // Filtrar por nombre del cliente
+          enHistorialDevoluciones: true // Solo incluir pedidos en historial de devoluciones
+        }
+      });
+      
+      console.log('Cargando devoluciones para cliente:', cliente.nombre, cliente._id);
+      console.log('Total devoluciones recibidas:', res.data?.length || 0);
+      
+      setDevolucionesCliente(res.data || []);
     } catch (error) {
       console.error('Error cargando devoluciones del cliente:', error);
       setDevolucionesCliente([]);
@@ -196,7 +208,7 @@ export default function ClientesMantenimiento() {
     setDatosReutilizacion(null);
     // Recargar pedidos para mostrar el nuevo pedido si se creó
     if (clienteEdit) {
-      cargarPedidosCliente(clienteEdit.nombre);
+      cargarPedidosCliente(clienteEdit);
     }
   };
 
@@ -282,8 +294,8 @@ export default function ClientesMantenimiento() {
     // Limpiar filtros al cambiar de cliente
     setFiltroFecha('');
     setFiltroProducto('');
-    cargarPedidosCliente(cliente.nombre);
-    cargarDevolucionesCliente(cliente.nombre);
+    cargarPedidosCliente(cliente);
+    cargarDevolucionesCliente(cliente);
   };
 
   const handleVer = (cliente) => {
@@ -292,8 +304,8 @@ export default function ClientesMantenimiento() {
     // Limpiar filtros al cambiar de cliente
     setFiltroFecha('');
     setFiltroProducto('');
-    cargarPedidosCliente(cliente.nombre);
-    cargarDevolucionesCliente(cliente.nombre);
+    cargarPedidosCliente(cliente);
+    cargarDevolucionesCliente(cliente);
   };
 
   const handleEliminar = async (cliente) => {
@@ -1646,100 +1658,100 @@ export default function ClientesMantenimiento() {
                     borderRadius: '10px',
                     padding: '20px',
                     maxHeight: '400px',
-                    overflowY: 'auto'                  }}>
-                    {pedidosFiltrados.map((pedido, index) => (
-                      <div
-                        key={pedido._id || index}
-                        style={{
-                          background: 'white',
-                          borderRadius: '8px',
-                          padding: '15px',
-                          marginBottom: '10px',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                          border: '1px solid #e1e8ed'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                          <div>
-                            <strong style={{ color: '#2c3e50', fontSize: '16px' }}>
-                              Pedido #{pedido.numeroPedido || pedido._id}
-                            </strong>
-                            <span style={{
-                              marginLeft: '15px',
-                              padding: '4px 8px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              background: pedido.estado === 'entregado' ? '#d4edda' : 
-                                         pedido.estado === 'enviado' ? '#fff3cd' : '#f8d7da',
-                              color: pedido.estado === 'entregado' ? '#155724' : 
-                                     pedido.estado === 'enviado' ? '#856404' : '#721c24'
-                            }}>
-                              {pedido.estado || 'Sin estado'}
-                            </span>
+                    overflowY: 'auto'                  
+                  }}>
+                    {pedidosFiltrados.length > 0 ? (
+                      pedidosFiltrados.map((pedido, index) => (
+                        <div
+                          key={pedido._id || index}
+                          style={{
+                            background: 'white',
+                            borderRadius: '8px',
+                            padding: '15px',
+                            marginBottom: '10px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            border: '1px solid #e1e8ed'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <div>
+                              <strong style={{ color: '#2c3e50', fontSize: '16px' }}>
+                                Pedido #{pedido.numeroPedido || pedido._id}
+                              </strong>
+                              <span style={{
+                                marginLeft: '15px',
+                                padding: '4px 8px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                background: pedido.estado === 'entregado' ? '#d4edda' : 
+                                          pedido.estado === 'enviado' ? '#fff3cd' : '#f8d7da',
+                                color: pedido.estado === 'entregado' ? '#155724' : 
+                                      pedido.estado === 'enviado' ? '#856404' : '#721c24'
+                              }}>
+                                {pedido.estado || 'Sin estado'}
+                              </span>
+                            </div>
+                            <div style={{ color: '#7f8c8d', fontSize: '14px' }}>
+                              {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : 
+                              pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleDateString() : 'Sin fecha'}
+                            </div>
                           </div>
-                          <div style={{ color: '#7f8c8d', fontSize: '14px' }}>
-                            {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : 
-                             pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleDateString() : 'Sin fecha'}
+                          
+                          {pedido.lineas && pedido.lineas.length > 0 && (
+                            <div style={{ fontSize: '14px', color: '#495057' }}>
+                              <strong>Productos:</strong>
+                              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                                {pedido.lineas.slice(0, 3).map((linea, idx) => (
+                                  <li key={idx} style={{ marginBottom: '2px' }}>
+                                    {linea.cantidad} {linea.formato || 'und'} de {linea.producto}
+                                    {linea.comentario && <span style={{ color: '#7f8c8d', fontStyle: 'italic' }}> - {linea.comentario}</span>}
+                                  </li>
+                                ))}
+                                {pedido.lineas.length > 3 && (
+                                  <li style={{ color: '#7f8c8d', fontStyle: 'italic' }}>
+                                    ... y {pedido.lineas.length - 3} productos más
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {/* Botón para reutilizar pedido */}
+                          <div style={{ marginTop: '15px', textAlign: 'right' }}>
+                            <button
+                              onClick={() => reutilizarPedido(pedido, clienteEdit)}
+                              style={{
+                                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 6px rgba(40, 167, 69, 0.3)',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                marginLeft: 'auto'
+                              }}
+                              onMouseOver={(e) => {
+                                e.target.style.transform = 'translateY(-1px)';
+                                e.target.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 2px 6px rgba(40, 167, 69, 0.3)';
+                              }}
+                            >
+                              🔄 Reutilizar Pedido
+                            </button>
                           </div>
                         </div>
-                        
-                        {pedido.lineas && pedido.lineas.length > 0 && (
-                          <div style={{ fontSize: '14px', color: '#495057' }}>
-                            <strong>Productos:</strong>
-                            <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-                              {pedido.lineas.slice(0, 3).map((linea, idx) => (
-                                <li key={idx} style={{ marginBottom: '2px' }}>
-                                  {linea.cantidad} {linea.formato || 'und'} de {linea.producto}
-                                  {linea.comentario && <span style={{ color: '#7f8c8d', fontStyle: 'italic' }}> - {linea.comentario}</span>}
-                                </li>
-                              ))}
-                              {pedido.lineas.length > 3 && (
-                                <li style={{ color: '#7f8c8d', fontStyle: 'italic' }}>
-                                  ... y {pedido.lineas.length - 3} productos más
-                                </li>
-                              )}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {/* Botón para reutilizar pedido */}
-                        <div style={{ marginTop: '15px', textAlign: 'right' }}>
-                          <button
-                            onClick={() => reutilizarPedido(pedido, clienteEdit)}
-                            style={{
-                              background: 'linear-gradient(135deg, #28a745, #20c997)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              padding: '8px 16px',
-                              fontSize: '13px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              boxShadow: '0 2px 6px rgba(40, 167, 69, 0.3)',
-                              transition: 'all 0.3s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              marginLeft: 'auto'
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.transform = 'translateY(-1px)';
-                              e.target.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = '0 2px 6px rgba(40, 167, 69, 0.3)';
-                            }}
-                          >
-                            🔄 Reutilizar Pedido
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Mensaje cuando no hay pedidos filtrados */}
-                    {pedidosCliente.length > 0 && pedidosFiltrados.length === 0 && (
+                      ))
+                    ) : (
                       <div style={{
                         textAlign: 'center',
                         padding: '40px',

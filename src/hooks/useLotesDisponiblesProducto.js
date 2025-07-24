@@ -1,6 +1,9 @@
 // Hook para obtener lotes disponibles de un producto en el almacén central
 import { useState, useEffect } from 'react';
 import { getMovimientosStock } from '../services/movimientosStockService';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
 /**
  * Devuelve los lotes disponibles para un producto en el almacén central, filtrando por fecha y stock > 0
@@ -12,6 +15,21 @@ export function useLotesDisponiblesProducto(producto, fechaExpedicion) {
   const [lotes, setLotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [infoProducto, setInfoProducto] = useState(null);
+
+  // Primero obtenemos la información del producto para saber si se controla por unidades o por peso
+  useEffect(() => {
+    if (!producto) return;
+    
+    setLoading(true);
+    axios.get(`${API_URL}/productos?nombre=${encodeURIComponent(producto)}`)
+      .then(response => {
+        if (response.data && response.data.length > 0) {
+          setInfoProducto(response.data[0]);
+        }
+      })
+      .catch(err => console.error('Error al obtener información del producto:', err));
+  }, [producto]);
 
   useEffect(() => {
     if (!producto) return;
@@ -29,15 +47,25 @@ export function useLotesDisponiblesProducto(producto, fechaExpedicion) {
             lotesMap[mov.lote].peso += Number(mov.peso) || 0;
           }
         });
+        
+        // Determinar si se controla por unidades o por peso
+        const esSoloPorUnidades = infoProducto && infoProducto.unidad && infoProducto.unidad !== 'kg';
+        
         // Solo lotes con stock > 0
-        setLotes(Object.values(lotesMap).filter(l => l.cantidad > 0 || l.peso > 0));
+        // Si el producto se controla por unidades, mostrar lotes con cantidad > 0 aunque el peso sea 0
+        setLotes(Object.values(lotesMap).filter(l => {
+          if (esSoloPorUnidades) {
+            return l.cantidad > 0; // Si es por unidades, solo importa que haya unidades disponibles
+          }
+          return l.cantidad > 0 || l.peso > 0; // Mantener la lógica original para productos por peso
+        }));
         setLoading(false);
       })
       .catch(err => {
         setError(err);
         setLoading(false);
       });
-  }, [producto, fechaExpedicion]);
+  }, [producto, fechaExpedicion, infoProducto]);
 
   return { lotes, loading, error };
 }
