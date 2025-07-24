@@ -233,7 +233,11 @@ export default function ClientesMantenimiento() {
 
   // Función para filtrar pedidos del cliente
   const filtrarPedidosCliente = (pedidos, filtroFecha, filtroProducto) => {
-    let pedidosFiltrados = [...pedidos];
+    console.log('DEBUG: Aplicando filtros a pedidos', { total: pedidos?.length || 0, filtroFecha, filtroProducto });
+    
+    // Asegurarnos que pedidos sea un array
+    const pedidosArray = Array.isArray(pedidos) ? pedidos : [];
+    let pedidosFiltrados = [...pedidosArray];
 
     // Filtro por fecha
     if (filtroFecha) {
@@ -262,14 +266,19 @@ export default function ClientesMantenimiento() {
         );
       });
     }
-
+    
+    console.log('DEBUG: Después de filtrar', { total: pedidosFiltrados.length });
     return pedidosFiltrados;
   };
 
   // Efecto para aplicar filtros cuando cambian
   React.useEffect(() => {
-    const pedidosFiltrados = filtrarPedidosCliente(pedidosCliente, filtroFecha, filtroProducto);
-    setPedidosFiltrados(pedidosFiltrados);
+    console.log('DEBUG: Efecto de filtrado ejecutado', { 
+      pedidosLength: pedidosCliente?.length || 0, 
+      filtroFecha, 
+      filtroProducto 
+    });
+    setPedidosFiltrados(filtrarPedidosCliente(pedidosCliente, filtroFecha, filtroProducto));
   }, [pedidosCliente, filtroFecha, filtroProducto]);
 
   // Función para limpiar filtros
