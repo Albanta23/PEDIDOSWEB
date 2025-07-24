@@ -252,8 +252,8 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
               </div>
             </div>
 
-            {/* Historial de estados */}
-            {pedido.historialEstados && pedido.historialEstados.length > 0 && (
+            {/* Historial de eventos */}
+            {(pedido.historial || pedido.historialEstados) && (pedido.historial || pedido.historialEstados).length > 0 && (
               <div style={{
                 background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
                 padding: '24px',
@@ -271,7 +271,7 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
                   gap: '12px'
                 }}>
                   <span style={{ fontSize: '20px' }}>🕒</span>
-                  Historial de Estados
+                  Historial del Pedido
                 </h3>
                 <div style={{
                   background: '#fff',
@@ -279,14 +279,14 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
                   borderRadius: '12px',
                   overflow: 'hidden'
                 }}>
-                  {pedido.historialEstados.map((h,i)=>(
+                  {(pedido.historial || pedido.historialEstados).map((h,i)=>(
                     <div key={i} style={{
                       padding: '16px 20px',
-                      borderBottom: i < pedido.historialEstados.length - 1 ? '1px solid #e2e8f0' : 'none',
+                      borderBottom: i < (pedido.historial || pedido.historialEstados).length - 1 ? '1px solid #e2e8f0' : 'none',
                       background: i % 2 === 0 ? '#fff' : '#f8fafc'
                     }}>
                       <div style={{fontWeight: '700', color: '#1e293b', fontSize: '16px', marginBottom: '4px'}}>
-                        {h.estado?.replace('_',' ').toUpperCase()}
+                        {h.tipo === 'bultos' ? `Actualización de Bultos: ${h.bultos}` : h.estado?.replace('_',' ').toUpperCase()}
                       </div>
                       <div style={{fontSize: '14px', color: '#64748b'}}>
                         Por <span style={{color:'#1976d2', fontWeight: '600'}}>{h.usuario}</span> el {h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '-'}
