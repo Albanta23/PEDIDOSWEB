@@ -136,19 +136,23 @@ async function registrarMovimientoStock({
         loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
       } else {
-        loteDoc = await Lote.create({
-          lote,
-          producto: productoDoc._id,
-          proveedorId,
-          fechaEntrada: fecha ? new Date(fecha) : new Date(),
-          cantidadInicial: cantidad,
-          pesoInicial: peso || 0,
-          cantidadDisponible: cantidad,
-          pesoDisponible: peso || 0,
-          referenciaDocumento,
-          precioCoste,
-          notas
-        });
+      // Solo incluir proveedorId si está presente
+      const loteData = {
+        lote,
+        producto: productoDoc._id,
+        fechaEntrada: fecha ? new Date(fecha) : new Date(),
+        cantidadInicial: cantidad,
+        pesoInicial: peso || 0,
+        cantidadDisponible: cantidad,
+        pesoDisponible: peso || 0,
+        referenciaDocumento,
+        precioCoste,
+        notas
+      };
+      if (typeof proveedorId !== 'undefined' && proveedorId !== null && proveedorId !== '') {
+        loteData.proveedorId = proveedorId;
+      }
+      loteDoc = await Lote.create(loteData);
       }
     }
   } else if ((tipo === 'baja' || tipo === 'transferencia_salida') && lote) {
