@@ -50,7 +50,7 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
   };
 
   const agregarProducto = () => {
-    setForm(f => ({ ...f, productos: [...f.productos, { producto: '', cantidad: 1, peso: 0, lote: '', comentario: '' }] }));
+    const [cargando, setCargando] = useState(false); // Loading state for transferencias
   };
 
   const quitarProducto = (idx) => {
@@ -115,72 +115,19 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
             <input type='text' placeholder='Observaciones' value={form.observaciones} onChange={e => handleFormChange('observaciones', e.target.value)} style={{width:180}} />
           </div>
           {form.productos.map((p, idx) => (
-            <div key={idx} style={{display:'flex',gap:8,marginTop:8,alignItems:'center'}}>
-              {/* Autocompletado dinámico usando buscarProductos */}
-              {(() => {
-                const { buscarProductos } = require('./ProductosContext');
-                const React = require('react');
-                const [sugerencias, setSugerencias] = React.useState([]);
-                const [buscando, setBuscando] = React.useState(false);
-                const [inputValue, setInputValue] = React.useState(p.producto || '');
-                React.useEffect(() => {
-                  if (!inputValue || inputValue.length < 2) {
-                    setSugerencias([]);
-                    return;
-                  }
-                  let cancelado = false;
-                  setBuscando(true);
-                  buscarProductos(inputValue).then(res => {
-                    if (!cancelado) setSugerencias(res);
-                  }).finally(() => { if (!cancelado) setBuscando(false); });
-                  return () => { cancelado = true; };
-                }, [inputValue]);
-                return (
-                  <div style={{ position: 'relative', width: 120 }}>
-                    <input
-                      type='text'
-                      autoComplete='off'
-                      placeholder='Producto'
-                      value={inputValue}
-                      onChange={e => {
-                        setInputValue(e.target.value);
-                        handleProductoChange(idx, 'producto', e.target.value);
-                      }}
-                      onFocus={e => {
-                        if (inputValue && inputValue.length >= 2) {
-                          buscarProductos(inputValue).then(setSugerencias);
-                        }
-                      }}
-                      style={{ width: 120, zIndex: 20 }}
-                    />
-                    {buscando && <div className="sugerencias-dropdown">Buscando...</div>}
-                    {sugerencias.length > 0 && (
-                      <ul className="sugerencias-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ccc', zIndex: 30, maxHeight: 180, overflowY: 'auto', margin: 0, padding: 0, listStyle: 'none' }}>
-                        {sugerencias.map(prod => (
-                          <li
-                            key={prod._id || prod.referencia || prod.nombre}
-                            style={{ padding: '6px 12px', cursor: 'pointer' }}
-                            onMouseDown={() => {
-                              setInputValue(prod.nombre);
-                              handleProductoChange(idx, 'producto', prod.nombre);
-                              setSugerencias([]);
-                            }}
-                          >
-                            {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })()}
+            <React.Fragment key={idx}>
+              <ProductoAutocomplete
+                idx={idx}
+                p={p}
+                handleProductoChange={handleProductoChange}
+              />
               <input type='number' min={1} placeholder='Cantidad' value={p.cantidad} onChange={e => handleProductoChange(idx, 'cantidad', e.target.value)} style={{width:70}} />
               <input type='number' min={0} step={0.01} placeholder='Peso (kg)' value={p.peso || ''} onChange={e => handleProductoChange(idx, 'peso', e.target.value)} style={{width:90}} />
               <input type='text' placeholder='Lote' value={p.lote} onChange={e => handleProductoChange(idx, 'lote', e.target.value)} style={{width:80}} />
               <input type='text' placeholder='Comentario' value={p.comentario} onChange={e => handleProductoChange(idx, 'comentario', e.target.value)} style={{width:120}} />
               <button onClick={() => quitarProducto(idx)} disabled={form.productos.length === 1}>-</button>
               {idx === form.productos.length - 1 && <button onClick={agregarProducto}>+</button>}
-            </div>
+            </React.Fragment>
           ))}
           <button onClick={enviarTransferencia} style={{marginTop:12,background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'8px 18px',fontWeight:600}}>Enviar traspaso/devolución</button>
         </div>
@@ -244,6 +191,71 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
             ))}
           </tbody>
         </table>
+      )}
+    </div>
+  );
+}
+
+// Componente separado para el autocompletado de productos
+function ProductoAutocomplete({ idx, p, handleProductoChange }) {
+  const { buscarProductos } = useProductos();
+  const [sugerencias, setSugerencias] = useState([]);
+  const [buscando, setBuscando] = useState(false);
+  const [inputValue, setInputValue] = useState(p.producto || '');
+
+  useEffect(() => {
+    setInputValue(p.producto || '');
+    // eslint-disable-next-line
+  }, [p.producto]);
+
+  useEffect(() => {
+    if (!inputValue || inputValue.length < 2) {
+      setSugerencias([]);
+      return;
+    }
+    let cancelado = false;
+    setBuscando(true);
+    buscarProductos(inputValue).then(res => {
+      if (!cancelado) setSugerencias(res);
+    }).finally(() => { if (!cancelado) setBuscando(false); });
+    return () => { cancelado = true; };
+  }, [inputValue, buscarProductos]);
+
+  return (
+    <div style={{ position: 'relative', width: 120 }}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={e => {
+          setInputValue(e.target.value);
+          handleProductoChange(idx, 'producto', e.target.value);
+        }}
+        placeholder="Producto"
+        style={{ width: 120 }}
+        autoComplete="off"
+        onFocus={e => {
+          if (inputValue && inputValue.length >= 2) {
+            buscarProductos(inputValue).then(setSugerencias);
+          }
+        }}
+      />
+      {buscando && <div style={{ position: 'absolute', top: 22, left: 0, background: '#fff', zIndex: 10, fontSize: 12 }}>Buscando...</div>}
+      {sugerencias.length > 0 && (
+        <ul className="sugerencias-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ccc', zIndex: 30, maxHeight: 180, overflowY: 'auto', margin: 0, padding: 0, listStyle: 'none' }}>
+          {sugerencias.map(prod => (
+            <li
+              key={prod._id || prod.referencia || prod.nombre}
+              style={{ padding: '6px 12px', cursor: 'pointer' }}
+              onMouseDown={() => {
+                setInputValue(prod.nombre);
+                handleProductoChange(idx, 'producto', prod.nombre);
+                setSugerencias([]);
+              }}
+            >
+              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
