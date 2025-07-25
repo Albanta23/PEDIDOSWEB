@@ -730,6 +730,28 @@ app.post('/api/productos/importar', async (req, res) => {
 });
 
 // --- ENDPOINT: Obtener todos los productos ---
+
+// ENDPOINT: Búsqueda parcial de productos por nombre o referencia
+app.get('/api/productos/buscar', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || typeof q !== 'string' || !q.trim()) {
+      return res.json([]); // Si no hay query, devolver array vacío
+    }
+    const regex = new RegExp(q.trim(), 'i');
+    const productos = await Producto.find({
+      $or: [
+        { nombre: { $regex: regex } },
+        { referencia: { $regex: regex } }
+      ]
+    });
+    res.json(productos);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ENDPOINT: Obtener todos los productos
 app.get('/api/productos', async (req, res) => {
   try {
     const productos = await Producto.find();

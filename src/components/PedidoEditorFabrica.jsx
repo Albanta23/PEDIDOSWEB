@@ -87,8 +87,25 @@ function LoteSelector({ productoId, value, onChange, lotes, loading, error }) {
 }
 
 function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAbrirModalPeso }) {
-  const producto = productos.find(p => p.nombre === linea.producto);
+  const { buscarProductos } = useProductos();
+  const [sugerencias, setSugerencias] = React.useState([]);
+  const [buscando, setBuscando] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState(linea.producto || '');
+  const producto = sugerencias.find(p => p.nombre === linea.producto) || productos.find(p => p.nombre === linea.producto);
   const { lotes, loading, error } = useLotesDisponibles(producto?._id);
+
+  React.useEffect(() => {
+    if (!inputValue || inputValue.length < 2) {
+      setSugerencias([]);
+      return;
+    }
+    let cancelado = false;
+    setBuscando(true);
+    buscarProductos(inputValue).then(res => {
+      if (!cancelado) setSugerencias(res);
+    }).finally(() => { if (!cancelado) setBuscando(false); });
+    return () => { cancelado = true; };
+  }, [inputValue]);
 
   return (
     linea.esComentario ? (
@@ -107,46 +124,45 @@ function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAb
       </div>
     ) : (
       <div key={idx} className="linea-pedido-card">
-        <div className="form-group">
+        <div className="form-group" style={{ position: 'relative' }}>
           <label htmlFor={`producto-${idx}`}>Producto</label>
           <input
             id={`producto-${idx}`}
-            list="productos-lista-global"
-            value={linea.producto}
-            onChange={e => actualizarLinea(idx, 'producto', e.target.value)}
-            onKeyDown={e => {
-              // Si se presiona Enter, buscar producto por referencia exacta
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const valor = e.target.value.trim();
-                // Buscar producto por referencia exacta
-                const productoEncontrado = productos.find(p => p.referencia &&
-                  String(p.referencia).toLowerCase() === String(valor).toLowerCase());
-                if (productoEncontrado) {
-                  actualizarLinea(idx, 'producto', productoEncontrado.nombre);
-                }
-              }
+            autoComplete="off"
+            value={inputValue}
+            onChange={e => {
+              setInputValue(e.target.value);
+              actualizarLinea(idx, 'producto', e.target.value);
             }}
-            onBlur={e => {
-              // Al perder foco, verificar si es una referencia exacta
-              const valor = e.target.value.trim();
-              const productoEncontrado = productos.find(p => p.referencia &&
-                String(p.referencia).toLowerCase() === String(valor).toLowerCase());
-              if (productoEncontrado) {
-                actualizarLinea(idx, 'producto', productoEncontrado.nombre);
+            onFocus={e => {
+              if (inputValue && inputValue.length >= 2) {
+                buscarProductos(inputValue).then(setSugerencias);
               }
             }}
             placeholder="Nombre del producto o referencia"
             className="producto-nombre-input"
+            style={{ zIndex: 20 }}
           />
-          <datalist id="productos-lista-global">
-            {productos.map(prod => (
-              <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-              </option>
-            ))}
-          </datalist>
+          {buscando && <div className="sugerencias-dropdown">Buscando...</div>}
+          {sugerencias.length > 0 && (
+            <ul className="sugerencias-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ccc', zIndex: 30, maxHeight: 180, overflowY: 'auto', margin: 0, padding: 0, listStyle: 'none' }}>
+              {sugerencias.map(prod => (
+                <li
+                  key={prod._id || prod.referencia || prod.nombre}
+                  style={{ padding: '6px 12px', cursor: 'pointer' }}
+                  onMouseDown={() => {
+                    setInputValue(prod.nombre);
+                    actualizarLinea(idx, 'producto', prod.nombre);
+                    setSugerencias([]);
+                  }}
+                >
+                  {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+        {/* ...el resto del componente permanece igual... */}
 
         <div className="form-grid">
           <div className="form-group">

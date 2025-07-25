@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const LoteSchema = new mongoose.Schema({
-  lote: { type: String, required: true, unique: true },
+  lote: { type: String, required: true },
   producto: { type: mongoose.Schema.Types.ObjectId, ref: 'Producto', required: true },
   proveedorId: { type: String, required: false },
   fechaEntrada: { type: Date, default: Date.now },
@@ -14,6 +14,6 @@ const LoteSchema = new mongoose.Schema({
   notas: { type: String }
 }, { timestamps: true });
 
-LoteSchema.index({ producto: 1, lote: 1 });
+LoteSchema.index({ producto: 1, lote: 1 }, { unique: true });
 
 module.exports = mongoose.model('Lote', LoteSchema);

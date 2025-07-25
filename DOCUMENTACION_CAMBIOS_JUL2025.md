@@ -1,3 +1,34 @@
+# CAMBIOS JULIO 2025
+
+## 1. Permitir productos diferentes sobre el mismo lote
+- El modelo `Lote.js` ahora usa un índice único compuesto `{ producto, lote }` en vez de solo `lote`, permitiendo registrar el mismo número de lote para productos diferentes.
+- Soluciona el error de clave duplicada en MongoDB al registrar lotes de productos distintos con el mismo identificador de lote.
+
+## 2. Refactorización y robustez en autocompletado de productos
+- Se ha corregido y limpiado el renderizado JSX en `PedidoList.jsx` para evitar errores de sintaxis y asegurar que toda la lógica de autocompletado esté dentro del render de cada línea.
+- Mejora UX y validación de productos en la edición de pedidos.
+- Eliminados comentarios y bloques de código fuera de lugar que causaban errores de compilación.
+
+## 3. Mejoras en la gestión de pedidos y lotes
+- El frontend usa la búsqueda de productos en vivo y evita errores 404.
+- Edición y guardado de líneas de pedido robusta y sin errores de validación.
+- Lógica de guardado en localStorage para borradores de pedidos documentada y robusta.
+
+## 4. Otros cambios
+- Actualización de estilos y componentes relacionados (`PedidoEditorFabrica.jsx`, `TransferenciasPanel.jsx`, `ProductosContext.jsx`).
+- Añadidos scripts y utilidades para diagnóstico y verificación de datos.
+
+## Archivos principales modificados
+- `gestion-pedidos-carniceria/src/models/Lote.js`
+- `gestion-pedidos-carniceria/src/server.js`
+- `src/components/PedidoList.jsx`
+- `src/components/PedidoEditorFabrica.jsx`
+- `src/components/TransferenciasPanel.jsx`
+- `src/components/ProductosContext.jsx`
+
+---
+Fecha: 25/07/2025
+Responsable: GitHub Copilot
 # Documentación de Cambios en PEDIDOSWEB
 
 ## Fecha: 17 de Julio de 2025

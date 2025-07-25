@@ -116,21 +116,64 @@ export default function TransferenciasPanel({ tiendas, tiendaActual, modoFabrica
           </div>
           {form.productos.map((p, idx) => (
             <div key={idx} style={{display:'flex',gap:8,marginTop:8,alignItems:'center'}}>
-              <input
-                list={`productos-lista-global`}
-                type='text'
-                placeholder='Producto'
-                value={p.producto}
-                onChange={e => handleProductoChange(idx, 'producto', e.target.value)}
-                style={{width:120}}
-              />
-              <datalist id="productos-lista-global">
-                {productos.map(prod => (
-                  <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                    {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                  </option>
-                ))}
-              </datalist>
+              {/* Autocompletado dinámico usando buscarProductos */}
+              {(() => {
+                const { buscarProductos } = require('./ProductosContext');
+                const React = require('react');
+                const [sugerencias, setSugerencias] = React.useState([]);
+                const [buscando, setBuscando] = React.useState(false);
+                const [inputValue, setInputValue] = React.useState(p.producto || '');
+                React.useEffect(() => {
+                  if (!inputValue || inputValue.length < 2) {
+                    setSugerencias([]);
+                    return;
+                  }
+                  let cancelado = false;
+                  setBuscando(true);
+                  buscarProductos(inputValue).then(res => {
+                    if (!cancelado) setSugerencias(res);
+                  }).finally(() => { if (!cancelado) setBuscando(false); });
+                  return () => { cancelado = true; };
+                }, [inputValue]);
+                return (
+                  <div style={{ position: 'relative', width: 120 }}>
+                    <input
+                      type='text'
+                      autoComplete='off'
+                      placeholder='Producto'
+                      value={inputValue}
+                      onChange={e => {
+                        setInputValue(e.target.value);
+                        handleProductoChange(idx, 'producto', e.target.value);
+                      }}
+                      onFocus={e => {
+                        if (inputValue && inputValue.length >= 2) {
+                          buscarProductos(inputValue).then(setSugerencias);
+                        }
+                      }}
+                      style={{ width: 120, zIndex: 20 }}
+                    />
+                    {buscando && <div className="sugerencias-dropdown">Buscando...</div>}
+                    {sugerencias.length > 0 && (
+                      <ul className="sugerencias-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ccc', zIndex: 30, maxHeight: 180, overflowY: 'auto', margin: 0, padding: 0, listStyle: 'none' }}>
+                        {sugerencias.map(prod => (
+                          <li
+                            key={prod._id || prod.referencia || prod.nombre}
+                            style={{ padding: '6px 12px', cursor: 'pointer' }}
+                            onMouseDown={() => {
+                              setInputValue(prod.nombre);
+                              handleProductoChange(idx, 'producto', prod.nombre);
+                              setSugerencias([]);
+                            }}
+                          >
+                            {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })()}
               <input type='number' min={1} placeholder='Cantidad' value={p.cantidad} onChange={e => handleProductoChange(idx, 'cantidad', e.target.value)} style={{width:70}} />
               <input type='number' min={0} step={0.01} placeholder='Peso (kg)' value={p.peso || ''} onChange={e => handleProductoChange(idx, 'peso', e.target.value)} style={{width:90}} />
               <input type='text' placeholder='Lote' value={p.lote} onChange={e => handleProductoChange(idx, 'lote', e.target.value)} style={{width:80}} />

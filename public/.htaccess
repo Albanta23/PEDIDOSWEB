@@ -1,0 +1,61 @@
+# Configuración para solucionar problemas de MIME en archivos JSX
+# Colocar este archivo en la raíz del servidor web Apache
+
+# Habilitar el módulo de reescritura
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+</IfModule>
+
+# Configurar tipos MIME correctos
+<IfModule mod_mime.c>
+  # Asegurar que los archivos JSX se sirvan con el tipo MIME correcto
+  AddType application/javascript .jsx
+  
+  # Otros tipos relevantes
+  AddType application/javascript .js
+  AddType text/css .css
+  AddType image/svg+xml .svg
+</IfModule>
+
+# Configurar cabeceras CORS
+<IfModule mod_headers.c>
+  <FilesMatch "\.(jsx|js|css|json)$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept"
+  </FilesMatch>
+</IfModule>
+
+# Configurar compresión para mejorar rendimiento
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Configurar caché para mejorar rendimiento
+<IfModule mod_expires.c>
+  ExpiresActive On
+  
+  # No almacenar en caché archivos JSX para desarrollo
+  <FilesMatch "\.(jsx)$">
+    ExpiresDefault "access"
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+  
+  # Caché normal para producción
+  # Descomentar estas líneas en producción
+  # <FilesMatch "\.(jsx)$">
+  #   ExpiresDefault "access plus 1 month"
+  #   Header set Cache-Control "public, max-age=2592000"
+  # </FilesMatch>
+</IfModule>
+
+# Redireccionar las solicitudes de archivos no encontrados a index.html para SPA
+<IfModule mod_rewrite.c>
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
