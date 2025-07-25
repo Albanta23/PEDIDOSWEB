@@ -127,7 +127,14 @@ async function registrarMovimientoStock({
     notas
   });
 
-  if (tipo === 'entrada' && lote) {
+  // Solo crear lote si el nombre de lote es válido y no es 'manual' ni vacío
+  if (
+    tipo === 'entrada' &&
+    lote &&
+    typeof lote === 'string' &&
+    lote.trim() !== '' &&
+    lote.trim().toLowerCase() !== 'manual'
+  ) {
     const productoDoc = await Producto.findOne({ nombre: producto });
     if (productoDoc) {
       let loteDoc = await Lote.findOne({ lote: lote, producto: productoDoc._id });
@@ -136,23 +143,23 @@ async function registrarMovimientoStock({
         loteDoc.pesoDisponible += peso || 0;
         await loteDoc.save();
       } else {
-      // Solo incluir proveedorId si está presente
-      const loteData = {
-        lote,
-        producto: productoDoc._id,
-        fechaEntrada: fecha ? new Date(fecha) : new Date(),
-        cantidadInicial: cantidad,
-        pesoInicial: peso || 0,
-        cantidadDisponible: cantidad,
-        pesoDisponible: peso || 0,
-        referenciaDocumento,
-        precioCoste,
-        notas
-      };
-      if (typeof proveedorId !== 'undefined' && proveedorId !== null && proveedorId !== '') {
-        loteData.proveedorId = proveedorId;
-      }
-      loteDoc = await Lote.create(loteData);
+        // Solo incluir proveedorId si está presente
+        const loteData = {
+          lote,
+          producto: productoDoc._id,
+          fechaEntrada: fecha ? new Date(fecha) : new Date(),
+          cantidadInicial: cantidad,
+          pesoInicial: peso || 0,
+          cantidadDisponible: cantidad,
+          pesoDisponible: peso || 0,
+          referenciaDocumento,
+          precioCoste,
+          notas
+        };
+        if (typeof proveedorId !== 'undefined' && proveedorId !== null && proveedorId !== '') {
+          loteData.proveedorId = proveedorId;
+        }
+        loteDoc = await Lote.create(loteData);
       }
     }
   } else if ((tipo === 'baja' || tipo === 'transferencia_salida') && lote) {

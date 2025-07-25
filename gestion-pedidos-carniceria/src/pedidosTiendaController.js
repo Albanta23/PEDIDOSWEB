@@ -36,10 +36,10 @@ module.exports = {
       const { id } = req.params;
       const pedidoPrevio = await Pedido.findById(id);
       if (!pedidoPrevio || pedidoPrevio.tiendaId === 'clientes') return res.status(404).json({ error: 'Pedido no encontrado' });
-      
+
       // Validación y preparación de datos
       datos = req.body;
-      
+
       // Validar que las líneas sean válidas si se están actualizando
       if (datos.lineas && Array.isArray(datos.lineas)) {
         // Validar cada línea
@@ -51,14 +51,13 @@ module.exports = {
               comentario: linea.comentario || ''
             };
           }
-          
+
           // Para líneas normales, producto es obligatorio
           if (linea.producto === null || linea.producto === undefined || (typeof linea.producto === 'string' && !linea.producto.trim())) {
             console.log('Línea inválida - producto requerido:', linea);
             return null;
           }
-          
-          // Normalizar campos numéricos
+
           // Normalizar campos numéricos con validación robusta
           if (linea.cantidad !== undefined && linea.cantidad !== null && linea.cantidad !== '') {
             const numCantidad = Number(linea.cantidad);
@@ -66,52 +65,55 @@ module.exports = {
           } else if (linea.cantidad === '') {
             linea.cantidad = 0;
           }
-          
+
           if (linea.peso !== undefined && linea.peso !== null && linea.peso !== '') {
             const numPeso = Number(linea.peso);
             linea.peso = isNaN(numPeso) ? null : numPeso;
           } else if (linea.peso === '') {
             linea.peso = null;
           }
-          
+
           if (linea.cantidadEnviada !== undefined && linea.cantidadEnviada !== null && linea.cantidadEnviada !== '') {
             const numCantidadEnviada = Number(linea.cantidadEnviada);
             linea.cantidadEnviada = isNaN(numCantidadEnviada) ? 0 : numCantidadEnviada;
           } else if (linea.cantidadEnviada === '') {
             linea.cantidadEnviada = 0;
           }
-          
+
           // Normalizar valores boolean
           if (linea.preparada !== undefined) linea.preparada = Boolean(linea.preparada);
-          
+
           return linea;
         }).filter(linea => linea !== null); // Eliminar líneas inválidas
       }
-      
+
       console.log(`[INFO] Actualizando pedido ${id} con datos:`, JSON.stringify(datos, null, 2));
-      
+
+      // Validación previa para mostrar errores claros
+      try {
+        await Pedido.findByIdAndUpdate(id, datos, { new: false, runValidators: true });
+      } catch (validationErr) {
+        console.error('[VALIDATION ERROR] Error de validación al actualizar pedido:', {
+          error: validationErr.message,
+          stack: validationErr.stack,
+          datos: datos
+        });
+        return res.status(400).json({
+          error: 'Error de validación',
+          message: validationErr.message,
+          datos: datos,
+          stack: validationErr.stack
+        });
+      }
+
       const pedidoActualizado = await Pedido.findByIdAndUpdate(id, datos, { new: true });
-      
+
       // Registrar movimientos de stock si el estado cambió a 'enviadoTienda'
       if (pedidoActualizado && pedidoPrevio.estado !== 'enviadoTienda' && pedidoActualizado.estado === 'enviadoTienda') {
         for (const linea of pedidoActualizado.lineas) {
           if (linea.esComentario) continue;
           if (!linea.producto || !linea.cantidadEnviada) continue;
-          
-          // Para el registro de stock, usamos cantidades positivas para peso
-        // Log extra para depuración antes de actualizar
-        try {
-          const testUpdate = await Pedido.findByIdAndUpdate(id, datos, { new: false, runValidators: true });
-        } catch (validationErr) {
-          console.error('[VALIDATION ERROR] Error de validación al actualizar pedido:', {
-            error: validationErr.message,
-            stack: validationErr.stack,
-            datos: JSON.stringify(datos, null, 2)
-          });
-          return res.status(400).json({ error: 'Error de validación: ' + validationErr.message });
-        }
 
-        const pedidoActualizado = await Pedido.findByIdAndUpdate(id, datos, { new: true });
           await registrarBajaStock({
             tiendaId: 'almacen_central',
             producto: linea.producto,
@@ -121,7 +123,7 @@ module.exports = {
             motivo: `Salida a tienda (${pedidoActualizado.tiendaId}) por pedido`,
             peso: typeof linea.peso !== 'undefined' ? Math.abs(linea.peso) : undefined // Peso POSITIVO
           });
-          
+
           // Registrar entrada de stock en la tienda destino
           await registrarMovimientoStock({
             tiendaId: pedidoActualizado.tiendaId,
@@ -135,15 +137,19 @@ module.exports = {
           });
         }
       }
-      
+
       res.json(pedidoActualizado);
     } catch (err) {
       console.error('[ERROR] Error al actualizar pedido:', {
-      error: err.message, 
-      stack: err.stack,
-      datos: JSON.stringify(datos, null, 2)
-    });
-      res.status(400).json({ error: err.message });
+        error: err.message,
+        stack: err.stack,
+        datos: datos
+      });
+      res.status(400).json({
+        error: err.message,
+        datos: datos,
+        stack: err.stack
+      });
     }
   },
   async eliminar(req, res) {
