@@ -111,7 +111,13 @@ module.exports = {
         pedidos = await PedidoCliente.find(filtroCreacion);
       }
       
-      res.json(pedidos);
+      // Asegurar que todos los pedidos devuelvan el campo 'bultos' aunque sea null
+      const pedidosConBultos = pedidos.map(p => {
+        const plain = p.toObject ? p.toObject() : p;
+        if (typeof plain.bultos === 'undefined') plain.bultos = null;
+        return plain;
+      });
+      res.json(pedidosConBultos);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

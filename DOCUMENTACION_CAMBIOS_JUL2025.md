@@ -18,6 +18,13 @@
 - Actualización de estilos y componentes relacionados (`PedidoEditorFabrica.jsx`, `TransferenciasPanel.jsx`, `ProductosContext.jsx`).
 - Añadidos scripts y utilidades para diagnóstico y verificación de datos.
 
+## 5. Migración definitiva de la gestión de bultos
+- Se ha revisado y limpiado todo el frontend para que únicamente se utilice la lógica nueva de gestión de bultos:
+  - Todos los componentes muestran el campo `bultos` y el historial combinado proveniente del backend.
+  - Eliminadas referencias y visualizaciones antiguas de bultos que no usaban la lógica actual.
+  - Garantizada la coherencia en la visualización de bultos en expediciones, gestión de clientes, historiales y PDFs.
+  - Documentada la migración y limpieza para futuras referencias.
+
 ## Archivos principales modificados
 - `gestion-pedidos-carniceria/src/models/Lote.js`
 - `gestion-pedidos-carniceria/src/server.js`
