@@ -31,13 +31,14 @@ module.exports = {
     }
   },
   async actualizar(req, res) {
+    let datos;
     try {
       const { id } = req.params;
       const pedidoPrevio = await Pedido.findById(id);
       if (!pedidoPrevio || pedidoPrevio.tiendaId === 'clientes') return res.status(404).json({ error: 'Pedido no encontrado' });
       
       // Validación y preparación de datos
-      const datos = req.body;
+      datos = req.body;
       
       // Validar que las líneas sean válidas si se están actualizando
       if (datos.lineas && Array.isArray(datos.lineas)) {
