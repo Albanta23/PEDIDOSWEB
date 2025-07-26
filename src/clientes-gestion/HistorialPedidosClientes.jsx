@@ -31,6 +31,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
   const [cancelandoId, setCancelandoId] = useState(null);
   const [showModalDevolucion, setShowModalDevolucion] = useState(false);
   const [pedidoDevolucion, setPedidoDevolucion] = useState(null);
+  const [enviandoId, setEnviandoId] = useState(null);
 
   const handleDevolucionParcial = (pedido) => {
     setPedidoDevolucion(pedido);
@@ -62,6 +63,32 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     }
   };
 
+  const marcarComoEnviado = async (pedido) => {
+    if (!window.confirm('¿Confirmar que este pedido ha sido enviado?')) return;
+    setEnviandoId(pedido._id);
+    try {
+      await axios.put(`${API_URL}/pedidos-clientes/${pedido._id}`, {
+        ...pedido,
+        estado: 'enviado',
+        usuarioTramitando: 'usuario',
+      });
+      setEnviandoId(null);
+      // Refrescar pedidos
+      let params = [];
+      if (clienteId) params.push(`clienteId=${clienteId}`);
+      if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
+      if (fechaFin) params.push(`fechaFin=${fechaFin}`);
+      const query = params.length ? '?' + params.join('&') : '';
+      const res = await axios.get(`${API_URL}/pedidos-clientes${query}`);
+      const pedidos = res.data || [];
+      setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
+      setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
+    } catch (e) {
+      setEnviandoId(null);
+      alert('Error al marcar como enviado');
+    }
+  };
+
   const cancelarPedido = async (pedido) => {
     if (!window.confirm('¿Seguro que quieres cancelar este pedido?')) return;
     setCancelandoId(pedido._id);
@@ -81,8 +108,8 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       const query = params.length ? '?' + params.join('&') : '';
       const res = await axios.get(`${API_URL}/pedidos-clientes${query}`);
       const pedidos = res.data || [];
-      setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
-      setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado'));
+      setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
+      setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
     } catch (e) {
       setCancelandoId(null);
       alert('Error al cancelar el pedido');
@@ -111,10 +138,10 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
 
         if (soloPreparados) {
           setPedidosAbiertos([]);
-          setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado'));
+          setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
         } else {
-          setPedidosAbiertos(pedidosFiltrados.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado'));
-          setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado'));
+          setPedidosAbiertos(pedidosFiltrados.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
+          setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
         }
         setCargando(false);
       })
@@ -125,6 +152,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (estado === 'en_espera') return '#d32f2f';
     if (estado === 'en_preparacion') return '#388e3c';
     if (estado === 'preparado') return '#1976d2';
+    if (estado === 'enviado') return '#4caf50';
     if (estado === 'cancelado') return '#888';
     return '#1976d2';
   };
@@ -546,10 +574,10 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
               }}>✅</div>
               <div>
                 <h4 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: '700' }}>
-                  Pedidos Completados
+                  Pedidos Completados y Enviados
                 </h4>
                 <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
-                  {pedidosCerrados.length} pedido{pedidosCerrados.length !== 1 ? 's' : ''} preparado{pedidosCerrados.length !== 1 ? 's' : ''}
+                  {pedidosCerrados.length} pedido{pedidosCerrados.length !== 1 ? 's' : ''} preparado{pedidosCerrados.length !== 1 ? 's' : ''}/enviado{pedidosCerrados.length !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -673,6 +701,39 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                           >
                             👁️ Ver detalle
                           </button>
+                          {p.estado === 'preparado' && (
+                            <button
+                              onClick={() => marcarComoEnviado(p)}
+                              disabled={enviandoId === p._id}
+                              style={{
+                                padding: '8px 16px',
+                                background: enviandoId === p._id ? '#94a3b8' : 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                fontSize: '12px',
+                                cursor: enviandoId === p._id ? 'not-allowed' : 'pointer',
+                                opacity: enviandoId === p._id ? 0.7 : 1,
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
+                              }}
+                              onMouseEnter={e => {
+                                if (enviandoId !== p._id) {
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 16px rgba(76, 175, 80, 0.4)';
+                                }
+                              }}
+                              onMouseLeave={e => {
+                                if (enviandoId !== p._id) {
+                                  e.target.style.transform = 'translateY(0)';
+                                  e.target.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
+                                }
+                              }}
+                            >
+                              {enviandoId === p._id ? '⏳ Enviando...' : '📦 Marcar como Enviado'}
+                            </button>
+                          )}
                           <button className="btn-warning" onClick={() => handleDevolucionParcial(p)}>Devolución Parcial</button>
                           <button className="btn-danger" onClick={() => handleDevolucionTotal(p)}>Devolución Total</button>
                         </div>

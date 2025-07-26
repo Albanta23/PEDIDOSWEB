@@ -108,39 +108,62 @@ module.exports = {
             // Buscar el producto en la DB por nombre o idWoo
             const productoDb = await ProductoWoo.findOne({ $or: [{ nombre: item.name }, { idWoo: item.product_id }] });
             
-            // Extraer formato y peso medio si existen en meta_data o atributos
-            let formato = null;
+            // --- INICIO DE LÓGICA MEJORADA PARA LÍNEAS DE PEDIDO ---
+
+            let formato = productoDb?.formatoEstandar || 'Unidad'; // Valor por defecto
             let pesoMedio = null;
-            let tipoIva = productoDb?.tipoIva || 10; // Usar el tipo de IVA del producto o por defecto 10%
-            
+
+            // 1. Lógica para el IVA: Priorizar el IVA real de la transacción para máxima precisión.
+            let tipoIva = 10; // IVA por defecto si no se puede calcular.
+            const totalTax = parseFloat(item.total_tax);
+            const lineTotal = parseFloat(item.total); // 'total' es el total de la línea (precio * cantidad) después de descuentos.
+
+            if (!isNaN(totalTax) && !isNaN(lineTotal) && lineTotal > 0) {
+              // Calculamos la tasa de IVA efectiva para esta línea específica.
+              // Esto es lo más preciso, ya que refleja el impuesto exacto cobrado al cliente en esa compra.
+              const calculatedRate = (totalTax / lineTotal) * 100;
+              tipoIva = Math.round(calculatedRate); // Redondear al entero más cercano (ej. 20.99 -> 21)
+            } else if (productoDb?.tipoIva) {
+              // Si no se pudo calcular (ej. pedidos gratuitos), usamos el IVA del producto en nuestra BD.
+              tipoIva = productoDb.tipoIva;
+            }
+
+            // 2. Lógica para formato y comentarios desde meta_data
+            let comentariosLinea = [];
+            let formatoYaEnComentarios = false;
             if (item.meta_data && Array.isArray(item.meta_data)) {
               for (const meta of item.meta_data) {
-                if (meta.key && meta.key.toLowerCase().includes('formato')) formato = meta.value;
+                // Extraer peso medio si existe
                 if (meta.key && meta.key.toLowerCase().includes('peso')) pesoMedio = meta.value;
-                if (meta.key && meta.key.toLowerCase().includes('iva')) {
-                  const valorIva = parseFloat(meta.value);
-                  if (!isNaN(valorIva)) tipoIva = valorIva;
+
+                // Si es un metadato visible, procesarlo
+                if (meta.display_key && meta.display_value) {
+                  // Si es el formato principal (Peso o Formato), actualizar el campo 'formato'
+                  if (['peso', 'formato'].includes(meta.display_key.toLowerCase())) {
+                    formato = meta.display_value;
+                    formatoYaEnComentarios = true;
+                  }
+                  // Añadir SIEMPRE el metadato visible a los comentarios para máxima información
+                  comentariosLinea.push(`${meta.display_key}: ${meta.display_value}`);
                 }
               }
             }
-            
-            // Usar el formato estandarizado del producto si existe
-            if (!formato && productoDb && productoDb.formatoEstandar) {
-              formato = productoDb.formatoEstandar;
+
+            // Asegurarse de que el formato (ya sea de metadatos o por defecto) esté en el comentario
+            if (!formatoYaEnComentarios && formato) {
+              comentariosLinea.unshift(`Formato: ${formato}`);
             }
-            
-            // Usar valores predeterminados si todavía no tenemos formato
-            if (!formato) formato = 'Unidad';
             
             return {
               producto: item.name,
               cantidad: item.quantity,
-              precio: productoDb?.precio || item.price,
+              precio: item.price, // Usar el precio exacto de la línea del pedido de WooCommerce.
               iva: tipoIva,
+              comentario: comentariosLinea.join('; '), // Comentarios generados desde meta_data.
               tipoProducto: item.variation_id ? 'variable' : 'simple',
               variaciones: item.meta_data,
               idWoo: item.product_id,
-              formato,
+              formato: formato, // El formato extraído de los metadatos o el default.
               pesoMedio,
               productoWoo: productoDb ? {
                 sku: productoDb.sku,

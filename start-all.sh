@@ -12,10 +12,12 @@ done
 # Función para limpiar todos los procesos hijos
 cleanup() {
   echo "\nDeteniendo todos los procesos..."
+  [ -n "$FRONTEND_PID" ] && kill $FRONTEND_PID 2>/dev/null
   kill $BACKEND_PID 2>/dev/null
   [ -n "$GESTOR_PID" ] && kill $GESTOR_PID 2>/dev/null
   [ -n "$CLIENTES_PID" ] && kill $CLIENTES_PID 2>/dev/null
   # Intentar matar los grupos de procesos por si hay hijos huérfanos
+  [ -n "$FRONTEND_PID" ] && kill -TERM -$FRONTEND_PID 2>/dev/null
   kill -TERM -$BACKEND_PID 2>/dev/null
   [ -n "$GESTOR_PID" ] && kill -TERM -$GESTOR_PID 2>/dev/null
   [ -n "$CLIENTES_PID" ] && kill -TERM -$CLIENTES_PID 2>/dev/null
@@ -25,8 +27,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Iniciar el backend en segundo plano
-echo "Iniciando backend..."
-(cd /workspaces/PEDIDOSWEB/gestion-pedidos-carniceria && npm start) &
+echo "Iniciando backend en modo público..."
+(cd /workspaces/PEDIDOSWEB/gestion-pedidos-carniceria && npm start -- --host 0.0.0.0) &
 BACKEND_PID=$!
 
 # Esperar de forma inteligente a que el backend esté listo usando un health check
