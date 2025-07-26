@@ -29,11 +29,22 @@ echo "Iniciando backend..."
 (cd /workspaces/PEDIDOSWEB/gestion-pedidos-carniceria && npm start) &
 BACKEND_PID=$!
 
+# Esperar de forma inteligente a que el backend esté listo usando un health check
+echo "Esperando a que el backend en el puerto 10001 esté disponible..."
+max_wait=60 # Esperar un máximo de 60 segundos
+count=0
+while ! curl -s -o /dev/null "http://localhost:10001/api/health"; do
+  if [ $count -ge $max_wait ]; then
+    echo "Error: El backend no respondió después de $max_wait segundos. Abortando."
+    kill $BACKEND_PID
+    exit 1
+  fi
+  printf "."
+  sleep 2
+  count=$((count+2))
+done
 
-# Esperar 15 segundos para que el backend arranque
-echo "Esperando 15 segundos para que el backend arranque..."
-sleep 15
-echo "Arrancando frontend principal."
+echo -e "\n¡Backend listo y respondiendo!"
 
 # Iniciar el frontend principal
 echo "Iniciando frontend principal..."

@@ -230,7 +230,7 @@ const FormularioEntradaFabricaAvanzado = ({ onRegistrar, onCancel }) => {
               <ul className="bg-white border border-gray-200 rounded-lg shadow max-h-40 overflow-y-auto">
                 {proveedoresFiltrados.map(p => (
                   <li
-                    key={p.codigo}
+                    key={p._id}
                     className={`px-4 py-2 cursor-pointer hover:bg-blue-50 ${proveedor?.codigo === p.codigo ? 'bg-blue-100' : ''}`}
                     onClick={() => seleccionarProveedor(p)}
                   >

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Etiquetas Profesionales</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .preview {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ Test de Etiquetas Profesionales</h1>
+        <p>Prueba las nuevas etiquetas de envío con formato profesional y logo incluido.</p>
+        
+        <button onclick="generarEtiquetaPrueba()">📦 Generar Etiqueta de Prueba</button>
+        <button onclick="generarMultiplesEtiquetas()">📦📦 Generar 3 Bultos</button>
+        
+        <div class="preview" id="preview">
+            <p><em>Haz clic en los botones para generar las etiquetas...</em></p>
+        </div>
+    </div>
+
+    <script>
+        // Simulamos el generador de tickets
+        function generarTicketHTML(pedido, bultoNum = 1, totalBultos = 1) {
+            const fecha = new Date().toLocaleDateString('es-ES');
+            const hora = new Date().toLocaleTimeString('es-ES');
+            const empresa = {
+                nombre: 'EMBUTIDOS BALLESTEROS SL',
+                direccion: 'CARRETERA NACIONAL 122 KM 424',
+                telefono: '980690604',
+                web: 'www.embutidosballesteros.com'
+            };
+
+            return `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <title>Etiqueta de Envío ${bultoNum}/${totalBultos}</title>
+                    <style>
+                      * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                      }
+                      
+                      body {
+                        font-family: 'Arial', sans-serif;
+                        background: white;
+                        padding: 20px;
+                        width: 400px;
+                        margin: 0 auto;
+                      }
+                      
+                      .etiqueta {
+                        border: 3px solid #2c3e50;
+                        border-radius: 12px;
+                        background: white;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                        overflow: hidden;
+                      }
+                      
+                      .header {
+                        background: linear-gradient(135deg, #3498db, #2c3e50);
+                        color: white;
+                        padding: 15px;
+                        text-align: center;
+                        position: relative;
+                      }
+                      
+                      .logo {
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        margin: 0 auto 10px;
+                        display: block;
+                        object-fit: cover;
+                        background: white;
+                        padding: 5px;
+                      }
+                      
+                      .header h1 {
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                      }
+                      
+                      .bulto-info {
+                        background: #e74c3c;
+                        color: white;
+                        padding: 8px 15px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        text-align: center;
+                        letter-spacing: 1px;
+                      }
+                      
+                      .contenido {
+                        padding: 20px;
+                      }
+                      
+                      .seccion {
+                        margin-bottom: 20px;
+                        border-bottom: 1px solid #ecf0f1;
+                        padding-bottom: 15px;
+                      }
+                      
+                      .seccion:last-child {
+                        border-bottom: none;
+                        margin-bottom: 0;
+                      }
+                      
+                      .titulo-seccion {
+                        background: #34495e;
+                        color: white;
+                        padding: 8px 12px;
+                        font-size: 12px;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        margin-bottom: 10px;
+                        border-radius: 4px;
+                      }
+                      
+                      .info-line {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 5px;
+                        font-size: 13px;
+                      }
+                      
+                      .label {
+                        font-weight: bold;
+                        color: #2c3e50;
+                        min-width: 80px;
+                      }
+                      
+                      .value {
+                        color: #34495e;
+                        text-align: right;
+                        flex: 1;
+                        margin-left: 10px;
+                      }
+                      
+                      .direccion {
+                        background: #f8f9fa;
+                        padding: 12px;
+                        border-radius: 6px;
+                        border-left: 4px solid #3498db;
+                        margin-top: 8px;
+                      }
+                      
+                      .direccion-nombre {
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #2c3e50;
+                        margin-bottom: 5px;
+                      }
+                      
+                      .direccion-linea {
+                        font-size: 14px;
+                        color: #34495e;
+                        margin-bottom: 3px;
+                      }
+                      
+                      .observaciones {
+                        background: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        border-radius: 6px;
+                        padding: 12px;
+                        color: #856404;
+                        font-size: 13px;
+                        line-height: 1.4;
+                      }
+                      
+                      .footer {
+                        background: #95a5a6;
+                        color: white;
+                        text-align: center;
+                        padding: 12px;
+                        font-size: 12px;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                      }
+                      
+                      .codigo-barras {
+                        text-align: center;
+                        font-family: 'Courier New', monospace;
+                        font-size: 20px;
+                        font-weight: bold;
+                        margin: 10px 0;
+                        letter-spacing: 2px;
+                        color: #2c3e50;
+                      }
+                      
+                      @media print {
+                        body { 
+                          padding: 0; 
+                          width: auto;
+                        }
+                        .etiqueta {
+                          box-shadow: none;
+                          border: 2px solid #2c3e50;
+                        }
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="etiqueta">
+                      <div class="header">
+                        <img src="/logo1.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+                        <h1>Etiqueta de Envío</h1>
+                        <div style="font-size: 12px; opacity: 0.9;">${empresa.nombre}</div>
+                      </div>
+                      
+                      <div class="bulto-info">
+                        BULTO ${bultoNum} DE ${totalBultos}
+                      </div>
+                      
+                      <div class="contenido">
+                        <div class="seccion">
+                          <div class="titulo-seccion">📋 Información del Pedido</div>
+                          <div class="info-line">
+                            <span class="label">Pedido Nº:</span>
+                            <span class="value">${pedido.numeroPedido || 'PED-2025-001'}</span>
+                          </div>
+                          <div class="info-line">
+                            <span class="label">Fecha:</span>
+                            <span class="value">${fecha}</span>
+                          </div>
+                          <div class="info-line">
+                            <span class="label">Hora:</span>
+                            <span class="value">${hora}</span>
+                          </div>
+                          <div class="info-line">
+                            <span class="label">Operario:</span>
+                            <span class="value">${pedido.usuarioTramitando || 'Expediciones'}</span>
+                          </div>
+                          <div class="codigo-barras">
+                            ||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||
+                          </div>
+                        </div>
+                        
+                        <div class="seccion">
+                          <div class="titulo-seccion">📦 Remitente</div>
+                          <div class="direccion">
+                            <div class="direccion-nombre">${empresa.nombre}</div>
+                            <div class="direccion-linea">${empresa.direccion}</div>
+                            <div class="direccion-linea">Tel: ${empresa.telefono}</div>
+                            <div class="direccion-linea">${empresa.web}</div>
+                          </div>
+                        </div>
+                        
+                        <div class="seccion">
+                          <div class="titulo-seccion">🏠 Destinatario</div>
+                          <div class="direccion">
+                            <div class="direccion-nombre">
+                              ${pedido.clienteNombre || 'María García López'}
+                            </div>
+                            <div class="direccion-linea">${pedido.direccion || 'Calle Mayor, 123'}</div>
+                            <div class="direccion-linea">${pedido.codigoPostal || '28001'} ${pedido.poblacion || 'Madrid'}</div>
+                            <div class="direccion-linea">Tel: ${pedido.telefono || '666 123 456'}</div>
+                          </div>
+                        </div>
+                        
+                        ${pedido.notasCliente ? `
+                        <div class="seccion">
+                          <div class="titulo-seccion">📝 Observaciones</div>
+                          <div class="observaciones">
+                            ${pedido.notasCliente}
+                          </div>
+                        </div>
+                        ` : ''}
+                      </div>
+                      
+                      <div class="footer">
+                        ¡Gracias por confiar en nosotros!
+                      </div>
+                    </div>
+                  </body>
+                </html>
+            `;
+        }
+
+        function generarEtiquetaPrueba() {
+            const pedidoPrueba = {
+                numeroPedido: 'PED-2025-001',
+                clienteNombre: 'María García López',
+                direccion: 'Calle Mayor, 123',
+                codigoPostal: '28001',
+                poblacion: 'Madrid',
+                telefono: '666 123 456',
+                usuarioTramitando: 'Juan Pérez',
+                notasCliente: 'Entregar en horario de mañana. Timbre del portero automático: García, 2º A'
+            };
+
+            const html = generarTicketHTML(pedidoPrueba, 1, 1);
+            const printWindow = window.open('', '_blank', 'width=450,height=700');
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
+
+        function generarMultiplesEtiquetas() {
+            const pedidoPrueba = {
+                numeroPedido: 'PED-2025-002',
+                clienteNombre: 'Restaurante El Buen Sabor',
+                direccion: 'Avenida de la Constitución, 45',
+                codigoPostal: '41001',
+                poblacion: 'Sevilla',
+                telefono: '954 123 456',
+                usuarioTramitando: 'Ana Martín'
+            };
+
+            for (let i = 1; i <= 3; i++) {
+                setTimeout(() => {
+                    const html = generarTicketHTML(pedidoPrueba, i, 3);
+                    const printWindow = window.open('', '_blank', 'width=450,height=700');
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                }, i * 300);
+            }
+        }
+    </script>
+</body>
+</html>

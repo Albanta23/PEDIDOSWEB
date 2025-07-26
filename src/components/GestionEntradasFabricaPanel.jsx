@@ -1,18 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import FormularioEntradaFabricaAvanzado from './FormularioEntradaFabricaAvanzado';
 import { getMovimientosStock, registrarEntradaStock } from '../services/movimientosStockService';
 import { useProveedores } from './ProveedoresContext';
 import { useProductos } from './ProductosContext';
 import { Button } from './ui/Button'; // Assuming relative path
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'; // Assuming relative path
-import { PlusCircle, ListChecks, XCircle, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
+import { PlusCircle, ListChecks, RefreshCw, AlertTriangle } from 'lucide-react'; // Icons
 
 // Define a constant for the central warehouse ID (almacen central)
 const ID_ALMACEN_CENTRAL = 'almacen_central';
-const NOMBRE_ALMACEN_CENTRAL = 'Almacén Central';
-
-// Importar iconos adicionales
-import { User, Shield } from 'lucide-react';
+// const NOMBRE_ALMACEN_CENTRAL = 'Almacén Central'; // No se está utilizando
 
 const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -23,15 +20,20 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
   const { proveedores, loading: loadingProveedores, error: errorProveedores } = useProveedores();
   const [formKey, setFormKey] = useState(Date.now());
 
-  const proveedoresMap = proveedores.reduce((acc, p) => {
-    acc[p._id] = p.nombre || p.razonComercial || p.codigo;
-    return acc;
-  }, {});
+  const proveedoresMap = useMemo(() => proveedores.reduce((acc, p) => {
+      acc[p._id] = p.nombre || p.razonComercial || p.codigo;
+      return acc;
+    }, {}), [proveedores]);
 
+  const productosMap = useMemo(() => productos.reduce((acc, p) => {
+      acc[p.id] = p.nombre;
+      // También se puede mapear por nombre si es un identificador alternativo
+      acc[p.nombre] = p.nombre;
+      return acc;
+    }, {}), [productos]);
 
   // Permisos basados en el rol - Ahora todos tienen acceso completo
-  const esAdministrador = userRole === 'administrador';
-  const puedeRegistrarEntradas = true; // Tanto usuario como administrador pueden registrar entradas
+  // const esAdministrador = userRole === 'administrador'; // No se está utilizando
 
   const cargarHistorialEntradas = useCallback(async () => {
     setCargandoHistorial(true);
@@ -53,18 +55,12 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
     cargarHistorialEntradas();
   }, [cargarHistorialEntradas]);
 
-  const handleEntradaRegistrada = () => {
-    setMostrarFormulario(false);
-    cargarHistorialEntradas();
-  };
-
   const getProductName = (productIdentifier) => {
-    const product = productos.find(p => p.id === productIdentifier || p.nombre === productIdentifier);
-    return product ? product.nombre : productIdentifier;
+    return productosMap[productIdentifier] || productIdentifier;
   };
 
   const getSupplierName = (supplierId) => {
-    return proveedoresMap[supplierId] || supplierId || '-';
+    return proveedoresMap[supplierId] || '-';
   }
 
   // Nueva función para registrar entrada avanzada
@@ -79,22 +75,25 @@ const GestionEntradasFabricaPanel = ({ onClose, userRole = 'usuario' }) => {
     setCargandoHistorial(true);
     setErrorHistorial('');
     try {
-      for (const l of lineas) {
-        await registrarEntradaStock({
+      // Usamos Promise.all para ejecutar todos los registros en paralelo, mejorando el rendimiento.
+      const registroPromises = lineas.map(l =>
+        registrarEntradaStock({
           tiendaId: ID_ALMACEN_CENTRAL,
           producto: l.producto,
           cantidad: Number(l.cantidad) || 0,
           unidad: 'kg', // Puedes ajustar según el producto
           lote: l.lote,
           motivo: 'Entrada técnica albarán/factura',
+          // CORRECCIÓN: El peso es independiente de la cantidad. Si no se proporciona, es 0.
           peso: Number(l.peso) || 0,
           proveedorId: proveedor._id,
           precioCoste: Number(l.precioCoste) || 0,
           fechaEntrada,
           referenciaDocumento,
           notas: l.observaciones
-        });
-      }
+        })
+      );
+      await Promise.all(registroPromises);
       cargarHistorialEntradas();
       setMostrarFormulario(false);
       setFormKey(Date.now()); // Reset the form by changing the key

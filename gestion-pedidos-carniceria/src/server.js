@@ -756,7 +756,20 @@ app.get('/api/productos/buscar', async (req, res) => {
 // ENDPOINT: Obtener todos los productos
 app.get('/api/productos', async (req, res) => {
   try {
-    const productos = await Producto.find();
+    const { nombre, q } = req.query;
+    const busqueda = nombre || q;
+    let filtro = {};
+
+    if (busqueda && typeof busqueda === 'string' && busqueda.trim()) {
+      const regex = new RegExp(busqueda.trim(), 'i');
+      filtro = {
+        $or: [
+          { nombre: { $regex: regex } },
+          { referencia: { $regex: regex } }
+        ]
+      };
+    }
+    const productos = await Producto.find(filtro);
     res.json(productos);
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
@@ -1159,8 +1172,12 @@ app.post('/api/movimientos-stock/entrada', async (req, res) => {
     } = req.body;
 
     // Validación básica
-    if (!tiendaId || !producto || !cantidad) {
-      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios: tiendaId, producto, cantidad.' });
+    if (!tiendaId || !producto) {
+      return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios: tiendaId, producto.' });
+    }
+
+    if ((!cantidad || Number(cantidad) === 0) && (!peso || Number(peso) === 0)) {
+      return res.status(400).json({ ok: false, error: 'Debe proporcionar un valor para cantidad o para peso.' });
     }
 
     await registrarMovimientoStock({

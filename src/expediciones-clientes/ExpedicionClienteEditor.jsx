@@ -268,35 +268,18 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
       // Generar e imprimir etiquetas
       for (let i = 0; i < numBultos; i++) {
-        const ticket = generarTicket(pedidoActualizado, i + 1, numBultos);
-        const printWindow = window.open('', '_blank', 'width=400,height=600');
-
-        fetch('/logo1.png')
-          .then(response => response.ok ? response.blob() : Promise.reject('Logo not found'))
-          .then(blob => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              printWindow.document.write(`
-                <html>
-                  <head><title>Etiqueta ${i + 1}/${numBultos}</title></head>
-                  <body>
-                    <img src="${reader.result}" style="max-width:100px; display:block; margin:0 auto 10px;">
-                    <pre>${ticket}</pre>
-                  </body>
-                </html>
-              `);
-              printWindow.document.close();
-              printWindow.print();
-              printWindow.close();
-            };
-            reader.readAsDataURL(blob);
-          })
-          .catch(() => {
-            printWindow.document.write(`<pre>${ticket}</pre>`);
-            printWindow.document.close();
-            printWindow.print();
-            printWindow.close();
-          });
+        const etiqueta = generarTicket(pedidoActualizado, i + 1, numBultos);
+        const printWindow = window.open('', '_blank', 'width=450,height=700');
+        
+        // Usar directamente el HTML generado por el generador de tickets
+        printWindow.document.write(etiqueta.html);
+        printWindow.document.close();
+        
+        // Pequeña pausa entre etiquetas para asegurar que se impriman correctamente
+        setTimeout(() => {
+          printWindow.print();
+          setTimeout(() => printWindow.close(), 500);
+        }, i * 200);
       }
 
       setMensaje('Pedido cerrado y etiquetas impresas');
