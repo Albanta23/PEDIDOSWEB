@@ -143,16 +143,37 @@ module.exports = {
   },
   async actualizar(req, res) {
     try {
+      console.log('[ACTUALIZAR PEDIDO] ID:', req.params.id);
+      console.log('[ACTUALIZAR PEDIDO] Body:', JSON.stringify(req.body, null, 2));
+      
+
       const { id } = req.params;
       const pedidoPrevio = await PedidoCliente.findById(id);
       if (!pedidoPrevio) return res.status(404).json({ error: 'Pedido no encontrado' });
       const { estado, usuarioTramitando, lineas, bultos } = req.body;
-      let update = { ...req.body };
+
+      // Preparar operadores de actualización
+      const update = {};
+      // $set para campos directos
+      update.$set = {};
+      // $push para arrays
+      update.$push = {};
+
+      // Actualizar campos directos
+      Object.keys(req.body).forEach(key => {
+        if (!["historialEstados", "historialBultos"].includes(key)) {
+          update.$set[key] = req.body[key];
+        }
+      });
+
       if (bultos) {
-        update.bultos = bultos;
-        update.$push = update.$push || {};
+        update.$set.bultos = bultos;
         update.$push.historialBultos = { bultos, fecha: new Date(), usuario: usuarioTramitando || req.body.usuario || 'expediciones' };
       }
+
+      // Log detallado antes de la operación
+      console.log(`[DEBUG] Estado previo del historialEstados:`, pedidoPrevio.historialEstados);
+
       // Cambios de estado y registro en historial
       if (estado && estado !== pedidoPrevio.estado) {
         // Solo permitir migrar si el pedido ha sido revisado y completado
@@ -160,11 +181,33 @@ module.exports = {
           if (!pedidoPrevio.revisado) {
             return res.status(400).json({ error: 'El pedido debe ser revisado y completado en clientes-gestion antes de migrar.' });
           }
-          update.estado = estado;
+          update.$set.estado = estado;
         }
-        update.$push = { historialEstados: { estado, usuario: usuarioTramitando || req.body.usuario || 'expediciones', fecha: new Date() } };
-        update.usuarioTramitando = usuarioTramitando || req.body.usuario || 'expediciones';
+        // Log detallado de la operación
+        console.log(`[DEBUG] Intentando agregar al historialEstados:`, {
+          estado,
+          usuario: usuarioTramitando || req.body.usuario || 'expediciones',
+          fecha: new Date()
+        });
+
+        update.$push.historialEstados = { estado, usuario: usuarioTramitando || req.body.usuario || 'expediciones', fecha: new Date() };
+        update.$set.usuarioTramitando = usuarioTramitando || req.body.usuario || 'expediciones';
       }
+
+      // Si no hay nada que pushear, eliminar $push
+      if (Object.keys(update.$push).length === 0) {
+        delete update.$push;
+      }
+      // Si no hay nada que setear, eliminar $set
+      if (Object.keys(update.$set).length === 0) {
+        delete update.$set;
+      }
+
+      // Log detallado después de la operación
+      if (update.$push && update.$push.historialEstados) {
+        console.log(`[DEBUG] Estado actualizado del historialEstados:`, update.$push.historialEstados);
+      }
+
       // Si el estado pasa a preparado, generar movimientos de stock
       if (estado === 'preparado' && pedidoPrevio.estado !== 'preparado') {
         for (const linea of (lineas || pedidoPrevio.lineas)) {
@@ -198,8 +241,11 @@ module.exports = {
         }
       }
       const pedidoActualizado = await PedidoCliente.findByIdAndUpdate(id, update, { new: true });
+      console.log('[ACTUALIZAR PEDIDO] Éxito. Pedido actualizado:', pedidoActualizado._id);
       res.json(pedidoActualizado);
     } catch (err) {
+      console.log('[ACTUALIZAR PEDIDO] Error:', err.message);
+      console.log('[ACTUALIZAR PEDIDO] Stack:', err.stack);
       res.status(400).json({ error: err.message });
     }
   },

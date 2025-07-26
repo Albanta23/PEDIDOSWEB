@@ -139,7 +139,9 @@ const io = new Server(server, {
     origin: corsOrigin, // Usar la misma función de validación CORS
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
-  }
+  },
+  pingTimeout: 60000, // Aumentar el timeout a 60 segundos para conexiones lentas
+  pingInterval: 30000
 });
 
 // Conexión a MongoDB robusta: usa Atlas si está definido, si no, usa local SOLO en desarrollo
@@ -189,6 +191,7 @@ app.delete('/api/pedidos-tienda/:id', pedidosTiendaController.eliminar);
 
 // Pedidos de clientes/expediciones
 app.get('/api/pedidos-clientes', pedidosClientesController.listar);
+app.get('/api/pedidos-clientes/:id', pedidosClientesController.obtenerPorId);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
 app.put('/api/pedidos-clientes/:id/asignar-cliente', pedidosClientesController.asignarCliente);
@@ -1378,7 +1381,7 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
   }
 });
 
-// API presupuestos - Endpoints para gestionar presupuestos
+// --- API presupuestos - Endpoints para gestionar presupuestos
 
 // --- API presupuestos ---
 app.get('/api/presupuestos', async (req, res) => {
@@ -1527,4 +1530,14 @@ app.get('/api/lotes/:productoId', async (req, res) => {
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor backend HTTP escuchando en puerto', PORT);
+});
+
+// Middleware para depurar errores HTTP 400
+app.use((err, req, res, next) => {
+  if (err.status === 400) {
+    console.error(`[DEBUG HTTP 400] Error en la ruta ${req.originalUrl}`);
+    console.error(`[DEBUG HTTP 400] Datos recibidos:`, req.body);
+    console.error(`[DEBUG HTTP 400] Headers:`, req.headers);
+  }
+  next(err);
 });

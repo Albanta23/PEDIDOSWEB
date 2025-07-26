@@ -43,6 +43,7 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
         secure: false,
+        proxyTimeout: 60000 // Aumentar el timeout a 60 segundos
       }
     }
   },
