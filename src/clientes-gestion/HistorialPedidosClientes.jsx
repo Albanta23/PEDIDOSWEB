@@ -67,7 +67,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (!window.confirm('¿Confirmar que este pedido ha sido enviado?')) return;
     setEnviandoId(pedido._id);
     try {
-      await axios.put(`${API_URL}/pedidos-clientes/${pedido._id}`, {
+      await axios.put(`${API_URL_CORRECTO}/pedidos-clientes/${pedido._id}`, {
         ...pedido,
         estado: 'enviado',
         usuarioTramitando: 'usuario',
@@ -79,7 +79,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
       if (fechaFin) params.push(`fechaFin=${fechaFin}`);
       const query = params.length ? '?' + params.join('&') : '';
-      const res = await axios.get(`${API_URL}/pedidos-clientes${query}`);
+      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes${query}`);
       const pedidos = res.data || [];
       setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
       setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
@@ -93,7 +93,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     if (!window.confirm('¿Seguro que quieres cancelar este pedido?')) return;
     setCancelandoId(pedido._id);
     try {
-      await axios.put(`${API_URL}/pedidos-clientes/${pedido._id}`, {
+      await axios.put(`${API_URL_CORRECTO}/pedidos-clientes/${pedido._id}`, {
         ...pedido,
         estado: 'cancelado',
         usuarioTramitando: 'usuario',
@@ -106,7 +106,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       if (fechaInicio) params.push(`fechaInicio=${fechaInicio}`);
       if (fechaFin) params.push(`fechaFin=${fechaFin}`);
       const query = params.length ? '?' + params.join('&') : '';
-      const res = await axios.get(`${API_URL}/pedidos-clientes${query}`);
+      const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes${query}`);
       const pedidos = res.data || [];
       setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
       setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
