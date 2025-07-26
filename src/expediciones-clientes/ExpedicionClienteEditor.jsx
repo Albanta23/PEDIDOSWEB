@@ -255,6 +255,23 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     setMensaje('');
     setGuardando(true);
 
+    // 1. Abrir las ventanas de impresión ANTES de cualquier 'await'
+    // Esto es crucial para evitar que los bloqueadores de pop-ups las bloqueen.
+    const printWindows = [];
+    for (let i = 0; i < numBultos; i++) {
+      const printWindow = window.open('', '_blank', 'width=450,height=700');
+      if (printWindow) {
+        // Escribir un mensaje de espera mientras se procesa el pedido
+        printWindow.document.write('<html><head><title>Generando etiqueta...</title></head><body><h1>Generando etiqueta, por favor espere...</h1></body></html>');
+        printWindows.push(printWindow);
+      } else {
+        // Si la ventana no se pudo abrir, informar al usuario y detener el proceso.
+        setError('No se pudo abrir la ventana de impresión. Por favor, deshabilita el bloqueador de pop-ups para este sitio.');
+        setGuardando(false);
+        return;
+      }
+    }
+
     try {
       const datosPedido = {
         ...pedido,
@@ -264,23 +281,31 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
         bultos: numBultos,
       };
 
+      // 2. Realizar la operación asíncrona (actualizar el pedido)
       const pedidoActualizado = await actualizarPedidoCliente(pedido._id || pedido.id, datosPedido);
 
-      // Generar e imprimir etiquetas
-      for (let i = 0; i < numBultos; i++) {
+      // 3. Ahora, con los datos actualizados, llenar las ventanas que ya están abiertas
+      printWindows.forEach((printWindow, i) => {
+        if (!printWindow || printWindow.closed) {
+          console.warn(`La ventana de impresión ${i + 1} fue cerrada por el usuario.`);
+          return; // Saltar si el usuario cerró la ventana
+        }
+
         const etiqueta = generarTicket(pedidoActualizado, i + 1, numBultos);
-        const printWindow = window.open('', '_blank', 'width=450,height=700');
         
         // Usar directamente el HTML generado por el generador de tickets
+        printWindow.document.open();
         printWindow.document.write(etiqueta.html);
         printWindow.document.close();
         
         // Pequeña pausa entre etiquetas para asegurar que se impriman correctamente
         setTimeout(() => {
-          printWindow.print();
-          setTimeout(() => printWindow.close(), 500);
+          if (printWindow && !printWindow.closed) {
+            printWindow.print();
+            setTimeout(() => printWindow.close(), 500);
+          }
         }, i * 200);
-      }
+      });
 
       setMensaje('Pedido cerrado y etiquetas impresas');
       setEstado('preparado');
@@ -294,6 +319,8 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
     } catch (e) {
       setError('Error al cerrar el pedido: ' + (e.response?.data?.error || e.message));
+      // En caso de error, cerrar las ventanas que se hayan abierto
+      printWindows.forEach(pw => pw && !pw.closed && pw.close());
     } finally {
       setGuardando(false);
     }
