@@ -20,8 +20,16 @@ export default function ExpedicionesClientes() {
     if (logueado) {
       setCargando(true);
       obtenerPedidosClientesExpedicion().then(data => {
-        // Filtrar: no en historial devoluciones y no pendientes de confirmación
-        const pedidosFiltrados = data.filter(p => !p.enHistorialDevoluciones && (p.estado || '').toLowerCase() !== 'pendiente_confirmacion');
+        // Filtrar: no en historial devoluciones, no pendientes de confirmación, no enviados, no entregados, no preparados, no borradores de woocommerce
+        const pedidosFiltrados = data.filter(p => {
+          const estado = (p.estado || '').toLowerCase();
+          return !p.enHistorialDevoluciones && 
+                 estado !== 'pendiente_confirmacion' && 
+                 estado !== 'enviado' && 
+                 estado !== 'entregado' &&
+                 estado !== 'preparado' &&
+                 estado !== 'borrador_woocommerce';
+        });
         setPedidos(pedidosFiltrados);
         setCargando(false);
       }).catch(() => setCargando(false));
@@ -32,7 +40,16 @@ export default function ExpedicionesClientes() {
   function recargarPedidos() {
     setCargando(true);
     obtenerPedidosClientesExpedicion().then(data => {
-      const pedidosFiltrados = data.filter(p => !p.enHistorialDevoluciones && (p.estado || '').toLowerCase() !== 'pendiente_confirmacion');
+      // Filtrar: no en historial devoluciones, no pendientes de confirmación, no enviados, no entregados, no preparados, no borradores de woocommerce
+      const pedidosFiltrados = data.filter(p => {
+        const estado = (p.estado || '').toLowerCase();
+        return !p.enHistorialDevoluciones && 
+               estado !== 'pendiente_confirmacion' && 
+               estado !== 'enviado' && 
+               estado !== 'entregado' &&
+               estado !== 'preparado' &&
+               estado !== 'borrador_woocommerce';
+      });
       setPedidos(pedidosFiltrados);
       setCargando(false);
     }).catch(() => setCargando(false));
@@ -76,10 +93,10 @@ export default function ExpedicionesClientes() {
             </tr>
           </thead>
           <tbody>
-            {pedidos.filter(p => (p.estado || '').toLowerCase() !== 'preparado').length === 0 && (
+            {pedidos.length === 0 && (
               <tr><td colSpan={6} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
             )}
-            {pedidos.filter(p => (p.estado || '').toLowerCase() !== 'preparado').map(p => (
+            {pedidos.map(p => (
               <tr key={p._id || p.id}>
                 <td style={{ padding: 8, border: '1px solid #eee', fontWeight: 600 }}>{p.numeroPedido || p.id}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.clienteNombre || p.nombreCliente || p.cliente || '-'}</td>
