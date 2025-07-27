@@ -70,7 +70,12 @@ module.exports = {
       }
       
       // Otros filtros
-      if (estado) filtro.estado = estado;
+      if (estado) {
+        filtro.estado = estado;
+      } else {
+        // Excluir pedidos cerrados si no se pide un estado específico
+        filtro.estado = { $nin: ['preparado', 'cancelado', 'devuelto_total'] };
+      }
       if (origen && origen.tipo) filtro['origen.tipo'] = origen.tipo;
       
       // Filtro por fecha
