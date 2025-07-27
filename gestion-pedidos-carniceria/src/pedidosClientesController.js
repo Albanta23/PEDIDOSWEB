@@ -73,8 +73,8 @@ module.exports = {
       if (estado) {
         filtro.estado = estado;
       } else {
-        // Excluir pedidos cerrados si no se pide un estado específico
-        filtro.estado = { $nin: ['preparado', 'cancelado', 'devuelto_total'] };
+        // Excluir pedidos en estado 'borrador_woocommerce' si no se pide un estado específico
+        filtro.estado = { $ne: 'borrador_woocommerce' };
       }
       if (origen && origen.tipo) filtro['origen.tipo'] = origen.tipo;
       
