@@ -43,32 +43,30 @@ module.exports = {
   async listar(req, res) {
     try {
       // Filtros: clienteId, nombreCliente, fechaInicio, fechaFin, estado, origen.tipo, enHistorialDevoluciones
-      const { clienteId, nombreCliente, fechaInicio, fechaFin, estado, origen, enHistorialDevoluciones } = req.query;
+      const { clienteId, nombreCliente, fechaInicio, fechaFin, estado, origen } = req.query;
+      let { enHistorialDevoluciones } = req.query;
       let filtro = {};
-      
+
       // Búsqueda por cliente - combinando ID y nombre
       if (clienteId || nombreCliente) {
         filtro.$or = [];
-        
         // Si tenemos ID del cliente - búsqueda exacta
         if (clienteId) {
           filtro.$or.push({ clienteId: clienteId });
           filtro.$or.push({ "cliente._id": clienteId });
           filtro.$or.push({ cliente: clienteId });
         }
-        
         // Si tenemos nombre del cliente - búsqueda exacta para evitar confusiones
         if (nombreCliente) {
           // Usar una expresión regular que coincida exactamente con el nombre, no parcialmente
-          const nombreRegexExacto = new RegExp('^' + nombreCliente.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i');
+          const nombreRegexExacto = new RegExp('^' + nombreCliente.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i');
           filtro.$or.push({ clienteNombre: nombreRegexExacto });
           filtro.$or.push({ "cliente.nombre": nombreRegexExacto });
-          
           // Para el campo cliente como string, necesitamos una comparación exacta
           filtro.$or.push({ cliente: nombreRegexExacto });
         }
       }
-      
+
       // Otros filtros
       if (estado) {
         filtro.estado = estado;
@@ -77,7 +75,7 @@ module.exports = {
         filtro.estado = { $ne: 'borrador_woocommerce' };
       }
       if (origen && origen.tipo) filtro['origen.tipo'] = origen.tipo;
-      
+
       // Filtro por fecha
       if (fechaInicio || fechaFin) {
         filtro.fechaPedido = {};
@@ -89,14 +87,33 @@ module.exports = {
           filtro.fechaPedido.$lte = fin;
         }
       }
-      
-      // Filtro por estado de devolución
+
+      // --- Normalización robusta de enHistorialDevoluciones ---
+      // Puede llegar como string ('true'/'false'), booleano, undefined o incluso número
+      let filtroDevoluciones;
       if (typeof enHistorialDevoluciones === 'undefined') {
-        filtro.enHistorialDevoluciones = { $ne: true };
-      } else if (enHistorialDevoluciones === 'true') {
-        filtro.enHistorialDevoluciones = true;
-      } else if (enHistorialDevoluciones === 'false') {
-        filtro.enHistorialDevoluciones = { $ne: true };
+        // Por defecto, excluir los que están en historial de devoluciones
+        filtroDevoluciones = { $ne: true };
+      } else {
+        // Normalizar a booleano real
+        if (typeof enHistorialDevoluciones === 'string') {
+          if (enHistorialDevoluciones.toLowerCase() === 'true' || enHistorialDevoluciones === '1') {
+            filtroDevoluciones = true;
+          } else if (enHistorialDevoluciones.toLowerCase() === 'false' || enHistorialDevoluciones === '0') {
+            filtroDevoluciones = { $ne: true };
+          } else {
+            // Si llega cualquier otro valor, no filtrar
+            filtroDevoluciones = undefined;
+          }
+        } else if (typeof enHistorialDevoluciones === 'boolean') {
+          filtroDevoluciones = enHistorialDevoluciones ? true : { $ne: true };
+        } else {
+          // Si llega como número u otro tipo
+          filtroDevoluciones = enHistorialDevoluciones ? true : { $ne: true };
+        }
+      }
+      if (typeof filtroDevoluciones !== 'undefined') {
+        filtro.enHistorialDevoluciones = filtroDevoluciones;
       }
       
       // Buscar pedidos
