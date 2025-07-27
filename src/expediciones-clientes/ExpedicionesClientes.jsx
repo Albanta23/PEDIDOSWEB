@@ -20,8 +20,9 @@ export default function ExpedicionesClientes() {
     if (logueado) {
       setCargando(true);
       obtenerPedidosClientesExpedicion().then(data => {
-        const pedidosFiltrados = data.filter(p => !p.enHistorialDevoluciones);
-        setPedidos(pedidosFiltrados); // Mostrar todos los pedidos de clientes
+        // Filtrar: no en historial devoluciones y no pendientes de confirmación
+        const pedidosFiltrados = data.filter(p => !p.enHistorialDevoluciones && (p.estado || '').toLowerCase() !== 'pendiente_confirmacion');
+        setPedidos(pedidosFiltrados);
         setCargando(false);
       }).catch(() => setCargando(false));
     }
@@ -31,8 +32,8 @@ export default function ExpedicionesClientes() {
   function recargarPedidos() {
     setCargando(true);
     obtenerPedidosClientesExpedicion().then(data => {
-      const pedidosFiltrados = data.filter(p => !p.enHistorialDevoluciones);
-      setPedidos(pedidosFiltrados); // Mostrar todos los pedidos de clientes
+      const pedidosFiltrados = data.filter(p => !p.enHistorialDevoluciones && (p.estado || '').toLowerCase() !== 'pendiente_confirmacion');
+      setPedidos(pedidosFiltrados);
       setCargando(false);
     }).catch(() => setCargando(false));
   }

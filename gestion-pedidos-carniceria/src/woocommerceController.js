@@ -198,6 +198,8 @@ module.exports = {
             clienteId,
             codigoCliente, // Guardar el código de cliente para SAGE50
             numeroPedido: siguienteNumero, // El número generado por la aplicación
+            estado: 'pendiente_confirmacion',
+            historialEstados: [{ estado: 'pendiente_confirmacion', usuario: 'sistema', fecha: new Date() }],
             numeroPedidoWoo: pedidoWoo.id, // Guardar el número de WooCommerce como referencia
             fechaPedido: pedidoWoo.date_created,
             estado: 'borrador_woocommerce',

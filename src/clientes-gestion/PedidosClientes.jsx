@@ -161,6 +161,12 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       return;
     }
 
+    // Determinar el estado correcto: si el pedido original es pendiente_confirmacion, al confirmar debe pasar a enviado
+    let estadoFinal = 'enviado';
+    if (pedidoInicial && pedidoInicial.estado === 'pendiente_confirmacion') {
+      estadoFinal = 'enviado';
+    }
+    // Si es un pedido nuevo, mantener 'enviado' como por defecto
     const pedidoData = {
       clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
       clienteNombre: clienteSeleccionado.nombre,
@@ -181,7 +187,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       })),
       tipo: 'cliente',
       fechaPedido: new Date().toISOString(),
-      estado: 'enviado',
+      estado: estadoFinal,
       codigoSage: codigoSage || '',
       nifCliente: nifCliente || '',
       // Datos específicos para WooCommerce
