@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
-import Papa from 'papaparse';
+import { toast } from 'react-toastify';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
@@ -9,13 +8,15 @@ export default function IntegracionSage() {
   const [pedidos, setPedidos] = useState([]);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
   const [exportedPedidos, setExportedPedidos] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_URL}/pedidos-clientes`)
+    // Cargar solo pedidos que no sean borradores
+    axios.get(`${API_URL}/pedidos-clientes?enviado=false`)
       .then(res => setPedidos(res.data))
       .catch(() => setPedidos([]));
   }, []);
-
+  
   const handleSelectPedido = (pedidoId) => {
     if (exportedPedidos.has(pedidoId)) return;
     setSelectedPedidos(prev =>
@@ -24,12 +25,12 @@ export default function IntegracionSage() {
         : [...prev, pedidoId]
     );
   };
-
+  
   const markAsExported = () => {
     setExportedPedidos(prev => new Set([...prev, ...selectedPedidos]));
     setSelectedPedidos([]);
   };
-
+  
   const resetExported = (pedidoId) => {
     setExportedPedidos(prev => {
       const newSet = new Set(prev);
@@ -37,164 +38,38 @@ export default function IntegracionSage() {
       return newSet;
     });
   };
-
-  const getSelectedPedidosData = () => {
-    return pedidos.filter(p => selectedPedidos.includes(p._id));
-  };
-
-  const exportToExcel = () => {
-    // Creamos la hoja principal de pedidos con información detallada
-    const pedidosData = getSelectedPedidosData().map(p => ({
-      NumeroPedido: p.numeroPedido,
-      Cliente_ID: p.clienteId,
-      Cliente_Nombre: p.clienteNombre,
-      Fecha: new Date(p.fechaPedido).toLocaleDateString('es-ES'),
-      FechaCreacion: new Date(p.fechaCreacion || p.fechaPedido).toLocaleDateString('es-ES'),
-      Estado: p.estado,
-      Subtotal: p.subtotal || 0,
-      IVA_Total: p.totalIva || 0,
-      Total: p.total || 0,
-      FormaPago: p.formaPago || '',
-      Observaciones: p.observaciones || '',
-      DireccionEntrega: p.direccionEntrega || '',
-      EmailCliente: p.emailCliente || '',
-      TelefonoCliente: p.telefonoCliente || '',
-      EnvioNacional: p.envioNacional ? 'Sí' : 'No',
-      TipoCliente: p.tipoCliente || '',
-      NumLineas: p.lineas ? p.lineas.length : 0,
-      FechaEntrega: p.fechaEntrega ? new Date(p.fechaEntrega).toLocaleDateString('es-ES') : '',
-      FechaUltimaModificacion: p.fechaUltimaModificacion ? new Date(p.fechaUltimaModificacion).toLocaleDateString('es-ES') : '',
-      UsuarioCreacion: p.usuarioCreacion || '',
-      Origen: p.origen || 'Manual'
-    }));
-    
-    // Creamos una hoja para las líneas de pedido detalladas
-    const lineasData = [];
-    getSelectedPedidosData().forEach(p => {
-      p.lineas && p.lineas.forEach((l, index) => {
-        lineasData.push({
-          NumeroPedido: p.numeroPedido,
-          Cliente: p.clienteNombre,
-          LineaNum: index + 1,
-          Producto: l.producto || '',
-          Cantidad: l.cantidad || 0,
-          Precio: l.precio || 0,
-          Subtotal: (l.cantidad * l.precio) || 0,
-          IVA_Porcentaje: l.iva || 0,
-          IVA_Importe: ((l.cantidad * l.precio) * (l.iva / 100)) || 0,
-          Total: ((l.cantidad * l.precio) * (1 + (l.iva / 100))) || 0,
-          Lote: l.lote || '',
-          FechaCaducidad: l.fechaCaducidad ? new Date(l.fechaCaducidad).toLocaleDateString('es-ES') : '',
-          UnidadMedida: l.unidadMedida || '',
-          Descuento: l.descuento || 0,
-          Comentario: l.esComentario ? 'Sí' : 'No',
-          CodigoProducto: l.codigoProducto || '',
-          Familia: l.familia || '',
-          SKU: l.sku || '',
-          Peso: l.peso || 0,
-          TipoIVA: l.tipoIVA || ''
-        });
-      });
-    });
-
-    // Creamos un libro de Excel con múltiples hojas
-    const wb = XLSX.utils.book_new();
-    
-    // Añadimos la hoja de pedidos
-    const wsPedidos = XLSX.utils.json_to_sheet(pedidosData);
-    XLSX.utils.book_append_sheet(wb, wsPedidos, 'Pedidos');
-    
-    // Añadimos la hoja de líneas de pedido
-    const wsLineas = XLSX.utils.json_to_sheet(lineasData);
-    XLSX.utils.book_append_sheet(wb, wsLineas, 'Lineas');
-    
-    // Guardamos el archivo
-    XLSX.writeFile(wb, 'pedidos_sage50.xlsx');
-    markAsExported();
-  };
-
-  const exportToCSV = () => {
-    const data = [];
-    getSelectedPedidosData().forEach(p => {
-      p.lineas.forEach(l => {
-        if (!l.esComentario) {
-          data.push({
-            TIPO: 'ALB',
-            CODIGO: p.numeroPedido,
-            FECHA: new Date(p.fechaPedido).toLocaleDateString('es-ES'),
-            CLIENTE: p.clienteId,
-            DESCRIPCION: l.producto,
-            CANTIDAD: l.cantidad,
-            PRECIO: l.precio || 0,
-            TOTAL: (l.cantidad * (l.precio || 0)).toFixed(2),
-            IVA: l.iva || 0
-          });
-        }
-      });
-    });
-    const csv = Papa.unparse(data, { delimiter: ';' });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'albaranes_sage.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    markAsExported();
-  };
-
-  const exportToXML = () => {
-    const pedidosSeleccionados = getSelectedPedidosData();
-    const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
-<SageImport>
-  ${pedidosSeleccionados.map(pedido => `
-  <DeliveryNote>
-    <Header>
-      <Number>${pedido.numeroPedido}</Number>
-      <Date>${new Date(pedido.fechaPedido).toLocaleDateString('es-ES')}</Date>
-      <Customer>${pedido.clienteId}</Customer>
-    </Header>
-    <Lines>
-      ${pedido.lineas.filter(l => !l.esComentario).map(linea => `
-      <Line>
-        <Item>${linea.producto}</Item>
-        <Description>${linea.producto}</Description>
-        <Quantity>${linea.cantidad}</Quantity>
-        <Price>${linea.precio || 0}</Price>
-        <TaxRate>${linea.iva || 0}</TaxRate>
-      </Line>
-      `).join('')}
-    </Lines>
-    <Summary>
-      <Subtotal>${pedido.subtotal || 0}</Subtotal>
-      <TaxAmount>${pedido.totalIva || 0}</TaxAmount>
-      <Total>${pedido.total || 0}</Total>
-    </Summary>
-  </DeliveryNote>
-  `).join('')}
-</SageImport>`;
-
-    const blob = new Blob([xmlString], { type: 'application/xml' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'albaranes_sage.xml');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    markAsExported();
-  };
-
-  const exportToJSON = () => {
-    const data = getSelectedPedidosData();
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'pedidos_sage.json');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    markAsExported();
+  
+  const handleExportSage50 = async () => {
+    if (selectedPedidos.length === 0) {
+      toast.warn('No has seleccionado ningún pedido para exportar.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/pedidos-clientes/exportar-sage50`,
+        { pedidoIds: selectedPedidos },
+        { responseType: 'blob' } // Importante para manejar la descarga del archivo
+      );
+      
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Exportacion_Sage50.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Exportados ${selectedPedidos.length} pedidos correctamente.`);
+      markAsExported();
+    } catch (error) {
+      console.error('Error al exportar para Sage 50:', error);
+      toast.error('Error al generar el archivo de exportación.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -203,10 +78,9 @@ export default function IntegracionSage() {
       <p>Selecciona los pedidos que quieres exportar y elige el formato de descarga.</p>
 
       <div>
-        <button onClick={exportToExcel} disabled={selectedPedidos.length === 0}>Exportar a Excel</button>
-        <button onClick={exportToCSV} disabled={selectedPedidos.length === 0}>Exportar a CSV</button>
-        <button onClick={exportToXML} disabled={selectedPedidos.length === 0}>Exportar a XML</button>
-        <button onClick={exportToJSON} disabled={selectedPedidos.length === 0}>Exportar a JSON</button>
+        <button onClick={handleExportSage50} disabled={selectedPedidos.length === 0 || isLoading}>
+          {isLoading ? 'Generando...' : `Exportar ${selectedPedidos.length} pedidos a Excel (SAGE 50)`}
+        </button>
       </div>
 
       <div style={{ maxHeight: '600px', overflowY: 'auto', marginTop: '20px' }}>

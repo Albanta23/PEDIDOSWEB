@@ -5,7 +5,8 @@ import { resolve } from 'path';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ["jspdf", "socket.io-client"]
+    include: ["jspdf", "socket.io-client", "socket.io-parser", "engine.io-client"],
+    force: true // Forzar re-optimización para evitar errores de cache
   },
   publicDir: 'public',
   resolve: {

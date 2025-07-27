@@ -4,7 +4,8 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ["jspdf", "socket.io-client"]
+    include: ["jspdf", "socket.io-client", "socket.io-parser", "engine.io-client"],
+    force: true // Forzar re-optimización para evitar errores de cache
   },
   build: {
     rollupOptions: {

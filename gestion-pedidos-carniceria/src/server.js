@@ -22,6 +22,7 @@ const Cliente = require('./models/Cliente'); // Nuevo modelo Cliente
 const Presupuesto = require('./models/Presupuesto'); // Modelo de presupuestos
 const Proveedor = require('./models/Proveedor'); // Modelo de proveedores
 const Lote = require('./models/Lote'); // Modelo de lotes
+const PedidoCliente = require('./models/PedidoCliente'); // Modelo de pedidos de clientes
 const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimientoStock } = require('./utils/stock');
 
 const pedidosTiendaController = require('./pedidosTiendaController');
@@ -190,7 +191,56 @@ app.put('/api/pedidos-tienda/:id', pedidosTiendaController.actualizar);
 app.delete('/api/pedidos-tienda/:id', pedidosTiendaController.eliminar);
 
 // Pedidos de clientes/expediciones
-app.get('/api/pedidos-clientes', pedidosClientesController.listar);
+app.get('/api/pedidos-clientes', async (req, res) => {
+  try {
+    console.log('[DEBUG] Query params:', req.query);
+    const { estado, enviado, fechaInicio, fechaFin, enHistorialDevoluciones, ...otrosFiltros } = req.query;
+    const filtro = { ...otrosFiltros };
+
+    // 1. Filtrar por estado del pedido
+    if (estado) {
+      filtro.estado = estado;
+    }
+
+    // 2. Filtrar por estado de envío
+    if (enviado !== undefined) {
+      filtro.enviado = enviado === 'true';
+    }
+
+    // 3. Filtrar por historial de devoluciones SOLO si el parámetro viene en la petición
+    if (Object.prototype.hasOwnProperty.call(req.query, 'enHistorialDevoluciones')) {
+      if (enHistorialDevoluciones === 'false') {
+        filtro.$or = [
+          { enHistorialDevoluciones: false },
+          { enHistorialDevoluciones: { $exists: false } }
+        ];
+      } else {
+        filtro.enHistorialDevoluciones = true;
+      }
+    }
+
+    // 4. Filtrar por rango de fechas
+    if (fechaInicio || fechaFin) {
+      filtro.fechaPedido = {};
+      if (fechaInicio) {
+        filtro.fechaPedido.$gte = new Date(fechaInicio);
+      }
+      if (fechaFin) {
+        const fin = new Date(fechaFin);
+        fin.setHours(23, 59, 59, 999);
+        filtro.fechaPedido.$lte = fin;
+      }
+    }
+
+    console.log('[DEBUG] Filtro usado:', filtro);
+    const pedidos = await PedidoCliente.find(filtro).sort({ fechaCreacion: -1 });
+    console.log('[DEBUG] Pedidos encontrados:', pedidos.length);
+    res.json(pedidos);
+  } catch (err) {
+    console.error('[ERROR] /api/pedidos-clientes:', err);
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
 app.get('/api/pedidos-clientes/:id', pedidosClientesController.obtenerPorId);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
@@ -367,6 +417,47 @@ app.post('/api/clientes/limpiar-duplicados', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post('/api/clientes/migrar-schema', async (req, res) => {
+  try {
+    console.log('[MIGRACION] Iniciando migración de esquema de clientes...');
+    
+    // 1. Añadir 'razonSocial' si no existe, usando 'nombre' como fallback.
+    const resultRazonSocial = await Cliente.updateMany(
+      { razonSocial: { $exists: false } },
+      [{ $set: { razonSocial: "$nombre" } }]
+    );
+    console.log(`[MIGRACION] 'razonSocial' añadido a ${resultRazonSocial.modifiedCount} clientes.`);
+
+    // 2. Añadir 'razonComercial' si no existe, usando 'nombre' como fallback.
+    const resultRazonComercial = await Cliente.updateMany(
+      { razonComercial: { $exists: false } },
+      [{ $set: { razonComercial: "$nombre" } }]
+    );
+    console.log(`[MIGRACION] 'razonComercial' añadido a ${resultRazonComercial.modifiedCount} clientes.`);
+
+    // 3. Asegurar que 'codigoSage' existe (como string vacío si no está).
+    const resultCodigoSage = await Cliente.updateMany(
+      { codigoSage: { $exists: false } },
+      { $set: { codigoSage: '' } }
+    );
+    console.log(`[MIGRACION] 'codigoSage' inicializado en ${resultCodigoSage.modifiedCount} clientes.`);
+
+    res.json({
+      message: 'Migración de esquema de clientes completada.',
+      resultados: {
+        razonSocial: resultRazonSocial.modifiedCount,
+        razonComercial: resultRazonComercial.modifiedCount,
+        codigoSage: resultCodigoSage.modifiedCount,
+      }
+    });
+
+  } catch (error) {
+    console.error('[MIGRACION] Error durante la migración:', error);
+    res.status(500).json({ error: 'Error durante la migración del esquema de clientes.' });
+  }
+});
+
 
 app.get('/api/productos-woo', async (req, res) => {
   const ProductoWoo = require('./models/ProductoWoo');

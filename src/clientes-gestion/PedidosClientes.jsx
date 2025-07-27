@@ -36,7 +36,6 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const [productoValido, setProductoValido] = useState([]);
   const [mensajeError, setMensajeError] = useState([]);
   const [testBackendMsg, setTestBackendMsg] = useState('');
-
   useEffect(() => {
     axios.get(`${API_URL}/clientes`)
       .then(res => setClientes(res.data))
@@ -285,31 +284,6 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase())
   ).slice(0, 8); // Máximo 8 sugerencias
 
-  const [pedidos, setPedidos] = useState([]);
-
-  useEffect(() => {
-    axios.get(`${API_URL}/pedidos-clientes`)
-      .then(res => setPedidos(res.data))
-      .catch(()=>setPedidos([]));
-  }, []);
-
-  const [sincronizando, setSincronizando] = useState(false);
-
-  const handleSincronizar = async () => {
-    setSincronizando(true);
-    try {
-      await axios.get(`${API_URL}/pedidos-woo/sincronizar`);
-      // Volver a cargar los pedidos después de sincronizar
-      axios.get(`${API_URL}/pedidos-clientes`)
-        .then(res => setPedidos(res.data))
-        .catch(()=>setPedidos([]));
-    } catch (error) {
-      console.error('Error al sincronizar los pedidos de WooCommerce', error);
-    } finally {
-      setSincronizando(false);
-    }
-  };
-
   return (
     <div style={{ 
       position: 'fixed',
@@ -368,26 +342,6 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             {pedidoId ? `Modificando el pedido #${pedidoId}` : 'Gestión profesional de pedidos con vista expandida'}
           </p>
         </div>
-        <button
-          onClick={handleSincronizar}
-          disabled={sincronizando}
-          style={{
-            background: 'rgba(255,255,255,0.2)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '12px 20px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            fontSize: '16px',
-            transition: 'background 0.3s ease',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          {sincronizando ? 'Sincronizando...' : 'Sincronizar con WooCommerce'}
-        </button>
         <div style={{
           background: 'rgba(255,255,255,0.2)',
           padding: '8px 16px',

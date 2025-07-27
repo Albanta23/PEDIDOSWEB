@@ -61,8 +61,8 @@ const PedidoClienteSchema = new mongoose.Schema({
   clienteCreado: Boolean, // Indica si se creó un nuevo cliente
   verificadoManualmente: Boolean, // Indica si el usuario verificó manualmente los datos
   yaActualizado: { type: Boolean, default: false }, // Indica si el pedido ya fue sincronizado (para pedidos de WooCommerce)
-  esTiendaOnline: { type: Boolean, default: false } // Indica si el pedido proviene de la tienda online
-  ,
+  enHistorialDevoluciones: { type: Boolean, default: false }, // Indica si el pedido está en el historial de devoluciones
+  esTiendaOnline: { type: Boolean, default: false }, // Indica si el pedido proviene de la tienda online
   bultos: { type: Number, default: null }, // Campo para el número de bultos
   historialBultos: [
     {
@@ -70,7 +70,8 @@ const PedidoClienteSchema = new mongoose.Schema({
       usuario: String,
       fecha: { type: Date, default: Date.now }
     }
-  ]
+  ],
+  enviado: { type: Boolean, default: false } // Indica si el pedido ha sido enviado
 }, { timestamps: true });
 
 PedidoClienteSchema.index({ numeroPedido: 1 }, { unique: true });
