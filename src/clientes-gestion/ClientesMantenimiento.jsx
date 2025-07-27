@@ -170,15 +170,20 @@ export default function ClientesMantenimiento() {
       
       // Verificar y transformar los datos si es necesario
       const pedidosNormalizados = (res.data || []).map(pedido => {
-        // Asegurarse de que tenga todas las propiedades necesarias
         return {
           ...pedido,
-          // Si falta clienteId pero tiene cliente como string, usarlo como clienteId
           clienteId: pedido.clienteId || (typeof pedido.cliente === 'string' ? pedido.cliente : undefined)
         };
       });
-      
-      setPedidosCliente(pedidosNormalizados);
+
+      // FILTRO EXTRA: solo mostrar pedidos del cliente actual
+      const pedidosFiltrados = pedidosNormalizados.filter(p =>
+        p.clienteId === cliente._id ||
+        (typeof p.cliente === 'string' && p.cliente === cliente._id) ||
+        (typeof p.cliente === 'object' && p.cliente && p.cliente._id === cliente._id)
+      );
+
+      setPedidosCliente(pedidosFiltrados);
     } catch (error) {
       console.error('Error cargando pedidos del cliente:', error);
       setPedidosCliente([]);
