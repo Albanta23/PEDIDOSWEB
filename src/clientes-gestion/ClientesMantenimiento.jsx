@@ -176,7 +176,12 @@ export default function ClientesMantenimiento() {
         };
       });
 
-      // FILTRO EXTRA: solo mostrar pedidos del cliente actual
+      /*
+        FILTRO EXTRA DE ROBUSTEZ (ver DOCUMENTACION_CORRECCION_PEDIDOS_FICHA_CLIENTE.md):
+        Aunque el backend filtra por clienteId y nombre exacto, reforzamos en frontend para evitar
+        contaminación de pedidos de otros clientes por posibles inconsistencias en los datos o en el backend.
+        Solo se muestran pedidos que realmente pertenecen al cliente seleccionado.
+      */
       const pedidosFiltrados = pedidosNormalizados.filter(p =>
         p.clienteId === cliente._id ||
         (typeof p.cliente === 'string' && p.cliente === cliente._id) ||
