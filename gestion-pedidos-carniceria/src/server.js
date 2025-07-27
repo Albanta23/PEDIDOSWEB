@@ -28,6 +28,7 @@ const { registrarEntradasStockPorPedido, registrarBajaStock, registrarMovimiento
 const pedidosTiendaController = require('./pedidosTiendaController');
 const pedidosClientesController = require('./pedidosClientesController');
 const pedidosLotesController = require('./pedidosLotesController'); // Controlador de pedidos de cestas/lotes
+const sageController = require('./sageController'); // Controlador para Sage 50
 const clientesController = require('./clientesController'); // Controlador de clientes
 
 const app = express();
@@ -241,6 +242,7 @@ app.get('/api/pedidos-clientes', async (req, res) => {
     res.status(500).json({ error: err.message, stack: err.stack });
   }
 });
+app.post('/api/pedidos-clientes/exportar-sage50', sageController.exportarPedidos);
 app.get('/api/pedidos-clientes/:id', pedidosClientesController.obtenerPorId);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);
@@ -1145,27 +1147,37 @@ app.post('/api/clientes/marcar-cestas-navidad', async (req, res) => {
           // CLIENTE EXISTENTE: Marcarlo como cliente normal Y de cestas
           await Cliente.updateOne(
             { _id: clienteEncontrado._id },
-            { $set: { esCestaNavidad: true } }
+            { 
+              $set: { 
+                esCestaNavidad: true,
+                activo: true // También marcarlo como cliente normal
+              } 
+            }
           );
           marcados++;
           console.log(`[CESTAS-NAVIDAD] [OK] Cliente marcado: ${clienteEncontrado.nombre} → Normal + Cestas`);
         } else {
           // CLIENTE NUEVO: Crear como cliente de cestas únicamente
-          const nuevoCliente = await Cliente.create({
-            nombre: clienteCesta.nombre,
+          const nuevoCliente = new Cliente({
+            nombre: clienteCesta.nombre || 'Cliente sin nombre',
             email: clienteCesta.email || '',
             telefono: clienteCesta.telefono || '',
             nif: clienteCesta.nif || '',
             direccion: clienteCesta.direccion || '',
-            activo: true,
+            codigoPostal: clienteCesta.codigoPostal || '',
+            poblacion: clienteCesta.poblacion || '',
+            provincia: clienteCesta.provincia || '',
+            activo: false,          // NO es cliente normal todavía
             esCestaNavidad: true    // SÍ es cliente de cestas
           });
+          
+          await nuevoCliente.save();
           creados++;
           console.log(`[CESTAS-NAVIDAD] [NUEVO] Cliente creado: ${nuevoCliente.nombre} → Solo Cestas`);
         }
       } catch (e) {
         errores.push({ cliente: clienteCesta, error: e.message });
-        console.error(`[CESTAS-NAVIDAD] [ERROR] Error procesando cliente ${clienteCesta.nombre}:`, e.message);
+        console.error('[CESTAS-NAVIDAD][ERROR]', clienteCesta, e.message);
       }
     }
     

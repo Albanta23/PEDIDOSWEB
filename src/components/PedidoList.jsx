@@ -236,7 +236,7 @@ export default function PedidoList({ pedidos, onModificar, onBorrar, onEditar, m
     }
   };
 
-  const REFERENCIAS_CERDO = ["lomo", "panceta", "solomillos", "costilla", "chuletero", "carrilleras", "pies", "espinazo", "secreto", "papada", "jamon", "paleta", "paleta tipo york", "maza de jamon"];
+  const REFERENCIAS_CERDO = ["lomo", "panceta", "solomillos", "costilla", "chuletero", "carrilleras", "pies", "espinazo", "secreto", "papada", "jamon", "orejas", "paleta tipo york", "maza de jamon"];
   const getProveedorKey = () => `proveedor_despiece_${tiendaActual?.id || 'default'}`;
   const [lineasProveedor, setLineasProveedor] = useState([]);
 
