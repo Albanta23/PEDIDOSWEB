@@ -157,12 +157,11 @@ export default function ClientesMantenimiento() {
       
       console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
       
-      // Llamar a la API con los parámetros correctos para filtrar en el backend
+      // Llamar a la API solo filtrando por clienteId y nombreCliente para obtener TODOS los pedidos del cliente
       const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
         params: {
           clienteId: cliente._id, // Filtrar por ID del cliente
-          nombreCliente: cliente.nombre, // Filtrar por nombre del cliente
-          enHistorialDevoluciones: false // Excluir pedidos en historial de devoluciones
+          nombreCliente: cliente.nombre // Filtrar por nombre del cliente
         }
       });
       
