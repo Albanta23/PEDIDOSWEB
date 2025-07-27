@@ -88,28 +88,41 @@ module.exports = {
         }
       }
 
-      // --- Normalización robusta de enHistorialDevoluciones ---
-      // Puede llegar como string ('true'/'false'), booleano, undefined o incluso número
+      // --- Normalización y filtro robusto de enHistorialDevoluciones ---
+      // Queremos:
+      // - Para pedidos normales (enHistorialDevoluciones: false):
+      //   Incluir los que NO son true ni 'true' (aceptar undefined, null, false, 'false', 0, '0', string vacío...)
+      // - Para devoluciones (enHistorialDevoluciones: true):
+      //   Solo los que son true o 'true'
       let filtroDevoluciones;
       if (typeof enHistorialDevoluciones === 'undefined') {
-        // Por defecto, excluir los que están en historial de devoluciones
-        filtroDevoluciones = { $ne: true };
+        // Por defecto, pedidos normales: excluir los que son true o 'true'
+        filtroDevoluciones = { $nin: [true, 'true'] };
       } else {
-        // Normalizar a booleano real
         if (typeof enHistorialDevoluciones === 'string') {
           if (enHistorialDevoluciones.toLowerCase() === 'true' || enHistorialDevoluciones === '1') {
-            filtroDevoluciones = true;
+            // Solo los que son true o 'true'
+            filtroDevoluciones = { $in: [true, 'true', 1, '1'] };
           } else if (enHistorialDevoluciones.toLowerCase() === 'false' || enHistorialDevoluciones === '0') {
-            filtroDevoluciones = { $ne: true };
+            // Excluir los que son true o 'true', aceptar todo lo demás
+            filtroDevoluciones = { $nin: [true, 'true', 1, '1'] };
           } else {
             // Si llega cualquier otro valor, no filtrar
             filtroDevoluciones = undefined;
           }
         } else if (typeof enHistorialDevoluciones === 'boolean') {
-          filtroDevoluciones = enHistorialDevoluciones ? true : { $ne: true };
+          if (enHistorialDevoluciones) {
+            filtroDevoluciones = { $in: [true, 'true', 1, '1'] };
+          } else {
+            filtroDevoluciones = { $nin: [true, 'true', 1, '1'] };
+          }
         } else {
           // Si llega como número u otro tipo
-          filtroDevoluciones = enHistorialDevoluciones ? true : { $ne: true };
+          if (enHistorialDevoluciones) {
+            filtroDevoluciones = { $in: [true, 'true', 1, '1'] };
+          } else {
+            filtroDevoluciones = { $nin: [true, 'true', 1, '1'] };
+          }
         }
       }
       if (typeof filtroDevoluciones !== 'undefined') {
