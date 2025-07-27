@@ -378,9 +378,6 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       <div className="expedicion-cliente-editor-container">
         <div className="editor-header">
           <h3>Pedido Nº {pedido.numeroPedido || pedido.id} (DEVUELTO)</h3>
-          <div className="editor-actions-main">
-            <button className="btn-default" onClick={onClose}>Cerrar ventana</button>
-          </div>
         </div>
         <div className="info-pedido">
           <div><b>Cliente:</b> {pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || '-'}</div>
@@ -397,10 +394,9 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       <div className="expedicion-cliente-editor-container">
         <div className="editor-header">
           <h3>Editar Pedido Nº {pedido.numeroPedido || pedido.id}</h3>
-          <div className="editor-actions-main">
+          <div className="editor-actions-main" style={{ marginRight: '80px' }}>
             {!esPreparado && <button className="btn-success" onClick={editado ? handleGuardar : undefined} disabled={guardando || !editado}>Guardar</button>}
             {!esPreparado && <button className="btn-premium" onClick={handleCerrar} disabled={guardando || estado === 'preparado'}>Cerrar pedido</button>}
-            <button className="btn-default" onClick={onClose}>Cerrar ventana</button>
           </div>
         </div>
 

@@ -108,9 +108,56 @@ export default function ExpedicionesClientes() {
         </table>
       )}
       {pedidoEditando && (
-        <ProductosProvider>
-          <ExpedicionClienteEditor pedido={pedidoEditando} usuario={usuario} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
-        </ProductosProvider>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(30, 41, 59, 0.85)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            width: '98vw',
+            height: '98vh',
+            background: '#fff',
+            borderRadius: 18,
+            boxShadow: '0 8px 32px #0005',
+            overflow: 'auto',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <button onClick={() => setPedidoEditando(null)} style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              zIndex: 999,
+              background: '#dc3545',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 50,  // Botón circular
+              padding: '10px',
+              width: '40px',
+              height: '40px',
+              fontWeight: 700,
+              fontSize: 18,
+              boxShadow: '0 2px 8px #0002',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>✕</button>
+            <div style={{flex:1, minHeight:0, minWidth:0, paddingTop: 32}}>
+              <ProductosProvider>
+                <ExpedicionClienteEditor pedido={pedidoEditando} usuario={usuario} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
+              </ProductosProvider>
+            </div>
+          </div>
+        </div>
       )}
       <div style={{ color: '#888', fontStyle: 'italic' }}>
         (En desarrollo) Aquí aparecerán los pedidos de clientes para tramitar, editar y su historial.
