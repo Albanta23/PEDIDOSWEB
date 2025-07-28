@@ -196,7 +196,7 @@ export default function ExpedicionesClientes() {
         </div>
       )}
       <div style={{ color: '#888', fontStyle: 'italic' }}>
-        (En desarrollo) Aquí aparecerán los pedidos de clientes para tramitar, editar y su historial.
+        Desarrollado por JCF2025DV
       </div>
     </div>
   );
