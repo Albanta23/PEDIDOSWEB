@@ -191,57 +191,8 @@ app.post('/api/pedidos-tienda', pedidosTiendaController.crear);
 app.put('/api/pedidos-tienda/:id', pedidosTiendaController.actualizar);
 app.delete('/api/pedidos-tienda/:id', pedidosTiendaController.eliminar);
 
-// Pedidos de clientes/expediciones
-app.get('/api/pedidos-clientes', async (req, res) => {
-  try {
-    console.log('[DEBUG] Query params:', req.query);
-    const { estado, enviado, fechaInicio, fechaFin, enHistorialDevoluciones, ...otrosFiltros } = req.query;
-    const filtro = { ...otrosFiltros };
-
-    // 1. Filtrar por estado del pedido
-    if (estado) {
-      filtro.estado = estado;
-    }
-
-    // 2. Filtrar por estado de envío
-    if (enviado !== undefined) {
-      filtro.enviado = enviado === 'true';
-    }
-
-    // 3. Filtrar por historial de devoluciones SOLO si el parámetro viene en la petición
-    if (Object.prototype.hasOwnProperty.call(req.query, 'enHistorialDevoluciones')) {
-      if (enHistorialDevoluciones === 'false') {
-        filtro.$or = [
-          { enHistorialDevoluciones: false },
-          { enHistorialDevoluciones: { $exists: false } }
-        ];
-      } else {
-        filtro.enHistorialDevoluciones = true;
-      }
-    }
-
-    // 4. Filtrar por rango de fechas
-    if (fechaInicio || fechaFin) {
-      filtro.fechaPedido = {};
-      if (fechaInicio) {
-        filtro.fechaPedido.$gte = new Date(fechaInicio);
-      }
-      if (fechaFin) {
-        const fin = new Date(fechaFin);
-        fin.setHours(23, 59, 59, 999);
-        filtro.fechaPedido.$lte = fin;
-      }
-    }
-
-    console.log('[DEBUG] Filtro usado:', filtro);
-    const pedidos = await PedidoCliente.find(filtro).sort({ fechaCreacion: -1 });
-    console.log('[DEBUG] Pedidos encontrados:', pedidos.length);
-    res.json(pedidos);
-  } catch (err) {
-    console.error('[ERROR] /api/pedidos-clientes:', err);
-    res.status(500).json({ error: err.message, stack: err.stack });
-  }
-});
+// Pedidos de clientes/expediciones - usar el controlador que tiene las correcciones implementadas
+app.get('/api/pedidos-clientes', pedidosClientesController.listar);
 app.post('/api/pedidos-clientes/exportar-sage50', sageController.exportarPedidos);
 app.get('/api/pedidos-clientes/:id', pedidosClientesController.obtenerPorId);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
