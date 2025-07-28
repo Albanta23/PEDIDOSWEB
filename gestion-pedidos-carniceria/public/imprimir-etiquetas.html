@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Imprimir etiquetas de bultos</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    iframe { width: 100vw; height: 100vh; border: none; }
+  </style>
+</head>
+<body>
+  <iframe id="pdfFrame"></iframe>
+  <script>
+    // Obtener el parámetro idPedido de la URL
+    const params = new URLSearchParams(window.location.search);
+    const idPedido = params.get('id');
+    if (idPedido) {
+      const pdfUrl = `/api/pedidos/${idPedido}/etiquetas-bultos-pdf`;
+      const iframe = document.getElementById('pdfFrame');
+      iframe.src = pdfUrl;
+      iframe.onload = function() {
+        setTimeout(() => {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        }, 500);
+      };
+    } else {
+      document.body.innerHTML = '<h2>Falta el parámetro id</h2>';
+    }
+  </script>
+</body>
+</html>

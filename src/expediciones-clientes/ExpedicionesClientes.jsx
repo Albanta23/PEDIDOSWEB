@@ -33,6 +33,25 @@ export default function ExpedicionesClientes() {
         setPedidos(pedidosFiltrados);
         setCargando(false);
       }).catch(() => setCargando(false));
+
+      // Configurar recarga automática cada 30 segundos
+      const intervalId = setInterval(() => {
+        obtenerPedidosClientesExpedicion().then(data => {
+          // Filtrar: no en historial devoluciones, no pendientes de confirmación, no enviados, no entregados, no preparados, no borradores de woocommerce
+          const pedidosFiltrados = data.filter(p => {
+            const estado = (p.estado || '').toLowerCase();
+            return !p.enHistorialDevoluciones && 
+                   estado !== 'pendiente_confirmacion' && 
+                   estado !== 'enviado' && 
+                   estado !== 'entregado' &&
+                   estado !== 'preparado' &&
+                   estado !== 'borrador_woocommerce';
+          });
+          setPedidos(pedidosFiltrados);
+        });
+      }, 30000);
+
+      return () => clearInterval(intervalId); // Limpiar intervalo al desmontar
     }
   }, [logueado]);
 
@@ -97,7 +116,7 @@ export default function ExpedicionesClientes() {
               <tr><td colSpan={6} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
             )}
             {pedidos.map(p => (
-              <tr key={p._id || p.id}>
+              <tr key={p._id || p.id} style={{ background: p.estado === 'borrador_woocommerce' ? '#ffeb3b' : 'transparent' }}>
                 <td style={{ padding: 8, border: '1px solid #eee', fontWeight: 600 }}>{p.numeroPedido || p.id}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.clienteNombre || p.nombreCliente || p.cliente || '-'}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.direccion || p.direccionEnvio || '-'}</td>
