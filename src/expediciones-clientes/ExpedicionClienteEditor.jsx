@@ -3,7 +3,7 @@ import { FORMATOS_PEDIDO } from '../configFormatos';
 import { useProductos } from '../components/ProductosContext';
 import { useLotesDisponibles } from '../hooks/useLotesDisponibles';
 import { actualizarPedidoCliente, registrarDevolucionParcial, registrarDevolucionTotal } from './pedidosClientesExpedicionService';
-import { generarTicket } from '../utils/ticketGenerator';
+import * as ticketGenerator from '../utils/ticketGenerator';
 import './ExpedicionClienteEditor.css';
 import '../styles/lote-selector.css'; // Importar estilos para el selector de lotes
 import ModalDevolucion from './ModalDevolucion';
@@ -243,88 +243,77 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     }
   }
 
-  // Abrir modal de bultos
+  // Cerrar pedido: imprime ticket automáticamente y abre modal bultos
   function handleCerrar() {
+    // 1. Imprimir automáticamente ticket profesional en Epson (impresora predeterminada)
+    try {
+      const ticketTexto = ticketGenerator.generarTicketTexto(pedidoParaImprimir, usuario || 'Expediciones');
+      
+      // Crear iframe oculto para imprimir sin mostrar ventana
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(ticketTexto);
+      iframeDoc.close();
+      
+      // Imprimir automáticamente en impresora predeterminada
+      setTimeout(() => {
+        iframe.contentWindow.print();
+        // Remover iframe después de imprimir
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+      
+      console.log('✅ Ticket profesional enviado a Epson (impresora predeterminada)');
+      
+    } catch (error) {
+      console.error('Error al imprimir ticket profesional:', error);
+    }
+    
+    // 2. Abrir modal de bultos para etiquetas Zebra
     setShowModalBultos(true);
   }
 
-  // Imprimir etiquetas y cerrar pedido
-  async function handleImprimirEtiquetas(numBultos) {
-    setShowModalBultos(false);
-    setError('');
-    setMensaje('');
-    setGuardando(true);
-
-    // 1. Abrir las ventanas de impresión ANTES de cualquier 'await'
-    // Esto es crucial para evitar que los bloqueadores de pop-ups las bloqueen.
-    const printWindows = [];
-    for (let i = 0; i < numBultos; i++) {
-      const printWindow = window.open('', '_blank', 'width=450,height=700');
-      if (printWindow) {
-        // Escribir un mensaje de espera mientras se procesa el pedido
-        printWindow.document.write('<html><head><title>Generando etiqueta...</title></head><body><h1>Generando etiqueta, por favor espere...</h1></body></html>');
-        printWindows.push(printWindow);
-      } else {
-        // Si la ventana no se pudo abrir, informar al usuario y detener el proceso.
-        setError('No se pudo abrir la ventana de impresión. Por favor, deshabilita el bloqueador de pop-ups para este sitio.');
-        setGuardando(false);
-        return;
-      }
-    }
-
+  // Imprimir etiquetas Zebra: UNA SOLA VENTANA con todas las etiquetas
+  const handleImprimirEtiquetas = (numBultos) => {
     try {
-      const datosPedido = {
-        ...pedido,
-        lineas,
-        estado: 'preparado',
-        usuarioTramitando: usuario || 'expediciones',
-        bultos: numBultos,
-      };
-
-      // 2. Realizar la operación asíncrona (actualizar el pedido)
-      const pedidoActualizado = await actualizarPedidoCliente(pedido._id || pedido.id, datosPedido);
-
-      // 3. Ahora, con los datos actualizados, llenar las ventanas que ya están abiertas
-      printWindows.forEach((printWindow, i) => {
-        if (!printWindow || printWindow.closed) {
-          console.warn(`La ventana de impresión ${i + 1} fue cerrada por el usuario.`);
-          return; // Saltar si el usuario cerró la ventana
-        }
-
-        const etiqueta = generarTicket(pedidoActualizado, i + 1, numBultos);
+      // Generar documento único con todas las etiquetas
+      const documentoCompleto = ticketGenerator.generarDocumentoEtiquetasCompleto(pedidoParaImprimir, numBultos);
+      
+      // Abrir una sola ventana con todas las etiquetas
+      const ventana = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+      if (ventana) {
+        ventana.document.write(documentoCompleto);
+        ventana.document.close();
         
-        // Usar directamente el HTML generado por el generador de tickets
-        printWindow.document.open();
-        printWindow.document.write(etiqueta.html);
-        printWindow.document.close();
-        
-        // Pequeña pausa entre etiquetas para asegurar que se impriman correctamente
+        // Activar impresión automática
         setTimeout(() => {
-          if (printWindow && !printWindow.closed) {
-            printWindow.print();
-            setTimeout(() => printWindow.close(), 500);
+          try {
+            ventana.focus();
+            ventana.print();
+          } catch (error) {
+            console.warn('Error al imprimir etiquetas:', error);
           }
-        }, i * 200);
-      });
-
-      setMensaje('Pedido cerrado y etiquetas impresas');
-      setEstado('preparado');
-      setEditado(false);
-      setBultos(numBultos);
-      if (onActualizado) onActualizado();
-      setTimeout(() => {
-        setMensaje('');
-        onClose();
-      }, 1500);
-
-    } catch (e) {
-      setError('Error al cerrar el pedido: ' + (e.response?.data?.error || e.message));
-      // En caso de error, cerrar las ventanas que se hayan abierto
-      printWindows.forEach(pw => pw && !pw.closed && pw.close());
-    } finally {
-      setGuardando(false);
+        }, 500);
+        
+        console.log(`✅ ${numBultos} etiquetas de envío generadas en una sola ventana para Zebra`);
+      }
+      
+    } catch (error) {
+      console.error('Error al generar etiquetas de envío:', error);
+      alert('Error al generar las etiquetas de envío');
     }
-  }
+    
+    // Cerrar modal
+    setShowModalBultos(false);
+  };
 
   const esPreparado = estado === 'preparado' || estado === 'entregado';
   const esDevuelto = pedido.enHistorialDevoluciones || estado === 'devuelto_parcial' || estado === 'devuelto_total';
