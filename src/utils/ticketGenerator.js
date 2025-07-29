@@ -684,8 +684,8 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           body {
             font-family: 'Arial', sans-serif;
             background: white;
-            padding: 20px;
-            width: 400px;
+            padding: 15px;
+            width: 580px; /* Aumentado para aprovechar formato apaisado */
             margin: 0 auto;
           }
           
@@ -836,13 +836,19 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           
           @media print {
             body { 
-              padding: 0; 
+              padding: 5mm; 
               width: auto;
+              max-width: 140mm; /* Aprovechar el ancho apaisado */
             }
             .etiqueta {
               box-shadow: none;
               border: 2px solid #2c3e50;
             }
+          }
+          
+          @page {
+            margin: 5mm;
+            size: 150mm 100mm; /* 15cm x 10cm - APAISADO */
           }
         </style>
       </head>
