@@ -1,0 +1,7 @@
+﻿serie;albaran;cliente;fecha;almacen;formapago;vendedor;articulo;definicion;unidades;precio;dto1;dto2;Obra;factura;fechafra;observaciones;nombrecliente;cifcliente;dircliente;cpcliente;pobcliente;provcliente;telfcliente;emailcliente
+SF;prueba1;43001234;09/01/2025;00;01;01;ART00002;One;3;8;;;;FR01;;;CLIVARIO;12345678A;c/varios, 11;;LLEIDA;LLEIDA;973973973;clientevario@clientes.com
+SF;prueba2;43000001;10/08/2025;00;03;01;ART00003;One;2;10;10;;;FR02;10/08/2025;;CLIVARIO2;87654321B;c/varios, 22;25200;MOLLERUSSA;LLEIDA;973739739;clientevario2@clientes.com
+SF;prueba2;43000001;10/08/2025;00;03;01;ART00002;One;5;15;25;;;FR02;10/08/2025;;CLIVARIO2;87654321B;c/varios, 22;25200;MOLLERUSSA;LLEIDA;973739739;clientevario2@clientes.com
+SF;PRUEBA33;43000001;14/05/2025;00;02;01;ART00001;Two;6;7,45;;;;FR03;;;;;;;;;;
+SF;PRUEBA33;43000001;14/05/2025;00;02;01;;Nota y referencia;;;;;;FR03;;;;;;;;;;
+SF;PRUEBA33;43000001;14/05/2025;00;02;01;ART00001;Three;4;10;;;;FR03;;;;;;;;;;
