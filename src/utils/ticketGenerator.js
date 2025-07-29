@@ -38,7 +38,9 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
     etiquetas.push(`
       <div class="etiqueta" style="page-break-after: ${i < numBultos ? 'always' : 'auto'};">
         <div class="header-empresa">
-          <div class="empresa-logo">📦</div>
+          <div class="empresa-logo">
+            <img src="./logo1.png" alt="Logo" style="height: 35px; width: auto;" />
+          </div>
           <div class="empresa-datos">
             <div class="empresa-nombre">${empresa.nombre}</div>
             <div class="empresa-direccion">${empresa.direccion}</div>
@@ -46,54 +48,30 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           </div>
         </div>
         
-        <div class="header-etiqueta">
-          <h1>ETIQUETA DE ENVÍO</h1>
-          <div class="origen-badge ${pedido.origen?.tipo === 'woocommerce' ? 'origen-woocommerce' : 'origen-manual'}">
-            ${pedido.origen?.tipo === 'woocommerce' ? 'WOOCOMMERCE' : 'MANUAL'}
-          </div>
-        </div>
-        
-        <div class="bulto-info">
-          <div class="bulto-numero">BULTO ${i} DE ${numBultos}</div>
-          <div class="pedido-numero">Pedido Nº ${pedido.numeroPedido || pedido._id}</div>
-        </div>
-        
         <div class="contenido">
-          <div class="contenido-superior">
-            <div class="columna-izquierda">
-              <div class="seccion-destinatario">
-                <div class="seccion-titulo">📍 DESTINATARIO:</div>
-                <div class="direccion">
-                  <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
-                  <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
-                  <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
-                  ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
-                </div>
-              </div>
-            </div>
-            
-            <div class="columna-derecha">
-              <div class="seccion-remitente">
-                <div class="seccion-titulo">📤 REMITENTE:</div>
-                <div class="remitente-datos">
-                  <div class="remitente-nombre">${empresa.nombre}</div>
-                  <div class="remitente-direccion">${empresa.direccion}</div>
-                  <div class="remitente-contacto">📞 ${empresa.telefono}</div>
-                </div>
-              </div>
+          <div class="seccion-destinatario">
+            <div class="seccion-titulo">📍 DESTINATARIO:</div>
+            <div class="direccion">
+              <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
+              <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
+              <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
+              ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
             </div>
           </div>
           
-          <div class="contenido-inferior">
-            <div class="codigo-barras">
-              <div class="codigo-titulo">CÓDIGO DE SEGUIMIENTO</div>
-              <div class="codigo-valor">||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||</div>
-            </div>
-            
-            <div class="info-adicional">
-              <div class="fecha-envio">📅 ${fecha} ${hora}</div>
-              <div class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</div>
-            </div>
+          <div class="bulto-info">
+            <div class="bulto-numero">BULTO ${i} DE ${numBultos}</div>
+            <div class="pedido-numero">Pedido Nº ${pedido.numeroPedido || pedido._id}</div>
+          </div>
+          
+          <div class="codigo-barras">
+            <div class="codigo-titulo">CÓDIGO DE SEGUIMIENTO</div>
+            <div class="codigo-valor">||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||</div>
+          </div>
+          
+          <div class="info-adicional">
+            <div class="fecha-envio">📅 ${fecha} ${hora}</div>
+            <div class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</div>
           </div>
         </div>
       </div>
@@ -121,28 +99,28 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           .etiqueta {
             border: 3px solid black;
-            padding: 8mm;
-            font-size: 16px; /* Letra más grande para apaisado */
-            width: 150mm;   /* 15cm - APAISADO */
-            height: 100mm;  /* 10cm - APAISADO */
+            padding: 5mm;
+            font-size: 14px;
+            width: 100mm;   /* 10cm - MÁXIMO ANCHO */
+            height: 150mm;  /* 15cm - ALTO */
             margin: 0 auto 10mm auto;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 4mm;
           }
           
           .header-empresa {
             display: flex;
             align-items: center;
-            margin-bottom: 6mm;
-            padding-bottom: 4mm;
-            border-bottom: 3px solid #1976d2;
+            padding-bottom: 3mm;
+            border-bottom: 2px solid #1976d2;
           }
           
           .empresa-logo {
-            font-size: 28px; /* Más grande para apaisado */
-            margin-right: 10px;
-            color: #1976d2;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
           }
           
           .empresa-datos {
@@ -150,70 +128,21 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           .empresa-nombre {
-            font-size: 18px; /* Más grande para apaisado */
+            font-size: 14px;
             font-weight: bold;
             color: #1976d2;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
           }
           
           .empresa-direccion {
-            font-size: 14px; /* Más grande para apaisado */
+            font-size: 11px;
             color: #333;
             margin-bottom: 1px;
           }
           
           .empresa-contacto {
-            font-size: 12px; /* Más grande para apaisado */
+            font-size: 10px;
             color: #666;
-          }
-          
-          .header-etiqueta {
-            text-align: center;
-            margin-bottom: 4mm;
-          }
-          
-          .header-etiqueta h1 {
-            font-size: 20px; /* Más grande para apaisado */
-            font-weight: bold;
-            margin-bottom: 4mm;
-            color: #333;
-          }
-          
-          .origen-badge {
-            display: inline-block;
-            padding: 4px 15px;
-            border-radius: 20px;
-            font-size: 14px; /* Más grande para apaisado */
-            font-weight: bold;
-            color: white;
-          }
-          
-          .origen-woocommerce {
-            background: #ff9800;
-          }
-          
-          .origen-manual {
-            background: #1976d2;
-          }
-          
-          .bulto-info {
-            text-align: center;
-            margin-bottom: 4mm;
-          }
-          
-          .bulto-numero {
-            font-size: 18px; /* Más grande para apaisado */
-            font-weight: bold;
-            background: #f0f0f0;
-            padding: 6px;
-            border: 3px solid black;
-            margin-bottom: 3mm;
-          }
-          
-          .pedido-numero {
-            font-size: 16px; /* Más grande para apaisado */
-            font-weight: bold;
-            color: #1976d2;
           }
           
           .contenido {
@@ -223,45 +152,29 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             gap: 4mm;
           }
           
-          .contenido-superior {
-            display: flex;
-            gap: 8mm;
+          .seccion-destinatario {
+            background: #f8f9fa;
+            padding: 4mm;
+            border: 2px solid #1976d2;
+            border-radius: 3mm;
             flex: 1;
-          }
-          
-          .columna-izquierda, .columna-derecha {
-            flex: 1;
-          }
-          
-          .contenido-inferior {
-            display: flex;
-            flex-direction: column;
-            gap: 3mm;
           }
           
           .seccion-titulo {
-            font-size: 16px; /* Más grande para apaisado */
+            font-size: 13px;
             font-weight: bold;
             background: #e3f2fd;
-            padding: 4px 8px;
-            border-left: 4px solid #1976d2;
+            padding: 3px 6px;
+            border-left: 3px solid #1976d2;
             margin-bottom: 3mm;
           }
           
-          .seccion-destinatario {
-            background: #f8f9fa;
-            padding: 5mm;
-            border: 3px solid #1976d2;
-            border-radius: 4mm;
-            height: 100%;
-          }
-          
           .direccion {
-            font-size: 15px; /* Más grande para apaisado */
+            font-size: 13px;
           }
           
           .direccion-nombre {
-            font-size: 17px; /* Más grande para apaisado */
+            font-size: 15px;
             font-weight: bold;
             margin-bottom: 2mm;
             color: #1976d2;
@@ -270,34 +183,58 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           .direccion-linea {
             margin-bottom: 1mm;
             color: #333;
+            word-wrap: break-word;
           }
           
-          .seccion-remitente {
-            background: #fff3e0;
-            padding: 5mm;
-            border: 2px solid #ff9800;
-            border-radius: 4mm;
-            height: 100%;
+          .bulto-info {
+            text-align: center;
+            margin: 2mm 0;
           }
           
-          .remitente-datos {
-            font-size: 14px; /* Más grande para apaisado */
-          }
-          
-          .remitente-nombre {
+          .bulto-numero {
+            font-size: 16px;
             font-weight: bold;
-            color: #f57c00;
-            margin-bottom: 1mm;
-            font-size: 16px; /* Más grande para apaisado */
+            background: #f0f0f0;
+            padding: 4px;
+            border: 2px solid black;
+            margin-bottom: 2mm;
           }
           
-          .remitente-direccion, .remitente-contacto {
-            color: #333;
-            margin-bottom: 1mm;
+          .pedido-numero {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1976d2;
           }
           
           .codigo-barras {
             text-align: center;
+            margin: 2mm 0;
+            padding: 3mm;
+            border: 2px solid black;
+            background: white;
+          }
+          
+          .codigo-titulo {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 2mm;
+          }
+          
+          .codigo-valor {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+          }
+          
+          .info-adicional {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px dashed #666;
+            padding-top: 2mm;
+          }
             margin: 3mm 0;
             padding: 4mm;
             border: 3px solid black;
@@ -310,23 +247,24 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             margin-bottom: 2mm;
           }
           
-          .codigo-valor {
-            font-family: 'Courier New', monospace;
-            font-size: 16px; /* Más grande para apaisado */
-            font-weight: bold;
-            letter-spacing: 2px;
-          }
-          
-          .info-adicional {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px; /* Más grande para apaisado */
-            color: #666;
-            border-top: 2px dashed #666;
-            padding-top: 3mm;
-          }
-          
           @media print {
+            body { 
+              padding: 0; 
+            }
+            .etiqueta {
+              margin: 0 auto;
+              page-break-inside: avoid;
+              page-break-after: always;
+            }
+            .etiqueta:last-child {
+              page-break-after: auto;
+            }
+          }
+          
+          @page {
+            margin: 5mm;
+            size: 100mm 150mm; /* 10cm x 15cm */
+          }          @media print {
             body { 
               padding: 0; 
             }
@@ -390,11 +328,11 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           body {
             font-family: 'Arial', sans-serif;
             background: white;
-            padding: 6px;
-            width: 226px; /* 6cm = 226px */
+            padding: 5px;
+            width: 189px; /* 5cm = 189px */
             margin: 0 auto;
-            font-size: 13px; /* Ajustado para 6cm */
-            line-height: 1.3;
+            font-size: 12px; /* Ajustado para 5cm */
+            line-height: 1.2;
           }
           
           .ticket {
@@ -409,29 +347,29 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .empresa-nombre {
-            font-size: 15px; /* Ajustado para 6cm */
+            font-size: 13px; /* Ajustado para 5cm */
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
           }
           
           .empresa-info {
-            font-size: 11px;
-            margin-bottom: 2px;
+            font-size: 10px;
+            margin-bottom: 1px;
           }
           
           .titulo-ticket {
-            font-size: 16px; /* Ajustado para 6cm */
+            font-size: 14px; /* Ajustado para 5cm */
             font-weight: bold;
-            margin: 10px 0;
+            margin: 8px 0;
           }
           
           .info-pedido {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
           }
           
           .info-line {
-            margin-bottom: 3px;
-            font-size: 12px; /* Ajustado para 6cm */
+            margin-bottom: 2px;
+            font-size: 11px; /* Ajustado para 5cm */
           }
           
           .label {
@@ -441,21 +379,21 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           .cliente-info {
             border-top: 2px dashed black;
             border-bottom: 2px dashed black;
-            padding: 12px 0;
-            margin: 12px 0;
+            padding: 10px 0;
+            margin: 10px 0;
           }
           
           .productos {
-            margin: 15px 0;
+            margin: 12px 0;
           }
           
           .productos-titulo {
-            font-size: 14px; /* Ajustado para 6cm */
+            font-size: 12px; /* Ajustado para 5cm */
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-align: center;
             background: #f0f0f0;
-            padding: 6px;
+            padding: 5px;
             border: 1px solid black;
           }
           
@@ -467,49 +405,49 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .producto-nombre {
             font-weight: bold;
-            font-size: 13px; /* Ajustado para 6cm */
+            font-size: 11px; /* Ajustado para 5cm */
             margin-bottom: 2px;
           }
           
           .producto-detalles {
-            font-size: 11px;
+            font-size: 10px;
             color: #333;
           }
           
           .producto-comentario {
-            font-size: 12px;
+            font-size: 10px;
             color: #666;
             font-style: italic;
             margin-top: 2px;
           }
           
           .comentarios {
-            margin: 15px 0;
+            margin: 12px 0;
             border: 2px solid #ff9800;
-            padding: 10px;
+            padding: 8px;
             background: #fff3e0;
           }
           
           .comentarios-titulo {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #e65100;
           }
           
           .comentario-line {
-            font-size: 13px;
-            margin-bottom: 5px;
+            font-size: 11px;
+            margin-bottom: 4px;
             color: #bf360c;
           }
           
           .bultos-info {
             text-align: center;
-            font-size: 15px; /* Ajustado para 6cm */
+            font-size: 12px; /* Ajustado para 5cm */
             font-weight: bold;
-            margin: 12px 0;
+            margin: 10px 0;
             background: #e3f2fd;
-            padding: 8px;
+            padding: 6px;
             border: 2px solid #1976d2;
             color: #0d47a1;
           }
@@ -549,7 +487,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           @page {
             margin: 5mm;
-            size: 60mm auto; /* 6cm de ancho */
+            size: 50mm auto; /* 5cm de ancho */
           }
         </style>
       </head>

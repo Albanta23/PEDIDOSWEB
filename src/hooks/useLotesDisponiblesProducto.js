@@ -1,5 +1,5 @@
 // Hook para obtener lotes disponibles de un producto en el almacén central
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getMovimientosStock } from '../services/movimientosStockService';
 import axios from 'axios';
 
@@ -16,23 +16,57 @@ export function useLotesDisponiblesProducto(producto, fechaExpedicion) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [infoProducto, setInfoProducto] = useState(null);
+  const debounceRef = useRef(null);
 
-  // Primero obtenemos la información del producto para saber si se controla por unidades o por peso
+  // CORRECIÓN: Debounce para evitar múltiples consultas por carácter tecleado
   useEffect(() => {
-    if (!producto) return;
+    // Limpiar timeout anterior
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Solo buscar si el producto tiene al menos 3 caracteres para evitar consultas inútiles
+    if (!producto || producto.trim().length < 3) {
+      setInfoProducto(null);
+      return;
+    }
     
-    setLoading(true);
-    axios.get(`${API_URL}/productos?nombre=${encodeURIComponent(producto)}`)
-      .then(response => {
-        if (response.data && response.data.length > 0) {
-          setInfoProducto(response.data[0]);
-        }
-      })
-      .catch(err => console.error('Error al obtener información del producto:', err));
+    // Debounce de 500ms para evitar saturación de requests
+    debounceRef.current = setTimeout(() => {
+      setLoading(true);
+      axios.get(`${API_URL}/productos?nombre=${encodeURIComponent(producto)}`)
+        .then(response => {
+          if (response.data && response.data.length > 0) {
+            setInfoProducto(response.data[0]);
+          } else {
+            setInfoProducto(null);
+          }
+        })
+        .catch(err => {
+          // Solo loggear errores para productos con nombre válido
+          if (producto.trim().length >= 3) {
+            console.error('Error al obtener información del producto:', err);
+          }
+          setInfoProducto(null);
+        });
+    }, 500);
+
+    // Cleanup function
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
   }, [producto]);
 
   useEffect(() => {
-    if (!producto) return;
+    // Solo buscar lotes si el producto tiene al menos 3 caracteres
+    if (!producto || producto.trim().length < 3) {
+      setLotes([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     getMovimientosStock({ tiendaId: 'almacen_central', producto })
       .then(movs => {
@@ -62,7 +96,12 @@ export function useLotesDisponiblesProducto(producto, fechaExpedicion) {
         setLoading(false);
       })
       .catch(err => {
+        // Solo loggear errores para productos con nombre válido
+        if (producto.trim().length >= 3) {
+          console.error(`Error al obtener movimientos de stock para producto "${producto}":`, err);
+        }
         setError(err);
+        setLotes([]);
         setLoading(false);
       });
   }, [producto, fechaExpedicion, infoProducto]);
