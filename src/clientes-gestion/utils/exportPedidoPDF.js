@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { DATOS_EMPRESA } from '../../configDatosEmpresa';
 import { formatearDireccionCompletaPedido } from './formatDireccion';
+import { formatearNombreClientePedido } from '../../utils/formatNombreCompleto';
 import { obtenerLogoPDF } from './logoBase64';
 
 // Función de respaldo completa (mantener por si acaso)
@@ -131,7 +132,7 @@ export async function exportPedidoClientePDF(pedido) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   
-  doc.text(`Cliente: ${pedido.clienteNombre || 'N/A'}`, 110, y);
+  doc.text(`Cliente: ${formatearNombreClientePedido(pedido)}`, 110, y);
   y += 8;
   
   // Dirección completa con manejo de múltiples líneas

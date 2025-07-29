@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PedidoClienteDetalle from './PedidoClienteDetalle';
 import { formatearDireccionCompletaPedido } from './utils/formatDireccion';
+import { formatearNombreClientePedido } from '../utils/formatNombreCompleto';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
@@ -434,7 +435,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ fontSize: '16px' }}>👤</span>
-                              <span style={{ fontWeight: '600', color: '#1e293b' }}>{p.clienteNombre || '-'}</span>
+                              <span style={{ fontWeight: '600', color: '#1e293b' }}>{formatearNombreClientePedido(p)}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ fontSize: '14px' }}>📍</span>
@@ -630,7 +631,7 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '16px' }}>👤</span>
-                            <span style={{ fontWeight: '600', color: '#1e293b' }}>{p.clienteNombre || '-'}</span>
+                            <span style={{ fontWeight: '600', color: '#1e293b' }}>{formatearNombreClientePedido(p)}</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '14px' }}>📍</span>

@@ -6,6 +6,6 @@ export const DATOS_EMPRESA = {
   direccion: 'CARRETERA NACIONAL 122 KM 424',
   telefono: '980690604',
   email: 'fabricaembutidosballesteros@gmail.com',
-  web: 'www.embutidosballesteros.com',
+  web: 'www.embutidosballesteros.es',
   cif: 'B49143456'
 };

@@ -4,6 +4,39 @@ const { Parser } = require('json2csv');
 const XLSX = require('xlsx');
 
 /**
+ * Función auxiliar para generar el nombre completo del cliente para SAGE50
+ * @param {object} cliente - Objeto cliente con datos de nombre y apellidos
+ * @param {string} fallbackNombre - Nombre de respaldo si no hay datos del cliente
+ * @returns {string} - Nombre completo formateado para SAGE50
+ */
+function generarNombreCompletoSage(cliente, fallbackNombre = 'Cliente') {
+  if (!cliente) {
+    return fallbackNombre;
+  }
+
+  // Si hay razón social, se usa preferentemente
+  if (cliente.razonSocial && cliente.razonSocial.trim()) {
+    return cliente.razonSocial.trim();
+  }
+
+  // Construir nombre con apellidos separados si están disponibles
+  if (cliente.nombre || cliente.primerApellido || cliente.segundoApellido) {
+    const partesNombre = [
+      cliente.nombre || '',
+      cliente.primerApellido || '',
+      cliente.segundoApellido || ''
+    ].filter(parte => parte.trim().length > 0);
+    
+    if (partesNombre.length > 0) {
+      return partesNombre.join(' ');
+    }
+  }
+
+  // Fallback al nombre concatenado original o al nombre de respaldo
+  return cliente.nombre || fallbackNombre;
+}
+
+/**
  * Exporta pedidos de clientes en formato SAGE50 - Albaranes de Venta
  * Estructura basada en el formato estándar de SAGE50 para importación de albaranes
  */
@@ -41,7 +74,7 @@ const exportarPedidos = async (req, res) => {
           if (cliente) {
             datosCliente = {
               codigo: cliente.codigoSage || cliente.nif || `CLI${String(contadorFactura).padStart(6, '0')}`,
-              nombre: cliente.razonSocial || cliente.nombre || pedido.clienteNombre,
+              nombre: generarNombreCompletoSage(cliente, pedido.clienteNombre),
               nif: cliente.nif || pedido.nif || '',
               direccion: cliente.direccion || pedido.direccion || '',
               codigoPostal: cliente.codigoPostal || pedido.codigoPostal || '',
@@ -295,7 +328,7 @@ async function generarLineasAlbaran(pedidos) {
         if (cliente) {
           datosCliente = {
             codigo: cliente.codigoSage || cliente.nif || `CLI${String(contadorFactura).padStart(6, '0')}`,
-            nombre: cliente.razonSocial || cliente.nombre || pedido.clienteNombre,
+            nombre: generarNombreCompletoSage(cliente, pedido.clienteNombre),
             nif: cliente.nif || pedido.nif || '',
             direccion: cliente.direccion || pedido.direccion || '',
             codigoPostal: cliente.codigoPostal || pedido.codigoPostal || '',

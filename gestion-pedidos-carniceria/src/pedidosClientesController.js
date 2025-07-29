@@ -129,8 +129,12 @@ module.exports = {
         filtro.enHistorialDevoluciones = filtroDevoluciones;
       }
       
-      // Buscar pedidos
-      let pedidos = await PedidoCliente.find(filtro);
+      // Buscar pedidos ordenados por fecha descendente (más reciente primero)
+      let pedidos = await PedidoCliente.find(filtro).sort({ 
+        fechaPedido: -1, 
+        fechaCreacion: -1, 
+        _id: -1 
+      });
       
       // Si no hay filtro de fecha y los pedidos no tienen fechaPedido, filtrar por fechaCreacion
       if ((fechaInicio || fechaFin) && pedidos.length === 0) {
@@ -143,7 +147,10 @@ module.exports = {
           fin.setHours(23,59,59,999);
           filtroCreacion.fechaCreacion.$lte = fin;
         }
-        pedidos = await PedidoCliente.find(filtroCreacion);
+        pedidos = await PedidoCliente.find(filtroCreacion).sort({ 
+          fechaCreacion: -1, 
+          _id: -1 
+        });
       }
       
       // Asegurar que todos los pedidos devuelvan el campo 'bultos' aunque sea null

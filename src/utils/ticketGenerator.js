@@ -1,4 +1,5 @@
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
+import { formatearNombreClientePedido } from './formatNombreCompleto';
 
 export function generarTicket(pedido, bultoNum = 1, totalBultos = 1) {
   const fecha = new Date().toLocaleDateString('es-ES');
@@ -52,7 +53,7 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           <div class="seccion-destinatario">
             <div class="seccion-titulo">📍 DESTINATARIO:</div>
             <div class="direccion">
-              <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
+              <div class="direccion-nombre">${formatearNombreClientePedido(pedido)}</div>
               <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
               <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
               ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
@@ -515,7 +516,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           <div class="cliente-info">
             <div class="info-line"><span class="label">CLIENTE:</span></div>
-            <div class="info-line">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'N/A'}</div>
+            <div class="info-line">${formatearNombreClientePedido(pedido)}</div>
             <div class="info-line">${pedido.direccion || pedido.direccionEnvio || 'N/A'}</div>
             <div class="info-line">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
             ${pedido.telefono ? `<div class="info-line">Tel: ${pedido.telefono}</div>` : ''}
@@ -651,7 +652,7 @@ function generateThermalLabelHTML(pedido, bultoNum, totalBultos, fecha, hora, em
           
           <div class="contenido">
             <div class="direccion">
-              <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
+              <div class="direccion-nombre">${formatearNombreClientePedido(pedido)}</div>
               <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
               <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
               ${pedido.telefono ? `<div class="direccion-linea">Tel: ${pedido.telefono}</div>` : ''}
@@ -939,7 +940,7 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
                 <div class="contenido-seccion">
                   <div class="direccion">
                     <div class="direccion-nombre">
-                      ${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Sin nombre'}
+                      ${formatearNombreClientePedido(pedido)}
                     </div>
                     ${pedido.direccion || pedido.direccionEnvio ? 
                       `<div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio}</div>` : ''}
@@ -993,7 +994,7 @@ Web: ${empresa.web}
 
 ========================================
 DESTINATARIO:
-${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Sin nombre'}
+${formatearNombreClientePedido(pedido)}
 ${pedido.direccion || pedido.direccionEnvio || ''}
 ${pedido.codigoPostal || ''} ${pedido.poblacion || ''}
 Tel: ${pedido.telefono || ''}

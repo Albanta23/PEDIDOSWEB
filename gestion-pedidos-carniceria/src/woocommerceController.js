@@ -2,6 +2,34 @@ const WooCommerce = require('./services/woocommerceService');
 const PedidoCliente = require('./models/PedidoCliente');
 const Cliente = require('./models/Cliente');
 const ProductoWoo = require('./models/ProductoWoo');
+const { construirNombreCompleto } = require('./sincronizarNombresPedidos');
+
+/**
+ * Función auxiliar para separar apellidos del campo last_name de WooCommerce
+ * @param {string} firstName - Nombre del cliente
+ * @param {string} lastName - Apellidos del cliente (puede contener uno o dos apellidos)
+ * @returns {object} - Objeto con nombre, primerApellido y segundoApellido separados
+ */
+function separarNombreApellidos(firstName, lastName) {
+  const nombre = firstName ? firstName.trim() : '';
+  
+  if (!lastName) {
+    return {
+      nombre,
+      primerApellido: '',
+      segundoApellido: ''
+    };
+  }
+  
+  // Dividir el lastName por espacios y filtrar elementos vacíos
+  const apellidos = lastName.trim().split(/\s+/).filter(apellido => apellido.length > 0);
+  
+  return {
+    nombre,
+    primerApellido: apellidos[0] || '',
+    segundoApellido: apellidos[1] || ''
+  };
+}
 
 module.exports = {
   async sincronizarPedidos(req, res) {
@@ -61,6 +89,7 @@ module.exports = {
           }
           
           const nombreCompleto = `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`;
+          const datosNombre = separarNombreApellidos(pedidoWoo.billing.first_name, pedidoWoo.billing.last_name);
           criteriosBusqueda.push({ nombre: nombreCompleto });
           
           // Buscar con $or para encontrar coincidencias con cualquiera de los criterios
@@ -83,7 +112,9 @@ module.exports = {
             }
             
             const nuevoCliente = new Cliente({
-              nombre: `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`,
+              nombre: datosNombre.nombre,
+              primerApellido: datosNombre.primerApellido,
+              segundoApellido: datosNombre.segundoApellido,
               nif: pedidoWoo.billing.vat || '',
               direccion: `${pedidoWoo.billing.address_1}${pedidoWoo.billing.address_2 ? ', ' + pedidoWoo.billing.address_2 : ''}`,
               email: pedidoWoo.billing.email || '',
@@ -194,6 +225,10 @@ module.exports = {
             };
           }));
           
+          // Buscar cliente recién creado para construir nombre completo
+          const clienteCompleto = await Cliente.findById(clienteId);
+          const nombreCompletoCliente = construirNombreCompleto(clienteCompleto, `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`);
+          
           const nuevoPedido = new PedidoCliente({
             clienteId,
             codigoCliente, // Guardar el código de cliente para SAGE50
@@ -203,7 +238,7 @@ module.exports = {
             numeroPedidoWoo: pedidoWoo.id, // Guardar el número de WooCommerce como referencia
             fechaPedido: pedidoWoo.date_created,
             estado: 'borrador_woocommerce',
-            clienteNombre: `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`,
+            clienteNombre: nombreCompletoCliente,
             nif: pedidoWoo.billing.vat || '',
             direccion: `${pedidoWoo.billing.address_1}${pedidoWoo.billing.address_2 ? ', ' + pedidoWoo.billing.address_2 : ''}`,
             codigoPostal: pedidoWoo.billing.postcode || '',
