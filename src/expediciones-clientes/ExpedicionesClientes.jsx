@@ -116,7 +116,7 @@ export default function ExpedicionesClientes() {
               <tr><td colSpan={6} style={{ textAlign: 'center', color: '#888', padding: 18 }}>No hay pedidos de clientes para expedición.</td></tr>
             )}
             {pedidos.map(p => (
-              <tr key={p._id || p.id} style={{ background: p.estado === 'borrador_woocommerce' ? '#ffeb3b' : 'transparent' }}>
+              <tr key={p._id || p.id} style={{ background: p.origen?.tipo === 'woocommerce' ? '#ffeb3b' : 'transparent' }}>
                 <td style={{ padding: 8, border: '1px solid #eee', fontWeight: 600 }}>{p.numeroPedido || p.id}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.clienteNombre || p.nombreCliente || p.cliente || '-'}</td>
                 <td style={{ padding: 8, border: '1px solid #eee' }}>{p.direccion || p.direccionEnvio || '-'}</td>

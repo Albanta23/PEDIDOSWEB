@@ -366,7 +366,17 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     return (
       <div className="expedicion-cliente-editor-container">
         <div className="editor-header">
-          <h3>Pedido Nº {pedido.numeroPedido || pedido.id} (DEVUELTO)</h3>
+          <h3>
+            Pedido Nº {pedido.numeroPedido || pedido.id} (DEVUELTO) - 
+            <span style={{ 
+              color: pedido.origen?.tipo === 'woocommerce' ? '#ff9800' : '#1976d2',
+              fontWeight: 'bold',
+              fontSize: '1.3rem',
+              marginLeft: '8px'
+            }}>
+              {pedido.origen?.tipo === 'woocommerce' ? 'WooCommerce' : 'Manual'}
+            </span>
+          </h3>
         </div>
         <div className="info-pedido">
           <div><b>Cliente:</b> {pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || '-'}</div>
@@ -382,7 +392,17 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     <>
       <div className="expedicion-cliente-editor-container">
         <div className="editor-header">
-          <h3>Editar Pedido Nº {pedido.numeroPedido || pedido.id}</h3>
+          <h3>
+            Editar Pedido Nº {pedido.numeroPedido || pedido.id} - 
+            <span style={{ 
+              color: pedido.origen?.tipo === 'woocommerce' ? '#ff9800' : '#1976d2',
+              fontWeight: 'bold',
+              fontSize: '1.9rem',
+              marginLeft: '8px'
+            }}>
+              {pedido.origen?.tipo === 'woocommerce' ? 'WooCommerce' : 'Manual'}
+            </span>
+          </h3>
           <div className="editor-actions-main" style={{ marginRight: '80px' }}>
             {!esPreparado && <button className="btn-success" onClick={editado ? handleGuardar : undefined} disabled={guardando || !editado}>Guardar</button>}
             {!esPreparado && <button className="btn-premium" onClick={handleCerrar} disabled={guardando || estado === 'preparado'}>Cerrar pedido</button>}
