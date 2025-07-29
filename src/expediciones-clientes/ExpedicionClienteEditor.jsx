@@ -245,6 +245,15 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
   // Cerrar pedido: imprime ticket automáticamente y abre modal bultos
   function handleCerrar() {
+    // Construir objeto pedido para impresión con datos actuales
+    const pedidoParaImprimir = {
+      ...pedido,
+      lineas: lineas,
+      estado: estado,
+      bultos: bultos,
+      usuario: usuario
+    };
+    
     // 1. Imprimir automáticamente ticket profesional en Epson (impresora predeterminada)
     try {
       const ticketTexto = ticketGenerator.generarTicketTexto(pedidoParaImprimir, usuario || 'Expediciones');
@@ -283,6 +292,15 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
 
   // Imprimir etiquetas Zebra: UNA SOLA VENTANA con todas las etiquetas
   const handleImprimirEtiquetas = (numBultos) => {
+    // Construir objeto pedido para impresión con datos actuales
+    const pedidoParaImprimir = {
+      ...pedido,
+      lineas: lineas,
+      estado: estado,
+      bultos: numBultos,
+      usuario: usuario
+    };
+    
     try {
       // Generar documento único con todas las etiquetas
       const documentoCompleto = ticketGenerator.generarDocumentoEtiquetasCompleto(pedidoParaImprimir, numBultos);
