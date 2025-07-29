@@ -244,12 +244,12 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
   }
 
   // Cerrar pedido: imprime ticket automáticamente y abre modal bultos
-  function handleCerrar() {
+  async function handleCerrar() {
     // Construir objeto pedido para impresión con datos actuales
     const pedidoParaImprimir = {
       ...pedido,
       lineas: lineas,
-      estado: estado,
+      estado: 'preparado',
       bultos: bultos,
       usuario: usuario
     };
@@ -286,8 +286,35 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       console.error('Error al imprimir ticket profesional:', error);
     }
     
-    // 2. Abrir modal de bultos para etiquetas Zebra
-    setShowModalBultos(true);
+    // 2. Guardar pedido como PREPARADO en la base de datos
+    setError('');
+    setMensaje('');
+    setGuardando(true);
+    
+    try {
+      await actualizarPedidoCliente(pedido._id || pedido.id, { 
+        lineas, 
+        estado: 'preparado', 
+        usuarioTramitando: usuario || 'expediciones', 
+        bultos,
+        fechaPreparado: new Date().toISOString()
+      });
+      
+      setMensaje('Pedido cerrado correctamente');
+      setEstado('preparado');
+      setEditado(false);
+      
+      // 3. Abrir modal de bultos para etiquetas Zebra
+      setShowModalBultos(true);
+      
+      if (onActualizado) onActualizado();
+      
+    } catch (error) {
+      console.error('Error al cerrar pedido:', error);
+      setError('Error al cerrar el pedido');
+    } finally {
+      setGuardando(false);
+    }
   }
 
   // Imprimir etiquetas Zebra: UNA SOLA VENTANA con todas las etiquetas

@@ -37,25 +37,55 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
   for (let i = 1; i <= numBultos; i++) {
     etiquetas.push(`
       <div class="etiqueta" style="page-break-after: ${i < numBultos ? 'always' : 'auto'};">
-        <div class="header">
-          <h1>Etiqueta de Envío</h1>
-          <div>${empresa.nombre}</div>
+        <div class="header-empresa">
+          <div class="empresa-logo">📦</div>
+          <div class="empresa-datos">
+            <div class="empresa-nombre">${empresa.nombre}</div>
+            <div class="empresa-direccion">${empresa.direccion}</div>
+            <div class="empresa-contacto">Tel: ${empresa.telefono} | ${empresa.web}</div>
+          </div>
+        </div>
+        
+        <div class="header-etiqueta">
+          <h1>ETIQUETA DE ENVÍO</h1>
+          <div class="origen-badge ${pedido.origen?.tipo === 'woocommerce' ? 'origen-woocommerce' : 'origen-manual'}">
+            ${pedido.origen?.tipo === 'woocommerce' ? 'WOOCOMMERCE' : 'MANUAL'}
+          </div>
         </div>
         
         <div class="bulto-info">
-          BULTO ${i} DE ${numBultos}
+          <div class="bulto-numero">BULTO ${i} DE ${numBultos}</div>
+          <div class="pedido-numero">Pedido Nº ${pedido.numeroPedido || pedido._id}</div>
         </div>
         
         <div class="contenido">
-          <div class="direccion">
-            <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
-            <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
-            <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
-            ${pedido.telefono ? `<div class="direccion-linea">Tel: ${pedido.telefono}</div>` : ''}
+          <div class="seccion-destinatario">
+            <div class="seccion-titulo">📍 DESTINATARIO:</div>
+            <div class="direccion">
+              <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
+              <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
+              <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
+              ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
+            </div>
+          </div>
+          
+          <div class="seccion-remitente">
+            <div class="seccion-titulo">📤 REMITENTE:</div>
+            <div class="remitente-datos">
+              <div class="remitente-nombre">${empresa.nombre}</div>
+              <div class="remitente-direccion">${empresa.direccion}</div>
+              <div class="remitente-contacto">📞 ${empresa.telefono}</div>
+            </div>
           </div>
           
           <div class="codigo-barras">
-            ||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||
+            <div class="codigo-titulo">CÓDIGO DE SEGUIMIENTO</div>
+            <div class="codigo-valor">||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||</div>
+          </div>
+          
+          <div class="info-adicional">
+            <div class="fecha-envio">📅 ${fecha} ${hora}</div>
+            <div class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</div>
           </div>
         </div>
       </div>
@@ -78,72 +108,195 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           body {
             font-family: 'Arial', sans-serif;
             background: white;
-            padding: 10px;
+            padding: 5mm;
           }
           
           .etiqueta {
-            border: 2px solid black;
-            padding: 15px;
-            font-size: 12px;
-            width: 300px;
-            margin: 0 auto 20px auto;
-            min-height: 200px;
+            border: 3px solid black;
+            padding: 8mm;
+            font-size: 14px;
+            width: 100mm;   /* 10cm */
+            height: 150mm;  /* 15cm */
+            margin: 0 auto 10mm auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
           }
           
-          .header {
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid black;
-            padding-bottom: 10px;
+          .header-empresa {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8mm;
+            padding-bottom: 5mm;
+            border-bottom: 2px solid #1976d2;
           }
           
-          .header h1 {
+          .empresa-logo {
+            font-size: 24px;
+            margin-right: 8px;
+            color: #1976d2;
+          }
+          
+          .empresa-datos {
+            flex: 1;
+          }
+          
+          .empresa-nombre {
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 5px;
+            color: #1976d2;
+            margin-bottom: 2px;
+          }
+          
+          .empresa-direccion {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 1px;
+          }
+          
+          .empresa-contacto {
+            font-size: 11px;
+            color: #666;
+          }
+          
+          .header-etiqueta {
+            text-align: center;
+            margin-bottom: 6mm;
+          }
+          
+          .header-etiqueta h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4mm;
+            color: #333;
+          }
+          
+          .origen-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+          }
+          
+          .origen-woocommerce {
+            background: #ff9800;
+          }
+          
+          .origen-manual {
+            background: #1976d2;
           }
           
           .bulto-info {
             text-align: center;
+            margin-bottom: 6mm;
+          }
+          
+          .bulto-numero {
+            font-size: 16px;
+            font-weight: bold;
+            background: #f0f0f0;
+            padding: 6px;
+            border: 2px solid black;
+            margin-bottom: 3mm;
+          }
+          
+          .pedido-numero {
             font-size: 14px;
             font-weight: bold;
-            margin-bottom: 15px;
-            background: #f0f0f0;
-            padding: 8px;
-            border: 1px solid black;
+            color: #1976d2;
           }
           
           .contenido {
-            font-size: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5mm;
+          }
+          
+          .seccion-titulo {
+            font-size: 14px;
+            font-weight: bold;
+            background: #e3f2fd;
+            padding: 4px 8px;
+            border-left: 4px solid #1976d2;
+            margin-bottom: 3mm;
+          }
+          
+          .seccion-destinatario {
+            background: #f8f9fa;
+            padding: 5mm;
+            border: 2px solid #1976d2;
+            border-radius: 4mm;
           }
           
           .direccion {
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px dashed black;
-            background: #f9f9f9;
+            font-size: 13px;
           }
           
           .direccion-nombre {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 2mm;
+            color: #1976d2;
           }
           
           .direccion-linea {
-            font-size: 12px;
-            margin-bottom: 3px;
+            margin-bottom: 1mm;
+            color: #333;
+          }
+          
+          .seccion-remitente {
+            background: #fff3e0;
+            padding: 4mm;
+            border: 1px solid #ff9800;
+            border-radius: 3mm;
+          }
+          
+          .remitente-datos {
+            font-size: 11px;
+          }
+          
+          .remitente-nombre {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 1mm;
+          }
+          
+          .remitente-direccion, .remitente-contacto {
+            color: #333;
+            margin-bottom: 1mm;
           }
           
           .codigo-barras {
             text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            font-weight: bold;
-            margin: 15px 0;
-            padding: 10px;
+            margin: 4mm 0;
+            padding: 4mm;
             border: 2px solid black;
             background: white;
+          }
+          
+          .codigo-titulo {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 2mm;
+          }
+          
+          .codigo-valor {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+          }
+          
+          .info-adicional {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px dashed #666;
+            padding-top: 3mm;
           }
           
           @media print {
@@ -153,12 +306,16 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             .etiqueta {
               margin: 0 auto;
               page-break-inside: avoid;
+              page-break-after: always;
+            }
+            .etiqueta:last-child {
+              page-break-after: auto;
             }
           }
           
           @page {
-            margin: 10mm;
-            size: auto;
+            margin: 5mm;
+            size: 100mm 150mm; /* 10cm x 15cm */
           }
         </style>
       </head>
@@ -171,6 +328,25 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
 
 // Función para generar ticket de texto profesional para Epson TM-T70II
 function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
+  // Formatear productos desde las líneas
+  const productosFormateados = (pedido.lineas || []).filter(linea => !linea.esComentario).map(linea => {
+    return `
+              <div class="producto-line">
+                <div class="producto-nombre">${linea.producto || 'Producto'}</div>
+                <div class="producto-detalles">
+                  Cant: ${linea.cantidad || 0} ${linea.formato || 'ud'}
+                  ${linea.peso ? `- Peso: ${linea.peso}kg` : ''}
+                  ${linea.lote ? `- Lote: ${linea.lote}` : ''}
+                </div>
+                ${linea.comentario ? `<div class="producto-comentario">Nota: ${linea.comentario}</div>` : ''}
+              </div>`;
+  }).join('');
+
+  // Formatear comentarios
+  const comentarios = (pedido.lineas || []).filter(linea => linea.esComentario).map(linea => {
+    return `<div class="comentario-line">📝 ${linea.comentario}</div>`;
+  }).join('');
+
   return `
     <!DOCTYPE html>
     <html>
@@ -185,13 +361,13 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           body {
-            font-family: 'Courier New', monospace;
+            font-family: 'Arial', sans-serif;
             background: white;
-            padding: 10px;
-            width: 300px;
+            padding: 8px;
+            width: 283px; /* 7.5cm = 283px */
             margin: 0 auto;
-            font-size: 12px;
-            line-height: 1.3;
+            font-size: 14px; /* Letra más grande */
+            line-height: 1.4;
           }
           
           .ticket {
@@ -200,26 +376,26 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .header {
             text-align: center;
-            border-bottom: 1px dashed black;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            border-bottom: 2px solid black;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
           }
           
           .empresa-nombre {
-            font-size: 14px;
+            font-size: 18px; /* Más grande */
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
           }
           
           .empresa-info {
-            font-size: 10px;
-            margin-bottom: 2px;
+            font-size: 12px;
+            margin-bottom: 3px;
           }
           
           .titulo-ticket {
-            font-size: 16px;
+            font-size: 20px; /* Más grande */
             font-weight: bold;
-            margin: 10px 0;
+            margin: 12px 0;
           }
           
           .info-pedido {
@@ -227,7 +403,8 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .info-line {
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+            font-size: 14px; /* Más grande */
           }
           
           .label {
@@ -235,61 +412,105 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .cliente-info {
-            border-top: 1px dashed black;
-            border-bottom: 1px dashed black;
-            padding: 10px 0;
-            margin: 10px 0;
+            border-top: 2px dashed black;
+            border-bottom: 2px dashed black;
+            padding: 12px 0;
+            margin: 12px 0;
           }
           
           .productos {
             margin: 15px 0;
           }
           
+          .productos-titulo {
+            font-size: 16px; /* Más grande */
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            background: #f0f0f0;
+            padding: 8px;
+            border: 1px solid black;
+          }
+          
           .producto-line {
-            margin-bottom: 5px;
-            padding-bottom: 5px;
-            border-bottom: 1px dotted #ccc;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dotted #666;
           }
           
           .producto-nombre {
             font-weight: bold;
-          }
-          
-          .producto-detalles {
-            font-size: 11px;
-          }
-          
-          .totales {
-            border-top: 1px dashed black;
-            padding-top: 10px;
-            margin-top: 15px;
-          }
-          
-          .total-line {
+            font-size: 15px; /* Más grande */
             margin-bottom: 3px;
           }
           
-          .total-final {
-            font-size: 14px;
+          .producto-detalles {
+            font-size: 13px;
+            color: #333;
+          }
+          
+          .producto-comentario {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+            margin-top: 2px;
+          }
+          
+          .comentarios {
+            margin: 15px 0;
+            border: 2px solid #ff9800;
+            padding: 10px;
+            background: #fff3e0;
+          }
+          
+          .comentarios-titulo {
+            font-size: 16px;
             font-weight: bold;
-            margin-top: 5px;
-            padding-top: 5px;
-            border-top: 1px solid black;
+            margin-bottom: 8px;
+            color: #e65100;
+          }
+          
+          .comentario-line {
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #bf360c;
+          }
+          
+          .bultos-info {
+            text-align: center;
+            font-size: 18px; /* Más grande */
+            font-weight: bold;
+            margin: 15px 0;
+            background: #e3f2fd;
+            padding: 10px;
+            border: 2px solid #1976d2;
+            color: #0d47a1;
           }
           
           .footer {
             text-align: center;
             margin-top: 15px;
-            border-top: 1px dashed black;
-            padding-top: 10px;
-            font-size: 10px;
+            border-top: 2px dashed black;
+            padding-top: 12px;
+            font-size: 12px;
           }
           
-          .observaciones {
+          .origen-info {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
             margin: 10px 0;
-            padding: 5px;
-            border: 1px dashed black;
-            font-size: 11px;
+            padding: 8px;
+            border-radius: 8px;
+            color: white;
+          }
+          
+          .origen-woocommerce {
+            background: #ff9800;
+          }
+          
+          .origen-manual {
+            background: #1976d2;
           }
           
           @media print {
@@ -297,6 +518,11 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
               padding: 0; 
               width: auto;
             }
+          }
+          
+          @page {
+            margin: 5mm;
+            size: 75mm auto; /* 7.5cm de ancho */
           }
         </style>
       </head>
@@ -315,7 +541,11 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
             <div class="info-line"><span class="label">Fecha:</span> ${fecha}</div>
             <div class="info-line"><span class="label">Hora:</span> ${hora}</div>
             <div class="info-line"><span class="label">Operario:</span> ${usuario || 'Expediciones'}</div>
-            <div class="info-line"><span class="label">Estado:</span> ${pedido.estado || 'Preparado'}</div>
+            <div class="info-line"><span class="label">Estado:</span> PREPARADO</div>
+          </div>
+
+          <div class="origen-info ${pedido.origen?.tipo === 'woocommerce' ? 'origen-woocommerce' : 'origen-manual'}">
+            ORIGEN: ${pedido.origen?.tipo === 'woocommerce' ? 'WOOCOMMERCE' : 'MANUAL'}
           </div>
           
           <div class="cliente-info">
@@ -327,36 +557,30 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           </div>
           
           <div class="productos">
-            <div class="info-line"><span class="label">PRODUCTOS:</span></div>
-            ${(pedido.lineas || []).map(linea => `
-              <div class="producto-line">
-                <div class="producto-nombre">${linea.producto?.nombre || linea.nombre || 'Producto'}</div>
-                <div class="producto-detalles">
-                  Cant: ${linea.cantidad || 0} ${linea.producto?.unidad || 'ud'} - 
-                  Precio: ${(linea.precio || 0).toFixed(2)}€ - 
-                  Total: ${((linea.cantidad || 0) * (linea.precio || 0)).toFixed(2)}€
-                </div>
-                ${linea.lote ? `<div class="producto-detalles">Lote: ${linea.lote}</div>` : ''}
-              </div>
-            `).join('')}
+            <div class="productos-titulo">📦 PRODUCTOS PEDIDO</div>
+            ${productosFormateados || '<div class="info-line">Sin productos especificados</div>'}
           </div>
-          
-          <div class="totales">
-            <div class="total-line"><span class="label">Subtotal:</span> ${(pedido.subtotal || 0).toFixed(2)}€</div>
-            ${pedido.descuento ? `<div class="total-line"><span class="label">Descuento:</span> -${pedido.descuento.toFixed(2)}€</div>` : ''}
-            <div class="total-line"><span class="label">IVA:</span> ${(pedido.iva || 0).toFixed(2)}€</div>
-            <div class="total-final">TOTAL: ${(pedido.total || 0).toFixed(2)}€</div>
+
+          ${comentarios ? `
+          <div class="comentarios">
+            <div class="comentarios-titulo">📝 COMENTARIOS:</div>
+            ${comentarios}
+          </div>
+          ` : ''}
+
+          <div class="bultos-info">
+            📦 BULTOS: ${pedido.bultos || 1}
           </div>
           
           ${pedido.notasCliente ? `
-          <div class="observaciones">
-            <div class="label">OBSERVACIONES:</div>
-            <div>${pedido.notasCliente}</div>
+          <div class="comentarios">
+            <div class="comentarios-titulo">📋 NOTAS DEL CLIENTE:</div>
+            <div class="comentario-line">${pedido.notasCliente}</div>
           </div>
           ` : ''}
           
           <div class="footer">
-            <div>¡Gracias por su compra!</div>
+            <div>¡Gracias por su pedido!</div>
             <div>${fecha} ${hora}</div>
           </div>
         </div>
