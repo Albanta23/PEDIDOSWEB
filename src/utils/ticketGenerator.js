@@ -113,10 +113,10 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           .etiqueta {
             border: 3px solid black;
-            padding: 8mm;
-            font-size: 14px;
+            padding: 6mm;
+            font-size: 12px;
             width: 100mm;   /* 10cm */
-            height: 150mm;  /* 15cm */
+            height: 130mm;  /* 13cm */
             margin: 0 auto 10mm auto;
             display: flex;
             flex-direction: column;
@@ -126,14 +126,14 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           .header-empresa {
             display: flex;
             align-items: center;
-            margin-bottom: 8mm;
-            padding-bottom: 5mm;
+            margin-bottom: 5mm;
+            padding-bottom: 3mm;
             border-bottom: 2px solid #1976d2;
           }
           
           .empresa-logo {
-            font-size: 24px;
-            margin-right: 8px;
+            font-size: 20px;
+            margin-right: 6px;
             color: #1976d2;
           }
           
@@ -142,40 +142,40 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           .empresa-nombre {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #1976d2;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
           }
           
           .empresa-direccion {
-            font-size: 12px;
+            font-size: 10px;
             color: #333;
             margin-bottom: 1px;
           }
           
           .empresa-contacto {
-            font-size: 11px;
+            font-size: 9px;
             color: #666;
           }
           
           .header-etiqueta {
             text-align: center;
-            margin-bottom: 6mm;
+            margin-bottom: 4mm;
           }
           
           .header-etiqueta h1 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 4mm;
+            margin-bottom: 3mm;
             color: #333;
           }
           
           .origen-badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 11px;
             font-weight: bold;
             color: white;
           }
@@ -190,20 +190,20 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           .bulto-info {
             text-align: center;
-            margin-bottom: 6mm;
+            margin-bottom: 4mm;
           }
           
           .bulto-numero {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             background: #f0f0f0;
-            padding: 6px;
+            padding: 4px;
             border: 2px solid black;
-            margin-bottom: 3mm;
+            margin-bottom: 2mm;
           }
           
           .pedido-numero {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             color: #1976d2;
           }
@@ -212,91 +212,91 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 5mm;
+            gap: 3mm;
           }
           
           .seccion-titulo {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             background: #e3f2fd;
-            padding: 4px 8px;
-            border-left: 4px solid #1976d2;
-            margin-bottom: 3mm;
+            padding: 3px 6px;
+            border-left: 3px solid #1976d2;
+            margin-bottom: 2mm;
           }
           
           .seccion-destinatario {
             background: #f8f9fa;
-            padding: 5mm;
+            padding: 3mm;
             border: 2px solid #1976d2;
-            border-radius: 4mm;
+            border-radius: 3mm;
           }
           
           .direccion {
-            font-size: 13px;
+            font-size: 11px;
           }
           
           .direccion-nombre {
-            font-size: 15px;
+            font-size: 13px;
             font-weight: bold;
-            margin-bottom: 2mm;
+            margin-bottom: 1mm;
             color: #1976d2;
           }
           
           .direccion-linea {
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
             color: #333;
           }
           
           .seccion-remitente {
             background: #fff3e0;
-            padding: 4mm;
+            padding: 3mm;
             border: 1px solid #ff9800;
-            border-radius: 3mm;
+            border-radius: 2mm;
           }
           
           .remitente-datos {
-            font-size: 11px;
+            font-size: 10px;
           }
           
           .remitente-nombre {
             font-weight: bold;
             color: #f57c00;
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
           }
           
           .remitente-direccion, .remitente-contacto {
             color: #333;
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
           }
           
           .codigo-barras {
             text-align: center;
-            margin: 4mm 0;
-            padding: 4mm;
+            margin: 2mm 0;
+            padding: 3mm;
             border: 2px solid black;
             background: white;
           }
           
           .codigo-titulo {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
-            margin-bottom: 2mm;
+            margin-bottom: 1mm;
           }
           
           .codigo-valor {
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
           }
           
           .info-adicional {
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
+            font-size: 9px;
             color: #666;
             border-top: 1px dashed #666;
-            padding-top: 3mm;
+            padding-top: 2mm;
           }
           
           @media print {
@@ -315,7 +315,7 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           @page {
             margin: 5mm;
-            size: 100mm 150mm; /* 10cm x 15cm */
+            size: 100mm 130mm; /* 10cm x 13cm */
           }
         </style>
       </head>
@@ -364,7 +364,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
             font-family: 'Arial', sans-serif;
             background: white;
             padding: 8px;
-            width: 283px; /* 7.5cm = 283px */
+            width: 264px; /* 7cm = 264px */
             margin: 0 auto;
             font-size: 14px; /* Letra más grande */
             line-height: 1.4;
@@ -382,7 +382,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .empresa-nombre {
-            font-size: 18px; /* Más grande */
+            font-size: 16px; /* Ajustado para 7cm */
             font-weight: bold;
             margin-bottom: 6px;
           }
@@ -393,7 +393,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .titulo-ticket {
-            font-size: 20px; /* Más grande */
+            font-size: 18px; /* Ajustado para 7cm */
             font-weight: bold;
             margin: 12px 0;
           }
@@ -404,7 +404,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .info-line {
             margin-bottom: 4px;
-            font-size: 14px; /* Más grande */
+            font-size: 13px; /* Ajustado para 7cm */
           }
           
           .label {
@@ -423,7 +423,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .productos-titulo {
-            font-size: 16px; /* Más grande */
+            font-size: 15px; /* Ajustado para 7cm */
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
@@ -440,7 +440,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .producto-nombre {
             font-weight: bold;
-            font-size: 15px; /* Más grande */
+            font-size: 14px; /* Ajustado para 7cm */
             margin-bottom: 3px;
           }
           
@@ -464,7 +464,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .comentarios-titulo {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             margin-bottom: 8px;
             color: #e65100;
@@ -478,7 +478,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .bultos-info {
             text-align: center;
-            font-size: 18px; /* Más grande */
+            font-size: 16px; /* Ajustado para 7cm */
             font-weight: bold;
             margin: 15px 0;
             background: #e3f2fd;
@@ -497,7 +497,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .origen-info {
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             margin: 10px 0;
             padding: 8px;
@@ -522,7 +522,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           @page {
             margin: 5mm;
-            size: 75mm auto; /* 7.5cm de ancho */
+            size: 70mm auto; /* 7cm de ancho */
           }
         </style>
       </head>
