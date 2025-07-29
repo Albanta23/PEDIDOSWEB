@@ -59,33 +59,41 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
         </div>
         
         <div class="contenido">
-          <div class="seccion-destinatario">
-            <div class="seccion-titulo">📍 DESTINATARIO:</div>
-            <div class="direccion">
-              <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
-              <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
-              <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
-              ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
+          <div class="contenido-superior">
+            <div class="columna-izquierda">
+              <div class="seccion-destinatario">
+                <div class="seccion-titulo">📍 DESTINATARIO:</div>
+                <div class="direccion">
+                  <div class="direccion-nombre">${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Cliente'}</div>
+                  <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
+                  <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
+                  ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
+                </div>
+              </div>
+            </div>
+            
+            <div class="columna-derecha">
+              <div class="seccion-remitente">
+                <div class="seccion-titulo">📤 REMITENTE:</div>
+                <div class="remitente-datos">
+                  <div class="remitente-nombre">${empresa.nombre}</div>
+                  <div class="remitente-direccion">${empresa.direccion}</div>
+                  <div class="remitente-contacto">📞 ${empresa.telefono}</div>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div class="seccion-remitente">
-            <div class="seccion-titulo">📤 REMITENTE:</div>
-            <div class="remitente-datos">
-              <div class="remitente-nombre">${empresa.nombre}</div>
-              <div class="remitente-direccion">${empresa.direccion}</div>
-              <div class="remitente-contacto">📞 ${empresa.telefono}</div>
+          <div class="contenido-inferior">
+            <div class="codigo-barras">
+              <div class="codigo-titulo">CÓDIGO DE SEGUIMIENTO</div>
+              <div class="codigo-valor">||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||</div>
             </div>
-          </div>
-          
-          <div class="codigo-barras">
-            <div class="codigo-titulo">CÓDIGO DE SEGUIMIENTO</div>
-            <div class="codigo-valor">||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||</div>
-          </div>
-          
-          <div class="info-adicional">
-            <div class="fecha-envio">📅 ${fecha} ${hora}</div>
-            <div class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</div>
+            
+            <div class="info-adicional">
+              <div class="fecha-envio">📅 ${fecha} ${hora}</div>
+              <div class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -113,10 +121,10 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           .etiqueta {
             border: 3px solid black;
-            padding: 6mm;
-            font-size: 12px;
-            width: 100mm;   /* 10cm */
-            height: 130mm;  /* 13cm */
+            padding: 8mm;
+            font-size: 16px; /* Letra más grande para apaisado */
+            width: 150mm;   /* 15cm - APAISADO */
+            height: 100mm;  /* 10cm - APAISADO */
             margin: 0 auto 10mm auto;
             display: flex;
             flex-direction: column;
@@ -126,14 +134,14 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           .header-empresa {
             display: flex;
             align-items: center;
-            margin-bottom: 5mm;
-            padding-bottom: 3mm;
-            border-bottom: 2px solid #1976d2;
+            margin-bottom: 6mm;
+            padding-bottom: 4mm;
+            border-bottom: 3px solid #1976d2;
           }
           
           .empresa-logo {
-            font-size: 20px;
-            margin-right: 6px;
+            font-size: 28px; /* Más grande para apaisado */
+            margin-right: 10px;
             color: #1976d2;
           }
           
@@ -142,20 +150,20 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           .empresa-nombre {
-            font-size: 14px;
+            font-size: 18px; /* Más grande para apaisado */
             font-weight: bold;
             color: #1976d2;
-            margin-bottom: 1px;
+            margin-bottom: 2px;
           }
           
           .empresa-direccion {
-            font-size: 10px;
+            font-size: 14px; /* Más grande para apaisado */
             color: #333;
             margin-bottom: 1px;
           }
           
           .empresa-contacto {
-            font-size: 9px;
+            font-size: 12px; /* Más grande para apaisado */
             color: #666;
           }
           
@@ -165,17 +173,17 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           .header-etiqueta h1 {
-            font-size: 16px;
+            font-size: 20px; /* Más grande para apaisado */
             font-weight: bold;
-            margin-bottom: 3mm;
+            margin-bottom: 4mm;
             color: #333;
           }
           
           .origen-badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 11px;
+            padding: 4px 15px;
+            border-radius: 20px;
+            font-size: 14px; /* Más grande para apaisado */
             font-weight: bold;
             color: white;
           }
@@ -194,16 +202,16 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           .bulto-numero {
-            font-size: 14px;
+            font-size: 18px; /* Más grande para apaisado */
             font-weight: bold;
             background: #f0f0f0;
-            padding: 4px;
-            border: 2px solid black;
-            margin-bottom: 2mm;
+            padding: 6px;
+            border: 3px solid black;
+            margin-bottom: 3mm;
           }
           
           .pedido-numero {
-            font-size: 12px;
+            font-size: 16px; /* Más grande para apaisado */
             font-weight: bold;
             color: #1976d2;
           }
@@ -212,91 +220,110 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             flex: 1;
             display: flex;
             flex-direction: column;
+            gap: 4mm;
+          }
+          
+          .contenido-superior {
+            display: flex;
+            gap: 8mm;
+            flex: 1;
+          }
+          
+          .columna-izquierda, .columna-derecha {
+            flex: 1;
+          }
+          
+          .contenido-inferior {
+            display: flex;
+            flex-direction: column;
             gap: 3mm;
           }
           
           .seccion-titulo {
-            font-size: 12px;
+            font-size: 16px; /* Más grande para apaisado */
             font-weight: bold;
             background: #e3f2fd;
-            padding: 3px 6px;
-            border-left: 3px solid #1976d2;
-            margin-bottom: 2mm;
+            padding: 4px 8px;
+            border-left: 4px solid #1976d2;
+            margin-bottom: 3mm;
           }
           
           .seccion-destinatario {
             background: #f8f9fa;
-            padding: 3mm;
-            border: 2px solid #1976d2;
-            border-radius: 3mm;
+            padding: 5mm;
+            border: 3px solid #1976d2;
+            border-radius: 4mm;
+            height: 100%;
           }
           
           .direccion {
-            font-size: 11px;
+            font-size: 15px; /* Más grande para apaisado */
           }
           
           .direccion-nombre {
-            font-size: 13px;
+            font-size: 17px; /* Más grande para apaisado */
             font-weight: bold;
-            margin-bottom: 1mm;
+            margin-bottom: 2mm;
             color: #1976d2;
           }
           
           .direccion-linea {
-            margin-bottom: 0.5mm;
+            margin-bottom: 1mm;
             color: #333;
           }
           
           .seccion-remitente {
             background: #fff3e0;
-            padding: 3mm;
-            border: 1px solid #ff9800;
-            border-radius: 2mm;
+            padding: 5mm;
+            border: 2px solid #ff9800;
+            border-radius: 4mm;
+            height: 100%;
           }
           
           .remitente-datos {
-            font-size: 10px;
+            font-size: 14px; /* Más grande para apaisado */
           }
           
           .remitente-nombre {
             font-weight: bold;
             color: #f57c00;
-            margin-bottom: 0.5mm;
+            margin-bottom: 1mm;
+            font-size: 16px; /* Más grande para apaisado */
           }
           
           .remitente-direccion, .remitente-contacto {
             color: #333;
-            margin-bottom: 0.5mm;
+            margin-bottom: 1mm;
           }
           
           .codigo-barras {
             text-align: center;
-            margin: 2mm 0;
-            padding: 3mm;
-            border: 2px solid black;
+            margin: 3mm 0;
+            padding: 4mm;
+            border: 3px solid black;
             background: white;
           }
           
           .codigo-titulo {
-            font-size: 10px;
+            font-size: 14px; /* Más grande para apaisado */
             font-weight: bold;
-            margin-bottom: 1mm;
+            margin-bottom: 2mm;
           }
           
           .codigo-valor {
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: 16px; /* Más grande para apaisado */
             font-weight: bold;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
           }
           
           .info-adicional {
             display: flex;
             justify-content: space-between;
-            font-size: 9px;
+            font-size: 12px; /* Más grande para apaisado */
             color: #666;
-            border-top: 1px dashed #666;
-            padding-top: 2mm;
+            border-top: 2px dashed #666;
+            padding-top: 3mm;
           }
           
           @media print {
@@ -315,7 +342,7 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           @page {
             margin: 5mm;
-            size: 100mm 130mm; /* 10cm x 13cm */
+            size: 150mm 100mm; /* 15cm x 10cm - APAISADO */
           }
         </style>
       </head>
@@ -363,11 +390,11 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           body {
             font-family: 'Arial', sans-serif;
             background: white;
-            padding: 8px;
-            width: 264px; /* 7cm = 264px */
+            padding: 6px;
+            width: 226px; /* 6cm = 226px */
             margin: 0 auto;
-            font-size: 14px; /* Letra más grande */
-            line-height: 1.4;
+            font-size: 13px; /* Ajustado para 6cm */
+            line-height: 1.3;
           }
           
           .ticket {
@@ -382,20 +409,20 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .empresa-nombre {
-            font-size: 16px; /* Ajustado para 7cm */
+            font-size: 15px; /* Ajustado para 6cm */
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
           }
           
           .empresa-info {
-            font-size: 12px;
-            margin-bottom: 3px;
+            font-size: 11px;
+            margin-bottom: 2px;
           }
           
           .titulo-ticket {
-            font-size: 18px; /* Ajustado para 7cm */
+            font-size: 16px; /* Ajustado para 6cm */
             font-weight: bold;
-            margin: 12px 0;
+            margin: 10px 0;
           }
           
           .info-pedido {
@@ -403,8 +430,8 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .info-line {
-            margin-bottom: 4px;
-            font-size: 13px; /* Ajustado para 7cm */
+            margin-bottom: 3px;
+            font-size: 12px; /* Ajustado para 6cm */
           }
           
           .label {
@@ -423,12 +450,12 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .productos-titulo {
-            font-size: 15px; /* Ajustado para 7cm */
+            font-size: 14px; /* Ajustado para 6cm */
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-align: center;
             background: #f0f0f0;
-            padding: 8px;
+            padding: 6px;
             border: 1px solid black;
           }
           
@@ -440,12 +467,12 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .producto-nombre {
             font-weight: bold;
-            font-size: 14px; /* Ajustado para 7cm */
-            margin-bottom: 3px;
+            font-size: 13px; /* Ajustado para 6cm */
+            margin-bottom: 2px;
           }
           
           .producto-detalles {
-            font-size: 13px;
+            font-size: 11px;
             color: #333;
           }
           
@@ -478,11 +505,11 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .bultos-info {
             text-align: center;
-            font-size: 16px; /* Ajustado para 7cm */
+            font-size: 15px; /* Ajustado para 6cm */
             font-weight: bold;
-            margin: 15px 0;
+            margin: 12px 0;
             background: #e3f2fd;
-            padding: 10px;
+            padding: 8px;
             border: 2px solid #1976d2;
             color: #0d47a1;
           }
@@ -497,11 +524,11 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .origen-info {
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
-            margin: 10px 0;
-            padding: 8px;
-            border-radius: 8px;
+            margin: 8px 0;
+            padding: 6px;
+            border-radius: 6px;
             color: white;
           }
           
@@ -522,7 +549,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           @page {
             margin: 5mm;
-            size: 70mm auto; /* 7cm de ancho */
+            size: 60mm auto; /* 6cm de ancho */
           }
         </style>
       </head>
