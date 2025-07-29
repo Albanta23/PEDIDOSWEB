@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Etiquetas de Envío - 1 Bultos</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+
+          body {
+            font-family: 'Arial', sans-serif;
+            background: white;
+            padding: 5mm;
+          }
+
+          .etiqueta {
+            border: 3px solid black;
+            padding: 5mm;
+            font-size: 14px;
+            width: 140mm;   /* 14cm - ANCHO PARA APAISADO */
+            height: 90mm;  /* 9cm - ALTO PARA APAISADO */
+            margin: 0 auto 10mm auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 4mm;
+          }
+
+          .header-empresa {
+            display: flex;
+            align-items: center;
+            padding-bottom: 3mm;
+            border-bottom: 2px solid #1976d2;
+          }
+
+          .empresa-logo {
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+          }
+
+          .empresa-datos {
+            flex: 1;
+          }
+
+          .empresa-nombre {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 1px;
+          }
+
+          .empresa-direccion {
+            font-size: 11px;
+            color: #333;
+            margin-bottom: 1px;
+          }
+
+          .empresa-contacto {
+            font-size: 10px;
+            color: #666;
+          }
+
+          .contenido {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4mm;
+          }
+
+          .seccion-destinatario {
+            background: #f8f9fa;
+            padding: 4mm;
+            border: 2px solid #1976d2;
+            border-radius: 3mm;
+            flex: 1;
+          }
+
+          .seccion-titulo {
+            font-size: 13px;
+            font-weight: bold;
+            background: #e3f2fd;
+            padding: 3px 6px;
+            border-left: 3px solid #1976d2;
+            margin-bottom: 3mm;
+          }
+
+          .direccion {
+            font-size: 13px;
+          }
+
+          .direccion-nombre {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 2mm;
+            color: #1976d2;
+          }
+
+          .direccion-linea {
+            margin-bottom: 1mm;
+            color: #333;
+            word-wrap: break-word;
+          }
+
+          .bulto-info {
+            text-align: center;
+            margin: 2mm 0;
+          }
+
+          .bulto-numero {
+            font-size: 16px;
+            font-weight: bold;
+            background: #f0f0f0;
+            padding: 4px;
+            border: 2px solid black;
+            margin-bottom: 2mm;
+          }
+
+          .pedido-numero {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1976d2;
+          }
+
+          .codigo-barras {
+            text-align: center;
+            margin: 2mm 0;
+            padding: 3mm;
+            border: 2px solid black;
+            background: white;
+          }
+
+          .codigo-titulo {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 2mm;
+          }
+
+          .codigo-valor {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+          }
+
+          .info-adicional {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px dashed #666;
+            padding-top: 2mm;
+          }
+
+          .codigo-barras {
+            text-align: center;
+            margin: 3mm 0;
+            padding: 4mm;
+            border: 3px solid black;
+            background: white;
+          }
+
+          .codigo-titulo {
+            font-size: 14px; /* Más grande para apaisado */
+            font-weight: bold;
+            margin-bottom: 2mm;
+          }
+
+          @media print {
+            body {
+              padding: 0;
+            }
+            .etiqueta {
+              margin: 0 auto;
+              page-break-inside: avoid;
+              page-break-after: always;
+            }
+            .etiqueta:last-child {
+              page-break-after: auto;
+            }
+          }
+
+          @page {
+            margin: 5mm;
+            size: 150mm 100mm; /* 15cm x 10cm - APAISADO */
+          }
+        </style>
+      </head>
+      <body>
+        <div class="etiqueta" style="page-break-after: auto;">
+        <div class="header-empresa">
+          <div class="empresa-logo">
+            <img src="./logo1.png" alt="Logo" style="height: 35px; width: auto;">
+          </div>
+          <div class="empresa-datos">
+            <div class="empresa-nombre">NOMBRE DE LA EMPRESA</div>
+            <div class="empresa-direccion">DIRECCIÓN DE LA EMPRESA</div>
+            <div class="empresa-contacto">Tel: 123456789 | web.com</div>
+          </div>
+        </div>
+
+        <div class="contenido">
+          <div class="seccion-destinatario">
+            <div class="seccion-titulo">📍 DESTINATARIO:</div>
+            <div class="direccion">
+              <div class="direccion-nombre">NOMBRE DEL CLIENTE</div>
+              <div class="direccion-linea">DIRECCIÓN DEL CLIENTE</div>
+              <div class="direccion-linea">CÓDIGO POSTAL Y POBLACIÓN</div>
+              <div class="direccion-linea">📞 Tel: 987654321</div>
+            </div>
+          </div>
+
+          <div class="bulto-info">
+            <div class="bulto-numero">BULTO 1 DE 1</div>
+            <div class="pedido-numero">Pedido Nº 12345678</div>
+          </div>
+
+
+          <div class="info-adicional">
+            <div class="fecha-envio">📅 29/07/2025 10:20</div>
+            <div class="operario">👤 Op: Expediciones</div>
+          </div>
+        </div>
+      </div>
+      </body>
+    </html>

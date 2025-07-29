@@ -65,10 +65,6 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             <div class="pedido-numero">Pedido Nº ${pedido.numeroPedido || pedido._id}</div>
           </div>
           
-          <div class="codigo-barras">
-            <div class="codigo-titulo">CÓDIGO DE SEGUIMIENTO</div>
-            <div class="codigo-valor">||||| ${(pedido.numeroPedido || '12345678').toString().slice(-8).padStart(8, '0')} |||||</div>
-          </div>
           
           <div class="info-adicional">
             <div class="fecha-envio">📅 ${fecha} ${hora}</div>
@@ -102,8 +98,8 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             border: 3px solid black;
             padding: 5mm;
             font-size: 14px;
-            width: 100mm;   /* 10cm - MÁXIMO ANCHO */
-            height: 150mm;  /* 15cm - ALTO */
+            width: 140mm;   /* 14cm - ANCHO PARA APAISADO */
+            height: 90mm;  /* 9cm - ALTO PARA APAISADO */
             margin: 0 auto 10mm auto;
             display: flex;
             flex-direction: column;
@@ -236,6 +232,9 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             border-top: 1px dashed #666;
             padding-top: 2mm;
           }
+
+          .codigo-barras {
+            text-align: center;
             margin: 3mm 0;
             padding: 4mm;
             border: 3px solid black;
@@ -249,23 +248,6 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           @media print {
-            body { 
-              padding: 0; 
-            }
-            .etiqueta {
-              margin: 0 auto;
-              page-break-inside: avoid;
-              page-break-after: always;
-            }
-            .etiqueta:last-child {
-              page-break-after: auto;
-            }
-          }
-          
-          @page {
-            margin: 5mm;
-            size: 100mm 150mm; /* 10cm x 15cm */
-          }          @media print {
             body { 
               padding: 0; 
             }
