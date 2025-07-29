@@ -411,6 +411,93 @@ app.post('/api/clientes/migrar-schema', async (req, res) => {
   }
 });
 
+// Endpoint administrativo para corregir índices problemáticos en lotes
+app.post('/api/admin/corregir-indice-lotes', async (req, res) => {
+  try {
+    console.log('[ADMIN] 🔧 Iniciando corrección de índices en colección lotes...');
+    
+    // Acceder directamente a la colección MongoDB nativa
+    const coleccionLotes = mongoose.connection.collection('lotes');
+    
+    // 1. Obtener información sobre índices existentes
+    const indicesExistentes = await coleccionLotes.indexes();
+    console.log('[ADMIN] 📋 Índices existentes:', indicesExistentes.map(idx => ({
+      name: idx.name,
+      key: idx.key,
+      unique: idx.unique
+    })));
+    
+    // 2. Buscar el índice problemático
+    const indiceProblematicoNombre = 'producto_1_codigo_1_ubicacion_1';
+    const indiceProblematicoExiste = indicesExistentes.find(idx => idx.name === indiceProblematicoNombre);
+    
+    if (indiceProblematicoExiste) {
+      console.log('[ADMIN] ❌ Encontrado índice problemático:', indiceProblematicoNombre);
+      
+      // 3. Eliminar el índice problemático
+      try {
+        await coleccionLotes.dropIndex(indiceProblematicoNombre);
+        console.log('[ADMIN] ✅ Índice problemático eliminado exitosamente');
+      } catch (dropError) {
+        if (dropError.code === 27) { // IndexNotFound
+          console.log('[ADMIN] ℹ️ El índice ya no existe');
+        } else {
+          throw dropError;
+        }
+      }
+    } else {
+      console.log('[ADMIN] ✅ El índice problemático no existe (ya fue eliminado)');
+    }
+    
+    // 4. Verificar que los índices necesarios existen
+    const indicesNecesarios = [
+      { key: { producto: 1 }, name: 'producto_1' },
+      { key: { codigo: 1 }, name: 'codigo_1' },
+      { key: { ubicacion: 1 }, name: 'ubicacion_1' }
+    ];
+    
+    for (const indiceRequerido of indicesNecesarios) {
+      const existe = indicesExistentes.find(idx => idx.name === indiceRequerido.name);
+      if (!existe) {
+        try {
+          await coleccionLotes.createIndex(indiceRequerido.key, { name: indiceRequerido.name });
+          console.log(`[ADMIN] ✅ Creado índice requerido: ${indiceRequerido.name}`);
+        } catch (createError) {
+          console.log(`[ADMIN] ℹ️ Índice ${indiceRequerido.name} ya existe o no es necesario crear`);
+        }
+      } else {
+        console.log(`[ADMIN] ✅ Índice requerido ya existe: ${indiceRequerido.name}`);
+      }
+    }
+    
+    // 5. Obtener información actualizada de índices
+    const indicesFinales = await coleccionLotes.indexes();
+    console.log('[ADMIN] 🎯 Índices finales:', indicesFinales.map(idx => ({
+      name: idx.name,
+      key: idx.key,
+      unique: idx.unique
+    })));
+    
+    console.log('[ADMIN] ✅ Corrección de índices completada');
+    
+    res.json({
+      ok: true,
+      mensaje: 'Corrección de índices completada exitosamente',
+      indicesEliminados: indiceProblematicoExiste ? [indiceProblematicoNombre] : [],
+      indicesFinales: indicesFinales.length,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('[ADMIN] ❌ Error durante la corrección de índices:', error);
+    res.status(500).json({ 
+      ok: false, 
+      error: 'Error durante la corrección de índices de lotes',
+      detalles: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 app.get('/api/productos-woo', async (req, res) => {
   const ProductoWoo = require('./models/ProductoWoo');
@@ -1580,6 +1667,35 @@ app.get('/api/lotes/:productoId', async (req, res) => {
   }
 });
 // --- FIN ENDPOINTS DE LOTES ---
+
+// --- ENDPOINT TEMPORAL: Corregir índice problemático de lotes ---
+app.post('/api/admin/corregir-indice-lotes', async (req, res) => {
+  try {
+    const { corregirIndiceLotes } = require('../corregir_indice_lotes');
+    console.log('[ADMIN] Iniciando corrección de índice de lotes...');
+    
+    const resultado = await corregirIndiceLotes();
+    
+    if (resultado.success) {
+      res.json({ 
+        ok: true, 
+        message: 'Índice corregido exitosamente',
+        indiceProblematicoEliminado: resultado.indiceProblematicoEliminado
+      });
+    } else {
+      res.status(500).json({ 
+        ok: false, 
+        error: 'Error durante la corrección: ' + resultado.error 
+      });
+    }
+  } catch (error) {
+    console.error('[ADMIN] Error al corregir índice:', error);
+    res.status(500).json({ 
+      ok: false, 
+      error: 'Error interno: ' + error.message 
+    });
+  }
+});
 
 const PORT = process.env.PORT || 10001;
 server.listen(PORT, '0.0.0.0', () => {
