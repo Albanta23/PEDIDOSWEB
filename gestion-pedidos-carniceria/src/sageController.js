@@ -242,6 +242,18 @@ const exportarPedidos = async (req, res) => {
 
     console.log(`[SAGE50] Exportación completada: ${lineasAlbaran.length} líneas en ${pedidos.length} pedidos`);
     
+    // Marcar pedidos como exportados a SAGE50
+    const idsParaMarcar = pedidos.map(p => p._id);
+    await PedidoCliente.updateMany(
+      { _id: { $in: idsParaMarcar } },
+      { 
+        exportadoSage: true,
+        fechaExportacionSage: new Date()
+      }
+    );
+    
+    console.log(`[SAGE50] Marcados ${idsParaMarcar.length} pedidos como exportados a SAGE50`);
+    
     res.send(excelBuffer);
 
   } catch (error) {
@@ -302,6 +314,19 @@ const exportarPedidosCSV = async (req, res) => {
     
     // Agregar BOM para UTF-8 (importante para caracteres especiales en SAGE50)
     const bom = '\uFEFF';
+    
+    // Marcar pedidos como exportados a SAGE50
+    const idsParaMarcarCsv = pedidos.map(p => p._id);
+    await PedidoCliente.updateMany(
+      { _id: { $in: idsParaMarcarCsv } },
+      { 
+        exportadoSage: true,
+        fechaExportacionSage: new Date()
+      }
+    );
+    
+    console.log(`[SAGE50] Marcados ${idsParaMarcarCsv.length} pedidos como exportados a SAGE50 (CSV)`);
+    
     res.send(bom + csv);
 
   } catch (error) {
@@ -407,7 +432,39 @@ async function generarLineasAlbaran(pedidos) {
   return lineasAlbaran;
 }
 
+/**
+ * Desmarcar un pedido como no exportado a SAGE50
+ */
+const desmarcarExportado = async (req, res) => {
+  try {
+    const { pedidoId } = req.body;
+    
+    if (!pedidoId) {
+      return res.status(400).json({ error: 'Se requiere el ID del pedido.' });
+    }
+
+    await PedidoCliente.findByIdAndUpdate(
+      pedidoId,
+      { 
+        exportadoSage: false,
+        $unset: { fechaExportacionSage: 1 }
+      }
+    );
+    
+    console.log(`[SAGE50] Pedido ${pedidoId} desmarcado como no exportado`);
+    res.json({ message: 'Pedido desmarcado correctamente.' });
+    
+  } catch (error) {
+    console.error('[SAGE50] Error al desmarcar pedido:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor.',
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   exportarPedidos,
   exportarPedidosCSV,
+  desmarcarExportado,
 };

@@ -71,7 +71,9 @@ const PedidoClienteSchema = new mongoose.Schema({
       fecha: { type: Date, default: Date.now }
     }
   ],
-  enviado: { type: Boolean, default: false } // Indica si el pedido ha sido enviado
+  enviado: { type: Boolean, default: false }, // Indica si el pedido ha sido enviado
+  exportadoSage: { type: Boolean, default: false }, // Indica si el pedido ya fue exportado a SAGE50
+  fechaExportacionSage: { type: Date }, // Fecha de exportación a SAGE50
 }, { timestamps: true });
 
 PedidoClienteSchema.index({ numeroPedido: 1 }, { unique: true });

@@ -195,6 +195,7 @@ app.delete('/api/pedidos-tienda/:id', pedidosTiendaController.eliminar);
 app.get('/api/pedidos-clientes', pedidosClientesController.listar);
 app.post('/api/pedidos-clientes/exportar-sage50', sageController.exportarPedidos);
 app.post('/api/pedidos-clientes/exportar-sage50-csv', sageController.exportarPedidosCSV);
+app.post('/api/pedidos-clientes/desmarcar-exportado', sageController.desmarcarExportado);
 app.get('/api/pedidos-clientes/:id', pedidosClientesController.obtenerPorId);
 app.post('/api/pedidos-clientes', pedidosClientesController.crear);
 app.put('/api/pedidos-clientes/:id', pedidosClientesController.actualizar);

@@ -7,7 +7,6 @@ const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 export default function IntegracionSage() {
   const [pedidos, setPedidos] = useState([]);
   const [selectedPedidos, setSelectedPedidos] = useState([]);
-  const [exportedPedidos, setExportedPedidos] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -18,7 +17,10 @@ export default function IntegracionSage() {
   }, []);
   
   const handleSelectPedido = (pedidoId) => {
-    if (exportedPedidos.has(pedidoId)) return;
+    // No permitir seleccionar pedidos ya exportados
+    const pedido = pedidos.find(p => p._id === pedidoId);
+    if (pedido?.exportadoSage) return;
+    
     setSelectedPedidos(prev =>
       prev.includes(pedidoId)
         ? prev.filter(id => id !== pedidoId)
@@ -26,17 +28,21 @@ export default function IntegracionSage() {
     );
   };
   
-  const markAsExported = () => {
-    setExportedPedidos(prev => new Set([...prev, ...selectedPedidos]));
-    setSelectedPedidos([]);
+  const recargarPedidos = () => {
+    axios.get(`${API_URL}/pedidos-clientes?enviado=false`)
+      .then(res => setPedidos(res.data))
+      .catch(() => setPedidos([]));
   };
   
-  const resetExported = (pedidoId) => {
-    setExportedPedidos(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(pedidoId);
-      return newSet;
-    });
+  const resetExported = async (pedidoId) => {
+    try {
+      await axios.post(`${API_URL}/pedidos-clientes/desmarcar-exportado`, { pedidoId });
+      toast.success('Pedido desmarcado como no exportado.');
+      recargarPedidos(); // Recargar la lista de pedidos
+    } catch (error) {
+      console.error('Error al desmarcar pedido:', error);
+      toast.error('Error al desmarcar el pedido.');
+    }
   };
   
   const handleExportSage50 = async (formato = 'excel') => {
@@ -72,7 +78,8 @@ export default function IntegracionSage() {
       window.URL.revokeObjectURL(url);
       
       toast.success(`Exportados ${selectedPedidos.length} pedidos correctamente en formato ${formato.toUpperCase()}.`);
-      markAsExported();
+      setSelectedPedidos([]); // Limpiar selección
+      recargarPedidos(); // Recargar la lista para ver el estado actualizado
     } catch (error) {
       console.error('Error al exportar para Sage 50:', error);
       toast.error('Error al generar el archivo de exportación.');
@@ -218,21 +225,30 @@ export default function IntegracionSage() {
                 }}
               >
                 <td style={{ padding: '12px' }}>
-                  {exportedPedidos.has(pedido._id) ? (
-                    <button 
-                      onClick={() => resetExported(pedido._id)}
-                      style={{
-                        background: '#ffc107',
-                        color: '#333',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      ✅ Exportado
-                    </button>
+                  {pedido.exportadoSage ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <button 
+                        onClick={() => resetExported(pedido._id)}
+                        style={{
+                          background: '#28a745',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}
+                        title="Click para desmarcar como exportado"
+                      >
+                        ✅ Exportado
+                      </button>
+                      {pedido.fechaExportacionSage && (
+                        <small style={{ color: '#666', fontSize: '10px' }}>
+                          {new Date(pedido.fechaExportacionSage).toLocaleString('es-ES')}
+                        </small>
+                      )}
+                    </div>
                   ) : (
                     <input
                       type="checkbox"
