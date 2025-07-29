@@ -684,8 +684,8 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           body {
             font-family: 'Arial', sans-serif;
             background: white;
-            padding: 15px;
-            width: 580px; /* Aumentado para aprovechar formato apaisado */
+            padding: 10px;
+            width: 580px; /* Ancho amplio para diseño horizontal */
             margin: 0 auto;
           }
           
@@ -736,13 +736,30 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           }
           
           .contenido {
-            padding: 20px;
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+          }
+          
+          .columna-izquierda {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+          
+          .columna-derecha {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
           }
           
           .seccion {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 15px;
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            overflow: hidden;
           }
           
           .seccion:last-child {
@@ -753,13 +770,16 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           .titulo-seccion {
             background: #34495e;
             color: white;
-            padding: 8px 12px;
-            font-size: 12px;
+            padding: 6px 10px;
+            font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
-            border-radius: 4px;
+            margin-bottom: 0;
+          }
+          
+          .contenido-seccion {
+            padding: 10px;
           }
           
           .info-line {
@@ -784,10 +804,16 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           
           .direccion {
             background: #f8f9fa;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 4px solid #3498db;
-            margin-top: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+          }
+          
+          .direccion-compacta {
+            background: #f8f9fa;
+            padding: 6px;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
           }
           
           .direccion-nombre {
@@ -827,18 +853,21 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           .codigo-barras {
             text-align: center;
             font-family: 'Courier New', monospace;
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
-            margin: 10px 0;
-            letter-spacing: 2px;
+            padding: 8px;
+            letter-spacing: 1px;
             color: #2c3e50;
+            background: #f8f9fa;
+            border: 2px solid #34495e;
+            border-radius: 4px;
           }
           
           @media print {
             body { 
               padding: 5mm; 
               width: auto;
-              max-width: 140mm; /* Aprovechar el ancho apaisado */
+              max-width: 140mm; /* Ancho horizontal amplio */
             }
             .etiqueta {
               box-shadow: none;
@@ -865,62 +894,74 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
           </div>
           
           <div class="contenido">
-            <div class="seccion">
-              <div class="titulo-seccion">📋 Información del Pedido</div>
-              <div class="info-line">
-                <span class="label">Pedido Nº:</span>
-                <span class="value">${pedido.numeroPedido || pedido._id || pedido.id || 'N/A'}</span>
+            <div class="columna-izquierda">
+              <div class="seccion">
+                <div class="titulo-seccion">📋 Información del Pedido</div>
+                <div class="contenido-seccion">
+                  <div class="info-line">
+                    <span class="label">Pedido Nº:</span>
+                    <span class="value">${pedido.numeroPedido || pedido._id || pedido.id || 'N/A'}</span>
+                  </div>
+                  <div class="info-line">
+                    <span class="label">Fecha:</span>
+                    <span class="value">${fecha}</span>
+                  </div>
+                  <div class="info-line">
+                    <span class="label">Hora:</span>
+                    <span class="value">${hora}</span>
+                  </div>
+                  <div class="info-line">
+                    <span class="label">Operario:</span>
+                    <span class="value">${pedido.usuarioTramitando || 'N/A'}</span>
+                  </div>
+                </div>
               </div>
-              <div class="info-line">
-                <span class="label">Fecha:</span>
-                <span class="value">${fecha}</span>
+              
+              <div class="seccion">
+                <div class="titulo-seccion">📦 Remitente</div>
+                <div class="contenido-seccion">
+                  <div class="direccion-compacta">
+                    <div class="direccion-nombre">${empresa.nombre}</div>
+                    <div class="direccion-linea">${empresa.direccion}</div>
+                    <div class="direccion-linea">Tel: ${empresa.telefono} | ${empresa.web}</div>
+                  </div>
+                </div>
               </div>
-              <div class="info-line">
-                <span class="label">Hora:</span>
-                <span class="value">${hora}</span>
-              </div>
-              <div class="info-line">
-                <span class="label">Operario:</span>
-                <span class="value">${pedido.usuarioTramitando || 'N/A'}</span>
-              </div>
+              
               <div class="codigo-barras">
                 ||||| ${(pedido.numeroPedido || pedido._id || '').toString().slice(-8).padStart(8, '0')} |||||
               </div>
             </div>
             
-            <div class="seccion">
-              <div class="titulo-seccion">📦 Remitente</div>
-              <div class="direccion">
-                <div class="direccion-nombre">${empresa.nombre}</div>
-                <div class="direccion-linea">${empresa.direccion}</div>
-                <div class="direccion-linea">Tel: ${empresa.telefono}</div>
-                <div class="direccion-linea">${empresa.web}</div>
-              </div>
-            </div>
-            
-            <div class="seccion">
-              <div class="titulo-seccion">🏠 Destinatario</div>
-              <div class="direccion">
-                <div class="direccion-nombre">
-                  ${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Sin nombre'}
+            <div class="columna-derecha">
+              <div class="seccion">
+                <div class="titulo-seccion">🏠 Destinatario</div>
+                <div class="contenido-seccion">
+                  <div class="direccion">
+                    <div class="direccion-nombre">
+                      ${pedido.clienteNombre || pedido.nombreCliente || pedido.cliente || 'Sin nombre'}
+                    </div>
+                    ${pedido.direccion || pedido.direccionEnvio ? 
+                      `<div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio}</div>` : ''}
+                    ${pedido.codigoPostal || pedido.poblacion ? 
+                      `<div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>` : ''}
+                    ${pedido.telefono ? 
+                      `<div class="direccion-linea">Tel: ${pedido.telefono}</div>` : ''}
+                  </div>
                 </div>
-                ${pedido.direccion || pedido.direccionEnvio ? 
-                  `<div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio}</div>` : ''}
-                ${pedido.codigoPostal || pedido.poblacion ? 
-                  `<div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>` : ''}
-                ${pedido.telefono ? 
-                  `<div class="direccion-linea">Tel: ${pedido.telefono}</div>` : ''}
               </div>
-            </div>
-            
-            ${pedido.notasCliente ? `
-            <div class="seccion">
-              <div class="titulo-seccion">📝 Observaciones</div>
-              <div class="observaciones">
-                ${pedido.notasCliente}
+              
+              ${pedido.notasCliente ? `
+              <div class="seccion">
+                <div class="titulo-seccion">📝 Observaciones</div>
+                <div class="contenido-seccion">
+                  <div class="observaciones">
+                    ${pedido.notasCliente}
+                  </div>
+                </div>
               </div>
+              ` : ''}
             </div>
-            ` : ''}
           </div>
           
           <div class="footer">
