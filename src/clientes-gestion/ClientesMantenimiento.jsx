@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
 import ImportarClientes from './ImportarClientes'; // Importar el nuevo componente
+import { obtenerNombreCompleto } from '../utils/clienteUtils';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
@@ -86,7 +87,7 @@ export default function ClientesMantenimiento() {
     if (busqueda.trim()) {
       // Filtrar por búsqueda en todos los clientes
       filtrados = listaClientes.filter(cliente =>
-        cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+        obtenerNombreCompleto(cliente).toLowerCase().includes(busqueda.toLowerCase()) ||
         (cliente.email && cliente.email.toLowerCase().includes(busqueda.toLowerCase())) ||
         (cliente.telefono && cliente.telefono.includes(busqueda)) ||
         (cliente.cif && cliente.cif.toLowerCase().includes(busqueda.toLowerCase())) ||
@@ -155,13 +156,13 @@ export default function ClientesMantenimiento() {
         return;
       }
       
-      console.log('Cargando pedidos para cliente:', cliente.nombre, cliente._id);
+      console.log('Cargando pedidos para cliente:', obtenerNombreCompleto(cliente), cliente._id);
       
       // Llamar a la API solo filtrando por clienteId y nombreCliente para obtener TODOS los pedidos del cliente
       const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
         params: {
           clienteId: cliente._id, // Filtrar por ID del cliente
-          nombreCliente: cliente.nombre // Filtrar por nombre del cliente
+          nombreCliente: obtenerNombreCompleto(cliente) // Filtrar por nombre del cliente
         }
       });
       
@@ -203,12 +204,12 @@ export default function ClientesMantenimiento() {
       const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
         params: {
           clienteId: cliente._id, // Filtrar por ID del cliente
-          nombreCliente: cliente.nombre, // Filtrar por nombre del cliente
+          nombreCliente: obtenerNombreCompleto(cliente), // Filtrar por nombre del cliente
           enHistorialDevoluciones: true // Solo incluir pedidos en historial de devoluciones
         }
       });
       
-      console.log('Cargando devoluciones para cliente:', cliente.nombre, cliente._id);
+      console.log('Cargando devoluciones para cliente:', obtenerNombreCompleto(cliente), cliente._id);
       console.log('Total devoluciones recibidas:', res.data?.length || 0);
       
       setDevolucionesCliente(res.data || []);

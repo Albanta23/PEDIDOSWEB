@@ -6,6 +6,7 @@ import { formatearDireccionCompleta } from './utils/formatDireccion';
 import { FaUndo, FaExclamationTriangle } from 'react-icons/fa';
 import DireccionEnvioFormulario from './components/DireccionEnvioFormulario';
 import FormaPagoFormulario from './components/FormaPagoFormulario';
+import { obtenerNombreCompleto } from '../utils/clienteUtils';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
@@ -62,7 +63,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
           const cliente = clientes.find(c => c._id === pedido.clienteId || c.id === pedido.clienteId);
           if (cliente) {
             setClienteSeleccionado(cliente);
-            setBusquedaCliente(cliente.nombre);
+            setBusquedaCliente(obtenerNombreCompleto(cliente));
             setCodigoSage(cliente.codigoCliente || '');
             setNifCliente(cliente.nif || '');
           }
@@ -195,7 +196,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     // Si es un pedido nuevo, mantener 'enviado' como por defecto
     const pedidoData = {
       clienteId: clienteSeleccionado._id || clienteSeleccionado.id || clienteSeleccionado.codigo,
-      clienteNombre: clienteSeleccionado.nombre,
+      clienteNombre: obtenerNombreCompleto(clienteSeleccionado),
       direccion: clienteSeleccionado.direccion || '',
       codigoPostal: clienteSeleccionado.codigoPostal || '',
       poblacion: clienteSeleccionado.poblacion || '',
@@ -231,7 +232,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       // Datos específicos para WooCommerce
       datosFacturacion: {
         nif: nifCliente || '',
-        nombre: clienteSeleccionado.nombre || '',
+        nombre: obtenerNombreCompleto(clienteSeleccionado) || '',
         direccion: clienteSeleccionado.direccion || '',
         codigoPostal: clienteSeleccionado.codigoPostal || '',
         poblacion: clienteSeleccionado.poblacion || '',
@@ -323,14 +324,14 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
 
   const handleSeleccionarCliente = (cliente) => {
     setClienteSeleccionado(cliente);
-    setBusquedaCliente(cliente.nombre);
+    setBusquedaCliente(obtenerNombreCompleto(cliente));
     setCodigoSage(cliente.codigoCliente || '');
     setNifCliente(cliente.nif || '');
     setMostrarSugerencias(false);
   };
 
   const clientesFiltrados = clientes.filter(cliente => 
-    cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase())
+    obtenerNombreCompleto(cliente).toLowerCase().includes(busquedaCliente.toLowerCase())
   ).slice(0, 8); // Máximo 8 sugerencias
 
   return (
@@ -543,7 +544,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: '600', fontSize: '14px' }}>
-                        {cliente.nombre}
+                        {obtenerNombreCompleto(cliente)}
                       </div>
                       {cliente.direccion && (
                         <div style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>
@@ -613,7 +614,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     fontSize: '16px', 
                     color: '#1e293b' 
                   }}>
-                    {clienteSeleccionado.nombre}
+                    {obtenerNombreCompleto(clienteSeleccionado)}
                   </div>
                   <div style={{ 
                     fontSize: '13px', 
