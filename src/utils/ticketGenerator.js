@@ -62,13 +62,13 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           
           <div class="bulto-info">
             <div class="bulto-numero">BULTO ${i} DE ${numBultos}</div>
-            <div class="pedido-numero">Pedido Nº ${pedido.numeroPedido || pedido._id}</div>
-          </div>
-          
-          
-          <div class="info-adicional">
-            <div class="fecha-envio">📅 ${fecha} ${hora}</div>
-            <div class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</div>
+            <div class="pedido-info-linea">
+              <div class="pedido-numero">Pedido Nº ${pedido.numeroPedido || pedido._id}</div>
+              <div class="info-adicional">
+                <span class="fecha-envio">📅 ${fecha} ${hora}</span>
+                <span class="operario">👤 Op: ${pedido.usuario || 'Expediciones'}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -203,34 +203,22 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             color: #1976d2;
           }
           
-          .codigo-barras {
-            text-align: center;
-            margin: 2mm 0;
-            padding: 3mm;
-            border: 2px solid black;
-            background: white;
-          }
-          
-          .codigo-titulo {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 2mm;
-          }
-          
-          .codigo-valor {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            font-weight: bold;
-            letter-spacing: 1px;
+          .pedido-info-linea {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
           }
           
           .info-adicional {
             display: flex;
-            justify-content: space-between;
+            gap: 8px;
             font-size: 10px;
             color: #666;
-            border-top: 1px dashed #666;
-            padding-top: 2mm;
+          }
+          
+          .fecha-envio, .operario {
+            white-space: nowrap;
           }
 
           .codigo-barras {
@@ -312,9 +300,9 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
             font-family: 'Arial', sans-serif;
             background: white;
             padding: 5px;
-            width: 189px; /* 5cm = 189px */
+            width: 264px; /* 7cm = 264px */
             margin: 0 auto;
-            font-size: 12px; /* Ajustado para 5cm */
+            font-size: 14px; /* Ajustado para 7cm */
             line-height: 1.2;
           }
           
@@ -330,18 +318,18 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .empresa-nombre {
-            font-size: 13px; /* Ajustado para 5cm */
+            font-size: 15px; /* Ajustado para 7cm */
             font-weight: bold;
             margin-bottom: 3px;
           }
           
           .empresa-info {
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 1px;
           }
           
           .titulo-ticket {
-            font-size: 14px; /* Ajustado para 5cm */
+            font-size: 16px; /* Ajustado para 7cm */
             font-weight: bold;
             margin: 8px 0;
           }
@@ -352,7 +340,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .info-line {
             margin-bottom: 2px;
-            font-size: 11px; /* Ajustado para 5cm */
+            font-size: 13px; /* Ajustado para 7cm */
           }
           
           .label {
@@ -371,7 +359,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .productos-titulo {
-            font-size: 12px; /* Ajustado para 5cm */
+            font-size: 14px; /* Ajustado para 7cm */
             font-weight: bold;
             margin-bottom: 6px;
             text-align: center;
@@ -388,17 +376,17 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           .producto-nombre {
             font-weight: bold;
-            font-size: 11px; /* Ajustado para 5cm */
+            font-size: 13px; /* Ajustado para 7cm */
             margin-bottom: 2px;
           }
           
           .producto-detalles {
-            font-size: 10px;
+            font-size: 12px;
             color: #333;
           }
           
           .producto-comentario {
-            font-size: 10px;
+            font-size: 12px;
             color: #666;
             font-style: italic;
             margin-top: 2px;
@@ -412,40 +400,38 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           }
           
           .comentarios-titulo {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
             margin-bottom: 6px;
             color: #e65100;
           }
           
           .comentario-line {
-            font-size: 11px;
+            font-size: 13px;
             margin-bottom: 4px;
             color: #bf360c;
           }
           
           .bultos-info {
             text-align: center;
-            font-size: 12px; /* Ajustado para 5cm */
+            font-size: 14px; /* Ajustado para 7cm */
             font-weight: bold;
             margin: 10px 0;
             background: #e3f2fd;
             padding: 6px;
             border: 2px solid #1976d2;
             color: #0d47a1;
-          }
-          
-          .footer {
+          }          .footer {
             text-align: center;
             margin-top: 15px;
             border-top: 2px dashed black;
             padding-top: 12px;
-            font-size: 12px;
+            font-size: 14px;
           }
           
           .origen-info {
             text-align: center;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
             margin: 8px 0;
             padding: 6px;
@@ -470,7 +456,7 @@ function generateProfessionalTextTicket(pedido, fecha, hora, empresa, usuario) {
           
           @page {
             margin: 5mm;
-            size: 50mm auto; /* 5cm de ancho */
+            size: 70mm auto; /* 7cm de ancho */
           }
         </style>
       </head>
