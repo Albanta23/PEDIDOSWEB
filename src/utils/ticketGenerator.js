@@ -1,5 +1,6 @@
 import { DATOS_EMPRESA } from '../configDatosEmpresa';
 import { formatearNombreClientePedido } from './formatNombreCompleto';
+import { obtenerDireccionEnvio, formatearNombreDestinatario } from './direccionEnvioUtils';
 
 export function generarTicket(pedido, bultoNum = 1, totalBultos = 1) {
   const fecha = new Date().toLocaleDateString('es-ES');
@@ -53,10 +54,19 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           <div class="seccion-destinatario">
             <div class="seccion-titulo">📍 DESTINATARIO:</div>
             <div class="direccion">
-              <div class="direccion-nombre">${formatearNombreClientePedido(pedido)}</div>
-              <div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio || 'Dirección no disponible'}</div>
-              <div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>
-              ${pedido.telefono ? `<div class="direccion-linea">📞 Tel: ${pedido.telefono}</div>` : ''}
+              ${(() => {
+                const datosEnvio = obtenerDireccionEnvio(pedido);
+                const nombreFormateado = formatearNombreDestinatario(datosEnvio);
+                
+                return `
+                  <div class="direccion-nombre">${nombreFormateado}</div>
+                  <div class="direccion-linea">${datosEnvio.direccionCompleta}</div>
+                  <div class="direccion-linea">${datosEnvio.codigoPostal || ''} ${datosEnvio.poblacion || ''}</div>
+                  ${datosEnvio.provincia ? `<div class="direccion-linea">${datosEnvio.provincia}</div>` : ''}
+                  ${datosEnvio.telefono ? `<div class="direccion-linea">📞 Tel: ${datosEnvio.telefono}</div>` : ''}
+                  ${datosEnvio.esEnvioAlternativo ? `<div class="direccion-especial">⚠️ DIRECCIÓN DE ENVÍO DIFERENTE</div>` : ''}
+                `;
+              })()}
             </div>
           </div>
           
@@ -181,6 +191,18 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             margin-bottom: 1mm;
             color: #333;
             word-wrap: break-word;
+          }
+          
+          .direccion-especial {
+            margin-top: 2mm;
+            padding: 2mm;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 2mm;
+            font-size: 11px;
+            font-weight: bold;
+            color: #856404;
+            text-align: center;
           }
           
           .bulto-info {
@@ -588,6 +610,18 @@ function generateThermalLabelHTML(pedido, bultoNum, totalBultos, fecha, hora, em
             font-size: 12px;
           }
           
+          .direccion-especial {
+            margin-top: 3px;
+            padding: 3px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #856404;
+            text-align: center;
+          }
+          
           .codigo-barras {
             text-align: center;
             font-family: 'Courier New', monospace;
@@ -907,15 +941,23 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
                 <div class="titulo-seccion">🏠 Destinatario</div>
                 <div class="contenido-seccion">
                   <div class="direccion">
-                    <div class="direccion-nombre">
-                      ${formatearNombreClientePedido(pedido)}
-                    </div>
-                    ${pedido.direccion || pedido.direccionEnvio ? 
-                      `<div class="direccion-linea">${pedido.direccion || pedido.direccionEnvio}</div>` : ''}
-                    ${pedido.codigoPostal || pedido.poblacion ? 
-                      `<div class="direccion-linea">${pedido.codigoPostal || ''} ${pedido.poblacion || ''}</div>` : ''}
-                    ${pedido.telefono ? 
-                      `<div class="direccion-linea">Tel: ${pedido.telefono}</div>` : ''}
+                    ${(() => {
+                      const datosEnvio = obtenerDireccionEnvio(pedido);
+                      const nombreFormateado = formatearNombreDestinatario(datosEnvio);
+                      
+                      return `
+                        <div class="direccion-nombre">${nombreFormateado}</div>
+                        <div class="direccion-linea">${datosEnvio.direccionCompleta}</div>
+                        ${datosEnvio.codigoPostal || datosEnvio.poblacion ? 
+                          `<div class="direccion-linea">${datosEnvio.codigoPostal || ''} ${datosEnvio.poblacion || ''}</div>` : ''}
+                        ${datosEnvio.provincia ? 
+                          `<div class="direccion-linea">${datosEnvio.provincia}</div>` : ''}
+                        ${datosEnvio.telefono ? 
+                          `<div class="direccion-linea">Tel: ${datosEnvio.telefono}</div>` : ''}
+                        ${datosEnvio.esEnvioAlternativo ? 
+                          `<div class="direccion-especial">⚠️ DIRECCIÓN DE ENVÍO DIFERENTE</div>` : ''}
+                      `;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -943,6 +985,9 @@ function generateProfessionalLabelHTML(pedido, bultoNum, totalBultos, fecha, hor
 }
 
 function generateTextVersion(pedido, bultoNum, totalBultos, fecha, hora, empresa) {
+  const datosEnvio = obtenerDireccionEnvio(pedido);
+  const nombreFormateado = formatearNombreDestinatario(datosEnvio);
+  
   let ticket = `
 ========================================
               ETIQUETA DE ENVÍO
@@ -962,10 +1007,12 @@ Web: ${empresa.web}
 
 ========================================
 DESTINATARIO:
-${formatearNombreClientePedido(pedido)}
-${pedido.direccion || pedido.direccionEnvio || ''}
-${pedido.codigoPostal || ''} ${pedido.poblacion || ''}
-Tel: ${pedido.telefono || ''}
+${nombreFormateado}
+${datosEnvio.direccionCompleta}
+${datosEnvio.codigoPostal || ''} ${datosEnvio.poblacion || ''}
+${datosEnvio.provincia ? datosEnvio.provincia : ''}
+Tel: ${datosEnvio.telefono || ''}
+${datosEnvio.esEnvioAlternativo ? '\n⚠️ DIRECCIÓN DE ENVÍO DIFERENTE' : ''}
 
 ========================================
 `;

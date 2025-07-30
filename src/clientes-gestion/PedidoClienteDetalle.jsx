@@ -1,6 +1,8 @@
 import React from 'react';
 import { exportPedidoClientePDF } from './utils/exportPedidoPDF';
 import { formatearDireccionCompletaPedido } from './utils/formatDireccion';
+import DireccionEnvioInfo from './components/DireccionEnvioInfo';
+import FormaPagoInfo from './components/FormaPagoInfo';
 
 export default function PedidoClienteDetalle({ pedido, onClose }) {
   if (!pedido) return null;
@@ -251,6 +253,32 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
                 </div>
               </div>
             </div>
+
+            {/* Dirección de Envío */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              padding: '24px',
+              borderRadius: '16px',
+              border: '2px solid #0ea5e9',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
+              marginTop: '20px'
+            }}>
+              <DireccionEnvioInfo pedido={pedido} />
+            </div>
+
+            {/* Forma de Pago y Vendedor */}
+            {(pedido.formaPago || pedido.datosWooCommerce?.formaPago || pedido.vendedor || pedido.datosWooCommerce?.vendedor) && (
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                padding: '24px',
+                borderRadius: '16px',
+                border: '2px solid #16a34a',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
+                marginTop: '20px'
+              }}>
+                <FormaPagoInfo pedido={pedido} />
+              </div>
+            )}
 
             {/* Historial de eventos */}
             {(pedido.historial || pedido.historialEstados) && (pedido.historial || pedido.historialEstados).length > 0 && (

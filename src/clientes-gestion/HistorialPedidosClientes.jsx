@@ -135,7 +135,133 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
     axios.get(`${API_URL_CORRECTO}/pedidos-clientes${query}`)
       .then(res => {
         const pedidos = res.data || [];
-        const pedidosFiltrados = pedidos.filter(p => !p.enHistorialDevoluciones);
+        
+        // 🧪 DATOS DE PRUEBA TEMPORALES PARA PROBAR DIRECCIONES DE ENVÍO
+        const pedidosPrueba = [
+          {
+            _id: 'test-envio-alternativo-001',
+            numeroPedido: 'TEST-2025-001',
+            clienteNombre: 'Cliente Prueba Envío Alternativo',
+            clienteNif: '12345678A',
+            telefono: '911234567',
+            direccion: 'Calle Facturación 123',
+            codigoPostal: '28001',
+            poblacion: 'Madrid',
+            provincia: 'Madrid',
+            estado: 'en_preparacion',
+            fechaPedido: new Date().toISOString(),
+            usuarioTramitando: 'operario_test',
+            bultos: 2,
+            
+            // ⭐ DATOS NUEVOS DE ENVÍO ALTERNATIVO
+            datosEnvioWoo: {
+              esEnvioAlternativo: true,
+              nombre: 'María López Destinataria',
+              empresa: 'Oficinas Centrales S.L.',
+              direccion1: 'Avenida del Envío 456',
+              direccion2: 'Oficina 301 - 3ª Planta',
+              codigoPostal: '28080',
+              ciudad: 'Madrid',
+              provincia: 'Madrid',
+              telefono: '917654321',
+              pais: 'ES'
+            },
+            
+            // ⭐ DATOS NUEVOS DE FORMA DE PAGO
+            datosWooCommerce: {
+              formaPago: {
+                titulo: 'Transferencia Bancaria',
+                codigo: '01',
+                metodo: 'bacs'
+              },
+              vendedor: 'Tienda Online'
+            },
+            
+            formaPago: 'Transferencia Bancaria',
+            vendedor: 'Tienda Online',
+            
+            lineas: [
+              {
+                producto: 'Producto Test Envío Alternativo',
+                cantidad: 2,
+                formato: 'ud',
+                peso: 1.5,
+                lote: 'L2025001',
+                comentario: 'Producto especial para prueba'
+              },
+              {
+                esComentario: true,
+                comentario: 'IMPORTANTE: Entregar en horario de oficina (9:00-17:00)'
+              }
+            ],
+            
+            historialEstados: [
+              {
+                estado: 'en_espera',
+                usuario: 'operario_test',
+                fecha: new Date(Date.now() - 3600000).toISOString(),
+                tipo: 'estado'
+              },
+              {
+                estado: 'en_preparacion',
+                usuario: 'operario_test',
+                fecha: new Date().toISOString(),
+                tipo: 'estado'
+              }
+            ]
+          },
+          {
+            _id: 'test-normal-002',
+            numeroPedido: 'TEST-2025-002',
+            clienteNombre: 'Cliente Prueba Normal',
+            clienteNif: '87654321B',
+            telefono: '983111222',
+            direccion: 'Plaza Mayor 1',
+            codigoPostal: '47001',
+            poblacion: 'Valladolid',
+            provincia: 'Valladolid',
+            estado: 'preparado',
+            fechaPedido: new Date().toISOString(),
+            usuarioTramitando: 'operario_test',
+            bultos: 1,
+            
+            // Sin envío alternativo
+            datosEnvioWoo: {
+              esEnvioAlternativo: false
+            },
+            
+            formaPago: 'Contra reembolso',
+            vendedor: 'Mostrador',
+            
+            lineas: [
+              {
+                producto: 'Producto Test Normal',
+                cantidad: 1,
+                formato: 'kg',
+                peso: 0.5
+              }
+            ],
+            
+            historialEstados: [
+              {
+                estado: 'en_espera',
+                usuario: 'operario_test',
+                fecha: new Date(Date.now() - 7200000).toISOString(),
+                tipo: 'estado'
+              },
+              {
+                estado: 'preparado',
+                usuario: 'operario_test',
+                fecha: new Date().toISOString(),
+                tipo: 'estado'
+              }
+            ]
+          }
+        ];
+        
+        // Combinar pedidos reales con pedidos de prueba
+        const todosPedidos = [...pedidosPrueba, ...pedidos];
+        const pedidosFiltrados = todosPedidos.filter(p => !p.enHistorialDevoluciones);
 
         if (soloPreparados) {
           setPedidosAbiertos([]);

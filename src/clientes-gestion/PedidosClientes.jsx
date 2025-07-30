@@ -4,6 +4,8 @@ import { useProductos } from '../components/ProductosContext';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { formatearDireccionCompleta } from './utils/formatDireccion';
 import { FaUndo, FaExclamationTriangle } from 'react-icons/fa';
+import DireccionEnvioFormulario from './components/DireccionEnvioFormulario';
+import FormaPagoFormulario from './components/FormaPagoFormulario';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
@@ -36,6 +38,13 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const [productoValido, setProductoValido] = useState([]);
   const [mensajeError, setMensajeError] = useState([]);
   const [testBackendMsg, setTestBackendMsg] = useState('');
+  
+  // 🆕 NUEVOS STATES PARA DIRECCIÓN DE ENVÍO Y FORMA DE PAGO
+  const [datosEnvioWoo, setDatosEnvioWoo] = useState({
+    esEnvioAlternativo: false
+  });
+  const [formaPago, setFormaPago] = useState('');
+  const [vendedor, setVendedor] = useState('');
   useEffect(() => {
     axios.get(`${API_URL}/clientes`)
       .then(res => setClientes(res.data))
@@ -70,6 +79,23 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
               descuento: linea.descuento || 0,
               subtotal: linea.subtotal || 0
             })));
+          }
+          
+          // 🆕 CARGAR DATOS DE ENVÍO Y FORMA DE PAGO
+          if (pedido.datosEnvioWoo) {
+            setDatosEnvioWoo(pedido.datosEnvioWoo);
+          }
+          
+          if (pedido.formaPago) {
+            setFormaPago(pedido.formaPago);
+          } else if (pedido.datosWooCommerce?.formaPago) {
+            setFormaPago(pedido.datosWooCommerce.formaPago);
+          }
+          
+          if (pedido.vendedor) {
+            setVendedor(pedido.vendedor);
+          } else if (pedido.datosWooCommerce?.vendedor) {
+            setVendedor(pedido.datosWooCommerce.vendedor);
           }
         })
         .catch(error => {
@@ -190,6 +216,18 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       estado: estadoFinal,
       codigoSage: codigoSage || '',
       nifCliente: nifCliente || '',
+      
+      // 🆕 NUEVOS CAMPOS DE DIRECCIÓN DE ENVÍO Y FORMA DE PAGO
+      datosEnvioWoo: datosEnvioWoo,
+      formaPago: formaPago,
+      vendedor: vendedor,
+      
+      // Para compatibilidad con estructura WooCommerce
+      datosWooCommerce: {
+        formaPago: formaPago,
+        vendedor: vendedor
+      },
+      
       // Datos específicos para WooCommerce
       datosFacturacion: {
         nif: nifCliente || '',
@@ -236,6 +274,11 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         setClienteSeleccionado(null);
         setBusquedaCliente('');
         setMostrarSugerencias(false);
+        
+        // 🆕 LIMPIAR NUEVOS CAMPOS
+        setDatosEnvioWoo({ esEnvioAlternativo: false });
+        setFormaPago('');
+        setVendedor('');
       }
 
       setTimeout(()=> {
@@ -1138,6 +1181,35 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             </button>
           </div>
         </div>
+
+        {/* Formularios de dirección de envío y forma de pago */}
+        {clienteSeleccionado && (
+          <div style={{
+            display: 'flex',
+            gap: '24px',
+            marginBottom: '24px',
+            flexWrap: 'wrap'
+          }}>
+            {/* Formulario de dirección de envío */}
+            <div style={{ flex: '1', minWidth: '400px' }}>
+              <DireccionEnvioFormulario
+                datos={datosEnvioWoo}
+                onChange={setDatosEnvioWoo}
+                clienteSeleccionado={clienteSeleccionado}
+              />
+            </div>
+
+            {/* Formulario de forma de pago */}
+            <div style={{ flex: '1', minWidth: '400px' }}>
+              <FormaPagoFormulario
+                datos={formaPago}
+                onChange={setFormaPago}
+                vendedor={vendedor}
+                onVendedorChange={setVendedor}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Botón principal de confirmación - Panel fijo */}
         <div style={{

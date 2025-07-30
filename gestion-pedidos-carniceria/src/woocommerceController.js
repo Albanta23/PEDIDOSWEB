@@ -5,12 +5,13 @@ const ProductoWoo = require('./models/ProductoWoo');
 const { construirNombreCompleto } = require('./sincronizarNombresPedidos');
 
 /**
- * Función auxiliar para separar apellidos del campo last_name de WooCommerce
+ * Separar nombre y apellidos considerando metadatos de WooCommerce
  * @param {string} firstName - Nombre del cliente
  * @param {string} lastName - Apellidos del cliente (puede contener uno o dos apellidos)
+ * @param {Array} metaData - Metadatos del pedido de WooCommerce
  * @returns {object} - Objeto con nombre, primerApellido y segundoApellido separados
  */
-function separarNombreApellidos(firstName, lastName) {
+function separarNombreApellidos(firstName, lastName, metaData = []) {
   const nombre = firstName ? firstName.trim() : '';
   
   if (!lastName) {
@@ -24,10 +25,69 @@ function separarNombreApellidos(firstName, lastName) {
   // Dividir el lastName por espacios y filtrar elementos vacíos
   const apellidos = lastName.trim().split(/\s+/).filter(apellido => apellido.length > 0);
   
+  let primerApellido = apellidos[0] || '';
+  let segundoApellido = apellidos[1] || '';
+  
+  // Verificar si hay segundo apellido en metadatos (campo _billing_myfield3)
+  if (metaData && Array.isArray(metaData)) {
+    const segundoApellidoMeta = metaData.find(meta => meta.key === '_billing_myfield3');
+    if (segundoApellidoMeta && segundoApellidoMeta.value && segundoApellidoMeta.value.trim()) {
+      segundoApellido = segundoApellidoMeta.value.trim();
+      console.log(`[WooCommerce] Segundo apellido desde metadatos: ${segundoApellido}`);
+    }
+  }
+  
   return {
     nombre,
-    primerApellido: apellidos[0] || '',
-    segundoApellido: apellidos[1] || ''
+    primerApellido,
+    segundoApellido
+  };
+}
+
+/**
+ * Comparar direcciones de facturación y envío para determinar si son diferentes
+ * @param {object} billing - Dirección de facturación
+ * @param {object} shipping - Dirección de envío
+ * @returns {boolean} - true si las direcciones son diferentes
+ */
+function direccionesEnvioSonDiferentes(billing, shipping) {
+  // Campos principales para comparar direcciones
+  const camposComparar = ['address_1', 'city', 'postcode', 'first_name', 'last_name'];
+  
+  for (const campo of camposComparar) {
+    const valorBilling = (billing[campo] || '').trim().toLowerCase();
+    const valorShipping = (shipping[campo] || '').trim().toLowerCase();
+    
+    if (valorBilling !== valorShipping) {
+      console.log(`[WooCommerce] Diferencia en ${campo}: "${billing[campo]}" vs "${shipping[campo]}"`);
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Extraer información completa de dirección para etiquetas de envío
+ * @param {object} shipping - Dirección de envío de WooCommerce
+ * @param {object} billing - Dirección de facturación (como fallback)
+ * @returns {object} - Objeto con los datos de dirección formateados
+ */
+function extraerDireccionEnvio(shipping, billing) {
+  // Usar dirección de envío si está completa, sino usar facturación
+  const direccionUsada = shipping.address_1 ? shipping : billing;
+  
+  return {
+    nombre: `${direccionUsada.first_name || ''} ${direccionUsada.last_name || ''}`.trim(),
+    empresa: direccionUsada.company || '',
+    direccion1: direccionUsada.address_1 || '',
+    direccion2: direccionUsada.address_2 || '',
+    ciudad: direccionUsada.city || '',
+    codigoPostal: direccionUsada.postcode || '',
+    provincia: direccionUsada.state || '',
+    pais: direccionUsada.country || '',
+    telefono: direccionUsada.phone || billing.phone || '', // El teléfono suele estar solo en billing
+    esEnvioAlternativo: direccionesEnvioSonDiferentes(billing, shipping)
   };
 }
 
@@ -47,9 +107,14 @@ module.exports = {
       
       console.log(`[WooCommerce] ${idsYaSincronizados.size} pedidos ya están marcados como sincronizados`);
       
-      // Obtener pedidos de WooCommerce
-      const response = await WooCommerce.get('orders');
+      // Obtener pedidos de WooCommerce (FILTRAR CANCELADOS)
+      const response = await WooCommerce.get('orders', {
+        status: 'processing,completed,on-hold,pending', // Excluir cancelled, refunded, failed
+        per_page: 100 // Aumentar límite para obtener más pedidos por llamada
+      });
       const pedidosWoo = response.data;
+      
+      console.log(`[WooCommerce] Filtrados pedidos cancelados. Obtenidos ${pedidosWoo.length} pedidos válidos`);
       
       // Si no se fuerza la sincronización, filtrar los pedidos que ya están sincronizados
       const pedidosAActualizar = forzarSincronizacion 
@@ -89,7 +154,38 @@ module.exports = {
           }
           
           const nombreCompleto = `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`;
-          const datosNombre = separarNombreApellidos(pedidoWoo.billing.first_name, pedidoWoo.billing.last_name);
+          const datosNombre = separarNombreApellidos(pedidoWoo.billing.first_name, pedidoWoo.billing.last_name, pedidoWoo.meta_data);
+          
+          // Extraer información de forma de pago
+          let formaPago = pedidoWoo.payment_method_title || pedidoWoo.payment_method || 'No especificado';
+          let detallesPago = {
+            metodo: formaPago,
+            metodoCodigo: pedidoWoo.payment_method || '',
+            total: pedidoWoo.total || 0
+          };
+          
+          // Buscar metadatos de forma de pago específicos
+          if (pedidoWoo.meta_data && Array.isArray(pedidoWoo.meta_data)) {
+            // PayPal
+            const paypalSource = pedidoWoo.meta_data.find(meta => meta.key === '_ppcp_paypal_payment_source');
+            const paypalFees = pedidoWoo.meta_data.find(meta => meta.key === '_ppcp_paypal_fees');
+            
+            if (paypalSource) {
+              detallesPago.proveedor = 'PayPal';
+              detallesPago.fuente = paypalSource.value;
+            }
+            if (paypalFees) {
+              detallesPago.comision = paypalFees.value;
+            }
+            
+            // Stripe
+            const stripeSource = pedidoWoo.meta_data.find(meta => meta.key.includes('stripe'));
+            if (stripeSource) {
+              detallesPago.proveedor = 'Stripe';
+            }
+            
+            console.log(`[WooCommerce] Pedido ${pedidoWoo.id} - Forma de pago: ${formaPago}, Detalles:`, detallesPago);
+          }
           criteriosBusqueda.push({ nombre: nombreCompleto });
           
           // Buscar con $or para encontrar coincidencias con cualquiera de los criterios
@@ -229,6 +325,13 @@ module.exports = {
           const clienteCompleto = await Cliente.findById(clienteId);
           const nombreCompletoCliente = construirNombreCompleto(clienteCompleto, `${pedidoWoo.billing.first_name} ${pedidoWoo.billing.last_name}`);
           
+          // Extraer información de dirección de envío
+          const datosEnvio = extraerDireccionEnvio(pedidoWoo.shipping, pedidoWoo.billing);
+          if (datosEnvio.esEnvioAlternativo) {
+            console.log(`[WooCommerce] Pedido #${pedidoWoo.id} tiene dirección de envío diferente`);
+            console.log(`[WooCommerce] Envío a: ${datosEnvio.nombre}, ${datosEnvio.direccion1}, ${datosEnvio.codigoPostal} ${datosEnvio.ciudad}`);
+          }
+          
           const nuevoPedido = new PedidoCliente({
             clienteId,
             codigoCliente, // Guardar el código de cliente para SAGE50
@@ -258,6 +361,8 @@ module.exports = {
             totalIva: pedidoWoo.total_tax,
             total: pedidoWoo.total,
             datosFacturaWoo: pedidoWoo.billing, // Guardar todos los datos de factura
+            datosEnvioWoo: datosEnvio, // NUEVO: Información completa de dirección de envío
+            formaPago: detallesPago, // NUEVO: Información de forma de pago extraída
             clienteExistente: !!clienteExistente, // Indicar si el cliente ya existía
             clienteCreado: !clienteExistente, // Indicar si se creó un nuevo cliente
             esTiendaOnline: true // Marcar como pedido de tienda online
@@ -407,3 +512,48 @@ module.exports = {
     }
   }
 };
+
+/**
+ * Función para determinar la forma de pago desde los datos de WooCommerce
+ */
+function determinarFormaPago(pedidoWoo) {
+  const metodoPago = pedidoWoo.payment_method || '';
+  const tituloMetodo = pedidoWoo.payment_method_title || '';
+  
+  // Mapear métodos de pago de WooCommerce a códigos SAGE50
+  const mapeoFormasPago = {
+    'bacs': '03', // Transferencia bancaria
+    'cheque': '04', // Cheque  
+    'cod': '01', // Contra reembolso
+    'paypal': '02', // PayPal
+    'stripe': '02', // Tarjeta (Stripe)
+    'woocommerce_payments': '02', // Tarjeta
+    'square': '02', // Tarjeta (Square)
+    'direct_debit': '05', // Domiciliación
+    'bank_transfer': '03', // Transferencia
+    'credit_card': '02', // Tarjeta de crédito
+  };
+  
+  // Buscar en metadatos información adicional de pago
+  const metaPago = pedidoWoo.meta_data?.find(meta => 
+    meta.key.includes('paypal') || 
+    meta.key.includes('stripe') ||
+    meta.key.includes('payment')
+  );
+  
+  return {
+    codigo: mapeoFormasPago[metodoPago] || '01', // Por defecto: Contado
+    metodo: metodoPago,
+    titulo: tituloMetodo,
+    detalles: metaPago ? {
+      key: metaPago.key,
+      value: metaPago.value
+    } : null
+  };
+}
+
+// Exportar funciones para testing
+module.exports.separarNombreApellidos = separarNombreApellidos;
+module.exports.determinarFormaPago = determinarFormaPago;
+module.exports.direccionesEnvioSonDiferentes = direccionesEnvioSonDiferentes;
+module.exports.extraerDireccionEnvio = extraerDireccionEnvio;

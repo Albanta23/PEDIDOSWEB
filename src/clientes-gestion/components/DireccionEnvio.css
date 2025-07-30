@@ -1,0 +1,177 @@
+/* Estilos para DireccionEnvioInfo */
+.direccion-envio-info {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.direccion-envio-info.compact {
+  font-size: 0.9em;
+}
+
+.direccion-envio-titulo {
+  margin-bottom: 16px;
+}
+
+.direccion-envio-titulo .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: none;
+}
+
+.direccion-envio-titulo .badge-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+  color: #92400e;
+  border: 2px solid #f59e0b;
+}
+
+.direccion-envio-titulo .badge-info {
+  background: linear-gradient(135deg, #dbeafe 0%, #3b82f6 100%);
+  color: #1e40af;
+  border: 2px solid #2563eb;
+}
+
+.direccion-envio-contenido {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.direccion-destinatario {
+  margin-bottom: 12px;
+}
+
+.direccion-destinatario strong {
+  color: #1e293b;
+  font-size: 16px;
+  display: block;
+}
+
+.empresa-envio {
+  margin-top: 4px;
+}
+
+.empresa-envio small {
+  color: #64748b;
+  font-style: italic;
+}
+
+.direccion-postal {
+  margin-bottom: 8px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.telefono-envio, .pais-envio {
+  margin-top: 8px;
+}
+
+.telefono-envio small, .pais-envio small {
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Estilos para FormaPagoInfo */
+.forma-pago-info {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.forma-pago-titulo h6 {
+  color: #1e293b;
+  font-weight: 700;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.forma-pago-contenido {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.forma-pago-detalle strong,
+.vendedor-detalle strong {
+  color: #374151;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.forma-pago-detalle .badge,
+.vendedor-detalle .badge {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.forma-pago-detalle .badge-primary {
+  background: linear-gradient(135deg, #dbeafe 0%, #3b82f6 100%);
+  color: #1e40af;
+  border: 1px solid #2563eb;
+}
+
+.vendedor-detalle .badge-info {
+  background: linear-gradient(135deg, #f0f9ff 0%, #0ea5e9 100%);
+  color: #0c4a6e;
+  border: 1px solid #0284c7;
+}
+
+.sage-info {
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sage-info small {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Utilidades Bootstrap-like */
+.d-flex {
+  display: flex !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.gap-2 {
+  gap: 8px !important;
+}
+
+.mb-1 {
+  margin-bottom: 4px !important;
+}
+
+.mb-2 {
+  margin-bottom: 8px !important;
+}
+
+.mt-2 {
+  margin-top: 8px !important;
+}
+
+.text-muted {
+  color: #6b7280 !important;
+}
+
+.alert {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 30%);
+  color: #92400e;
+  border-color: #f59e0b;
+}
