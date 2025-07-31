@@ -8,6 +8,7 @@ import ClientesMantenimiento from './ClientesMantenimiento';
 import HistorialPedidosClientes from './HistorialPedidosClientes';
 import PedidosBorrador from './PedidosBorrador';
 import HistorialDevoluciones from './HistorialDevoluciones';
+import MantenimientoSage from './MantenimientoSage';
 
 const USUARIOS = [
   { nombre: 'Amaya', pin: 'Amaya' },
@@ -76,6 +77,7 @@ export default function App() {
         <button onClick={()=>setTab('mantenimiento')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='mantenimiento'?'#1976d2':'#fff',color:tab==='mantenimiento'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Clientes</button>
         <button onClick={()=>setMostrarHistorial(m=>!m)} style={{padding:'8px 18px',border:'none',borderRadius:6,background:mostrarHistorial?'#1976d2':'#fff',color:mostrarHistorial?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Historial pedidos clientes</button>
         <button onClick={()=>setTab('devoluciones')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='devoluciones'?'#1976d2':'#fff',color:tab==='devoluciones'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Historial Devoluciones</button>
+        <button onClick={()=>setTab('mantenimientosage')} style={{padding:'8px 18px',border:'none',borderRadius:6,background:tab==='mantenimientosage'?'#1976d2':'#fff',color:tab==='mantenimientosage'?'#fff':'#1976d2',fontWeight:700,transition:'all .2s'}}>Mantenimiento SAGE</button>
         <button 
           onClick={() => {
             // Si ya está logueado, acceso directo
@@ -123,6 +125,7 @@ export default function App() {
                   {/* {tab==='woo' && <PedidosWoo />} */}
                   {tab==='sage' && <IntegracionSage />}
                   {tab==='devoluciones' && <HistorialDevoluciones />}
+                  {tab==='mantenimientosage' && <MantenimientoSage />}
                 </>
               )
             )}

@@ -30,6 +30,10 @@ const pedidosClientesController = require('./pedidosClientesController');
 const pedidosLotesController = require('./pedidosLotesController'); // Controlador de pedidos de cestas/lotes
 const sageController = require('./sageController'); // Controlador para Sage 50
 const clientesController = require('./clientesController'); // Controlador de clientes
+const Vendedor = require('./models/Vendedor');
+const FormaPago = require('./models/FormaPago');
+const ProductoSage = require('./models/ProductoSage');
+const Almacen = require('./models/Almacen');
 
 const app = express();
 const server = http.createServer(app); // Usar solo HTTP, compatible con Render
@@ -413,106 +417,148 @@ app.post('/api/clientes/migrar-schema', async (req, res) => {
   }
 });
 
-// Endpoint administrativo para corregir índices problemáticos en lotes
-app.post('/api/admin/corregir-indice-lotes', async (req, res) => {
+// --- ENDPOINTS Vendedores ---
+app.get('/api/vendedores', async (req, res) => {
   try {
-    console.log('[ADMIN] 🔧 Iniciando corrección de índices en colección lotes...');
-    
-    // Acceder directamente a la colección MongoDB nativa
-    const coleccionLotes = mongoose.connection.collection('lotes');
-    
-    // 1. Obtener información sobre índices existentes
-    const indicesExistentes = await coleccionLotes.indexes();
-    console.log('[ADMIN] 📋 Índices existentes:', indicesExistentes.map(idx => ({
-      name: idx.name,
-      key: idx.key,
-      unique: idx.unique
-    })));
-    
-    // 2. Buscar el índice problemático
-    const indiceProblematicoNombre = 'producto_1_codigo_1_ubicacion_1';
-    const indiceProblematicoExiste = indicesExistentes.find(idx => idx.name === indiceProblematicoNombre);
-    
-    if (indiceProblematicoExiste) {
-      console.log('[ADMIN] ❌ Encontrado índice problemático:', indiceProblematicoNombre);
-      
-      // 3. Eliminar el índice problemático
-      try {
-        await coleccionLotes.dropIndex(indiceProblematicoNombre);
-        console.log('[ADMIN] ✅ Índice problemático eliminado exitosamente');
-      } catch (dropError) {
-        if (dropError.code === 27) { // IndexNotFound
-          console.log('[ADMIN] ℹ️ El índice ya no existe');
-        } else {
-          throw dropError;
-        }
-      }
-    } else {
-      console.log('[ADMIN] ✅ El índice problemático no existe (ya fue eliminado)');
-    }
-    
-    // 4. Verificar que los índices necesarios existen
-    const indicesNecesarios = [
-      { key: { producto: 1 }, name: 'producto_1' },
-      { key: { codigo: 1 }, name: 'codigo_1' },
-      { key: { ubicacion: 1 }, name: 'ubicacion_1' }
-    ];
-    
-    for (const indiceRequerido of indicesNecesarios) {
-      const existe = indicesExistentes.find(idx => idx.name === indiceRequerido.name);
-      if (!existe) {
-        try {
-          await coleccionLotes.createIndex(indiceRequerido.key, { name: indiceRequerido.name });
-          console.log(`[ADMIN] ✅ Creado índice requerido: ${indiceRequerido.name}`);
-        } catch (createError) {
-          console.log(`[ADMIN] ℹ️ Índice ${indiceRequerido.name} ya existe o no es necesario crear`);
-        }
-      } else {
-        console.log(`[ADMIN] ✅ Índice requerido ya existe: ${indiceRequerido.name}`);
-      }
-    }
-    
-    // 5. Obtener información actualizada de índices
-    const indicesFinales = await coleccionLotes.indexes();
-    console.log('[ADMIN] 🎯 Índices finales:', indicesFinales.map(idx => ({
-      name: idx.name,
-      key: idx.key,
-      unique: idx.unique
-    })));
-    
-    console.log('[ADMIN] ✅ Corrección de índices completada');
-    
-    res.json({
-      ok: true,
-      mensaje: 'Corrección de índices completada exitosamente',
-      indicesEliminados: indiceProblematicoExiste ? [indiceProblematicoNombre] : [],
-      indicesFinales: indicesFinales.length,
-      timestamp: new Date().toISOString()
-    });
-    
-  } catch (error) {
-    console.error('[ADMIN] ❌ Error durante la corrección de índices:', error);
-    res.status(500).json({ 
-      ok: false, 
-      error: 'Error durante la corrección de índices de lotes',
-      detalles: error.message,
-      timestamp: new Date().toISOString()
-    });
+    const vendedores = await Vendedor.find();
+    res.json(vendedores);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/vendedores', async (req, res) => {
+  try {
+    const vendedor = new Vendedor(req.body);
+    await vendedor.save();
+    res.status(201).json(vendedor);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.put('/api/vendedores/:id', async (req, res) => {
+  try {
+    const vendedor = await Vendedor.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!vendedor) return res.status(404).json({ error: 'Vendedor no encontrado' });
+    res.json(vendedor);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.delete('/api/vendedores/:id', async (req, res) => {
+  try {
+    await Vendedor.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
-app.get('/api/productos-woo', async (req, res) => {
-  const ProductoWoo = require('./models/ProductoWoo');
-  const productos = await ProductoWoo.find();
-  res.json(productos);
-});
-app.put('/api/productos-woo', async (req, res) => {
-  const ProductoWoo = require('./models/ProductoWoo');
-  const { productos } = req.body;
-  for (const producto of productos) {
-    await ProductoWoo.findByIdAndUpdate(producto._id, producto);
+// --- ENDPOINTS Formas de Pago ---
+app.get('/api/formas-pago', async (req, res) => {
+  try {
+    const formas = await FormaPago.find();
+    res.json(formas);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({ message: 'Productos actualizados' });
+});
+app.post('/api/formas-pago', async (req, res) => {
+  try {
+    const forma = new FormaPago(req.body);
+    await forma.save();
+    res.status(201).json(forma);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.put('/api/formas-pago/:id', async (req, res) => {
+  try {
+    const forma = await FormaPago.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!forma) return res.status(404).json({ error: 'Forma de pago no encontrada' });
+    res.json(forma);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.delete('/api/formas-pago/:id', async (req, res) => {
+  try {
+    await FormaPago.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS Productos Sage ---
+app.get('/api/productos-sage', async (req, res) => {
+  try {
+    const productos = await ProductoSage.find();
+    res.json(productos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/productos-sage', async (req, res) => {
+  try {
+    const producto = new ProductoSage(req.body);
+    await producto.save();
+    res.status(201).json(producto);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.put('/api/productos-sage/:id', async (req, res) => {
+  try {
+    const producto = await ProductoSage.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json(producto);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.delete('/api/productos-sage/:id', async (req, res) => {
+  try {
+    await ProductoSage.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- ENDPOINTS Almacenes ---
+app.get('/api/almacenes', async (req, res) => {
+  try {
+    const almacenes = await Almacen.find();
+    res.json(almacenes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/almacenes', async (req, res) => {
+  try {
+    const almacen = new Almacen(req.body);
+    await almacen.save();
+    res.status(201).json(almacen);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.put('/api/almacenes/:id', async (req, res) => {
+  try {
+    const almacen = await Almacen.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!almacen) return res.status(404).json({ error: 'Almacén no encontrado' });
+    res.json(almacen);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+app.delete('/api/almacenes/:id', async (req, res) => {
+  try {
+    await Almacen.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // --- ENDPOINTS REST ORIGINALES (DEPRECATED, SOLO PARA COMPATIBILIDAD TEMPORAL) ---
@@ -1607,6 +1653,7 @@ app.delete('/api/proveedores/:id', async (req, res) => {
     // res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: err.message });
+
   }
 });
 // --- FIN ENDPOINTS DE PROVEEDORES ---

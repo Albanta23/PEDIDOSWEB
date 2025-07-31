@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
-import ImportarClientes from './ImportarClientes'; // Importar el nuevo componente
+import ImportarClientes from './ImportarClientes';
 import { obtenerNombreCompleto } from '../utils/clienteUtils';
+import { ProductosSageProvider, useProductosSage } from './components/ProductosSageContext';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
@@ -24,6 +25,8 @@ function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion })
       onPedidoCreado={onPedidoCreado}
       clienteInicial={datosReutilizacion?.cliente}
       lineasIniciales={datosReutilizacion?.lineasOriginales}
+      productosSage={datosReutilizacion?.productosSage}
+      cargandoProductosSage={datosReutilizacion?.cargandoProductosSage}
     />
   );
 }
@@ -46,6 +49,19 @@ export default function ClientesMantenimiento() {
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroProducto, setFiltroProducto] = useState('');
   const [pedidosFiltrados, setPedidosFiltrados] = useState([]);
+  // Productos SAGE para el editor de pedidos
+  const [productosSage, setProductosSage] = useState([]);
+  const [cargandoProductosSage, setCargandoProductosSage] = useState(true);
+  useEffect(() => {
+    let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+    if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+    const PRODUCTOS_SAGE_API_ENDPOINT = `${apiUrl}/productos-sage`;
+    setCargandoProductosSage(true);
+    axios.get(PRODUCTOS_SAGE_API_ENDPOINT)
+      .then(res => setProductosSage(res.data))
+      .catch(() => setProductosSage([]))
+      .finally(() => setCargandoProductosSage(false));
+  }, []);
   
   // Estados para gestión de cestas de navidad
   const [estadisticasCestas, setEstadisticasCestas] = useState(null);
@@ -2050,7 +2066,11 @@ export default function ClientesMantenimiento() {
       {mostrarEditorPedidos && (
         <PedidosClientesConReutilizacion 
           onPedidoCreado={cerrarEditorPedidos}
-          datosReutilizacion={datosReutilizacion}
+          datosReutilizacion={{
+            ...datosReutilizacion,
+            productosSage,
+            cargandoProductosSage
+          }}
         />
       )}
 

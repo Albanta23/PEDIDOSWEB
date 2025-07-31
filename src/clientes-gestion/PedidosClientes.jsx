@@ -10,7 +10,7 @@ import { obtenerNombreCompleto } from '../utils/clienteUtils';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 
-export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales, pedidoId }) {
+export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineasIniciales, pedidoId, productosSage, cargandoProductosSage }) {
   const [clientes, setClientes] = useState([]);
   const [pedidoInicial, setPedidoInicial] = useState(null);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(clienteInicial || null);
@@ -35,7 +35,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     [{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', precioUnitario: 0, iva: 0, descuento: 0, subtotal: 0 }]
   );
   const [mensaje, setMensaje] = useState('');
-  const { productos, cargando } = useProductos();
+  // Usar solo productosSage si se pasan como prop, si no, lista vacía
+  let productos = Array.isArray(productosSage) ? productosSage : [];
+  let cargando = cargandoProductosSage;
   const [productoValido, setProductoValido] = useState([]);
   const [mensajeError, setMensajeError] = useState([]);
   const [testBackendMsg, setTestBackendMsg] = useState('');
@@ -129,7 +131,8 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   useEffect(() => {
     setProductoValido(lineas.map(l => !!l.producto));
     setMensajeError(lineas.map(() => ''));
-  }, [lineas, productos]);
+    // Solo depender de lineas, no de productos, para evitar bucle infinito
+  }, [lineas]);
 
   const handleLineaChange = (idx, campo, valor) => {
     const lineasActualizadas = lineas.map((l, i) => {
@@ -518,12 +521,13 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     style={{
                       padding: '10px 14px',
                       cursor: 'pointer',
-                      borderBottom: index < clientesFiltrados.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      border: 'none',
                       transition: 'background-color 0.2s ease',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
-                      color: '#2c3e50'
+                      color: '#2c3e50',
+                      ...(index < clientesFiltrados.length - 1 ? { borderBottom: '1px solid #f1f5f9' } : {})
                     }}
                     onMouseEnter={e => e.target.style.background = '#f8fafc'}
                     onMouseLeave={e => e.target.style.background = 'transparent'}
@@ -867,7 +871,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                 }}>
                   <div style={{ position: 'relative' }}>
                     <input
-                      list="productos-lista-global"
+                      list={`productos-sage-lista-global-${idx}`}
                       value={linea.producto}
                       onChange={e => handleLineaChange(idx, 'producto', e.target.value)}
                       onKeyDown={e => {
@@ -875,7 +879,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                           handleProductoBlur(idx, e.target.value);
                         }
                       }}
-                      placeholder="🔍 Buscar producto..."
+                      placeholder={cargando ? 'Cargando productos SAGE...' : '🔍 Buscar producto SAGE...'}
                       style={{ 
                         padding: '14px 18px', 
                         width: '100%', 
@@ -896,12 +900,25 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                         handleProductoBlur(idx, e.target.value);
                       }}
                     />
-                    <datalist id="productos-lista-global">
-                      {productos.map(prod => (
-                        <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                          {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
-                        </option>
-                      ))}
+                    <datalist id={`productos-sage-lista-global-${idx}`}>
+                      {cargando ? (
+                        <option value="Cargando productos SAGE..." />
+                      ) : (
+                        productos
+                          .filter(prod => {
+                            const inputValue = (linea.producto || '').trim().toLowerCase();
+                            if (!inputValue || inputValue.length < 3) return false;
+                            return (
+                              (prod.nombre && prod.nombre.toLowerCase().includes(inputValue)) ||
+                              (prod.referencia && String(prod.referencia).toLowerCase().includes(inputValue))
+                            );
+                          })
+                          .map(prod => (
+                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
+                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                            </option>
+                          ))
+                      )}
                     </datalist>
                   </div>
                   
@@ -1219,7 +1236,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
           borderRadius: '20px 20px 0 0',
           textAlign: 'center',
           border: puedeCrear ? '3px solid rgba(37, 99, 235, 0.4)' : '3px solid #dee2e6',
-          borderBottom: 'none',
+          // borderBottom eliminado porque border ya lo cubre
           position: 'fixed',
           bottom: '0',
           left: '0',
@@ -1282,6 +1299,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
               textAlign: 'left', 
               margin: '0 0 16px 0',
               color: '#334155',
+              // borderBottom solo aquí, no se define border en este h3
               borderBottom: '1px solid #cbd5e1',
               paddingBottom: '8px',
               fontSize: '18px',
