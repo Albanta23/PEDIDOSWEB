@@ -1158,11 +1158,11 @@ export default function ClientesMantenimiento() {
                               fontSize: '16px',
                               fontWeight: '700'
                             }}>
-                              {c.nombre.charAt(0).toUpperCase()}
+                              {obtenerNombreCompleto(c).charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <div style={{ fontSize: '16px', fontWeight: '700', color: '#2c3e50' }}>
-                                {c.nombre}
+                                {obtenerNombreCompleto(c)}
                               </div>
                               {c.email && (
                                 <div style={{ fontSize: '12px', color: '#7f8c8d', marginTop: '2px' }}>
@@ -1889,7 +1889,7 @@ export default function ClientesMantenimiento() {
                 <h4 style={{ margin: '0 0 15px 0', color: '#495057', fontSize: '16px', fontWeight: '700' }}>📧 Información de Contacto</h4>
                 <div style={{ marginBottom: '10px' }}>
                   <strong style={{ color: '#2c3e50' }}>Nombre:</strong>
-                  <span style={{ marginLeft: '10px', color: '#495057' }}>{clienteEdit.nombre}</span>
+                  <span style={{ marginLeft: '10px', color: '#495057' }}>{obtenerNombreCompleto(clienteEdit)}</span>
                 </div>
                 <div style={{ marginBottom: '10px' }}>
                   <strong style={{ color: '#2c3e50' }}>Email:</strong>

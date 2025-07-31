@@ -92,9 +92,16 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
 
   const cancelarPedido = async (pedido) => {
     if (!window.confirm('¿Seguro que quieres cancelar este pedido?')) return;
-    setCancelandoId(pedido._id);
+    
+    const pedidoId = pedido._id || pedido.id;
+    if (!pedidoId) {
+      alert('Error: No se puede obtener el ID del pedido');
+      return;
+    }
+    
+    setCancelandoId(pedidoId);
     try {
-      await axios.put(`${API_URL_CORRECTO}/pedidos-clientes/${pedido._id}`, {
+      await axios.put(`${API_URL_CORRECTO}/pedidos-clientes/${pedidoId}`, {
         ...pedido,
         estado: 'cancelado',
         usuarioTramitando: 'usuario',
@@ -123,8 +130,31 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       setPedidosAbiertos(pedidosFiltrados.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
       setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
     } catch (e) {
+      console.error('Error al cancelar el pedido:', e);
       setCancelandoId(null);
-      alert('Error al cancelar el pedido');
+      
+      // Manejo más específico de errores
+      if (e.response) {
+        // El servidor respondió con un código de error
+        const status = e.response.status;
+        const message = e.response.data?.message || e.response.data?.error || 'Error desconocido';
+        
+        if (status === 404) {
+          alert('Error: El pedido no existe o ya fue eliminado');
+        } else if (status === 400) {
+          alert(`Error de solicitud: ${message}`);
+        } else if (status === 500) {
+          alert('Error interno del servidor. Intenta de nuevo más tarde.');
+        } else {
+          alert(`Error ${status}: ${message}`);
+        }
+      } else if (e.request) {
+        // La solicitud se hizo pero no hubo respuesta
+        alert('Error de conexión: No se pudo contactar con el servidor');
+      } else {
+        // Algo pasó al configurar la solicitud
+        alert(`Error inesperado: ${e.message}`);
+      }
     }
   };
 
@@ -147,132 +177,18 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       .then(res => {
         const pedidos = res.data || [];
         
-        // 🧪 DATOS DE PRUEBA TEMPORALES PARA PROBAR DIRECCIONES DE ENVÍO
-        const pedidosPrueba = [
-          {
-            _id: 'test-envio-alternativo-001',
-            numeroPedido: 'TEST-2025-001',
-            clienteNombre: 'Cliente Prueba Envío Alternativo',
-            clienteNif: '12345678A',
-            telefono: '911234567',
-            direccion: 'Calle Facturación 123',
-            codigoPostal: '28001',
-            poblacion: 'Madrid',
-            provincia: 'Madrid',
-            estado: 'en_preparacion',
-            fechaPedido: new Date().toISOString(),
-            usuarioTramitando: 'operario_test',
-            bultos: 2,
-            
-            // ⭐ DATOS NUEVOS DE ENVÍO ALTERNATIVO
-            datosEnvioWoo: {
-              esEnvioAlternativo: true,
-              nombre: 'María López Destinataria',
-              empresa: 'Oficinas Centrales S.L.',
-              direccion1: 'Avenida del Envío 456',
-              direccion2: 'Oficina 301 - 3ª Planta',
-              codigoPostal: '28080',
-              ciudad: 'Madrid',
-              provincia: 'Madrid',
-              telefono: '917654321',
-              pais: 'ES'
-            },
-            
-            // ⭐ DATOS NUEVOS DE FORMA DE PAGO
-            datosWooCommerce: {
-              formaPago: {
-                titulo: 'Transferencia Bancaria',
-                codigo: '01',
-                metodo: 'bacs'
-              },
-              vendedor: 'Tienda Online'
-            },
-            
-            formaPago: 'Transferencia Bancaria',
-            vendedor: 'Tienda Online',
-            
-            lineas: [
-              {
-                producto: 'Producto Test Envío Alternativo',
-                cantidad: 2,
-                formato: 'ud',
-                peso: 1.5,
-                lote: 'L2025001',
-                comentario: 'Producto especial para prueba'
-              },
-              {
-                esComentario: true,
-                comentario: 'IMPORTANTE: Entregar en horario de oficina (9:00-17:00)'
-              }
-            ],
-            
-            historialEstados: [
-              {
-                estado: 'en_espera',
-                usuario: 'operario_test',
-                fecha: new Date(Date.now() - 3600000).toISOString(),
-                tipo: 'estado'
-              },
-              {
-                estado: 'en_preparacion',
-                usuario: 'operario_test',
-                fecha: new Date().toISOString(),
-                tipo: 'estado'
-              }
-            ]
-          },
-          {
-            _id: 'test-normal-002',
-            numeroPedido: 'TEST-2025-002',
-            clienteNombre: 'Cliente Prueba Normal',
-            clienteNif: '87654321B',
-            telefono: '983111222',
-            direccion: 'Plaza Mayor 1',
-            codigoPostal: '47001',
-            poblacion: 'Valladolid',
-            provincia: 'Valladolid',
-            estado: 'preparado',
-            fechaPedido: new Date().toISOString(),
-            usuarioTramitando: 'operario_test',
-            bultos: 1,
-            
-            // Sin envío alternativo
-            datosEnvioWoo: {
-              esEnvioAlternativo: false
-            },
-            
-            formaPago: 'Contra reembolso',
-            vendedor: 'Mostrador',
-            
-            lineas: [
-              {
-                producto: 'Producto Test Normal',
-                cantidad: 1,
-                formato: 'kg',
-                peso: 0.5
-              }
-            ],
-            
-            historialEstados: [
-              {
-                estado: 'en_espera',
-                usuario: 'operario_test',
-                fecha: new Date(Date.now() - 7200000).toISOString(),
-                tipo: 'estado'
-              },
-              {
-                estado: 'preparado',
-                usuario: 'operario_test',
-                fecha: new Date().toISOString(),
-                tipo: 'estado'
-              }
-            ]
-          }
-        ];
-        
-        // Combinar pedidos reales con pedidos de prueba
-        const todosPedidos = [...pedidosPrueba, ...pedidos];
-        const pedidosFiltrados = todosPedidos.filter(p => !p.enHistorialDevoluciones);
+        // Filtrar pedidos de WooCommerce antiguos (anteriores al 24/07/2025)
+        const fechaCorte = new Date('2025-07-24T00:00:00.000Z');
+        const pedidosFiltrados = pedidos.filter(pedido => {
+          // Si está en historial de devoluciones, filtrarlo
+          if (pedido.enHistorialDevoluciones) return false;
+          
+          // Si no es de WooCommerce, mantenerlo
+          if (pedido.origen?.tipo !== 'woocommerce') return true;
+          // Si es de WooCommerce, solo mantener los posteriores al 24/07/2025
+          const fechaPedido = new Date(pedido.fechaPedido);
+          return fechaPedido >= fechaCorte;
+        });
 
         if (soloPreparados) {
           setPedidosAbiertos([]);
@@ -645,34 +561,34 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
                             </button>
                             <button 
                               onClick={()=>cancelarPedido(p)} 
-                              disabled={cancelandoId===p._id}
+                              disabled={cancelandoId===(p._id || p.id)}
                               style={{
                                 padding: '8px 16px',
-                                background: cancelandoId===p._id ? '#94a3b8' : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                                background: cancelandoId===(p._id || p.id) ? '#94a3b8' : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '8px',
                                 fontWeight: '600',
                                 fontSize: '12px',
-                                cursor: cancelandoId===p._id ? 'not-allowed' : 'pointer',
-                                opacity: cancelandoId===p._id ? 0.7 : 1,
+                                cursor: cancelandoId===(p._id || p.id) ? 'not-allowed' : 'pointer',
+                                opacity: cancelandoId===(p._id || p.id) ? 0.7 : 1,
                                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                                 boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)'
                               }}
                               onMouseEnter={e => {
-                                if (cancelandoId!==p._id) {
+                                if (cancelandoId!==(p._id || p.id)) {
                                   e.target.style.transform = 'translateY(-2px)';
                                   e.target.style.boxShadow = '0 4px 16px rgba(255, 107, 107, 0.4)';
                                 }
                               }}
                               onMouseLeave={e => {
-                                if (cancelandoId!==p._id) {
+                                if (cancelandoId!==(p._id || p.id)) {
                                   e.target.style.transform = 'translateY(0)';
                                   e.target.style.boxShadow = '0 2px 8px rgba(255, 107, 107, 0.3)';
                                 }
                               }}
                             >
-                              {cancelandoId===p._id ? '⏳ Cancelando...' : '❌ Cancelar'}
+                              {cancelandoId===(p._id || p.id) ? '⏳ Cancelando...' : '❌ Cancelar'}
                             </button>
                           </div>
                         </td>
