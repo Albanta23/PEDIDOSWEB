@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useProductos } from '../components/ProductosContext';
 import { FORMATOS_PEDIDO } from '../configFormatos';
 import { formatearDireccionCompleta } from './utils/formatDireccion';
 import { FaUndo, FaExclamationTriangle } from 'react-icons/fa';
@@ -35,9 +34,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     [{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', precioUnitario: 0, iva: 0, descuento: 0, subtotal: 0 }]
   );
   const [mensaje, setMensaje] = useState('');
-  // Usar solo productosSage si se pasan como prop, si no, lista vacía
-  let productos = Array.isArray(productosSage) ? productosSage : [];
-  let cargando = cargandoProductosSage;
+  // Usar los productos SAGE que se pasan como prop, en lugar de un contexto interno
+  const productos = productosSage || [];
+  const cargando = cargandoProductosSage || false;
   const [productoValido, setProductoValido] = useState([]);
   const [mensajeError, setMensajeError] = useState([]);
   const [testBackendMsg, setTestBackendMsg] = useState('');
@@ -295,12 +294,23 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     }
   };
 
-  // Autocompletar producto por referencia
+  // Autocompletar producto por código o referencia SAGE
   const handleProductoBlur = (idx, valor) => {
     const valNorm = valor.trim().toLowerCase();
-    const prod = productos.find(p => p.referencia && String(p.referencia).toLowerCase() === valNorm);
+    
+    // Buscar por código SAGE, referencia o código alternativo
+    const prod = productos.find(p => 
+      (p.codigo && String(p.codigo).toLowerCase() === valNorm) ||
+      (p.codigoSage && String(p.codigoSage).toLowerCase() === valNorm) ||
+      (p.referencia && String(p.referencia).toLowerCase() === valNorm)
+    );
+    
     if (prod) {
       handleLineaChange(idx, 'producto', prod.nombre);
+      // Si encontramos el producto, también podemos establecer el precio si está disponible
+      if (prod.precio) {
+        handleLineaChange(idx, 'precioUnitario', Number(prod.precio));
+      }
     }
   };
 
@@ -521,7 +531,6 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     style={{
                       padding: '10px 14px',
                       cursor: 'pointer',
-                      border: 'none',
                       transition: 'background-color 0.2s ease',
                       display: 'flex',
                       alignItems: 'center',
@@ -869,7 +878,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                   boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
                   transition: 'all 0.3s ease'
                 }}>
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <input
                       list={`productos-sage-lista-global-${idx}`}
                       value={linea.producto}
@@ -879,20 +888,20 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                           handleProductoBlur(idx, e.target.value);
                         }
                       }}
+                      onFocus={e => {
+                        e.target.style.borderColor = '#4facfe';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
+                      }}
                       placeholder={cargando ? 'Cargando productos SAGE...' : '🔍 Buscar producto SAGE...'}
-                      style={{ 
-                        padding: '14px 18px', 
-                        width: '100%', 
-                        border: '2px solid #e2e8f0', 
-                        borderRadius: '10px', 
+                      style={{
+                        padding: '14px 18px',
+                        width: '100%',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '10px',
                         background: '#fff',
                         fontSize: '16px',
                         outline: 'none',
                         transition: 'border-color 0.3s ease, box-shadow 0.3s ease'
-                      }}
-                      onFocus={e => {
-                        e.target.style.borderColor = '#4facfe';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(79, 172, 254, 0.1)';
                       }}
                       onBlur={e => {
                         e.target.style.borderColor = '#e2e8f0';
@@ -903,21 +912,22 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                     <datalist id={`productos-sage-lista-global-${idx}`}>
                       {cargando ? (
                         <option value="Cargando productos SAGE..." />
-                      ) : (
-                        productos
-                          .filter(prod => {
-                            const inputValue = (linea.producto || '').trim().toLowerCase();
-                            if (!inputValue || inputValue.length < 3) return false;
-                            return (
-                              (prod.nombre && prod.nombre.toLowerCase().includes(inputValue)) ||
-                              (prod.referencia && String(prod.referencia).toLowerCase().includes(inputValue))
-                            );
-                          })
-                          .map(prod => (
-                            <option key={prod._id || prod.referencia || prod.nombre} value={prod.nombre}>
-                              {prod.nombre} {prod.referencia ? `(${prod.referencia})` : ''}
+                      ) : productos && productos.length > 0 ? (
+                        productos.map(prod => {
+                          if (!prod) return null;
+                          const nombre = prod.nombre || '';
+                          const codigo = prod.codigo || prod.codigoSage || '';
+                          return (
+                            <option 
+                              key={prod._id || prod.codigo || prod.nombre || Math.random()} 
+                              value={nombre}
+                            >
+                              {nombre} {codigo ? `(${codigo})` : ''}
                             </option>
-                          ))
+                          );
+                        }).filter(Boolean)
+                      ) : (
+                        <option value="No hay productos disponibles" disabled />
                       )}
                     </datalist>
                   </div>

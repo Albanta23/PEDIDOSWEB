@@ -6,6 +6,8 @@ const AlmacenSchema = new mongoose.Schema({
   direccion: { type: String },
   telefono: { type: String },
   activo: { type: Boolean, default: true }
+}, {
+  collection: 'almacens' // Especifica el nombre correcto de la colección
 });
 
 module.exports = mongoose.model('Almacen', AlmacenSchema);

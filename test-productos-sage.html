@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Productos SAGE</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .producto-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .producto-codigo {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .producto-nombre {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ff9999;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #e6ffe6;
+            border: 1px solid #99ff99;
+            color: #008800;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stats {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛒 Prueba de Productos SAGE</h1>
+    <p>Esta página prueba la conexión con el backend y la carga de productos SAGE.</p>
+    
+    <div id="status"></div>
+    
+    <input type="text" id="searchInput" placeholder="🔍 Buscar productos..." style="display: none;">
+    
+    <div id="contenido">
+        <div class="loading">
+            <h3>Cargando productos SAGE...</h3>
+            <p>Conectando con el backend...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev/api';
+        const statusDiv = document.getElementById('status');
+        const contenidoDiv = document.getElementById('contenido');
+        const searchInput = document.getElementById('searchInput');
+        
+        let todosLosProductos = [];
+        
+        async function cargarProductosSage() {
+            try {
+                console.log('Cargando productos desde:', API_URL + '/productos-sage');
+                
+                const response = await fetch(API_URL + '/productos-sage');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const productos = await response.json();
+                todosLosProductos = productos;
+                
+                statusDiv.innerHTML = `
+                    <div class="success">
+                        ✅ <strong>Conexión exitosa!</strong> Se cargaron ${productos.length} productos SAGE.
+                    </div>
+                    <div class="stats">
+                        <strong>📊 Estadísticas:</strong><br>
+                        • Total de productos: ${productos.length}<br>
+                        • Productos con código SAGE: ${productos.filter(p => p.codigoSage).length}<br>
+                        • Productos activos: ${productos.filter(p => p.activo).length}<br>
+                        • Endpoint: ${API_URL}/productos-sage
+                    </div>
+                `;
+                
+                mostrarProductos(productos);
+                searchInput.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error al cargar productos:', error);
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>Error de conexión:</strong> ${error.message}<br>
+                        <small>URL: ${API_URL}/productos-sage</small>
+                    </div>
+                `;
+                contenidoDiv.innerHTML = `
+                    <div class="error">
+                        <h3>No se pudieron cargar los productos</h3>
+                        <p>Verifica que el backend esté ejecutándose en:</p>
+                        <p><strong>${API_URL}</strong></p>
+                    </div>
+                `;
+            }
+        }
+        
+        function mostrarProductos(productos) {
+            if (productos.length === 0) {
+                contenidoDiv.innerHTML = '<p>No se encontraron productos.</p>';
+                return;
+            }
+            
+            const productosHtml = productos.map(producto => `
+                <div class="producto-card">
+                    <div class="producto-codigo">
+                        📦 ${producto.codigo || 'Sin código'}
+                        ${producto.codigoSage ? ` (SAGE: ${producto.codigoSage})` : ''}
+                    </div>
+                    <div class="producto-nombre">${producto.nombre || 'Sin nombre'}</div>
+                    <div style="font-size: 12px; color: #666;">
+                        ${producto.activo ? '✅ Activo' : '❌ Inactivo'}
+                        ${producto.precio ? ` • €${producto.precio}` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            contenidoDiv.innerHTML = `<div class="productos-grid">${productosHtml}</div>`;
+        }
+        
+        function filtrarProductos(termino) {
+            const terminoLower = termino.toLowerCase();
+            const productosFiltrados = todosLosProductos.filter(producto => 
+                (producto.nombre && producto.nombre.toLowerCase().includes(terminoLower)) ||
+                (producto.codigo && producto.codigo.toLowerCase().includes(terminoLower)) ||
+                (producto.codigoSage && producto.codigoSage.toLowerCase().includes(terminoLower))
+            );
+            mostrarProductos(productosFiltrados);
+        }
+        
+        searchInput.addEventListener('input', (e) => {
+            filtrarProductos(e.target.value);
+        });
+        
+        // Cargar productos al inicio
+        cargarProductosSage();
+    </script>
+</body>
+</html>

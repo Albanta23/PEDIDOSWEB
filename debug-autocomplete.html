@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Autocomplete SAGE</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            font-size: 16px; 
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info { 
+            background: #e3f2fd; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 10px 0;
+        }
+        .error { 
+            background: #ffebee; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 10px 0;
+            color: #c62828;
+        }
+        .success { 
+            background: #e8f5e8; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 10px 0;
+            color: #2e7d32;
+        }
+        .productos-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Autocomplete SAGE Products</h1>
+    
+    <div class="debug-container">
+        <h3>1. Test API Connectivity</h3>
+        <button onclick="testAPI()">🌐 Test Backend API</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="debug-container">
+        <h3>2. Test Autocomplete</h3>
+        <label>Escribe para buscar productos:</label>
+        <input list="productos-test" id="test-input" placeholder="Escribe aquí..." oninput="debugInput()">
+        <datalist id="productos-test">
+            <!-- Se llenarán dinámicamente -->
+        </datalist>
+        <div id="input-debug"></div>
+    </div>
+
+    <div class="debug-container">
+        <h3>3. Lista de Productos Cargados</h3>
+        <div id="productos-info">No cargados aún</div>
+        <div id="productos-list" class="productos-list"></div>
+    </div>
+
+    <script>
+        let productosGlobal = [];
+        
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="info">🔄 Probando conexión...</div>';
+            
+            try {
+                const apiUrl = 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev/api/productos-sage';
+                console.log('Testing API:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                productosGlobal = data;
+                
+                console.log('API Response:', data);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ API funciona correctamente<br>
+                        📊 Total productos: ${data.length}<br>
+                        🔗 URL: ${apiUrl}
+                    </div>
+                `;
+                
+                // Llenar el datalist
+                const datalist = document.getElementById('productos-test');
+                datalist.innerHTML = '';
+                
+                data.slice(0, 50).forEach(prod => { // Solo los primeros 50 para test
+                    const option = document.createElement('option');
+                    option.value = prod.nombre || '';
+                    option.textContent = `${prod.nombre} (${prod.codigo || prod.codigoSage || 'Sin código'})`;
+                    datalist.appendChild(option);
+                });
+                
+                // Mostrar info de productos
+                document.getElementById('productos-info').innerHTML = `
+                    <div class="success">
+                        📦 ${data.length} productos cargados correctamente<br>
+                        🎯 Primeros 50 añadidos al datalist para test
+                    </div>
+                `;
+                
+                // Mostrar lista de productos
+                const listaDiv = document.getElementById('productos-list');
+                listaDiv.innerHTML = data.slice(0, 20).map(prod => 
+                    `<div>📦 ${prod.nombre} - Código: ${prod.codigo || prod.codigoSage || 'N/A'}</div>`
+                ).join('');
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Error de conexión: ${error.message}<br>
+                        🔗 URL probada: https://fantastic-space-rotary-phone-gg649p44xjr29wwg-10001.app.github.dev/api/productos-sage
+                    </div>
+                `;
+            }
+        }
+        
+        function debugInput() {
+            const input = document.getElementById('test-input');
+            const debugDiv = document.getElementById('input-debug');
+            
+            debugDiv.innerHTML = `
+                <div class="info">
+                    🔤 Valor actual: "${input.value}"<br>
+                    📝 Longitud: ${input.value.length}<br>
+                    🎯 Datalist ID: ${input.getAttribute('list')}<br>
+                    📊 Productos disponibles: ${productosGlobal.length}<br>
+                    ${input.value.length > 0 ? `🔍 Coincidencias: ${buscarCoincidencias(input.value)}` : ''}
+                </div>
+            `;
+        }
+        
+        function buscarCoincidencias(texto) {
+            if (!texto || productosGlobal.length === 0) return 0;
+            
+            const coincidencias = productosGlobal.filter(prod => {
+                const nombre = (prod.nombre || '').toLowerCase();
+                const codigo = (prod.codigo || prod.codigoSage || '').toLowerCase();
+                const busqueda = texto.toLowerCase();
+                return nombre.includes(busqueda) || codigo.includes(busqueda);
+            });
+            
+            return coincidencias.length;
+        }
+        
+        // Cargar productos automáticamente al cargar la página
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

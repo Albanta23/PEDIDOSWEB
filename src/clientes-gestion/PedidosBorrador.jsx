@@ -17,6 +17,11 @@ export default function PedidosBorrador() {
   const [mensajeExito, setMensajeExito] = useState('');
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [filtroTiendaOnline, setFiltroTiendaOnline] = useState(true); // Por defecto mostramos los de tienda online
+  
+  // Estados para productos SAGE
+  const [productosSage, setProductosSage] = useState([]);
+  const [cargandoProductosSage, setCargandoProductosSage] = useState(true);
+  
   const [nuevoCliente, setNuevoCliente] = useState({
     nombre: '',
     nif: '',
@@ -37,6 +42,24 @@ export default function PedidosBorrador() {
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
   }, [filtroTiendaOnline]); // Recargar cuando cambie el filtro
+
+  // Cargar productos SAGE para el editor
+  useEffect(() => {
+    let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+    if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+    const PRODUCTOS_SAGE_API_ENDPOINT = `${apiUrl}/productos-sage`;
+    
+    setCargandoProductosSage(true);
+    axios.get(PRODUCTOS_SAGE_API_ENDPOINT)
+      .then(res => {
+        setProductosSage(res.data);
+      })
+      .catch((error) => {
+        console.error('Error cargando productos SAGE:', error);
+        setProductosSage([]);
+      })
+      .finally(() => setCargandoProductosSage(false));
+  }, []);
 
   const cargarPedidos = () => {
     setCargando(true);
@@ -381,6 +404,8 @@ export default function PedidosBorrador() {
       pedidoInicial={pedidoEditando} 
       clienteInicial={pedidoEditando.cliente} 
       lineasIniciales={pedidoEditando.lineas} 
+      productosSage={productosSage}
+      cargandoProductosSage={cargandoProductosSage}
     />;
   }
 

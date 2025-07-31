@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import './DireccionEnvio.css';
 
 /**
@@ -35,7 +35,6 @@ const FormaPagoFormulario = ({
   const [modoAvanzado, setModoAvanzado] = useState(false);
 
   const handleFormaPagoChange = (tipo, valor) => {
-    console.log('handleFormaPagoChange:', tipo, valor); // Debug
     if (tipo === 'simple') {
       onChange(valor);
     } else {
@@ -59,23 +58,22 @@ const FormaPagoFormulario = ({
     });
   };
 
-  const getFormaPagoActual = () => {
-    console.log('getFormaPagoActual - datos:', datos); // Debug
+  // Memorizar los valores calculados para evitar re-renders infinitos
+  const formaPagoActual = useMemo(() => {
     if (typeof datos === 'string') {
       return datos;
     } else if (typeof datos === 'object' && datos?.titulo) {
       return datos.titulo;
     }
     return '';
-  };
+  }, [datos]);
 
-  const getCodigoFormaPagoActual = () => {
-    console.log('getCodigoFormaPagoActual - datos:', datos); // Debug
+  const codigoFormaPagoActual = useMemo(() => {
     if (typeof datos === 'object' && datos?.codigo) {
       return datos.codigo;
     }
     return '01'; // Valor por defecto
-  };
+  }, [datos]);
 
   return (
     <div className="forma-pago-formulario">
@@ -158,7 +156,7 @@ const FormaPagoFormulario = ({
               /* Modo avanzado con códigos SAGE50 */
               <div>
                 <select
-                  value={getCodigoFormaPagoActual()}
+                  value={codigoFormaPagoActual}
                   onChange={e => handleFormaPagoChange('avanzado', e.target.value)}
                   style={{
                     width: '100%',
@@ -177,7 +175,7 @@ const FormaPagoFormulario = ({
                 </select>
                 
                 {/* Opción personalizada para "Otro" */}
-                {getCodigoFormaPagoActual() === '99' && (
+                {codigoFormaPagoActual === '99' && (
                   <input
                     type="text"
                     value={typeof datos === 'object' && datos?.titulo ? datos.titulo : ''}
@@ -204,14 +202,14 @@ const FormaPagoFormulario = ({
                   fontSize: '13px',
                   color: '#0c4a6e'
                 }}>
-                  <strong>📊 SAGE50:</strong> Se exportará con código {getCodigoFormaPagoActual()}
+                  <strong>📊 SAGE50:</strong> Se exportará con código {codigoFormaPagoActual}
                 </div>
               </div>
             ) : (
               /* Modo simple */
               <div>
                 <select
-                  value={getFormaPagoActual()}
+                  value={formaPagoActual}
                   onChange={e => handleFormaPagoChange('simple', e.target.value)}
                   style={{
                     width: '100%',
@@ -231,7 +229,7 @@ const FormaPagoFormulario = ({
                 </select>
                 
                 {/* Input personalizado si es "Otro" */}
-                {getFormaPagoActual() === 'Otro' && (
+                {formaPagoActual === 'Otro' && (
                   <input
                     type="text"
                     value={typeof datos === 'string' && datos !== 'Otro' ? datos : ''}
