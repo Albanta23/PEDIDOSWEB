@@ -3,7 +3,6 @@ import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
 import ImportarClientes from './ImportarClientes';
 import { obtenerNombreCompleto } from '../utils/clienteUtils';
-import { ProductosSageProvider, useProductosSage } from './components/ProductosSageContext';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;

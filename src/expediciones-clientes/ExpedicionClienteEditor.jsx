@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FORMATOS_PEDIDO } from '../configFormatos';
-import { useProductosSage } from '../clientes-gestion/components/ProductosSageContext';
+import { useProductos } from '../components/ProductosContext';
 import { useLotesDisponibles } from '../hooks/useLotesDisponibles';
 import { actualizarPedidoCliente, registrarDevolucionParcial, registrarDevolucionTotal } from './pedidosClientesExpedicionService';
 import * as ticketGenerator from '../utils/ticketGenerator';
@@ -174,7 +174,7 @@ function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea }) {
 }
 
 export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onActualizado }) {
-  const { productosSage: productos } = useProductosSage();
+  const { productos } = useProductos();
   const [lineas, setLineas] = useState([]);
   const [estado, setEstado] = useState(pedido.estado || 'pendiente');
   const [mensaje, setMensaje] = useState('');
