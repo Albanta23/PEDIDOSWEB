@@ -1194,9 +1194,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             {/* Formulario de dirección de envío */}
             <div style={{ flex: '1', minWidth: '400px' }}>
               <DireccionEnvioFormulario
-                datos={datosEnvioWoo}
-                onChange={setDatosEnvioWoo}
-                clienteSeleccionado={clienteSeleccionado}
+                datosEnvio={datosEnvioWoo}
+                onDatosEnvioChange={setDatosEnvioWoo}
+                direccionFacturacion={`${clienteSeleccionado?.direccion || ''}, ${clienteSeleccionado?.codigoPostal || ''} ${clienteSeleccionado?.poblacion || ''}, ${clienteSeleccionado?.provincia || ''}`.replace(/^, |, $/, '')}
               />
             </div>
 

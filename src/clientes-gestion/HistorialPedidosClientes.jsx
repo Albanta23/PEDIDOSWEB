@@ -109,8 +109,19 @@ export default function HistorialPedidosClientes({ soloPreparados }) {
       const query = params.length ? '?' + params.join('&') : '';
       const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes${query}`);
       const pedidos = res.data || [];
-      setPedidosAbiertos(pedidos.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
-      setPedidosCerrados(pedidos.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
+      
+      // Filtrar pedidos de WooCommerce antiguos (anteriores al 24/07/2025)
+      const fechaCorte = new Date('2025-07-24T00:00:00.000Z');
+      const pedidosFiltrados = pedidos.filter(pedido => {
+        // Si no es de WooCommerce, mantenerlo
+        if (pedido.origen?.tipo !== 'woocommerce') return true;
+        // Si es de WooCommerce, solo mantener los posteriores al 24/07/2025
+        const fechaPedido = new Date(pedido.fechaPedido);
+        return fechaPedido >= fechaCorte;
+      });
+      
+      setPedidosAbiertos(pedidosFiltrados.filter(p => p.estado !== 'preparado' && p.estado !== 'cancelado' && p.estado !== 'enviado'));
+      setPedidosCerrados(pedidosFiltrados.filter(p => p.estado === 'preparado' || p.estado === 'enviado'));
     } catch (e) {
       setCancelandoId(null);
       alert('Error al cancelar el pedido');

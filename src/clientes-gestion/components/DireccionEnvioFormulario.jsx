@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './DireccionEnvio.css';
 
 /**
@@ -14,6 +14,11 @@ const DireccionEnvioFormulario = ({
   const [envioAlternativo, setEnvioAlternativo] = useState(
     datosEnvio?.esEnvioAlternativo || false
   );
+
+  // Sincronizar el estado local con los props
+  useEffect(() => {
+    setEnvioAlternativo(datosEnvio?.esEnvioAlternativo || false);
+  }, [datosEnvio?.esEnvioAlternativo]);
 
   const handleToggleEnvioAlternativo = (activar) => {
     setEnvioAlternativo(activar);
@@ -42,7 +47,8 @@ const DireccionEnvioFormulario = ({
 
   const handleInputChange = (campo, valor) => {
     onDatosEnvioChange({
-      ...datosEnvio,
+      ...(datosEnvio || {}),
+      esEnvioAlternativo: envioAlternativo,
       [campo]: valor
     });
   };

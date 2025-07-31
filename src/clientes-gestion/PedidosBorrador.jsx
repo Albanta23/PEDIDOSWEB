@@ -42,11 +42,15 @@ export default function PedidosBorrador() {
     setCargando(true);
     // Si el filtro está activado, solo mostramos los pedidos de la tienda online (woocommerce)
     const url = filtroTiendaOnline 
-      ? `${API_URL}/pedidos-clientes?estado=borrador_woocommerce&origen.tipo=woocommerce` 
-      : `${API_URL}/pedidos-clientes?estado=borrador`;
-    
+      ? `${API_URL}/pedidos-clientes?estado=borrador_woocommerce&origen.tipo=woocommerce&fechaPedido[gte]=2025-07-21&estado[ne]=tramitado` 
+      : `${API_URL}/pedidos-clientes?estado=borrador&fechaPedido[gte]=2025-07-21`;
+
     axios.get(url)
-      .then(res => setPedidos(res.data))
+      .then(res => {
+        // Filtrar pedidos por fecha en caso de que la API no lo haga correctamente
+        const pedidosFiltrados = res.data.filter(pedido => new Date(pedido.fechaPedido) >= new Date('2025-07-21'));
+        setPedidos(pedidosFiltrados);
+      })
       .catch(() => setPedidos([]))
       .finally(() => setCargando(false));
   };
