@@ -6,8 +6,6 @@ const VendedorSchema = new mongoose.Schema({
   email: { type: String },
   telefono: { type: String },
   activo: { type: Boolean, default: true }
-}, {
-  collection: 'vendedors' // Especifica el nombre correcto de la colección
 });
 
 module.exports = mongoose.model('Vendedor', VendedorSchema);
