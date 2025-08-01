@@ -5,6 +5,7 @@ import { formatearDireccionCompleta } from './utils/formatDireccion';
 import { FaUndo, FaExclamationTriangle } from 'react-icons/fa';
 import DireccionEnvioFormulario from './components/DireccionEnvioFormulario';
 import FormaPagoFormulario from './components/FormaPagoFormulario';
+import FormaPagoVendedorInfo from './components/FormaPagoVendedorInfo';
 import { obtenerNombreCompleto } from '../utils/clienteUtils';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
@@ -47,6 +48,8 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   });
   const [formaPago, setFormaPago] = useState('');
   const [vendedor, setVendedor] = useState('');
+  const [almacenExpedicion, setAlmacenExpedicion] = useState('');
+  const [serieFacturacion, setSerieFacturacion] = useState('A');
   useEffect(() => {
     axios.get(`${API_URL}/clientes`)
       .then(res => setClientes(res.data))
@@ -98,6 +101,15 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             setVendedor(pedido.vendedor);
           } else if (pedido.datosWooCommerce?.vendedor) {
             setVendedor(pedido.datosWooCommerce.vendedor);
+          }
+          
+          // 🆕 CARGAR DATOS DE ALMACÉN Y SERIE
+          if (pedido.almacenExpedicion) {
+            setAlmacenExpedicion(pedido.almacenExpedicion);
+          }
+          
+          if (pedido.serieFacturacion) {
+            setSerieFacturacion(pedido.serieFacturacion);
           }
         })
         .catch(error => {
@@ -224,6 +236,8 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       datosEnvioWoo: datosEnvioWoo,
       formaPago: formaPago,
       vendedor: vendedor,
+      almacenExpedicion: almacenExpedicion,
+      serieFacturacion: serieFacturacion,
       
       // Para compatibilidad con estructura WooCommerce
       datosWooCommerce: {
@@ -1234,6 +1248,10 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
                 onChange={setFormaPago}
                 vendedor={vendedor}
                 onVendedorChange={setVendedor}
+                almacenExpedicion={almacenExpedicion}
+                onAlmacenChange={setAlmacenExpedicion}
+                serieFacturacion={serieFacturacion}
+                onSerieChange={setSerieFacturacion}
               />
             </div>
           </div>

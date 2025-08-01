@@ -2,7 +2,7 @@ import React from 'react';
 import { exportPedidoClientePDF } from './utils/exportPedidoPDF';
 import { formatearDireccionCompletaPedido } from './utils/formatDireccion';
 import DireccionEnvioInfo from './components/DireccionEnvioInfo';
-import FormaPagoInfo from './components/FormaPagoInfo';
+import FormaPagoVendedorInfo from './components/FormaPagoVendedorInfo';
 
 export default function PedidoClienteDetalle({ pedido, onClose }) {
   if (!pedido) return null;
@@ -266,7 +266,7 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
               <DireccionEnvioInfo pedido={pedido} />
             </div>
 
-            {/* Forma de Pago y Vendedor */}
+            {/* Forma de Pago y Vendedor con datos SAGE50 */}
             {(pedido.formaPago || pedido.datosWooCommerce?.formaPago || pedido.vendedor || pedido.datosWooCommerce?.vendedor) && (
               <div style={{
                 background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
@@ -276,7 +276,7 @@ export default function PedidoClienteDetalle({ pedido, onClose }) {
                 boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
                 marginTop: '20px'
               }}>
-                <FormaPagoInfo pedido={pedido} />
+                <FormaPagoVendedorInfo pedido={pedido} />
               </div>
             )}
 

@@ -22,6 +22,9 @@ const PedidoClienteSchema = new mongoose.Schema({
   datosFacturaWoo: mongoose.Schema.Types.Mixed, // Guardar todos los datos de factura recibidos de WooCommerce
   datosEnvioWoo: mongoose.Schema.Types.Mixed, // Información completa de dirección de envío (nombre, dirección, teléfono, etc.)
   formaPago: mongoose.Schema.Types.Mixed, // Información de forma de pago (método, proveedor, comisiones, etc.)
+  vendedor: String, // Información del vendedor asignado (integración con SAGE50)
+  almacenExpedicion: String, // Almacén que expide el pedido (integración con SAGE50)
+  serieFacturacion: { type: String, enum: ['A', 'T'], default: 'A' }, // Serie de facturación (A o T)
   numeroPedidoWoo: Number, // Número de pedido original de WooCommerce
   clienteId: String,
   clienteNombre: String,
