@@ -3,15 +3,12 @@ import axios from 'axios';
 import PedidosClientes from './PedidosClientes';
 import ImportarClientes from './ImportarClientes';
 import { obtenerNombreCompleto } from '../utils/clienteUtils';
-import { ProductosSageProvider, useProductosSage } from './components/ProductosSageContext';
 
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
 const API_URL_CORRECTO = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
-console.log('[DEBUG ClientesMantenimiento] API_URL:', API_URL);
-console.log('[DEBUG ClientesMantenimiento] VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 // Componente que extiende PedidosClientes para manejar reutilización
-function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion }) {
+function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion, productosSage, cargandoProductosSage }) {
   const [componenteKey, setComponenteKey] = useState(0);
 
   useEffect(() => {
@@ -25,8 +22,8 @@ function PedidosClientesConReutilizacion({ onPedidoCreado, datosReutilizacion })
       onPedidoCreado={onPedidoCreado}
       clienteInicial={datosReutilizacion?.cliente}
       lineasIniciales={datosReutilizacion?.lineasOriginales}
-      productosSage={datosReutilizacion?.productosSage}
-      cargandoProductosSage={datosReutilizacion?.cargandoProductosSage}
+      productosSage={productosSage}
+      cargandoProductosSage={cargandoProductosSage}
     />
   );
 }
@@ -52,14 +49,22 @@ export default function ClientesMantenimiento() {
   // Productos SAGE para el editor de pedidos
   const [productosSage, setProductosSage] = useState([]);
   const [cargandoProductosSage, setCargandoProductosSage] = useState(true);
+
+  // Cargar productos SAGE al montar el componente
   useEffect(() => {
     let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
     if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
     const PRODUCTOS_SAGE_API_ENDPOINT = `${apiUrl}/productos-sage`;
+    
     setCargandoProductosSage(true);
     axios.get(PRODUCTOS_SAGE_API_ENDPOINT)
-      .then(res => setProductosSage(res.data))
-      .catch(() => setProductosSage([]))
+      .then(res => {
+        setProductosSage(res.data);
+      })
+      .catch((error) => {
+        console.error('Error al cargar productos SAGE:', error);
+        setProductosSage([]);
+      })
       .finally(() => setCargandoProductosSage(false));
   }, []);
   
@@ -172,8 +177,6 @@ export default function ClientesMantenimiento() {
         return;
       }
       
-      console.log('Cargando pedidos para cliente:', obtenerNombreCompleto(cliente), cliente._id);
-      
       // Llamar a la API solo filtrando por clienteId y nombreCliente para obtener TODOS los pedidos del cliente
       const res = await axios.get(`${API_URL_CORRECTO}/pedidos-clientes`, {
         params: {
@@ -181,8 +184,6 @@ export default function ClientesMantenimiento() {
           nombreCliente: obtenerNombreCompleto(cliente) // Filtrar por nombre del cliente
         }
       });
-      
-      console.log('Total pedidos recibidos:', res.data?.length || 0);
       
       // Verificar y transformar los datos si es necesario
       const pedidosNormalizados = (res.data || []).map(pedido => {
@@ -225,9 +226,6 @@ export default function ClientesMantenimiento() {
         }
       });
       
-      console.log('Cargando devoluciones para cliente:', obtenerNombreCompleto(cliente), cliente._id);
-      console.log('Total devoluciones recibidas:', res.data?.length || 0);
-      
       setDevolucionesCliente(res.data || []);
     } catch (error) {
       console.error('Error cargando devoluciones del cliente:', error);
@@ -241,7 +239,9 @@ export default function ClientesMantenimiento() {
     // Preparar los datos para reutilizar el pedido
     const datosParaReutilizar = {
       cliente: cliente,
-      lineasOriginales: pedido.lineas || []
+      lineasOriginales: pedido.lineas || [],
+      productosSage: productosSage,
+      cargandoProductosSage: cargandoProductosSage
     };
     
     setDatosReutilizacion(datosParaReutilizar);
@@ -259,8 +259,6 @@ export default function ClientesMantenimiento() {
 
   // Función para filtrar pedidos del cliente
   const filtrarPedidosCliente = (pedidos, filtroFecha, filtroProducto) => {
-    console.log('DEBUG: Aplicando filtros a pedidos', { total: pedidos?.length || 0, filtroFecha, filtroProducto });
-    
     // Asegurarnos que pedidos sea un array
     const pedidosArray = Array.isArray(pedidos) ? pedidos : [];
     let pedidosFiltrados = [...pedidosArray];
@@ -293,17 +291,11 @@ export default function ClientesMantenimiento() {
       });
     }
     
-    console.log('DEBUG: Después de filtrar', { total: pedidosFiltrados.length });
     return pedidosFiltrados;
   };
 
   // Efecto para aplicar filtros cuando cambian
   React.useEffect(() => {
-    console.log('DEBUG: Efecto de filtrado ejecutado', { 
-      pedidosLength: pedidosCliente?.length || 0, 
-      filtroFecha, 
-      filtroProducto 
-    });
     setPedidosFiltrados(filtrarPedidosCliente(pedidosCliente, filtroFecha, filtroProducto));
   }, [pedidosCliente, filtroFecha, filtroProducto]);
 
@@ -455,8 +447,6 @@ export default function ClientesMantenimiento() {
         clientesCestasNavidad: clientesCestas
       });
       
-      console.log('[INFO] Procesamiento completado:', response.data);
-      
       if (response.data.ok) {
         const { marcados, creados, errores } = response.data;
         let mensaje = `✅ Procesamiento completado:\n`;
@@ -516,6 +506,18 @@ export default function ClientesMantenimiento() {
     } catch (error) {
       setMensaje('Error limpiando marcas de cestas de navidad');
     }
+  };
+
+  const handleNuevoPedido = (cliente) => {
+    // Preparar los datos para un nuevo pedido
+    const datosParaNuevoPedido = {
+      cliente: cliente,
+      lineasOriginales: [], // Empezar con un pedido vacío
+      productosSage: productosSage,
+      cargandoProductosSage: cargandoProductosSage,
+    };
+    setDatosReutilizacion(datosParaNuevoPedido);
+    setMostrarEditorPedidos(true);
   };
 
   // --- Scroll horizontal con click derecho ---
@@ -1156,11 +1158,11 @@ export default function ClientesMantenimiento() {
                               fontSize: '16px',
                               fontWeight: '700'
                             }}>
-                              {c.nombre.charAt(0).toUpperCase()}
+                              {obtenerNombreCompleto(c).charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <div style={{ fontSize: '16px', fontWeight: '700', color: '#2c3e50' }}>
-                                {c.nombre}
+                                {obtenerNombreCompleto(c)}
                               </div>
                               {c.email && (
                                 <div style={{ fontSize: '12px', color: '#7f8c8d', marginTop: '2px' }}>
@@ -1545,18 +1547,39 @@ export default function ClientesMantenimiento() {
 
             {/* Mostrar pedidos del cliente durante la edición */}
             {modo === 'editar' && (
-              <div style={{ marginTop: '30px' }}>
-                <h4 style={{
-                  fontSize: '20px',
-                  fontWeight: '700',
-                  color: '#2c3e50',
-                  marginBottom: '20px',
-                  borderBottom: '2px solid #ecf0f1',
-                  paddingBottom: '10px'
-                }}>
-                  📋 Historial de Pedidos del Cliente
-                </h4>
-                
+              <div style={{ marginTop: '40px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #ecf0f1', paddingBottom: '10px' }}>
+                  <h4 style={{
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: '#2c3e50',
+                    margin: 0
+                  }}>
+                    📋 Historial de Pedidos del Cliente
+                  </h4>
+                  <button
+                    onClick={() => handleNuevoPedido(clienteEdit)}
+                    style={{
+                      background: 'linear-gradient(135deg, #28a745, #20c997)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '12px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    title="Crear un nuevo pedido para este cliente"
+                  >
+                    ➕ Nuevo Pedido
+                  </button>
+                </div>
+
                 {/* Filtros para pedidos */}
                 <div style={{
                   background: 'linear-gradient(135deg, #e8f4fd, #f8f9fa)',
@@ -1866,7 +1889,7 @@ export default function ClientesMantenimiento() {
                 <h4 style={{ margin: '0 0 15px 0', color: '#495057', fontSize: '16px', fontWeight: '700' }}>📧 Información de Contacto</h4>
                 <div style={{ marginBottom: '10px' }}>
                   <strong style={{ color: '#2c3e50' }}>Nombre:</strong>
-                  <span style={{ marginLeft: '10px', color: '#495057' }}>{clienteEdit.nombre}</span>
+                  <span style={{ marginLeft: '10px', color: '#495057' }}>{obtenerNombreCompleto(clienteEdit)}</span>
                 </div>
                 <div style={{ marginBottom: '10px' }}>
                   <strong style={{ color: '#2c3e50' }}>Email:</strong>
@@ -2066,11 +2089,9 @@ export default function ClientesMantenimiento() {
       {mostrarEditorPedidos && (
         <PedidosClientesConReutilizacion 
           onPedidoCreado={cerrarEditorPedidos}
-          datosReutilizacion={{
-            ...datosReutilizacion,
-            productosSage,
-            cargandoProductosSage
-          }}
+          datosReutilizacion={datosReutilizacion}
+          productosSage={productosSage}
+          cargandoProductosSage={cargandoProductosSage}
         />
       )}
 

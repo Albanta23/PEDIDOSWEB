@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import PedidosClientes from './PedidosClientes';
@@ -24,6 +25,29 @@ export default function App() {
   const [pin, setPin] = useState('');
   const [errorLogin, setErrorLogin] = useState('');
   const [autenticado, setAutenticado] = useState(false);
+  
+  // Estados para productos SAGE
+  const [productosSage, setProductosSage] = useState([]);
+  const [cargandoProductosSage, setCargandoProductosSage] = useState(true);
+  
+  // Cargar productos SAGE al montar el componente
+  useEffect(() => {
+    let apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+    if (!apiUrl.endsWith('/api')) apiUrl = apiUrl + '/api';
+    const PRODUCTOS_SAGE_API_ENDPOINT = `${apiUrl}/productos-sage`;
+    
+    setCargandoProductosSage(true);
+    axios.get(PRODUCTOS_SAGE_API_ENDPOINT)
+      .then(res => {
+        setProductosSage(res.data);
+      })
+      .catch((error) => {
+        console.error('Error cargando productos SAGE:', error);
+        setProductosSage([]);
+      })
+      .finally(() => setCargandoProductosSage(false));
+  }, []);
+  
   // Obtener la(s) URL(s) de cestas desde la variable de entorno
   const cestasUrls = (import.meta.env.VITE_CESTAS_URL || '').split(',').map(u => u.trim()).filter(Boolean);
   const cestasUrl = cestasUrls[0] || 'https://fantastic-space-rotary-phone-gg649p44xjr29wwg-3200.app.github.dev';
@@ -116,7 +140,11 @@ export default function App() {
               editorAbierto ? (
                 <div style={{background:'#fff',borderRadius:16,boxShadow:'0 4px 32px #0002',padding:32,maxWidth:900,margin:'0 auto',position:'relative'}}>
                   <button onClick={()=>setEditorAbierto(false)} style={{position:'absolute',top:18,right:18,background:'#dc3545',color:'#fff',border:'none',borderRadius:6,padding:'8px 20px',fontWeight:700,cursor:'pointer'}}>Cancelar</button>
-                  <PedidosClientes onPedidoCreado={()=>setEditorAbierto(false)} />
+                  <PedidosClientes 
+                    onPedidoCreado={()=>setEditorAbierto(false)} 
+                    productosSage={productosSage}
+                    cargandoProductosSage={cargandoProductosSage}
+                  />
                 </div>
               ) : (
                 <>
