@@ -53,19 +53,27 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
         <div class="contenido">
           <div class="seccion-destinatario">
             <div class="seccion-titulo">📍 DESTINATARIO:</div>
-            <div class="direccion">
+            <div class="direccion-wrapper">
               ${(() => {
                 const datosEnvio = obtenerDireccionEnvio(pedido);
                 const nombreFormateado = formatearNombreDestinatario(datosEnvio);
                 
-                return `
+                const direccionPrincipal = `
                   <div class="direccion-nombre">${nombreFormateado}</div>
                   <div class="direccion-linea">${datosEnvio.direccionCompleta}</div>
                   <div class="direccion-linea">${datosEnvio.codigoPostal || ''} ${datosEnvio.poblacion || ''}</div>
                   ${datosEnvio.provincia ? `<div class="direccion-linea">${datosEnvio.provincia}</div>` : ''}
                   ${datosEnvio.telefono ? `<div class="direccion-linea">📞 Tel: ${datosEnvio.telefono}</div>` : ''}
-                  ${datosEnvio.esEnvioAlternativo ? `<div class="direccion-especial">⚠️ DIRECCIÓN DE ENVÍO DIFERENTE</div>` : ''}
                 `;
+
+                if (datosEnvio.esEnvioAlternativo) {
+                  return `
+                    <div class="direccion">${direccionPrincipal}</div>
+                    <div class="direccion-especial">⚠️ DIRECCIÓN DE ENVÍO DIFERENTE</div>
+                  `;
+                }
+                
+                return `<div class="direccion">${direccionPrincipal}</div>`;
               })()}
             </div>
           </div>
@@ -175,9 +183,16 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             border-left: 3px solid #1976d2;
             margin-bottom: 3mm;
           }
+
+          .direccion-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
           
           .direccion {
             font-size: 13px;
+            flex-grow: 1;
           }
           
           .direccion-nombre {
@@ -194,8 +209,7 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
           }
           
           .direccion-especial {
-            margin-top: 2mm;
-            padding: 2mm;
+            padding: 3mm;
             background: #fff3cd;
             border: 1px solid #ffeaa7;
             border-radius: 2mm;
@@ -203,6 +217,8 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             font-weight: bold;
             color: #856404;
             text-align: center;
+            margin-left: 4mm;
+            flex-shrink: 0;
           }
           
           .bulto-info {

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const LineaClienteSchema = new mongoose.Schema({
   producto: String,
+  codigoSage: String, // 🆕 CÓDIGO DEL PRODUCTO EN SAGE50 (movido a posición más visible)
   cantidad: Number,
   peso: Number,
   formato: String,
@@ -11,11 +12,13 @@ const LineaClienteSchema = new mongoose.Schema({
   preparada: Boolean,
   esComentario: Boolean,
   precio: Number,
+  precioUnitario: Number, // 🆕 PRECIO UNITARIO (para compatibilidad)
   iva: Number,
+  descuento: Number, // 🆕 DESCUENTO DE LA LÍNEA
+  subtotal: Number, // 🆕 SUBTOTAL DE LA LÍNEA
   tipoProducto: String, // 'simple' o 'variable'
   variaciones: mongoose.Schema.Types.Mixed,
-  idWoo: Number, // ID del producto en WooCommerce
-  codigoSage: String // Código del producto en SAGE50
+  idWoo: Number // ID del producto en WooCommerce
 });
 
 const PedidoClienteSchema = new mongoose.Schema({

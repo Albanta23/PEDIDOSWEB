@@ -359,7 +359,7 @@ const FormaPagoFormulario = ({
                   {vendedoresSage.length > 0 && (
                     <optgroup label="📊 Vendedores SAGE50">
                       {vendedoresSage.map(v => (
-                        <option key={v._id} value={v.nombre}>
+                        <option key={v._id} value={v.codigo}>
                           {v.nombre} (Código: {v.codigo})
                         </option>
                       ))}
@@ -464,7 +464,7 @@ const FormaPagoFormulario = ({
                   
                   {/* Almacenes de SAGE50 */}
                   {almacenesSage.length > 0 && almacenesSage.map(a => (
-                    <option key={a._id} value={a.nombre}>
+                    <option key={a._id} value={a.codigo}>
                       {a.nombre} (Código: {a.codigo})
                     </option>
                   ))}

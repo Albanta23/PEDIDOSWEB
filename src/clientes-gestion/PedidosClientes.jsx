@@ -23,6 +23,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     lineasIniciales && lineasIniciales.length > 0 ? 
     lineasIniciales.map(linea => ({
       producto: linea.producto || '',
+      codigoSage: linea.codigoSage || '', // 🆕 CÓDIGO SAGE DEL PRODUCTO
       cantidad: linea.cantidad || 1,
       formato: linea.formato || FORMATOS_PEDIDO[0],
       comentario: linea.comentario || '',
@@ -32,7 +33,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       descuento: linea.descuento || 0,
       subtotal: linea.subtotal || 0
     })) :
-    [{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', precioUnitario: 0, iva: 0, descuento: 0, subtotal: 0 }]
+    [{ producto: '', codigoSage: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', precioUnitario: 0, iva: 0, descuento: 0, subtotal: 0 }]
   );
   const [mensaje, setMensaje] = useState('');
   // Usar los productos SAGE que se pasan como prop, en lugar de un contexto interno
@@ -75,6 +76,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
           if (pedido.lineas && pedido.lineas.length > 0) {
             setLineas(pedido.lineas.map(linea => ({
               producto: linea.producto || '',
+              codigoSage: linea.codigoSage || '', // 🆕 CÓDIGO SAGE DEL PRODUCTO
               cantidad: linea.cantidad || 1,
               formato: linea.formato || FORMATOS_PEDIDO[0],
               comentario: linea.comentario || '',
@@ -130,6 +132,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     if (lineasIniciales && lineasIniciales.length > 0) {
       const lineasFormateadas = lineasIniciales.map(linea => ({
         producto: linea.producto || '',
+        codigoSage: linea.codigoSage || '', // 🆕 CÓDIGO SAGE DEL PRODUCTO
         cantidad: linea.cantidad || 1,
         formato: linea.formato || FORMATOS_PEDIDO[0],
         comentario: linea.comentario || '',
@@ -167,6 +170,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
   const handleAgregarLinea = () => {
     setLineas([...lineas, { 
       producto: '', 
+      codigoSage: '', // 🆕 CÓDIGO SAGE DEL PRODUCTO
       cantidad: 1, 
       formato: FORMATOS_PEDIDO[0], 
       comentario: '',
@@ -181,6 +185,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       esComentario: true, 
       comentario: '',
       producto: '', 
+      codigoSage: '', // 🆕 CÓDIGO SAGE DEL PRODUCTO
       cantidad: 1, 
       formato: FORMATOS_PEDIDO[0],
       precioUnitario: 0,
@@ -217,6 +222,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
       provincia: clienteSeleccionado.provincia || '',
       lineas: lineas.filter(l => l.esComentario || (l.producto && l.cantidad > 0)).map(linea => ({
         producto: linea.producto || '',
+        codigoSage: linea.codigoSage || '', // 🆕 MAPEAR CÓDIGO SAGE DEL PRODUCTO
         cantidad: linea.cantidad || 1,
         formato: linea.formato || FORMATOS_PEDIDO[0],
         comentario: linea.comentario || '',
@@ -287,7 +293,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
         setMensaje('✅ Pedido creado correctamente.');
 
         // Limpiar formulario solo para nuevos pedidos
-        setLineas([{ producto: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '' }]);
+        setLineas([{ producto: '', codigoSage: '', cantidad: 1, formato: FORMATOS_PEDIDO[0], comentario: '', precioUnitario: 0, iva: 0, descuento: 0, subtotal: 0 }]);
         setClienteSeleccionado(null);
         setBusquedaCliente('');
         setMostrarSugerencias(false);
@@ -316,11 +322,17 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
     const prod = productos.find(p => 
       (p.codigo && String(p.codigo).toLowerCase() === valNorm) ||
       (p.codigoSage && String(p.codigoSage).toLowerCase() === valNorm) ||
-      (p.referencia && String(p.referencia).toLowerCase() === valNorm)
+      (p.referencia && String(p.referencia).toLowerCase() === valNorm) ||
+      (p.nombre && String(p.nombre).toLowerCase() === valNorm) // También buscar por nombre
     );
     
     if (prod) {
       handleLineaChange(idx, 'producto', prod.nombre);
+      // 🆕 MAPEAR CÓDIGO SAGE DEL PRODUCTO AUTOMÁTICAMENTE
+      if (prod.codigo || prod.codigoSage || prod.referencia) {
+        const codigoSage = prod.codigo || prod.codigoSage || prod.referencia;
+        handleLineaChange(idx, 'codigoSage', codigoSage);
+      }
       // Si encontramos el producto, también podemos establecer el precio si está disponible
       if (prod.precio) {
         handleLineaChange(idx, 'precioUnitario', Number(prod.precio));

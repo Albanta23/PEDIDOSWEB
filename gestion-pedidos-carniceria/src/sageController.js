@@ -73,7 +73,7 @@ const exportarPedidos = async (req, res) => {
           const cliente = await Cliente.findById(pedido.clienteId);
           if (cliente) {
             datosCliente = {
-              codigo: cliente.codigoSage || cliente.nif || `CLI${String(contadorFactura).padStart(6, '0')}`,
+              codigo: cliente.codigo || cliente.nif || `CLI${String(contadorFactura).padStart(6, '0')}`,
               nombre: generarNombreCompletoSage(cliente, pedido.clienteNombre),
               nif: cliente.nif || pedido.nif || '',
               direccion: cliente.direccion || pedido.direccion || '',
@@ -114,67 +114,112 @@ const exportarPedidos = async (req, res) => {
         pedido.lineas.forEach((linea, index) => {
           if (!linea.esComentario && linea.producto) {
             // Línea de producto
-            const cantidadFinal = linea.cantidadEnviada || linea.cantidad || 0;
-            const precioUnitario = linea.precio || 0;
-            const descuento1 = 0; // Se puede calcular si hay descuentos
+            
+            // 🔧 LÓGICA SIMPLIFICADA PARA UNIDADES SEGÚN PESO
+            let unidadesFinal;
+            const esWooCommerce = Boolean(pedido.numeroPedidoWoo || pedido.datosFacturaWoo);
+            
+            if (esWooCommerce) {
+              // 🛒 PEDIDOS WOOCOMMERCE: Siempre usar cantidad original (venta por unidad)
+              unidadesFinal = linea.cantidad || 0;
+            } else {
+              // 🏪 PEDIDOS NORMALES: Lógica basada en el valor del peso
+              // SI peso > 0 → usar PESO para UNIDADES
+              // SI peso = 0 → usar CANTIDAD ENVIADA para UNIDADES
+              if (linea.peso && linea.peso > 0) {
+                unidadesFinal = linea.peso; // 🔧 PESO > 0: Usar peso
+              } else {
+                unidadesFinal = linea.cantidadEnviada || linea.cantidad || 0; // 🔧 PESO = 0: Usar cantidad enviada
+              }
+            }
+            
+            const precioUnitario = linea.precio || linea.precioUnitario || 0;
+            const descuento1 = linea.descuento || 0; // Usar descuento de la línea
             const descuento2 = 0;
 
+            // 🆕 MAPEO CORRECTO DE CAMPOS DESDE EL PEDIDO
+            const serieFactura = pedido.serieFacturacion || 'A'; // Serie desde el pedido
+            const almacenExpedicion = pedido.almacenExpedicion || '01'; // Almacén desde el pedido (CÓDIGO)
+            const formaPagoSage = (typeof pedido.formaPago === 'object' ? pedido.formaPago.codigo : pedido.formaPago) || '01'; // Forma de pago desde el pedido (CÓDIGO)
+            const vendedorSage = pedido.vendedor || '01'; // Vendedor desde el pedido (CÓDIGO)
+            const codigoProductoSage = String(linea.codigo || `ART${String(index + 1).padStart(5, '0')}`); // 🔧 USAR CAMPO 'codigo' PARA SAGE50
+            
+            // 🆕 OBSERVACIONES CON INFORMACIÓN CONTEXTUAL
+            const observacionesCompletas = [
+              linea.comentario || '',
+              esWooCommerce ? 'Pedido WooCommerce' : '',
+              !esWooCommerce && linea.peso ? `Peso: ${linea.peso}kg` : '',
+              !esWooCommerce && linea.cantidadEnviada ? `Cant. enviada: ${linea.cantidadEnviada}` : ''
+            ].filter(Boolean).join(' | ');
+
             lineasAlbaran.push({
-              serie: 'SF', // Serie por defecto
-              albaran: numeroAlbaran,
-              cliente: datosCliente.codigo,
-              fecha: fechaFormateada,
-              almacen: '00', // Almacén por defecto
-              formapago: '01', // Forma de pago por defecto (contado)
-              vendedor: '01', // Vendedor por defecto
-              articulo: linea.codigoSage || `ART${String(index + 1).padStart(5, '0')}`,
-              definicion: linea.producto,
-              unidades: cantidadFinal,
-              precio: precioUnitario.toString().replace('.', ','), // SAGE50 usa coma decimal
-              dto1: descuento1,
-              dto2: descuento2,
-              Obra: '', // Campo obra vacío
-              factura: numeroFactura,
-              fechafra: fechaFormateada,
-              observaciones: linea.comentario || '',
-              nombrecliente: datosCliente.nombre,
-              cifcliente: datosCliente.nif,
-              dircliente: datosCliente.direccion,
-              cpcliente: datosCliente.codigoPostal,
-              pobcliente: datosCliente.poblacion,
-              provcliente: datosCliente.provincia,
-              telfcliente: datosCliente.telefono,
-              emailcliente: datosCliente.email
+              SERIE: serieFactura, // 🔧 CABECERAS MAYÚSCULAS PARA CLARIDAD
+              ALBARAN: numeroAlbaran,
+              CLIENTE: datosCliente.codigo,
+              FECHA: fechaFormateada,
+              ALMACEN: almacenExpedicion, // 🆕 USAR ALMACÉN DEL PEDIDO
+              FORMAPAGO: formaPagoSage, // 🆕 USAR FORMA DE PAGO DEL PEDIDO
+              VENDEDOR: vendedorSage, // 🆕 USAR VENDEDOR DEL PEDIDO
+              ARTICULO: codigoProductoSage, // 🔧 CÓDIGO DE PRODUCTO ALFANUMÉRICO
+              DEFINICION: linea.producto,
+              UNIDADES: unidadesFinal,
+              PRECIO: precioUnitario.toString().replace('.', ','), // SAGE50 usa coma decimal
+              DTO1: descuento1,
+              DTO2: descuento2,
+              OBRA: '', // Campo obra vacío
+              FACTURA: '', // 🔧 Campo factura vacío (según especificación)
+              FECHAFRA: '', // 🔧 Campo fecha factura vacío (según especificación)
+              OBSERVACIONES: observacionesCompletas,
+              NOMBRECLIENTE: datosCliente.nombre,
+              CIFCLIENTE: datosCliente.nif,
+              DIRCLIENTE: datosCliente.direccion,
+              CPCLIENTE: datosCliente.codigoPostal,
+              POBCLIENTE: datosCliente.poblacion,
+              PROVCLIENTE: datosCliente.provincia,
+              TELFCLIENTE: datosCliente.telefono,
+              EMAILCLIENTE: datosCliente.email
             });
+            
+            // 🔧 LOG DE DEBUG PARA VERIFICAR MAPEO
+            console.log(`[SAGE50] Línea ${index + 1}: ARTICULO="${codigoProductoSage}" (${typeof codigoProductoSage}), DEFINICION="${linea.producto}"`);
           } else if (linea.esComentario && linea.comentario) {
             // Línea de comentario/observación
+            // 🆕 MAPEO CORRECTO DE CAMPOS DESDE EL PEDIDO PARA COMENTARIOS
+            const serieFactura = pedido.serieFacturacion || 'A';
+            const almacenExpedicion = pedido.almacenExpedicion || '01'; // CÓDIGO del almacén
+            const formaPagoSage = (typeof pedido.formaPago === 'object' ? pedido.formaPago.codigo : pedido.formaPago) || '01'; // CÓDIGO de forma de pago
+            const vendedorSage = pedido.vendedor || '01'; // CÓDIGO del vendedor
+
             lineasAlbaran.push({
-              serie: 'SF',
-              albaran: numeroAlbaran,
-              cliente: datosCliente.codigo,
-              fecha: fechaFormateada,
-              almacen: '00',
-              formapago: '01',
-              vendedor: '01',
-              articulo: '', // Artículo vacío para comentarios
-              definicion: linea.comentario,
-              unidades: '',
-              precio: '',
-              dto1: '',
-              dto2: '',
-              Obra: '',
-              factura: numeroFactura,
-              fechafra: '',
-              observaciones: '',
-              nombrecliente: datosCliente.nombre,
-              cifcliente: datosCliente.nif,
-              dircliente: datosCliente.direccion,
-              cpcliente: datosCliente.codigoPostal,
-              pobcliente: datosCliente.poblacion,
-              provcliente: datosCliente.provincia,
-              telfcliente: datosCliente.telefono,
-              emailcliente: datosCliente.email
+              SERIE: serieFactura, // 🔧 CABECERAS MAYÚSCULAS PARA CLARIDAD
+              ALBARAN: numeroAlbaran,
+              CLIENTE: datosCliente.codigo,
+              FECHA: fechaFormateada,
+              ALMACEN: almacenExpedicion, // 🆕 USAR ALMACÉN DEL PEDIDO
+              FORMAPAGO: formaPagoSage, // 🆕 USAR FORMA DE PAGO DEL PEDIDO
+              VENDEDOR: vendedorSage, // 🆕 USAR VENDEDOR DEL PEDIDO
+              ARTICULO: '', // 🔧 Artículo vacío para comentarios (formato alfanumérico)
+              DEFINICION: linea.comentario,
+              UNIDADES: '',
+              PRECIO: '',
+              DTO1: '',
+              DTO2: '',
+              OBRA: '',
+              FACTURA: '', // 🔧 Campo factura vacío (según especificación)
+              FECHAFRA: '', // 🔧 Campo fecha factura vacío (según especificación)
+              OBSERVACIONES: '',
+              NOMBRECLIENTE: datosCliente.nombre,
+              CIFCLIENTE: datosCliente.nif,
+              DIRCLIENTE: datosCliente.direccion,
+              CPCLIENTE: datosCliente.codigoPostal,
+              POBCLIENTE: datosCliente.poblacion,
+              PROVCLIENTE: datosCliente.provincia,
+              TELFCLIENTE: datosCliente.telefono,
+              EMAILCLIENTE: datosCliente.email
             });
+            
+            // 🔧 LOG DE DEBUG PARA COMENTARIOS
+            console.log(`[SAGE50] Comentario: ARTICULO="" (vacío), DEFINICION="${linea.comentario}"`);
           }
         });
       }
@@ -188,14 +233,23 @@ const exportarPedidos = async (req, res) => {
 
     // Generar archivo Excel compatible con SAGE50
     const workbook = XLSX.utils.book_new();
+    
+    // 🔧 USAR CABECERAS EXPLÍCITAS EN MAYÚSCULAS PARA SAGE50
     const worksheet = XLSX.utils.json_to_sheet(lineasAlbaran, {
       header: [
-        'serie', 'albaran', 'cliente', 'fecha', 'almacen', 'formapago', 'vendedor',
-        'articulo', 'definicion', 'unidades', 'precio', 'dto1', 'dto2', 'Obra',
-        'factura', 'fechafra', 'observaciones', 'nombrecliente', 'cifcliente',
-        'dircliente', 'cpcliente', 'pobcliente', 'provcliente', 'telfcliente', 'emailcliente'
+        'SERIE', 'ALBARAN', 'CLIENTE', 'FECHA', 'ALMACEN', 'FORMAPAGO', 'VENDEDOR',
+        'ARTICULO', 'DEFINICION', 'UNIDADES', 'PRECIO', 'DTO1', 'DTO2', 'OBRA',
+        'FACTURA', 'FECHAFRA', 'OBSERVACIONES', 'NOMBRECLIENTE', 'CIFCLIENTE',
+        'DIRCLIENTE', 'CPCLIENTE', 'POBCLIENTE', 'PROVCLIENTE', 'TELFCLIENTE', 'EMAILCLIENTE'
       ]
     });
+    
+    // 🔧 LOG DE DEBUG PARA VERIFICAR DATOS GENERADOS
+    console.log(`[SAGE50] DEBUG: Generadas ${lineasAlbaran.length} líneas de albarán`);
+    if (lineasAlbaran.length > 0) {
+      const primeraLinea = lineasAlbaran[0];
+      console.log(`[SAGE50] DEBUG: Primera línea ARTICULO="${primeraLinea.ARTICULO}", DEFINICION="${primeraLinea.DEFINICION}"`);
+    }
 
     // Configurar ancho de columnas para mejor legibilidad
     const columnWidths = [
@@ -352,7 +406,7 @@ async function generarLineasAlbaran(pedidos) {
         const cliente = await Cliente.findById(pedido.clienteId);
         if (cliente) {
           datosCliente = {
-            codigo: cliente.codigoSage || cliente.nif || `CLI${String(contadorFactura).padStart(6, '0')}`,
+            codigo: cliente.codigo || cliente.nif || `CLI${String(contadorFactura).padStart(6, '0')}`,
             nombre: generarNombreCompletoSage(cliente, pedido.clienteNombre),
             nif: cliente.nif || pedido.nif || '',
             direccion: cliente.direccion || pedido.direccion || '',
@@ -392,22 +446,47 @@ async function generarLineasAlbaran(pedidos) {
     if (pedido.lineas && pedido.lineas.length > 0) {
       pedido.lineas.forEach((linea, index) => {
         if (!linea.esComentario && linea.producto) {
-          const cantidadFinal = linea.cantidadEnviada || linea.cantidad || 0;
-          const precioUnitario = linea.precio || 0;
+          // 🔧 APLICAR MISMA LÓGICA DE UNIDADES QUE EN EXCEL
+          let cantidadFinal;
+          const esWooCommerce = Boolean(pedido.numeroPedidoWoo || pedido.datosFacturaWoo);
+          
+          if (esWooCommerce) {
+            // 🛒 PEDIDOS WOOCOMMERCE: Siempre usar cantidad original
+            cantidadFinal = linea.cantidad || 0;
+          } else {
+            // 🏪 PEDIDOS NORMALES: Lógica basada en el valor del peso
+            // SI peso > 0 → usar PESO para UNIDADES
+            // SI peso = 0 → usar CANTIDAD ENVIADA para UNIDADES
+            if (linea.peso && linea.peso > 0) {
+              cantidadFinal = linea.peso; // 🔧 PESO > 0: Usar peso
+            } else {
+              cantidadFinal = linea.cantidadEnviada || linea.cantidad || 0; // 🔧 PESO = 0: Usar cantidad enviada
+            }
+          }
+          
+          const precioUnitario = linea.precio || linea.precioUnitario || 0;
+          const descuento1 = linea.descuento || 0;
+
+          // 🆕 MAPEO CORRECTO DE CAMPOS DESDE EL PEDIDO EN LA FUNCIÓN AUXILIAR
+          const serieFactura = pedido.serieFacturacion || 'A';
+          const almacenExpedicion = pedido.almacenExpedicion || '01';
+          const formaPagoSage = pedido.formaPago || '01';
+          const vendedorSage = pedido.vendedor || '01';
+          const codigoProductoSage = linea.codigo || `ART${String(index + 1).padStart(5, '0')}`; // 🔧 USAR CAMPO 'codigo' PARA SAGE50
 
           lineasAlbaran.push({
-            serie: 'SF',
+            serie: serieFactura, // 🆕 USAR SERIE DEL PEDIDO
             albaran: numeroAlbaran,
             cliente: datosCliente.codigo,
             fecha: fechaFormateada,
-            almacen: '00',
-            formapago: '01',
-            vendedor: '01',
-            articulo: linea.codigoSage || `ART${String(index + 1).padStart(5, '0')}`,
+            almacen: almacenExpedicion, // 🆕 USAR ALMACÉN DEL PEDIDO
+            formapago: formaPagoSage, // 🆕 USAR FORMA DE PAGO DEL PEDIDO
+            vendedor: vendedorSage, // 🆕 USAR VENDEDOR DEL PEDIDO
+            articulo: codigoProductoSage, // 🆕 USAR CÓDIGO SAGE DEL PRODUCTO
             definicion: linea.producto,
             unidades: cantidadFinal,
             precio: precioUnitario.toString().replace('.', ','),
-            dto1: 0,
+            dto1: descuento1, // 🆕 USAR DESCUENTO DE LA LÍNEA
             dto2: 0,
             Obra: '',
             factura: numeroFactura,
