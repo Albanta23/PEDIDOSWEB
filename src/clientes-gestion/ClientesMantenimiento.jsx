@@ -2020,7 +2020,7 @@ export default function ClientesMantenimiento() {
                           </span>
                         </div>
                         <div style={{ color: '#7f8c8d', fontSize: '14px' }}>
-                          📅 {pedido.devoluciones[0] ? new Date(pedido.devoluciones[0].fecha).toLocaleDateString() : 'Sin fecha'}
+                          📅 {pedido.devoluciones && pedido.devoluciones[0] ? new Date(pedido.devoluciones[0].fecha).toLocaleDateString() : 'Sin fecha'}
                         </div>
                       </div>
                       {pedido.devoluciones && pedido.devoluciones.length > 0 && (

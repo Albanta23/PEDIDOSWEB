@@ -68,7 +68,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
           const cliente = clientes.find(c => c._id === pedido.clienteId || c.id === pedido.clienteId);
           if (cliente) {
             setClienteSeleccionado(cliente);
-            setBusquedaCliente(obtenerNombreCompleto(cliente));
+            setBusquedaCliente(obtenerNombreCompleto(cliente) || '');
             setCodigoSage(cliente.codigoCliente || '');
             setNifCliente(cliente.nif || '');
           }
@@ -363,7 +363,7 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
 
   const handleSeleccionarCliente = (cliente) => {
     setClienteSeleccionado(cliente);
-    setBusquedaCliente(obtenerNombreCompleto(cliente));
+    setBusquedaCliente(obtenerNombreCompleto(cliente) || '');
     setCodigoSage(cliente.codigoCliente || '');
     setNifCliente(cliente.nif || '');
     setMostrarSugerencias(false);
@@ -503,9 +503,9 @@ export default function PedidosClientes({ onPedidoCreado, clienteInicial, lineas
             </h3>
             <input
               type="text"
-              value={busquedaCliente}
+              value={busquedaCliente || ''}
               onChange={handleBusquedaClienteChange}
-              onFocus={() => setMostrarSugerencias(busquedaCliente.length > 0)}
+              onFocus={() => setMostrarSugerencias((busquedaCliente || '').length > 0)}
               onBlur={() => setTimeout(() => setMostrarSugerencias(false), 200)}
               placeholder="🔍 Escribe el nombre del cliente..."
               style={{

@@ -3,7 +3,6 @@ import ExpedicionesClientesLogin from './ExpedicionesClientesLogin';
 import { obtenerPedidosClientesExpedicion, borrarPedidoCliente } from './pedidosClientesExpedicionService';
 import ExpedicionClienteEditor from './ExpedicionClienteEditor';
 import { ProductosProvider } from '../components/ProductosContext';
-import { ProductosSageProvider } from '../clientes-gestion/components/ProductosSageContext';
 import HistorialPedidosClientes from '../clientes-gestion/HistorialPedidosClientes';
 import HistorialDevoluciones from '../clientes-gestion/HistorialDevoluciones';
 import { exportExpedicionClientePDF } from './exportExpedicionPDF';
