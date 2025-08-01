@@ -318,7 +318,10 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
   }
 
   // Imprimir etiquetas Zebra: UNA SOLA VENTANA con todas las etiquetas
-  const handleImprimirEtiquetas = (numBultos) => {
+  const handleImprimirEtiquetas = async (numBultos) => {
+    // 1. Actualizar los bultos en el estado local y en la base de datos
+    setBultos(numBultos);
+    
     // Construir objeto pedido para impresión con datos actuales
     const pedidoParaImprimir = {
       ...pedido,
@@ -329,10 +332,17 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
     };
     
     try {
-      // Generar documento único con todas las etiquetas
+      // 2. Actualizar bultos en la base de datos
+      await actualizarPedidoCliente(pedido._id || pedido.id, { 
+        bultos: numBultos
+      });
+      
+      console.log(`✅ Bultos actualizados en BD: ${numBultos}`);
+      
+      // 3. Generar documento único con todas las etiquetas
       const documentoCompleto = ticketGenerator.generarDocumentoEtiquetasCompleto(pedidoParaImprimir, numBultos);
       
-      // Abrir una sola ventana con todas las etiquetas
+      // 4. Abrir una sola ventana con todas las etiquetas
       const ventana = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
       if (ventana) {
         ventana.document.write(documentoCompleto);
@@ -352,12 +362,20 @@ export default function ExpedicionClienteEditor({ pedido, usuario, onClose, onAc
       }
       
     } catch (error) {
-      console.error('Error al generar etiquetas de envío:', error);
+      console.error('Error al generar/actualizar etiquetas de envío:', error);
       alert('Error al generar las etiquetas de envío');
     }
     
-    // Cerrar modal
+    // 5. Cerrar modal y luego cerrar editor
     setShowModalBultos(false);
+    
+    // 6. Cerrar el editor automáticamente después de un breve delay
+    setTimeout(() => {
+      console.log('✅ Cerrando editor automáticamente tras completar cierre de pedido');
+      if (onClose) {
+        onClose();
+      }
+    }, 500);
   };
 
   const esPreparado = estado === 'preparado' || estado === 'entregado';
