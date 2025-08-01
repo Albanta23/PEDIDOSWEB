@@ -172,7 +172,7 @@ function generateAllLabelsDocument(pedido, numBultos, fecha, hora, empresa) {
             padding: 4mm;
             border: 2px solid #1976d2;
             border-radius: 3mm;
-            flex: 1;
+            min-height: 40mm; /* Se quita flex:1 y se añade min-height para evitar que el bloque crezca y empuje el contenido */
           }
           
           .seccion-titulo {
