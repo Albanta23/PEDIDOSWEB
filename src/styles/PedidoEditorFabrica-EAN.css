@@ -1,0 +1,307 @@
+/* 🆕 ESTILOS PARA SISTEMA EAN EN PEDIDO EDITOR FABRICA */
+
+/* ===== BOTÓN EAN GLOBAL ===== */
+.btn-info.active {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  animation: pulse-ean 2s infinite;
+}
+
+@keyframes pulse-ean {
+  0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* ===== LECTOR EAN COMPONENTE ===== */
+.lector-ean-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.lector-ean-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 16px;
+  background: #f8f9fa;
+}
+
+.lector-ean-input:focus {
+  outline: none;
+  border-color: #0056b3;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.lector-ean-button {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.lector-ean-button:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.lector-ean-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.lector-ean-feedback {
+  position: absolute;
+  top: -30px;
+  right: 0;
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: fade-in-out 2s ease-in-out;
+}
+
+@keyframes fade-in-out {
+  0%, 100% { opacity: 0; transform: translateY(5px); }
+  50% { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== INDICADOR LÍNEA SELECCIONADA EAN ===== */
+.linea-ean-target {
+  border: 2px solid #007bff !important;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3) !important;
+  position: relative;
+}
+
+.linea-ean-target::before {
+  content: "🎯 EAN";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #007bff;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 10;
+}
+
+/* ===== MODAL PESO MEJORADO ===== */
+.modal-peso-fabrica {
+  background: white;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modal-peso-fabrica .modal-header {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-peso-fabrica .modal-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-peso-fabrica .btn-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.modal-peso-fabrica .btn-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-peso-fabrica .modal-body {
+  padding: 24px 20px;
+}
+
+.modal-peso-fabrica .info-producto {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007bff;
+  font-size: 14px;
+}
+
+.modal-peso-fabrica .input-group {
+  margin-bottom: 16px;
+}
+
+.modal-peso-fabrica .input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #495057;
+  font-size: 14px;
+}
+
+.modal-peso-fabrica .input-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.modal-peso-fabrica .input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.modal-peso-fabrica .peso-total {
+  background: #e8f4fd;
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 16px;
+  color: #0056b3;
+  border: 2px solid #007bff;
+}
+
+.modal-peso-fabrica .modal-footer {
+  background: #f8f9fa;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #dee2e6;
+}
+
+.modal-peso-fabrica .modal-footer button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.modal-peso-fabrica .btn-default {
+  background: #6c757d;
+  color: white;
+}
+
+.modal-peso-fabrica .btn-default:hover {
+  background: #545b62;
+  transform: translateY(-1px);
+}
+
+.modal-peso-fabrica .btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.modal-peso-fabrica .btn-success:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+}
+
+/* ===== INFORMACIÓN FORMATOS EAN ===== */
+.editor-footer-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid #dee2e6;
+  margin-top: 20px;
+}
+
+.formatos-ean-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: #6c757d;
+  text-align: right;
+  line-height: 1.4;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  max-width: 300px;
+}
+
+.formatos-ean-info strong {
+  color: #495057;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .editor-actions-main {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .lector-ean-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .formatos-ean-info {
+    display: none; /* Ocultar en móviles para ahorrar espacio */
+  }
+  
+  .modal-peso-fabrica {
+    width: 95%;
+    margin: 20px auto;
+  }
+}
+
+/* ===== ANIMACIONES DE ESTADO ===== */
+.linea-pedido-procesando-ean {
+  animation: procesando-ean 1s ease-in-out;
+}
+
+@keyframes procesando-ean {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); background-color: #e8f4fd; }
+}
+
+.ean-procesado-exitoso {
+  animation: exito-ean 0.8s ease-out;
+}
+
+@keyframes exito-ean {
+  0% { background-color: #d4edda; border-color: #28a745; }
+  100% { background-color: inherit; border-color: inherit; }
+}
