@@ -7,8 +7,6 @@ const ProductoSageSchema = new mongoose.Schema({
   descripcion: { type: String },
   precio: { type: Number },
   activo: { type: Boolean, default: true }
-}, {
-  collection: 'productosages' // Especifica el nombre exacto de la colección
 });
 
 module.exports = mongoose.model('ProductoSage', ProductoSageSchema);

@@ -188,14 +188,10 @@ export default function ExpedicionesClientes() {
               justifyContent: 'center',
             }}>✕</button>
             <div style={{flex:1, minHeight:0, minWidth:0, paddingTop: 32}}>
-              {/* ProductosProvider corregido - no necesita ProductosSageProvider */}
               <ProductosProvider>
-                <ExpedicionClienteEditor 
-                  pedido={pedidoEditando} 
-                  usuario={usuario} 
-                  onClose={() => setPedidoEditando(null)} 
-                  onActualizado={recargarPedidos} 
-                />
+                <ProductosSageProvider>
+                  <ExpedicionClienteEditor pedido={pedidoEditando} usuario={usuario} onClose={() => setPedidoEditando(null)} onActualizado={recargarPedidos} />
+                </ProductosSageProvider>
               </ProductosProvider>
             </div>
           </div>
