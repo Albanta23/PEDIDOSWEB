@@ -460,7 +460,7 @@ function LineaPedido({ linea, idx, productos, actualizarLinea, borrarLinea, onAb
               />
               {/* 🔧 MEJORADO: Botón de suma de pesos mejorado */}
               {typeof onAbrirModalPeso === 'function' && !linea.esComentario &&
-                Number(linea.cantidad) >= 2 && Number(linea.cantidad) < 100 && (
+                Number(linea.cantidad) >= 2 && Number(linea.cantidad) <= 9 && (
                   <button
                     type="button"
                     className="btn-add-peso"
@@ -550,7 +550,9 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     indiceLinea: -1,
     nombreProducto: '',
     peso: 0,
-    pesoAdicional: 0
+    pesoAdicional: 0,
+    cantidad: 0,
+    pesosIndividuales: [] // Array para los pesos individuales
   });
 
   // 🆕 FUNCIÓN PARA PROCESAR EAN GLOBAL
@@ -617,12 +619,17 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
     const linea = lineas[idx];
     if (!linea) return;
     
+    const cantidad = parseInt(linea.cantidad) || 0;
+    const pesosIndividuales = Array(cantidad).fill(0); // Crear array con tantos elementos como cantidad
+    
     setModalPeso({
       visible: true,
       indiceLinea: idx,
       nombreProducto: nombreProducto || linea.producto || 'Sin especificar',
       peso: parseFloat(pesoActual || linea.peso || 0),
-      pesoAdicional: 0
+      pesoAdicional: 0,
+      cantidad: cantidad,
+      pesosIndividuales: pesosIndividuales
     });
   };
 
@@ -632,14 +639,28 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
       indiceLinea: -1,
       nombreProducto: '',
       peso: 0,
-      pesoAdicional: 0
+      pesoAdicional: 0,
+      cantidad: 0,
+      pesosIndividuales: []
     });
   };
 
   const confirmarModalPeso = () => {
-    const pesoTotal = (modalPeso.peso || 0) + (modalPeso.pesoAdicional || 0);
+    // Sumar peso actual + peso adicional + todos los pesos individuales
+    const sumaPesosIndividuales = modalPeso.pesosIndividuales.reduce((acc, peso) => acc + (parseFloat(peso) || 0), 0);
+    const pesoTotal = (modalPeso.peso || 0) + (modalPeso.pesoAdicional || 0) + sumaPesosIndividuales;
     actualizarLinea(modalPeso.indiceLinea, 'peso', pesoTotal);
     cerrarModalPeso();
+  };
+
+  // 🆕 FUNCIÓN PARA ACTUALIZAR PESOS INDIVIDUALES
+  const actualizarPesoIndividual = (indice, valor) => {
+    setModalPeso(prev => ({
+      ...prev,
+      pesosIndividuales: prev.pesosIndividuales.map((peso, i) => 
+        i === indice ? (parseFloat(valor) || 0) : peso
+      )
+    }));
   };
 
   // 🔧 MEJORADO: Modal de peso que no borra el valor actual
@@ -1091,9 +1112,12 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
             <div className="modal-body">
               <div className="info-producto">
                 <strong>Producto:</strong> {modalPeso.nombreProducto || 'Sin especificar'}
+                <br />
+                <small style={{ color: '#666' }}>Cantidad pedida: {modalPeso.cantidad} unidades</small>
               </div>
+              
               <div className="input-group">
-                <label>Peso actual (kg):</label>
+                <label>Peso actual en línea (kg):</label>
                 <input
                   type="number"
                   step="0.01"
@@ -1106,8 +1130,9 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   placeholder="0.00"
                 />
               </div>
+              
               <div className="input-group">
-                <label>Peso adicional (kg):</label>
+                <label>Peso adicional global (kg):</label>
                 <input
                   type="number"
                   step="0.01"
@@ -1120,8 +1145,71 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                   placeholder="0.00"
                 />
               </div>
-              <div className="peso-total">
-                <strong>Total: {((modalPeso.peso || 0) + (modalPeso.pesoAdicional || 0)).toFixed(2)} kg</strong>
+
+              {/* 🆕 INPUTS INDIVIDUALES PARA CADA CANTIDAD */}
+              <div className="pesos-individuales-section">
+                <label style={{ fontWeight: 'bold', marginBottom: '8px', display: 'block' }}>
+                  Pesos individuales (kg):
+                </label>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: modalPeso.cantidad <= 3 ? 'repeat(1, 1fr)' : modalPeso.cantidad <= 6 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                  gap: '8px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  padding: '8px',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '4px',
+                  backgroundColor: '#f8f9fa'
+                }}>
+                  {modalPeso.pesosIndividuales.map((peso, indice) => (
+                    <div key={indice} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ 
+                        minWidth: '20px', 
+                        fontSize: '12px', 
+                        color: '#666',
+                        fontWeight: 'bold'
+                      }}>
+                        #{indice + 1}:
+                      </span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={peso}
+                        onChange={(e) => actualizarPesoIndividual(indice, e.target.value)}
+                        placeholder="0.00"
+                        style={{
+                          flex: 1,
+                          padding: '4px 8px',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
+                          fontSize: '12px'
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="peso-total" style={{ 
+                marginTop: '16px',
+                padding: '12px',
+                backgroundColor: '#e8f5e8',
+                border: '1px solid #4caf50',
+                borderRadius: '4px'
+              }}>
+                <strong>Total: {(
+                  (modalPeso.peso || 0) + 
+                  (modalPeso.pesoAdicional || 0) + 
+                  modalPeso.pesosIndividuales.reduce((acc, peso) => acc + (parseFloat(peso) || 0), 0)
+                ).toFixed(2)} kg</strong>
+                <br />
+                <small style={{ color: '#666' }}>
+                  Actual: {(modalPeso.peso || 0).toFixed(2)} + 
+                  Adicional: {(modalPeso.pesoAdicional || 0).toFixed(2)} + 
+                  Individual: {modalPeso.pesosIndividuales.reduce((acc, peso) => acc + (parseFloat(peso) || 0), 0).toFixed(2)}
+                </small>
               </div>
             </div>
             <div className="modal-footer">
@@ -1129,7 +1217,7 @@ export default function PedidoEditorFabrica({ pedido, onSave, onSend, onCancel, 
                 Cancelar
               </button>
               <button className="btn-success" onClick={confirmarModalPeso}>
-                Aplicar Peso
+                Aplicar Peso Total
               </button>
             </div>
           </div>
